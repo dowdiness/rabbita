@@ -70,7 +70,7 @@ let path : String = match @env.args() {
 }
 
 ///|
-#cfg(not(target="js"))
+#cfg(target="native")
 async fn main {
   let app = @rabbita.simple_cell(model=0, update~, view~)
   let html =
