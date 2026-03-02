@@ -1,34 +1,33 @@
-# Server side rendering
+# Shiki Editor Example
 
-This example shows a minimal Rabbita setup that combines:
+This example is a browser app built with Rabbita + Shiki.
 
-- server-side rendering (SSR) on `native` using `@rabbita.render_to_string`
-- client-side mounting on `js` for interactive SPA updates
+## Backend support
 
-When you open `/`, the native server returns a full HTML page with pre-rendered
-markup in `<div id="app">...</div>`. The browser then loads `assets/main.js`,
-starts the Rabbita app, and continues as a normal SPA.
+`utils/shiki` currently depends on `extern "js"` APIs, so this example is
+**JS/browser-only** for now.
 
-## build step
+Do not run:
 
-In this module's directory:
+```bash
+moon run ./main --target native
+```
 
-1. install dependencies
+## Run in development
 
-  ```
-  npm install
-  ```
+In this directory:
 
-2. generate the client assets
+```bash
+npm install
+npm run dev
+```
 
-  ```
-  npm run build
-  ```
+Then open the local URL shown by Vite (usually `http://localhost:5173`).
 
-3. run the server
+## Build
 
-  ```
-  moon run ./main --target native
-  ```
+```bash
+npm run build
+```
 
-Then open `http://localhost:8006`.
+The built assets are generated in `dist/`.
