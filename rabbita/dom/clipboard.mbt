@@ -25,9 +25,29 @@ pub extern "js" fn Clipboard::write_text(
   self : Clipboard,
   text : String,
 ) -> @js.Promise =
-  #| (self,text) => self.writeText(text)
+  #| (self, text) => {
+  #|   const writeText = self && self.writeText
+  #|   if (typeof writeText === 'function') {
+  #|     return writeText.call(self, text)
+  #|   }
+  #|   return Promise.reject(
+  #|     new Error(
+  #|       "Clipboard.writeText is unavailable (requires browser support and secure context)."
+  #|     )
+  #|   )
+  #| }
 
 ///|
 #cfg(target="js")
 pub extern "js" fn Clipboard::read_text(self : Clipboard) -> @js.Promise =
-  #| (self) => self.readText()
+  #| (self) => {
+  #|   const readText = self && self.readText
+  #|   if (typeof readText === 'function') {
+  #|     return readText.call(self)
+  #|   }
+  #|   return Promise.reject(
+  #|     new Error(
+  #|       "Clipboard.readText is unavailable (requires browser support and secure context)."
+  #|     )
+  #|   )
+  #| }
