@@ -22,14 +22,19 @@ jobs:
 
       - name: install
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s pre-release
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
 
       - name: moon version
         run: |
           cd rabbita
           moon version --all
           moonrun --version
+
+      - name: moon update
+        run: |
+          moon update
 
       # - name: moon test
       #   run: |
