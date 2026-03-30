@@ -9,6 +9,7 @@ enum Msg {
   Clicked
 }
 
+///|
 type Model = Int
 
 ///|
@@ -48,4 +49,3 @@ fn view(dispatch : Dispatch[Msg], count : Model) -> Html {
     ]),
   ])
 }
-

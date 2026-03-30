@@ -3,8 +3,8 @@
 ///|
 pub(all) struct TourModel {
   chapter_idx : Int
-  content     : String
-  failed      : Bool
+  content : String
+  failed : Bool
 }
 
 ///|
@@ -13,14 +13,14 @@ pub let init_tour : TourModel = { chapter_idx: 0, content: "", failed: false }
 ///|
 struct TocEntry {
   level : Int
-  text  : String
-  id    : String
+  text : String
+  id : String
 }
 
 ///|
 pub(all) struct TourChapter {
   title : String
-  path  : String  // e.g. "001_intro" — used as URL slug and to locate doc files
+  path : String // e.g. "001_intro" — used as URL slug and to locate doc files
 }
 
 // ─── Tour Chapters (default fallback) ────────────────────────────────────
@@ -28,22 +28,29 @@ pub(all) struct TourChapter {
 ///|
 let tour_chapters : Array[TourChapter] = [
   { title: "Introduction", path: "001_intro" },
-  { title: "Router",       path: "003_router" },
+  { title: "Router", path: "003_router" },
 ]
 
 // Returns the site root URL, e.g. "/" or "/rabbita/"
+
+///|
 extern "js" fn site_base_url() -> String =
   #| () => import.meta.env.BASE_URL
 
 // Returns the base URL for tour pages, e.g. "/tour/" or "/rabbita/tour/"
+
+///|
 extern "js" fn tour_base_url() -> String =
   #| () => import.meta.env.BASE_URL + "tour/"
 
+///|
 fn scroll_to_heading(id : String) -> @rabbita.Cmd {
   @nav.scroll_to(id)
 }
 
 // Returns the doc directory URL base for a chapter
+
+///|
 fn chapter_base_url(ch : TourChapter) -> String {
   site_base_url() + "doc/" + ch.path + "/"
 }
@@ -51,6 +58,8 @@ fn chapter_base_url(ch : TourChapter) -> String {
 // Strips the site base prefix from a url.path (which has no leading slash).
 // e.g. site_base_url()="/rabbita/" → strips "rabbita/" prefix
 // e.g. site_base_url()="/"        → returns path unchanged
+
+///|
 fn strip_base(path : String) -> String {
   let base = site_base_url() // e.g. "/rabbita/" or "/"
   // strip_len = length of prefix to remove (base minus its leading "/")
@@ -70,6 +79,8 @@ fn strip_base(path : String) -> String {
 }
 
 // Returns true for any path that maps to the tour section
+
+///|
 fn is_tour_url(chapters : Array[TourChapter], path : String) -> Bool {
   let p = strip_base(path)
   if p == "tour" || p == "tour/" || p.has_prefix("tour/") {
@@ -84,6 +95,8 @@ fn is_tour_url(chapters : Array[TourChapter], path : String) -> Bool {
 }
 
 // Finds the chapter index matching a URL path; defaults to 0
+
+///|
 fn chapter_idx_from_path(chapters : Array[TourChapter], path : String) -> Int {
   let p = strip_base(path)
   for i = 0; i < chapters.length(); i = i + 1 {
@@ -97,6 +110,7 @@ fn chapter_idx_from_path(chapters : Array[TourChapter], path : String) -> Int {
 
 // ─── Menu / Chapter Fetch ─────────────────────────────────────────────────
 
+///|
 fn parse_menu(json : Json) -> Result[Array[TourChapter], String] {
   guard json is Array(items) else { return Err("expected JSON array") }
   let chapters : Array[TourChapter] = []
@@ -118,16 +132,15 @@ fn parse_menu(json : Json) -> Result[Array[TourChapter], String] {
 ///|
 fn fetch_menu(dispatch : Dispatch[Msg]) -> @rabbita.Cmd {
   let url = site_base_url() + "doc/menu.json"
-  let expect : @http.Expecting[@rabbita.Cmd, Array[TourChapter]] =
-    @http.Expecting::Json(
-      fn(result) {
-        match result {
-          Ok(chapters) => dispatch(MenuLoaded(chapters))
-          Err(_) => @rabbita.none
-        }
-      },
-      parse_menu,
-    )
+  let expect : @http.Expecting[@rabbita.Cmd, Array[TourChapter]] = @http.Expecting::Json(
+    fn(result) {
+      match result {
+        Ok(chapters) => dispatch(MenuLoaded(chapters))
+        Err(_) => @rabbita.none
+      }
+    },
+    parse_menu,
+  )
   @http.get(url, expect~)
 }
 
@@ -135,18 +148,18 @@ fn fetch_menu(dispatch : Dispatch[Msg]) -> @rabbita.Cmd {
 fn fetch_chapter(
   dispatch : Dispatch[Msg],
   chapters : Array[TourChapter],
-  idx      : Int,
+  idx : Int,
 ) -> @rabbita.Cmd {
   let safe_idx = if idx >= 0 && idx < chapters.length() { idx } else { 0 }
   let url = chapter_base_url(chapters[safe_idx]) + "readme.mbt.md"
-  let expect : @http.Expecting[@rabbita.Cmd, Unit] = @http.Expecting::Text(
-    fn(result) {
-      match result {
-        Ok(text) => dispatch(TourContent(text))
-        Err(_) => dispatch(TourFailed)
-      }
-    },
-  )
+  let expect : @http.Expecting[@rabbita.Cmd, Unit] = @http.Expecting::Text(fn(
+    result,
+  ) {
+    match result {
+      Ok(text) => dispatch(TourContent(text))
+      Err(_) => dispatch(TourFailed)
+    }
+  })
   @http.get(url, expect~)
 }
 
@@ -156,7 +169,7 @@ fn fetch_chapter(
 fn inline_to_text(inline : @cmark.Inline) -> String {
   let buf = StringBuilder::new()
   let stack : Array[@cmark.Inline] = [inline]
-  for {
+  for ;; {
     guard stack.pop() is Some(curr) else { break }
     match curr {
       Text({ v, .. }) => buf.write_string(v)
@@ -183,7 +196,7 @@ fn extract_toc(src : String) -> Array[TocEntry] {
   let doc = @cmark.Doc::from_string(heading_auto_ids=true, strict=false, src)
   let toc : Array[TocEntry] = []
   let stack : Array[@cmark.Block] = [doc.block]
-  for {
+  for ;; {
     guard stack.pop() is Some(b) else { break }
     match b {
       Heading({ v: { level, inline, id, .. }, .. }) => {
@@ -204,7 +217,9 @@ fn extract_toc(src : String) -> Array[TocEntry] {
       }
       BlockQuote({ v: { block: inner, .. }, .. }) => stack.push(inner)
       List({ v: { items, .. }, .. }) =>
-        for item in items.iter() { stack.push(item.v.block) }
+        for item in items.iter() {
+          stack.push(item.v.block)
+        }
       _ => ()
     }
   }
@@ -215,8 +230,8 @@ fn extract_toc(src : String) -> Array[TocEntry] {
 
 ///|
 fn render_link(
-  defs     : Map[String, @cmark.LabelDef],
-  lnk      : @cmark.InlineLink,
+  defs : Map[String, @cmark.LabelDef],
+  lnk : @cmark.InlineLink,
   is_image : Bool,
   base_url : String,
 ) -> Html {
@@ -237,16 +252,14 @@ fn render_link(
       }
   }
   if is_image {
-    let src = if not(
-      dest.has_prefix("http://") ||
+    let src = if !(dest.has_prefix("http://") ||
       dest.has_prefix("https://") ||
-      dest.has_prefix("/")
-    ) {
+      dest.has_prefix("/")) {
       base_url + dest
     } else {
       dest
     }
-    img(class="md-img", src=src, alt=inline_to_text(lnk.text), nothing)
+    img(class="md-img", src~, alt=inline_to_text(lnk.text), nothing)
   } else {
     a(class="md-link", href=dest, [render_inline(defs, lnk.text, base_url)])
   }
@@ -254,8 +267,8 @@ fn render_link(
 
 ///|
 fn render_inline(
-  defs     : Map[String, @cmark.LabelDef],
-  inline   : @cmark.Inline,
+  defs : Map[String, @cmark.LabelDef],
+  inline : @cmark.Inline,
   base_url : String,
 ) -> Html {
   match inline {
@@ -276,8 +289,7 @@ fn render_inline(
     Image({ v: lnk, .. }) => render_link(defs, lnk, true, base_url)
     Break({ v: { ty: Hard, .. }, .. }) => @html.br()
     Break({ v: { ty: Soft, .. }, .. }) => text(" ")
-    Autolink({ v: { link, .. }, .. }) =>
-      a(class="md-link", href=link.v, link.v)
+    Autolink({ v: { link, .. }, .. }) => a(class="md-link", href=link.v, link.v)
     ExtStrikethrough({ v: st, .. }) =>
       del([render_inline(defs, st.0, base_url)])
     ExtMathSpan({ v: ms, .. }) => code(ms.tex())
@@ -286,10 +298,7 @@ fn render_inline(
 }
 
 ///|
-fn render_code_block(
-  hl : @shiki.Highlighter?,
-  cb : @cmark.CodeBlock,
-) -> Html {
+fn render_code_block(hl : @shiki.Highlighter?, cb : @cmark.CodeBlock) -> Html {
   let lang = match cb.info_string {
     Some({ v, .. }) =>
       match @cmark.CodeBlock::language_of_info_string(v) {
@@ -308,7 +317,9 @@ fn render_code_block(
     }
     let buf = StringBuilder::new()
     for i = 0; i < lines.length(); i = i + 1 {
-      if i > 0 { buf.write_char('\n') }
+      if i > 0 {
+        buf.write_char('\n')
+      }
       buf.write_string(lines[i])
     }
     buf.to_string()
@@ -329,12 +340,12 @@ fn render_code_block(
 
 ///|
 fn render_table(
-  defs     : Map[String, @cmark.LabelDef],
-  tbl      : @cmark.Table,
+  defs : Map[String, @cmark.LabelDef],
+  tbl : @cmark.Table,
   base_url : String,
 ) -> Html {
   let header_rows : Array[Html] = []
-  let body_rows   : Array[Html] = []
+  let body_rows : Array[Html] = []
   for item in tbl.rows.iter() {
     let (row_node, _blanks) = item
     match row_node.v {
@@ -365,9 +376,9 @@ fn render_table(
 
 ///|
 fn render_block(
-  hl       : @shiki.Highlighter?,
-  defs     : Map[String, @cmark.LabelDef],
-  block    : @cmark.Block,
+  hl : @shiki.Highlighter?,
+  defs : Map[String, @cmark.LabelDef],
+  block : @cmark.Block,
   base_url : String,
 ) -> Html {
   match block {
@@ -397,7 +408,9 @@ fn render_block(
     CodeBlock({ v: cb, .. }) => render_code_block(hl, cb)
     ExtMathBlock({ v: cb, .. }) => render_code_block(hl, cb)
     BlockQuote({ v: { block: inner, .. }, .. }) =>
-      blockquote(class="md-blockquote", [render_block(hl, defs, inner, base_url)])
+      blockquote(class="md-blockquote", [
+        render_block(hl, defs, inner, base_url),
+      ])
     List({ v: { ty, items, .. }, .. }) => {
       let list_items : Array[Html] = []
       for item in items.iter() {
@@ -427,8 +440,8 @@ fn render_block(
 
 ///|
 fn render_markdown(
-  hl       : @shiki.Highlighter?,
-  src      : String,
+  hl : @shiki.Highlighter?,
+  src : String,
   base_url : String,
 ) -> Html {
   let doc = @cmark.Doc::from_string(heading_auto_ids=true, strict=false, src)
@@ -440,7 +453,7 @@ fn render_markdown(
 ///|
 fn view_tour_sidebar(
   dispatch : Dispatch[Msg],
-  tm       : TourModel,
+  tm : TourModel,
   chapters : Array[TourChapter],
 ) -> Html {
   let items = chapters.mapi(fn(i, ch) {
@@ -466,9 +479,7 @@ fn view_tour_toc(toc : Array[TocEntry]) -> Html {
   } else {
     let items = toc.map(fn(entry) {
       let cls = "tour-toc-item tour-toc-item--h\{entry.level}"
-      li(class=cls, [
-        a(class="tour-toc-link", href="#\{entry.id}", entry.text),
-      ])
+      li(class=cls, [a(class="tour-toc-link", href="#\{entry.id}", entry.text)])
     })
     div(class="tour-sidebar-right", [
       p(class="tour-toc-heading", "On this page"),

@@ -1,4 +1,3 @@
-
 ///|
 #cfg(target="js")
 fn main {

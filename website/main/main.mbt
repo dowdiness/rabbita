@@ -1,12 +1,45 @@
 ///|
 using @html {
-  a, blockquote, button, code, del, div, em, footer, fragment, h1, h2, h3,
-  h4, h5, h6, header, hr, img, li, main_, nav, nothing, ol, p, pre, section,
-  span, strong, table, tbody, td, text, th, thead, tr, ul,
+  a,
+  blockquote,
+  button,
+  code,
+  del,
+  div,
+  em,
+  footer,
+  fragment,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  header,
+  hr,
+  img,
+  li,
+  main_,
+  nav,
+  nothing,
+  ol,
+  p,
+  pre,
+  section,
+  span,
+  strong,
+  table,
+  tbody,
+  td,
+  text,
+  th,
+  thead,
+  tr,
+  ul,
 }
 
 ///|
-using @rabbita { type Dispatch, type Html, type Cmd, batch }
+using @rabbita {type Dispatch, type Html, type Cmd, batch}
 
 ///|
 enum Theme {
@@ -17,15 +50,18 @@ enum Theme {
 
 ///|
 struct HomeModel {
-  hero_tab    : Int
-  cmp_idx     : Int
-  cmp_anim    : Bool
+  hero_tab : Int
+  cmp_idx : Int
+  cmp_anim : Bool
   copied_step : Int?
 }
 
 ///|
 let init_home : HomeModel = {
-  hero_tab: 0, cmp_idx: 0, cmp_anim: false, copied_step: None,
+  hero_tab: 0,
+  cmp_idx: 0,
+  cmp_anim: false,
+  copied_step: None,
 }
 
 ///|
@@ -54,11 +90,11 @@ enum Msg {
 
 ///|
 struct Model {
-  menu_open   : Bool
-  theme       : Theme
-  page        : Page
+  menu_open : Bool
+  theme : Theme
+  page : Page
   highlighter : @shiki.Highlighter?
-  chapters    : Array[TourChapter]
+  chapters : Array[TourChapter]
 }
 
 ///|
@@ -79,7 +115,8 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
       )
     SelectTab(t) =>
       match model.page {
-        Home(hm) => (@rabbita.none, { ..model, page: Home({ ..hm, hero_tab: t }) })
+        Home(hm) =>
+          (@rabbita.none, { ..model, page: Home({ ..hm, hero_tab: t }) })
         _ => (@rabbita.none, model)
       }
     SelectCmpIdx(i) =>
@@ -87,7 +124,10 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
         Home(hm) =>
           (
             @rabbita.none,
-            { ..model, page: Home({ ..hm, cmp_idx: i, cmp_anim: not(hm.cmp_anim) }) },
+            {
+              ..model,
+              page: Home({ ..hm, cmp_idx: i, cmp_anim: not(hm.cmp_anim) }),
+            },
           )
         _ => (@rabbita.none, model)
       }
@@ -118,7 +158,8 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
       }
     ClearCopied =>
       match model.page {
-        Home(hm) => (@rabbita.none, { ..model, page: Home({ ..hm, copied_step: None }) })
+        Home(hm) =>
+          (@rabbita.none, { ..model, page: Home({ ..hm, copied_step: None }) })
         _ => (@rabbita.none, model)
       }
     SelectChapter(i) =>
@@ -134,19 +175,30 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
           }
           (
             @nav.push_url(tour_base_url() + path),
-            { ..model, page: Tour({ chapter_idx: i, content: "", failed: false }) },
+            {
+              ..model,
+              page: Tour({ chapter_idx: i, content: "", failed: false }),
+            },
           )
         }
         _ => (@rabbita.none, model)
       }
     TourContent(s) =>
       match model.page {
-        Tour(tm) => (@rabbita.none, { ..model, page: Tour({ ..tm, content: s, failed: false }) })
+        Tour(tm) =>
+          (
+            @rabbita.none,
+            { ..model, page: Tour({ ..tm, content: s, failed: false }) },
+          )
         _ => (@rabbita.none, model)
       }
     TourFailed =>
       match model.page {
-        Tour(tm) => (@rabbita.none, { ..model, page: Tour({ ..tm, content: "", failed: true }) })
+        Tour(tm) =>
+          (
+            @rabbita.none,
+            { ..model, page: Tour({ ..tm, content: "", failed: true }) },
+          )
         _ => (@rabbita.none, model)
       }
     MenuLoaded(chs) => (@rabbita.none, { ..model, chapters: chs })
@@ -157,7 +209,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
         Internal(url) => (@nav.push_url(url.to_string()), model)
         External(url) => (@nav.load(url), model)
       }
-    UrlChanged(url) => {
+    UrlChanged(url) =>
       if is_tour_url(model.chapters, url.path) {
         let idx = chapter_idx_from_path(model.chapters, url.path)
         let scroll_cmd = match url.fragment {
@@ -174,7 +226,10 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
         } else {
           (
             batch([fetch_chapter(dispatch, model.chapters, idx), scroll_cmd]),
-            { ..model, page: Tour({ chapter_idx: idx, content: "", failed: false }) },
+            {
+              ..model,
+              page: Tour({ chapter_idx: idx, content: "", failed: false }),
+            },
           )
         }
       } else {
@@ -186,9 +241,8 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
           Some(frag) => scroll_to_heading(frag)
           None => @nav.scroll_to_top()
         }
-        (cmd, { ..model, page })
+        (cmd, { ..model, page, })
       }
-    }
   }
 }
 
@@ -199,8 +253,7 @@ let github_url : String = "https://github.com/moonbit-community/rabbita"
 let docs_url : String = "https://mooncakes.io/docs/moonbit-community/rabbita/"
 
 ///|
-let template_url : String =
-  "https://github.com/moonbit-community/rabbita-template"
+let template_url : String = "https://github.com/moonbit-community/rabbita-template"
 
 ///|
 let code_counter : String =
@@ -299,8 +352,8 @@ let cmp_mb_update : String =
 
 ///|
 struct CmpEntry {
-  label  : String
-  desc   : String
+  label : String
+  desc : String
   js_src : String
   mb_src : String
 }
@@ -308,20 +361,20 @@ struct CmpEntry {
 ///|
 let cmp_entries : Array[CmpEntry] = [
   {
-    label:  "Pattern matching",
-    desc:   "Exhaustive by default. No fallthrough, no forgotten cases.",
+    label: "Pattern matching",
+    desc: "Exhaustive by default. No fallthrough, no forgotten cases.",
     js_src: cmp_js_match,
     mb_src: cmp_mb_match,
   },
   {
-    label:  "if / match as expressions",
-    desc:   "Control flow returns values directly. No IIFE wrappers, no ternary pyramids.",
+    label: "if / match as expressions",
+    desc: "Control flow returns values directly. No IIFE wrappers, no ternary pyramids.",
     js_src: cmp_js_expr,
     mb_src: cmp_mb_expr,
   },
   {
-    label:  "Record update",
-    desc:   "Pure, concise, type-checked. Only the fields you change.",
+    label: "Record update",
+    desc: "Pure, concise, type-checked. Only the fields you change.",
     js_src: cmp_js_update,
     mb_src: cmp_mb_update,
   },
@@ -329,7 +382,8 @@ let cmp_entries : Array[CmpEntry] = [
 
 // ─── Feature Icons ────────────────────────────────────────────────────────
 
-///| Arrow with source dot — represents a single-direction flow
+///|
+/// Arrow with source dot — represents a single-direction flow
 fn icon_flow() -> Html {
   @svg.svg(view_box="0 0 24 24", width=24, height=24, class="feat-icon", [
     @svg.circle(cx=4, cy=12, r=2, fill="currentColor"),
@@ -342,7 +396,8 @@ fn icon_flow() -> Html {
   ])
 }
 
-///| Shield with checkmark — represents type safety
+///|
+/// Shield with checkmark — represents type safety
 fn icon_shield() -> Html {
   @svg.svg(view_box="0 0 24 24", width=24, height=24, class="feat-icon", [
     @svg.path(
@@ -360,7 +415,8 @@ fn icon_shield() -> Html {
   ])
 }
 
-///| Stacked layers — represents modular, composable cells
+///|
+/// Stacked layers — represents modular, composable cells
 fn icon_layers() -> Html {
   @svg.svg(view_box="0 0 24 24", width=24, height=24, class="feat-icon", [
     @svg.path(
@@ -384,7 +440,8 @@ fn icon_layers() -> Html {
   ])
 }
 
-///| Package box — represents small bundle size
+///|
+/// Package box — represents small bundle size
 fn icon_box() -> Html {
   @svg.svg(view_box="0 0 24 24", width=24, height=24, class="feat-icon", [
     @svg.path(
@@ -405,7 +462,8 @@ fn icon_box() -> Html {
 
 // ─── Theme Toggle Icons ───────────────────────────────────────────────────
 
-///| Sun — shown when theme is Light
+///|
+/// Sun — shown when theme is Light
 fn icon_sun() -> Html {
   @svg.svg(view_box="0 0 24 24", width=20, height=20, class="theme-icon", [
     @svg.circle(
@@ -425,7 +483,8 @@ fn icon_sun() -> Html {
   ])
 }
 
-///| Crescent moon — shown when theme is Dark
+///|
+/// Crescent moon — shown when theme is Dark
 fn icon_moon() -> Html {
   @svg.svg(view_box="0 0 24 24", width=20, height=20, class="theme-icon", [
     @svg.path(
@@ -437,7 +496,8 @@ fn icon_moon() -> Html {
   ])
 }
 
-///| Half-filled circle — left half filled (dark), right half empty (light)
+///|
+/// Half-filled circle — left half filled (dark), right half empty (light)
 fn icon_auto() -> Html {
   @svg.svg(view_box="0 0 24 24", width=20, height=20, class="theme-icon", [
     @svg.circle(
@@ -463,7 +523,8 @@ fn theme_icon(theme : Theme) -> Html {
 
 // ─── Navigation ───────────────────────────────────────────────────────────
 
-///| Diagonal arrow — external link indicator
+///|
+/// Diagonal arrow — external link indicator
 fn icon_ext_link() -> Html {
   @svg.svg(view_box="0 0 12 12", width=10, height=10, class="nav-ext-icon", [
     @svg.path(
@@ -471,33 +532,42 @@ fn icon_ext_link() -> Html {
       fill="none",
       stroke="currentColor",
       stroke_width=2,
-      attrs=@svg.Attrs::build()
-        .stroke_linecap("round")
-        .stroke_linejoin("round"),
+      attrs=@svg.Attrs::build().stroke_linecap("round").stroke_linejoin("round"),
     ),
   ])
 }
 
 ///|
 fn hamburger(is_open : Bool) -> Html {
-  div(
-    class=if is_open { "hamburger is-open" } else { "hamburger" },
-    [
-      div(class="bar", nothing),
-      div(class="bar", nothing),
-      div(class="bar", nothing),
-    ],
-  )
+  div(class=if is_open { "hamburger is-open" } else { "hamburger" }, [
+    div(class="bar", nothing),
+    div(class="bar", nothing),
+    div(class="bar", nothing),
+  ])
 }
 
 ///|
 fn view_nav(dispatch : Dispatch[Msg], model : Model) -> Html {
-  let is_home = match model.page { Home(_) => true; _ => false }
-  let is_tour = match model.page { Tour(_) => true; _ => false }
+  let is_home = match model.page {
+    Home(_) => true
+    _ => false
+  }
+  let is_tour = match model.page {
+    Tour(_) => true
+    _ => false
+  }
   let home_cls = if is_home { "nav-link nav-link--active" } else { "nav-link" }
   let tour_cls = if is_tour { "nav-link nav-link--active" } else { "nav-link" }
-  let home_m = if is_home { "mobile-link mobile-link--active" } else { "mobile-link" }
-  let tour_m = if is_tour { "mobile-link mobile-link--active" } else { "mobile-link" }
+  let home_m = if is_home {
+    "mobile-link mobile-link--active"
+  } else {
+    "mobile-link"
+  }
+  let tour_m = if is_tour {
+    "mobile-link mobile-link--active"
+  } else {
+    "mobile-link"
+  }
   header(class="site-header", [
     nav(class="navbar", [
       a(class="nav-logo", href=github_url, "Rabbita"),
@@ -546,13 +616,13 @@ fn view_nav(dispatch : Dispatch[Msg], model : Model) -> Html {
 ///|
 struct HeroTabEntry {
   label : String
-  src   : String
+  src : String
 }
 
 ///|
 let hero_tabs : Array[HeroTabEntry] = [
   { label: "Counter", src: code_counter },
-  { label: "SSR",     src: code_ssr     },
+  { label: "SSR", src: code_ssr },
 ]
 
 ///|
@@ -651,21 +721,15 @@ fn view_features() -> Html {
 ///|
 fn dual_block(hl : @shiki.Highlighter, src : String, lang : String) -> Html {
   div(class="code-dual", [
-    div(class="code-light", [
-      hl.code_to_html(src, lang=lang, theme="github-light"),
-    ]),
+    div(class="code-light", [hl.code_to_html(src, lang~, theme="github-light")]),
     div(class="code-dark", [
-      hl.code_to_html(src, lang=lang, theme="github-dark-default"),
+      hl.code_to_html(src, lang~, theme="github-dark-default"),
     ]),
   ])
 }
 
 ///|
-fn cmp_card(
-  hl : @shiki.Highlighter?,
-  js_src : String,
-  mb_src : String
-) -> Html {
+fn cmp_card(hl : @shiki.Highlighter?, js_src : String, mb_src : String) -> Html {
   let js_block = match hl {
     Some(h) => dual_block(h, js_src, "javascript")
     None => pre(class="code-block", [code(js_src)])
@@ -676,23 +740,19 @@ fn cmp_card(
   }
   div(class="cmp-card", [
     div(class="cmp-cols", [
-      div(class="cmp-col", [
-        div(class="cmp-lang-label", "JavaScript"),
-        js_block,
-      ]),
-      div(class="cmp-col", [
-        div(class="cmp-lang-label", "MoonBit"),
-        mb_block,
-      ]),
+      div(class="cmp-col", [div(class="cmp-lang-label", "JavaScript"), js_block]),
+      div(class="cmp-col", [div(class="cmp-lang-label", "MoonBit"), mb_block]),
     ]),
-    div(class="cmp-progress-track", [
-      div(class="cmp-progress-fill", nothing),
-    ]),
+    div(class="cmp-progress-track", [div(class="cmp-progress-fill", nothing)]),
   ])
 }
 
 ///|
-fn view_comparison(dispatch : Dispatch[Msg], model : Model, hm : HomeModel) -> Html {
+fn view_comparison(
+  dispatch : Dispatch[Msg],
+  model : Model,
+  hm : HomeModel,
+) -> Html {
   let entry = cmp_entries[hm.cmp_idx]
   let card = cmp_card(model.highlighter, entry.js_src, entry.mb_src)
   section(class="comparison", [
@@ -711,7 +771,11 @@ fn view_comparison(dispatch : Dispatch[Msg], model : Model, hm : HomeModel) -> H
           }),
         ),
         div(
-          class=if hm.cmp_anim { "cmp-anim-wrap anim-a" } else { "cmp-anim-wrap anim-b" },
+          class=if hm.cmp_anim {
+            "cmp-anim-wrap anim-a"
+          } else {
+            "cmp-anim-wrap anim-b"
+          },
           [card],
         ),
         p(class="cmp-nav-desc", entry.desc),
@@ -727,22 +791,17 @@ fn showcase_card(
   url : String,
   img_src : String,
   title : String,
-  desc : String
+  desc : String,
 ) -> Html {
-  a(
-    class="showcase-card",
-    href=url,
-    target=Blank,
-    [
-      div(class="showcase-thumb", [
-        img(class="showcase-thumb-img", src=img_src, alt=title, nothing),
-      ]),
-      div(class="showcase-info", [
-        span(class="showcase-title", title),
-        span(class="showcase-desc", desc),
-      ]),
-    ],
-  )
+  a(class="showcase-card", href=url, target=Blank, [
+    div(class="showcase-thumb", [
+      img(class="showcase-thumb-img", src=img_src, alt=title, nothing),
+    ]),
+    div(class="showcase-info", [
+      span(class="showcase-title", title),
+      span(class="showcase-desc", desc),
+    ]),
+  ])
 }
 
 ///|
@@ -756,16 +815,10 @@ fn view_showcase() -> Html {
       ),
       div(class="showcase-grid", [
         showcase_card(
-          github_url,
-          "rabbita.jpeg",
-          "rabbita.dev",
-          "The official Rabbita framework site — this page.",
+          github_url, "rabbita.jpeg", "rabbita.dev", "The official Rabbita framework site — this page.",
         ),
         showcase_card(
-          "https://mooncakes.io",
-          "mooncakesio.jpeg",
-          "mooncakes.io",
-          "The MoonBit package registry and documentation hub.",
+          "https://mooncakes.io", "mooncakesio.jpeg", "mooncakes.io", "The MoonBit package registry and documentation hub.",
         ),
         a(
           class="showcase-card showcase-card--submit",
@@ -789,26 +842,38 @@ fn view_showcase() -> Html {
 
 // ─── Quick Start ──────────────────────────────────────────────────────────
 
-///| Two overlapping rectangles — clipboard copy
+///|
+/// Two overlapping rectangles — clipboard copy
 fn icon_copy() -> Html {
   @svg.svg(view_box="0 0 24 24", width=15, height=15, class="qs-copy-icon", [
     @svg.rect(
-      x=9, y=9, width=13, height=13, rx=2,
-      fill="none", stroke="currentColor", stroke_width=2,
+      x=9,
+      y=9,
+      width=13,
+      height=13,
+      rx=2,
+      fill="none",
+      stroke="currentColor",
+      stroke_width=2,
     ),
     @svg.path(
       d="M 5 15 H 4 C 3 15 2 14 2 13 V 4 C 2 3 3 2 4 2 H 13 C 14 2 15 3 15 4 V 5",
-      fill="none", stroke="currentColor", stroke_width=2,
+      fill="none",
+      stroke="currentColor",
+      stroke_width=2,
     ),
   ])
 }
 
-///| Checkmark — shown after successful copy
+///|
+/// Checkmark — shown after successful copy
 fn icon_check() -> Html {
   @svg.svg(view_box="0 0 24 24", width=15, height=15, class="qs-copy-icon", [
     @svg.path(
       d="M 5 12 L 10 17 L 19 7",
-      fill="none", stroke="currentColor", stroke_width=2,
+      fill="none",
+      stroke="currentColor",
+      stroke_width=2,
       attrs=@svg.Attrs::build().stroke_linecap("round").stroke_linejoin("round"),
     ),
   ])
@@ -821,7 +886,7 @@ fn qs_step(
   num : String,
   title : String,
   cmd : String,
-  is_copied : Bool
+  is_copied : Bool,
 ) -> Html {
   div(class="qs-step", [
     div(class="qs-step-head", [
@@ -831,7 +896,11 @@ fn qs_step(
     div(class="qs-step-code-wrap", [
       pre(class="install-block qs-step-code", [code(cmd)]),
       button(
-        class=if is_copied { "qs-copy-btn qs-copy-btn--done" } else { "qs-copy-btn" },
+        class=if is_copied {
+          "qs-copy-btn qs-copy-btn--done"
+        } else {
+          "qs-copy-btn"
+        },
         on_click=batch([
           @clipboard.copy(@clipboard.Text(cmd)),
           dispatch(CopiedStep(idx)),
@@ -848,10 +917,7 @@ fn view_quickstart(dispatch : Dispatch[Msg], hm : HomeModel) -> Html {
   section(class="quickstart", [
     div(class="quickstart-inner", [
       h2(class="section-title", "Quick Start"),
-      p(
-        class="section-desc",
-        "From zero to a running app in three steps.",
-      ),
+      p(class="section-desc", "From zero to a running app in three steps."),
       div(class="qs-steps", [
         qs_step(
           dispatch,
@@ -934,7 +1000,9 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
   }
   div(class=site_class, [
     div(class="wip-banner", [
-      text("🚧  This website is a work in progress. Content may be incomplete or inaccurate."),
+      text(
+        "🚧  This website is a work in progress. Content may be incomplete or inaccurate.",
+      ),
     ]),
     view_nav(dispatch, model),
     body,
@@ -958,10 +1026,9 @@ async fn main {
     view~,
   )
   @rabbita.new(app)
-  ..with_route(
-    url_changed=url => dispatch(UrlChanged(url)),
-    url_request=req => dispatch(UrlRequest(req)),
-  )
+  ..with_route(url_changed=url => dispatch(UrlChanged(url)), url_request=req => {
+    dispatch(UrlRequest(req))
+  })
   ..with_init(
     batch([
       fetch_menu(dispatch),

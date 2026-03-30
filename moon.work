@@ -1,4 +1,4 @@
-use = [
+members = [
   "./doc",
   "./examples/shiki_editor",
   "./examples/SSR",

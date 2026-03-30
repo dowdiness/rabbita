@@ -181,10 +181,10 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
     div(class="editor-card", [
       div(class=stack_class(theme), [
         div(id="code-preview", class="preview-layer", [
-          match highlighter {
+          (match highlighter {
             Some(hl) => hl.code_to_html(code, lang~, theme~)
             None => nothing
-          },
+          }),
         ]),
         textarea(
           id="code-input",
