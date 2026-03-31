@@ -16,10 +16,9 @@ pub(all) enum CustomCommand {
   Message(Id, () -> Unit)
 }
 
-pub(all) struct CustomSubscription {
-  on_load : (&Scheduler) -> Unit
-  on_unload : (&Scheduler) -> Unit
-}
+pub(all) struct CustomSubscription((&Scheduler) -> () -> Unit)
+#deprecated
+pub fn CustomSubscription::inner(Self) -> (&Scheduler) -> () -> Unit
 
 type Id derive(Compare, Eq, Hash, Show)
 pub fn Id::new() -> Self

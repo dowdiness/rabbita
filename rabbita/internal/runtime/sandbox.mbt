@@ -105,6 +105,7 @@ pub fn Sandbox::initialize(self : Self) -> Unit {
   let root = self.root
   let element = @dom.document().get_element_by_id(self.mount).unwrap() // TODO: handle error
   self.dirty_set.add(root.cell.flags().id)
+  root.cell.init(self)
   let vnode = root.cell.view()
   let inode = vnode.insert(self, root, element.as_node(), null())
   self.root.inode = Some(inode)

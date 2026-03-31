@@ -1,5 +1,6 @@
 ///|
 pub(open) trait IsCell {
+  init(Self, &@interface.Scheduler) -> Unit
   step(Self, &@interface.Scheduler) -> Unit
   view(Self) -> VNode
   flags(Self) -> Flags

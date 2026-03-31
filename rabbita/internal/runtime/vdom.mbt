@@ -150,20 +150,16 @@ fn VNode::insert(
       parent.insert_before(e.as_node(), before)
       Text(s, e)
     }
-    // if c.dirty_flag() {
-    //   c.refersh()
-    // } 
     Slot(cell) => {
-      // sandbox.subscribe(cell, c)
       let flags = cell.flags()
+      if flags.attach_count == 0 {
+        cell.init(sandbox)
+      }
       flags.attach_count += 1
       let start = @dom.document().create_comment("")
       let end = @dom.document().create_comment("")
       let fragment = @dom.document().create_document_fragment()
       fragment.insert_before(start.as_node(), null())
-      // let inter = 
-      // match c.data().inode {
-      //   None => {
       let inst = Instance::new(cell)
       let inode = cell.view().insert(sandbox, inst, fragment.as_node(), null())
       inst.inode = Some(inode)
@@ -177,13 +173,6 @@ fn VNode::insert(
       }
       inst.link.val = Some(inst)
       parent_inst.new_childs[inst.id] = inst.link
-      //     inter
-      //   }
-      //   Some(inter) => {
-      //     inter.relocate(fragment.as_node(), null())
-      //     inter
-      //   }
-      // }
       fragment.insert_before(end.as_node(), null())
       parent.insert_before(fragment.as_node(), before)
       Slot(inst, start, end)

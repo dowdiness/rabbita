@@ -7,7 +7,4 @@ pub(open) trait Subscription {
 }
 
 ///|
-pub(all) struct CustomSubscription {
-  on_load : (&Scheduler) -> Unit
-  on_unload : (&Scheduler) -> Unit
-}
+pub(all) struct CustomSubscription ((&Scheduler) -> () -> Unit)

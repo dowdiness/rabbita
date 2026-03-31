@@ -1,5 +1,6 @@
 ///|
 priv struct TypedCell[Model, Msg] {
+  mut has_init : Bool
   model : Ref[Model]
   dispatch : @cmd.Dispatch[Msg]
   inbox : @queue.Queue[Msg]
@@ -11,7 +12,7 @@ priv struct TypedCell[Model, Msg] {
 }
 
 ///|
-type SubscriptionMap = Map[String, @interface.CustomSubscription]
+type SubscriptionMap = Map[String, () -> Unit]
 
 ///|
 /// Message dispatcher type used by a `Cell`.
@@ -21,22 +22,40 @@ type SubscriptionMap = Map[String, @interface.CustomSubscription]
 pub type Dispatch[Msg] = @cmd.Dispatch[Msg]
 
 ///|
-fn diff_sub_maps(
-  new : SubscriptionMap,
-  old : SubscriptionMap,
+impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with init(
+  self,
+  scheduler,
+) {
+  guard !self.has_init else { return }
+  self.has_init = true
+  if self.subscriptions is Some(subscriptions) {
+    let subs = subscriptions(self.dispatch, self.model.val).to_map()
+    for key, sub in subs {
+      self.sub_map[key] = sub(scheduler)
+    }
+  }
+}
+
+///|
+fn diff_subs(
+  old_subs : SubscriptionMap,
+  new_subs : Map[String, @interface.CustomSubscription],
   scheduler : &@interface.Scheduler,
 ) -> SubscriptionMap {
-  for key, sub in old {
-    if !new.contains(key) {
-      (sub.on_unload)(scheduler)
+  let sub_map = {}
+  for key, dispose in old_subs {
+    if !new_subs.contains(key) {
+      dispose()
+    } else {
+      sub_map[key] = dispose
     }
   }
-  for key, sub in new {
-    if !old.contains(key) {
-      (sub.on_load)(scheduler)
+  for key, sub in new_subs {
+    if !old_subs.contains(key) {
+      sub_map[key] = sub(scheduler)
     }
   }
-  new
+  sub_map
 }
 
 ///|
@@ -47,8 +66,9 @@ impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with step(
   if self.inbox.pop() is Some(msg) {
     let (cmd, model) = (self.update)(self.dispatch, msg, self.model.val)
     if self.subscriptions is Some(subscriptions) {
-      self.sub_map = subscriptions(self.dispatch, model).to_map()
-        |> diff_sub_maps(self.sub_map, scheduler)
+      let new_subs = subscriptions(self.dispatch, model).to_map()
+      let old_subs = self.sub_map
+      self.sub_map = diff_subs(old_subs, new_subs, scheduler)
     }
     self.model.val = model
     scheduler.add_cmds(cmd.to_array())
@@ -143,12 +163,8 @@ pub fn[Model, Msg] cell(
   let inbox = @queue.Queue::new()
   let dispatch = @cmd.make_dispatcher(flags.id, inbox)
   let model = @ref.new(model)
-  // let sub_map = if subscriptions is Some(subscriptions) {
-  //   subscriptions(dispatch, model.val).to_map() |> diff_sub_maps({}, scheduler)
-  // } else {
-  //   {}
-  // }
   Cell({
+    has_init: false,
     inbox,
     view,
     update,
@@ -230,6 +246,7 @@ pub fn[Model, Msg] cell_with_dispatch(
   (
     dispatch,
     Cell({
+      has_init: false,
       inbox,
       view,
       update,
@@ -336,6 +353,7 @@ pub fn[Model, Msg] simple_cell_with_dispatch(
   (
     dispatch,
     Cell({
+      has_init: false,
       inbox,
       view,
       update: (_, msg, model) => (none, update(msg, model)),
