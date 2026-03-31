@@ -156,7 +156,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
         select(
           id="lang-select",
           class="control-select",
-          on_change=s => dispatch(LangChanged(s)),
+          on_change=dispatch.map(lang => LangChanged(lang)),
           language_items.map(p => option(value=p.0, selected=lang == p.0, p.1)),
         ),
       ]),
@@ -165,7 +165,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
         select(
           id="theme-select",
           class="control-select",
-          on_change=s => dispatch(ThemeChanged(s)),
+          on_change=dispatch.map(theme => ThemeChanged(theme)),
           [
             ..light_theme_items.map(p => {
               option(value=p.0, selected=theme == p.0, p.1)
@@ -190,7 +190,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
           id="code-input",
           class="input-layer",
           value=code,
-          on_input=s => dispatch(Input(s)),
+          on_input=dispatch.map(code => Input(code)),
           nothing,
         ),
       ]),

@@ -26,8 +26,13 @@ jobs:
 
       - name: Install MoonBit
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s pre-release
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: MoonBit version
+        working-directory: website
+        run: |
+          moon version --all
 
       - name: Update MoonBit registry and install dependencies
         working-directory: website

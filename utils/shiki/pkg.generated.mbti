@@ -2,12 +2,12 @@
 package "Yoorkin/shiki"
 
 import {
+  "moonbit-community/rabbita/cmd",
   "moonbit-community/rabbita/html",
-  "moonbit-community/rabbita/internal/runtime",
 }
 
 // Values
-pub fn load(Array[String], Array[String], (Result[Highlighter, Error]) -> @runtime.Cmd) -> @runtime.Cmd
+pub fn load(Array[String], Array[String], (Result[Highlighter, Error]) -> @cmd.Cmd) -> @cmd.Cmd
 
 // Errors
 
