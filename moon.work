@@ -1,0 +1,9 @@
+members = [
+  "./doc",
+  "./examples/shiki_editor",
+  "./examples/SSR",
+  "./rabbita",
+  "./website",
+  "./utils/shiki",
+]
+preferred_target = "js"

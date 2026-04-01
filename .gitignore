@@ -2,3 +2,4 @@ _test
 **/.mooncakes
 **/_build
 **/node_modules
+**/dist

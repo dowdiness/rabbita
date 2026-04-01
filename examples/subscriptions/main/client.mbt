@@ -2,6 +2,9 @@
 using @html {button, code, div, h1, nothing, p}
 
 ///|
+using @common {type Keyboard, type Mouse, type Scroll, type Viewport}
+
+///|
 using @rabbita {type Cmd, type Dispatch, type Html}
 
 ///|
@@ -20,12 +23,12 @@ enum Msg {
   SelectTab(Tab)
   Tick
   ToggleTicker
-  Resized(Int, Int)
-  Scrolled(Int, Int, Int, Int)
-  KeyDownCaptured(String, String, Bool)
-  KeyUpCaptured(String, String)
+  ViewportChanged(Viewport)
+  PageScrolled(Scroll)
+  KeyPressed(Keyboard)
+  KeyReleased(Keyboard)
   VisibilityChanged(Bool)
-  MouseMoved(Int, Int)
+  MouseMoved(Mouse)
 }
 
 ///|
@@ -90,17 +93,13 @@ fn tab_title(tab : Tab) -> String {
 fn tab_signature(tab : Tab) -> String {
   match tab {
     Every => "@sub.every(1000, dispatch(Tick))"
-    Resize => "@sub.on_resize(dispatch.map(v => Resized(v.width, v.height)))"
-    Scroll =>
-      "@sub.on_scroll(dispatch.map(s => { let p = s.offset_pos(); Scrolled(p.x, p.y, s.width(), s.height()) }))"
-    KeyDown =>
-      "@sub.on_key_down(dispatch.map(e => KeyDownCaptured(e.key(), e.code(), e.repeat())))"
-    KeyUp =>
-      "@sub.on_key_up(dispatch.map(e => KeyUpCaptured(e.key(), e.code())))"
+    Resize => "@sub.on_resize(v => dispatch(ViewportChanged(v)))"
+    Scroll => "@sub.on_scroll(s => dispatch(PageScrolled(s)))"
+    KeyDown => "@sub.on_key_down(k => dispatch(KeyPressed(k)))"
+    KeyUp => "@sub.on_key_up(k => dispatch(KeyReleased(k)))"
     VisibilityChange =>
-      "@sub.on_visibility_change(dispatch.map(hidden => VisibilityChanged(hidden)))"
-    MouseMove =>
-      "@sub.on_mouse_move(dispatch.map(e => { let p = e.client_pos(); MouseMoved(p.x, p.y) }))"
+      "@sub.on_visibility_change(hidden => dispatch(VisibilityChanged(hidden)))"
+    MouseMove => "@sub.on_mouse_move(m => dispatch(MouseMoved(m)))"
   }
 }
 
@@ -201,47 +200,49 @@ fn update(_ : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
     SelectTab(tab) => (@rabbita.none, { ..model, active_tab: tab })
     Tick => (@rabbita.none, { ..model, tick_count: model.tick_count + 1 })
     ToggleTicker => (@rabbita.none, { ..model, ticking: !model.ticking })
-    Resized(width, height) =>
+    ViewportChanged(viewport) =>
       (
         @rabbita.none,
         {
           ..model,
           resize_count: model.resize_count + 1,
-          viewport_width: width,
-          viewport_height: height,
+          viewport_width: viewport.width,
+          viewport_height: viewport.height,
         },
       )
-    Scrolled(x, y, width, height) =>
+    PageScrolled(scroll) => {
+      let pos = scroll.offset_pos()
       (
         @rabbita.none,
         {
           ..model,
           scroll_count: model.scroll_count + 1,
-          scroll_x: x,
-          scroll_y: y,
-          scroll_width: width,
-          scroll_height: height,
+          scroll_x: pos.x,
+          scroll_y: pos.y,
+          scroll_width: scroll.width(),
+          scroll_height: scroll.height(),
         },
       )
-    KeyDownCaptured(key, code, repeat) =>
+    }
+    KeyPressed(event) =>
       (
         @rabbita.none,
         {
           ..model,
           keydown_count: model.keydown_count + 1,
-          last_key_down: key,
-          last_key_down_code: code,
-          last_key_down_repeat: repeat,
+          last_key_down: event.key(),
+          last_key_down_code: event.code(),
+          last_key_down_repeat: event.repeat(),
         },
       )
-    KeyUpCaptured(key, code) =>
+    KeyReleased(event) =>
       (
         @rabbita.none,
         {
           ..model,
           keyup_count: model.keyup_count + 1,
-          last_key_up: key,
-          last_key_up_code: code,
+          last_key_up: event.key(),
+          last_key_up_code: event.code(),
         },
       )
     VisibilityChanged(hidden) =>
@@ -253,11 +254,18 @@ fn update(_ : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
           visibility_count: model.visibility_count + 1,
         },
       )
-    MouseMoved(x, y) =>
+    MouseMoved(event) => {
+      let pos = event.client_pos()
       (
         @rabbita.none,
-        { ..model, mouse_moves: model.mouse_moves + 1, mouse_x: x, mouse_y: y },
+        {
+          ..model,
+          mouse_moves: model.mouse_moves + 1,
+          mouse_x: pos.x,
+          mouse_y: pos.y,
+        },
       )
+    }
   }
 }
 
@@ -270,38 +278,13 @@ fn subscriptions(dispatch : Dispatch[Msg], model : Model) -> @sub.Sub {
       } else {
         @sub.none
       }
-    Resize =>
-      @sub.on_resize(
-        dispatch.map(viewport => Resized(viewport.width, viewport.height)),
-      )
-    Scroll =>
-      @sub.on_scroll(
-        dispatch.map(scroll => {
-          let pos = scroll.offset_pos()
-          Scrolled(pos.x, pos.y, scroll.width(), scroll.height())
-        }),
-      )
-    KeyDown =>
-      @sub.on_key_down(
-        dispatch.map(event => {
-          KeyDownCaptured(event.key(), event.code(), event.repeat())
-        }),
-      )
-    KeyUp =>
-      @sub.on_key_up(
-        dispatch.map(event => KeyUpCaptured(event.key(), event.code())),
-      )
+    Resize => @sub.on_resize(v => dispatch(ViewportChanged(v)))
+    Scroll => @sub.on_scroll(s => dispatch(PageScrolled(s)))
+    KeyDown => @sub.on_key_down(k => dispatch(KeyPressed(k)))
+    KeyUp => @sub.on_key_up(k => dispatch(KeyReleased(k)))
     VisibilityChange =>
-      @sub.on_visibility_change(
-        dispatch.map(hidden => VisibilityChanged(hidden)),
-      )
-    MouseMove =>
-      @sub.on_mouse_move(
-        dispatch.map(event => {
-          let pos = event.client_pos()
-          MouseMoved(pos.x, pos.y)
-        }),
-      )
+      @sub.on_visibility_change(h => dispatch(VisibilityChanged(h)))
+    MouseMove => @sub.on_mouse_move(m => dispatch(MouseMoved(m)))
   }
 }
 
