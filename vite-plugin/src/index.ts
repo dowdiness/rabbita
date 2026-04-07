@@ -3,8 +3,10 @@ import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-type MoonModConfig = {
+type MoonProjectConfig = {
+  moduleRoot: string;
   modPath: string;
+  workspaceRoot?: string;
 };
 
 type MoonBuildPackage = {
@@ -31,6 +33,10 @@ type RabbitaOptions = {
 
 const VIRTUAL_MAIN_ENTRY_ID = '\0rabbita:main-entry';
 
+function defaultProjectRoot(): string {
+  return process.env.INIT_CWD ?? process.cwd();
+}
+
 function normalizePathLike(input: string): string {
   return input.replaceAll('\\', '/').replace(/^\/+|\/+$/g, '');
 }
@@ -41,11 +47,25 @@ function moduleOutputName(modPath: string): string {
   return segments[segments.length - 1] ?? normalized;
 }
 
-function probeMoonBitModule(): MoonModConfig {
-  const cwd = process.cwd();
-  const modJsonPath = path.join(cwd, 'moon.mod.json');
+function findNearestMoonWork(startDir: string): string | undefined {
+  let current = startDir;
+  while (true) {
+    const workPath = path.join(current, 'moon.work');
+    if (fs.existsSync(workPath)) {
+      return current;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) {
+      return undefined;
+    }
+    current = parent;
+  }
+}
+
+function probeMoonBitProject(moduleRoot: string): MoonProjectConfig {
+  const modJsonPath = path.join(moduleRoot, 'moon.mod.json');
   if (!fs.existsSync(modJsonPath)) {
-    throw new Error(`Cannot find MoonBit module (moon.mod.json) in ${cwd}`);
+    throw new Error(`Cannot find moon.mod.json in ${moduleRoot}`);
   }
 
   const json = JSON.parse(fs.readFileSync(modJsonPath, 'utf8')) as { name?: string };
@@ -54,20 +74,23 @@ function probeMoonBitModule(): MoonModConfig {
   }
 
   return {
+    moduleRoot,
     modPath: json.name,
+    workspaceRoot: findNearestMoonWork(moduleRoot),
   };
 }
 
-function buildRootCandidates(cwd: string): Array<string> {
-  return [path.join(cwd, '_build'), path.join(cwd, 'target')];
+function buildRootCandidates(project: MoonProjectConfig): Array<string> {
+  const candidates = project.workspaceRoot
+    ? [path.join(project.workspaceRoot, '_build'), path.join(project.moduleRoot, '_build')]
+    : [path.join(project.moduleRoot, '_build')];
+  return [...new Set(candidates.map(candidate => path.resolve(candidate)))];
 }
 
-function readBuildMetadata(cwd: string): MoonBuildMetadata | undefined {
-  for (const buildRoot of buildRootCandidates(cwd)) {
-    const metadataPath = path.join(buildRoot, 'packages.json');
-    if (fs.existsSync(metadataPath)) {
-      return JSON.parse(fs.readFileSync(metadataPath, 'utf8')) as MoonBuildMetadata;
-    }
+function readBuildMetadata(buildRoot: string): MoonBuildMetadata | undefined {
+  const metadataPath = path.join(buildRoot, 'packages.json');
+  if (fs.existsSync(metadataPath)) {
+    return JSON.parse(fs.readFileSync(metadataPath, 'utf8')) as MoonBuildMetadata;
   }
   return undefined;
 }
@@ -76,6 +99,7 @@ function pickMainPackage(
   metadata: MoonBuildMetadata | undefined,
   modulePath: string,
   preferredPackagePath?: string,
+  allowFallback = true,
 ): MoonBuildPackage | undefined {
   const mainPackages = (metadata?.packages ?? []).filter(pkg => pkg['is-main'] === true);
   if (mainPackages.length === 0) {
@@ -97,7 +121,15 @@ function pickMainPackage(
   }
 
   const ownModuleMain = mainPackages.find(pkg => pkg.root === modulePath);
-  return ownModuleMain ?? mainPackages[0];
+  if (ownModuleMain) {
+    return ownModuleMain;
+  }
+
+  if (!allowFallback) {
+    return undefined;
+  }
+
+  return mainPackages[0];
 }
 
 function collectJsFiles(buildDir: string): Array<string> {
@@ -136,7 +168,7 @@ function toJsOutput(jsPath: string): JsOutput {
 function findJsOutputInBuildRoot(
   buildRoot: string,
   mode: BuildMode,
-  modConfig: MoonModConfig,
+  modPath: string,
   mainPkg?: MoonBuildPackage,
 ): JsOutput | undefined {
   const buildDir = path.join(buildRoot, 'js', mode, 'build');
@@ -144,13 +176,22 @@ function findJsOutputInBuildRoot(
     return undefined;
   }
 
-  const moduleName = moduleOutputName(modConfig.modPath);
+  const moduleName = moduleOutputName(modPath);
+  const packageRoot = normalizePathLike(mainPkg?.root ?? '');
   const packageRel = normalizePathLike(mainPkg?.rel ?? '');
 
   const explicitCandidates: Array<string> = [path.join(buildDir, `${moduleName}.js`)];
   if (packageRel !== '') {
     explicitCandidates.push(path.join(buildDir, packageRel, `${path.basename(packageRel)}.js`));
     explicitCandidates.push(path.join(buildDir, `${packageRel}.js`));
+  }
+  if (packageRoot !== '' && packageRel !== '') {
+    explicitCandidates.push(
+      path.join(buildDir, packageRoot, packageRel, `${path.basename(packageRel)}.js`),
+    );
+  }
+  if (packageRoot !== '') {
+    explicitCandidates.push(path.join(buildDir, packageRoot, `${moduleOutputName(packageRoot)}.js`));
   }
 
   for (const candidate of explicitCandidates) {
@@ -167,6 +208,16 @@ function findJsOutputInBuildRoot(
   const byModuleName = discovered.find(file => path.basename(file) === `${moduleName}.js`);
   if (byModuleName) {
     return toJsOutput(byModuleName);
+  }
+
+  if (packageRoot !== '' && packageRel !== '') {
+    const rootRelSuffix = normalizePathLike(
+      path.join(packageRoot, packageRel, `${path.basename(packageRel)}.js`),
+    );
+    const byRootAndRel = discovered.find(file => normalizePathLike(file).endsWith(rootRelSuffix));
+    if (byRootAndRel) {
+      return toJsOutput(byRootAndRel);
+    }
   }
 
   if (packageRel !== '') {
@@ -189,13 +240,28 @@ function findJsOutputInBuildRoot(
 }
 
 function resolveJsOutput(
-  cwd: string,
+  buildRoots: Array<string>,
   mode: BuildMode,
-  modConfig: MoonModConfig,
-  mainPkg?: MoonBuildPackage,
+  project: MoonProjectConfig,
+  preferredPackagePath?: string,
 ): JsOutput | undefined {
-  for (const buildRoot of buildRootCandidates(cwd)) {
-    const output = findJsOutputInBuildRoot(buildRoot, mode, modConfig, mainPkg);
+  const localBuildRoot = path.resolve(path.join(project.moduleRoot, '_build'));
+  for (const buildRoot of buildRoots) {
+    const metadata = readBuildMetadata(buildRoot);
+    if (!metadata) {
+      continue;
+    }
+    const allowFallback = path.resolve(buildRoot) === localBuildRoot;
+    const mainPkg = pickMainPackage(
+      metadata,
+      project.modPath,
+      preferredPackagePath,
+      allowFallback,
+    );
+    if (!mainPkg && !allowFallback) {
+      continue;
+    }
+    const output = findJsOutputInBuildRoot(buildRoot, mode, project.modPath, mainPkg);
     if (output) {
       return output;
     }
@@ -203,9 +269,9 @@ function resolveJsOutput(
   return undefined;
 }
 
-function runMoonBuild(mode: BuildMode): void {
+function runMoonBuild(mode: BuildMode, cwd: string): void {
   const args = ['build', '--target', 'js', mode === 'release' ? '--release' : '--debug'];
-  const result = spawnSync('moon', args, { encoding: 'utf8' });
+  const result = spawnSync('moon', args, { cwd, encoding: 'utf8' });
   if (result.status === 0) {
     return;
   }
@@ -219,6 +285,7 @@ function shouldRebuildForFile(filePath: string): boolean {
   const fileName = path.basename(filePath);
   return filePath.endsWith('.mbt')
     || filePath.endsWith('.mbti')
+    || fileName === 'moon.work'
     || fileName === 'moon.mod.json'
     || fileName === 'moon.pkg'
     || fileName === 'moon.pkg.json';
@@ -243,38 +310,35 @@ function shouldRebuildForFile(filePath: string): boolean {
  */
 export function rabbita(options: RabbitaOptions = {}): Plugin {
   const mainPackagePath = options.main;
-  const cwd = process.cwd();
-  const modConfig = probeMoonBitModule();
+  let project: MoonProjectConfig | undefined = undefined;
   let isBuild = false;
   let latestOutput: JsOutput | undefined = undefined;
   let rebuildTimer: ReturnType<typeof setTimeout> | undefined = undefined;
-  const watchTargets = [
-    path.join(cwd, '**/*.mbt'),
-    path.join(cwd, '**/*.mbti'),
-    path.join(cwd, '**/moon.pkg'),
-    path.join(cwd, '**/moon.pkg.json'),
-    path.join(cwd, 'moon.mod.json'),
-  ];
+
+  function ensureProject(root: string = defaultProjectRoot()): MoonProjectConfig {
+    if (!project || project.moduleRoot !== root) {
+      project = probeMoonBitProject(root);
+    }
+    return project;
+  }
 
   function runMoonbitBuild(): JsOutput {
+    const currentProject = project ?? ensureProject();
     const primaryMode: BuildMode = isBuild ? 'release' : 'debug';
-    runMoonBuild(primaryMode);
+    const buildRoots = buildRootCandidates(currentProject);
+    runMoonBuild(primaryMode, currentProject.moduleRoot);
 
-    const metadata = readBuildMetadata(cwd);
-    const mainPkg = pickMainPackage(metadata, modConfig.modPath, mainPackagePath);
-    let output = resolveJsOutput(cwd, primaryMode, modConfig, mainPkg);
+    let output = resolveJsOutput(buildRoots, primaryMode, currentProject, mainPackagePath);
 
     if (!output && primaryMode === 'release') {
-      runMoonBuild('debug');
-      const debugMetadata = readBuildMetadata(cwd);
-      const debugMainPkg = pickMainPackage(debugMetadata, modConfig.modPath, mainPackagePath);
-      output = resolveJsOutput(cwd, 'debug', modConfig, debugMainPkg);
+      runMoonBuild('debug', currentProject.moduleRoot);
+      output = resolveJsOutput(buildRoots, 'debug', currentProject, mainPackagePath);
     }
 
     if (!output) {
       throw new Error(
-        `Cannot locate generated JS output under "_build/js/*/build" or "target/js/*/build". `
-        + `Please verify your MoonBit main package and build artifacts.`,
+        `Cannot locate generated JS output under ${buildRoots.map(root => `"${root}"`).join(', ')}. `
+        + 'Please verify your MoonBit main package and build artifacts.',
       );
     }
 
@@ -337,15 +401,32 @@ export function rabbita(options: RabbitaOptions = {}): Plugin {
       isBuild = command === 'build';
     },
 
+    configResolved(config) {
+      ensureProject(config.root);
+    },
+
     buildStart() {
       try {
-        runMoonbitBuild();
+        if (project) {
+          runMoonbitBuild();
+        }
       } catch (err: any) {
         console.log('buildStart error', err);
       }
     },
 
     configureServer(server) {
+      const currentProject = ensureProject(server.config.root);
+      const watchTargets = [
+        path.join(currentProject.moduleRoot, '**/*.mbt'),
+        path.join(currentProject.moduleRoot, '**/*.mbti'),
+        path.join(currentProject.moduleRoot, '**/moon.pkg'),
+        path.join(currentProject.moduleRoot, '**/moon.pkg.json'),
+        path.join(currentProject.moduleRoot, 'moon.mod.json'),
+      ];
+      if (currentProject.workspaceRoot) {
+        watchTargets.push(path.join(currentProject.workspaceRoot, 'moon.work'));
+      }
       server.watcher.add(watchTargets);
       const onFsChange = (filePath: string) => {
         scheduleRebuild(server, filePath);
@@ -358,8 +439,13 @@ export function rabbita(options: RabbitaOptions = {}): Plugin {
     resolveId(source) {
       const cleanSource = source.split('?', 1)[0];
       let entryFileName = latestOutput ? path.basename(latestOutput.jsPath) : undefined;
-      if (!entryFileName && cleanSource.endsWith('.js')) {
+      if (cleanSource.endsWith('.js')) {
         try {
+          const needsRefresh = !entryFileName
+            || (entryFileName && cleanSource !== `/${entryFileName}` && cleanSource !== entryFileName);
+          if (needsRefresh) {
+            latestOutput = undefined;
+          }
           entryFileName = path.basename(ensureOutput().jsPath);
         } catch {
           // buildStart will report build errors

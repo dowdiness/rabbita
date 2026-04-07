@@ -1,0 +1,8 @@
+{
+  "name": "test/project4-a",
+  "deps": {
+    "moonbit-community/rabbita": {
+      "path": "../../../../rabbita"
+    }
+  }
+}
