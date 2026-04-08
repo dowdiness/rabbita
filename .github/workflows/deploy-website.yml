@@ -26,7 +26,7 @@ jobs:
 
       - name: Install MoonBit
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s pre-release
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash 
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: MoonBit version
@@ -38,7 +38,6 @@ jobs:
         working-directory: website
         run: |
           moon update
-          moon install
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -55,7 +54,9 @@ jobs:
 
       - name: Build
         working-directory: website
-        run: npm run build
+        run: |
+          moon check --target js
+          npm run build
         env:
           VITE_BASE: ${{ steps.pages.outputs.base_path }}
 
