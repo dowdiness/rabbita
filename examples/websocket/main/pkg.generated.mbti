@@ -1,0 +1,18 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "example/websocket/main"
+
+// Values
+
+// Errors
+
+// Types and methods
+type ChatEntry
+
+type Model
+
+type Msg
+
+// Type aliases
+
+// Traits
+
