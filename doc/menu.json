@@ -1,6 +1,21 @@
 [
-  { "title": "Introduction", "path": "001_intro" },
-  { "title": "Writing HTML", "path": "002_writing_html" },
-  { "title": "Using Command", "path": "004_using_command" },
-  { "title": "Using Router", "path": "003_router" }
+  {
+    "section": "Rabbita Basic",
+    "items": [
+      { "title": "Introduction", "path": "001_intro" },
+      { "title": "Writing HTML", "path": "002_writing_html" },
+      { "title": "Using Command", "path": "004_using_command" },
+      { "title": "Using Router", "path": "003_router" }
+    ]
+  },
+  {
+    "section": "Design Patterns",
+    "items": []
+  },
+  {
+    "section": "MoonBit Tricks",
+    "items": [
+      { "title": "Suberror as Extensible Enum", "path": "suberror_as_extensible_enum" }
+    ]
+  }
 ]
