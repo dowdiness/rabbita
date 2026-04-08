@@ -4,8 +4,9 @@
     "items": [
       { "title": "Introduction", "path": "001_intro" },
       { "title": "Writing HTML", "path": "002_writing_html" },
-      { "title": "Using Command", "path": "004_using_command" },
-      { "title": "Using Router", "path": "003_router" }
+      { "title": "Command", "path": "004_using_command" },
+      { "title": "Subscriptions", "path": "using_subscriptions" },
+      { "title": "Router", "path": "003_router" }
     ]
   },
   {
