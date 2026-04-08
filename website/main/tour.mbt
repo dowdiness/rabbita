@@ -21,14 +21,15 @@ struct TocEntry {
 pub(all) struct TourChapter {
   title : String
   path : String // e.g. "001_intro" — used as URL slug and to locate doc files
+  section : String // section name for sidebar grouping
 }
 
 // ─── Tour Chapters (default fallback) ────────────────────────────────────
 
 ///|
 let tour_chapters : Array[TourChapter] = [
-  { title: "Introduction", path: "001_intro" },
-  { title: "Router", path: "003_router" },
+  { title: "Introduction", path: "001_intro", section: "Rabbita Basic" },
+  { title: "Router", path: "003_router", section: "Rabbita Basic" },
 ]
 
 // Returns the site root URL, e.g. "/" or "/rabbita/"
@@ -112,19 +113,32 @@ fn chapter_idx_from_path(chapters : Array[TourChapter], path : String) -> Int {
 
 ///|
 fn parse_menu(json : Json) -> Result[Array[TourChapter], String] {
-  guard json is Array(items) else { return Err("expected JSON array") }
+  guard json is Array(sections) else {
+    return Err("expected JSON array of sections")
+  }
   let chapters : Array[TourChapter] = []
-  for item in items {
-    guard item is Object(obj) else { return Err("expected object in array") }
-    let title = match obj.get("title") {
+  for sec in sections {
+    guard sec is Object(obj) else { return Err("expected section object") }
+    let section = match obj.get("section") {
       Some(String(s)) => s
-      _ => return Err("missing title")
+      _ => return Err("missing section name")
     }
-    let path = match obj.get("path") {
-      Some(String(s)) => s
-      _ => return Err("missing path")
+    let items = match obj.get("items") {
+      Some(Array(arr)) => arr
+      _ => return Err("missing items array")
     }
-    chapters.push({ title, path })
+    for item in items {
+      guard item is Object(o) else { return Err("expected object in items") }
+      let title = match o.get("title") {
+        Some(String(s)) => s
+        _ => return Err("missing title")
+      }
+      let path = match o.get("path") {
+        Some(String(s)) => s
+        _ => return Err("missing path")
+      }
+      chapters.push({ title, path, section })
+    }
   }
   Ok(chapters)
 }
@@ -456,20 +470,36 @@ fn view_tour_sidebar(
   tm : TourModel,
   chapters : Array[TourChapter],
 ) -> Html {
-  let items = chapters.mapi(fn(i, ch) {
+  let elements : Array[Html] = []
+  let mut current_section = ""
+  let mut current_items : Array[Html] = []
+  for i = 0; i < chapters.length(); i = i + 1 {
+    let ch = chapters[i]
+    if ch.section != current_section {
+      if !current_items.is_empty() {
+        elements.push(ul(class="tour-chapter-list", current_items))
+      }
+      current_section = ch.section
+      current_items = []
+      if !ch.section.is_empty() {
+        elements.push(p(class="tour-section-heading", ch.section))
+      }
+    }
     let cls = if i == tm.chapter_idx {
       "tour-chapter-item tour-chapter-item--active"
     } else {
       "tour-chapter-item"
     }
-    li(class="tour-chapter-li", [
-      button(class=cls, on_click=dispatch(SelectChapter(i)), ch.title),
-    ])
-  })
-  div(class="tour-sidebar-left", [
-    p(class="tour-sidebar-heading", "Chapters"),
-    ul(class="tour-chapter-list", items),
-  ])
+    current_items.push(
+      li(class="tour-chapter-li", [
+        button(class=cls, on_click=dispatch(SelectChapter(i)), ch.title),
+      ]),
+    )
+  }
+  if !current_items.is_empty() {
+    elements.push(ul(class="tour-chapter-list", current_items))
+  }
+  div(class="tour-sidebar-left", [fragment(elements)])
 }
 
 ///|
