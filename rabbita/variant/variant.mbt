@@ -4,4 +4,9 @@ pub(all) enum Variant {
   Integer(Int)
   Floating(Double)
   String(String)
-} derive(Show, Eq, Compare, Hash)
+} derive(Debug, Eq, Compare, Hash)
+
+///|
+pub impl Show for Variant with output(self, buf) {
+  self.to_repr().output(buf)
+}

@@ -247,6 +247,14 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
 }
 
 ///|
+fn subscriptions(dispatch : Dispatch[Msg], _ : Model) -> @sub.Sub {
+  @sub.batch([
+    @sub.on_url_changed(url => dispatch(UrlChanged(url))),
+    @sub.on_url_request(req => dispatch(UrlRequest(req))),
+  ])
+}
+
+///|
 let github_url : String = "https://github.com/moonbit-community/rabbita"
 
 ///|
@@ -1023,13 +1031,11 @@ fn main {
       highlighter: None,
       chapters: tour_chapters,
     },
+    subscriptions~,
     update~,
     view~,
   )
   @rabbita.new(app)
-  ..with_route(url_changed=url => dispatch(UrlChanged(url)), url_request=req => {
-    dispatch(UrlRequest(req))
-  })
   ..with_init(
     batch([
       fetch_menu(dispatch),

@@ -3,8 +3,8 @@ let rabbit_logo_pattern_index = 7
 
 ///|
 fn reset_animation(model : Model) -> Model {
+  ignore(model)
   {
-    ..model,
     frame_count: 0,
     last_frame_ms: 0.0,
     logo: logo_static_pattern(rabbit_logo_pattern_index),
@@ -20,11 +20,12 @@ fn step_animation_frame(timestamp : Double, model : Model) -> Model {
     timestamp - model.last_frame_ms
   }
   if logo_is_moving(model.logo) {
+    let next_logo = logo_step(delta_ms, model.logo)
     {
-      ..model,
       frame_count: model.frame_count + 1,
       last_frame_ms: timestamp,
-      logo: logo_step(delta_ms, model.logo),
+      logo: next_logo,
+      logo_pattern_index: model.logo_pattern_index,
     }
   } else {
     { ..model, frame_count: model.frame_count + 1, last_frame_ms: timestamp }

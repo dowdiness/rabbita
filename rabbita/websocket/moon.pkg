@@ -7,8 +7,4 @@ import {
   "moonbitlang/core/ref",
 }
 
-import {
-  "moonbit-community/rabbita/internal/key",
-} for "test"
-
 supported_targets = "js"

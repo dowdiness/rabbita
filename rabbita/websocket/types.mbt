@@ -9,7 +9,12 @@ pub struct CloseInfo {
   code : Int
   reason : String
   clean : Bool
-} derive(Show, Debug)
+} derive(Debug)
+
+///|
+pub impl Show for CloseInfo with output(self, buf) {
+  self.to_repr().output(buf)
+}
 
 ///|
 /// Inbound events emitted by a managed WebSocket connection.
@@ -19,7 +24,12 @@ pub(all) enum Event {
   Message(String)
   Closed(CloseInfo)
   Errored
-} derive(Show, Debug)
+} derive(Debug)
+
+///|
+pub impl Show for Event with output(self, buf) {
+  self.to_repr().output(buf)
+}
 
 ///|
 /// Outbound payload for `send(...)`.
@@ -27,7 +37,23 @@ pub(all) enum Event {
 pub(all) enum Payload {
   Text(String)
   Json(Json)
-} derive(Show)
+}
+
+///|
+pub impl Show for Payload with output(self, buf) {
+  match self {
+    Text(text) => {
+      buf.write_string("Text(")
+      text.output(buf)
+      buf.write_string(")")
+    }
+    Json(value) => {
+      buf.write_string("Json(")
+      value.output(buf)
+      buf.write_string(")")
+    }
+  }
+}
 
 ///|
 #cfg(target="js")
@@ -43,7 +69,12 @@ pub(all) enum ReadyState {
   Open
   Closing
   Closed
-} derive(Show, Debug)
+} derive(Debug)
+
+///|
+pub impl Show for ReadyState with output(self, buf) {
+  self.to_repr().output(buf)
+}
 
 ///|
 /// Snapshot of the current connection state for a named socket.
@@ -54,4 +85,9 @@ pub struct Snapshot {
   protocol : String
   buffered_amount : Int
   ready_state : ReadyState
-} derive(Show, Debug)
+} derive(Debug)
+
+///|
+pub impl Show for Snapshot with output(self, buf) {
+  self.to_repr().output(buf)
+}

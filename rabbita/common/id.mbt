@@ -2,7 +2,12 @@
 let global_id_count : Ref[Int] = Ref(0)
 
 ///|
-struct Id(Int) derive(Eq, Hash, Compare, Show)
+struct Id(Int) derive(Eq, Hash, Compare)
+
+///|
+pub impl Show for Id with output(self, buf) {
+  self.0.output(buf)
+}
 
 ///|
 fn next_id() -> Int {

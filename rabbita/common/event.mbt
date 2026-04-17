@@ -29,7 +29,12 @@ pub fn Mouse::client_pos(self : Mouse) -> Pos {
 pub(all) struct Pos {
   x : Int
   y : Int
-} derive(Show, Debug)
+} derive(Debug)
+
+///|
+pub impl Show for Pos with output(self, buf) {
+  self.to_repr().output(buf)
+}
 
 ///|
 struct Keyboard {
@@ -145,4 +150,9 @@ pub fn Scroll::height(self : Self) -> Int {
 pub(all) struct Viewport {
   width : Int
   height : Int
-} derive(Show, Debug)
+} derive(Debug)
+
+///|
+pub impl Show for Viewport with output(self, buf) {
+  self.to_repr().output(buf)
+}

@@ -6,6 +6,7 @@ import {
   "moonbit-community/rabbita/nav",
   "moonbit-community/rabbita/url",
   "moonbit-community/rabbita/http",
+  "moonbit-community/rabbita/sub",
   "Yoorkin/shiki",
   "moonbit-community/cmark/cmark",
   "moonbit-community/cmark/cmark_base",

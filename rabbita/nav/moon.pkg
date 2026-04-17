@@ -3,3 +3,5 @@ import {
   "moonbit-community/rabbita/dom",
   "moonbit-community/rabbita/js",
 }
+
+supported_targets = "js"

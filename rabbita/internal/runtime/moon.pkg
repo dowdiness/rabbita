@@ -9,3 +9,5 @@ import {
   "moonbit-community/rabbita/js",
   "moonbit-community/rabbita/internal/key",
 }
+
+supported_targets = "js+native"

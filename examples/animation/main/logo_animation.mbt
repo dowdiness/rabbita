@@ -170,11 +170,6 @@ let astiffness = 200.0
 let adamping = 10.0
 
 ///|
-fn logo_pattern_count() -> Int {
-  8
-}
-
-///|
 fn logo_pattern_name(index : Int) -> String {
   match index {
     0 => "logo"
@@ -185,15 +180,6 @@ fn logo_pattern_name(index : Int) -> String {
     5 => "cat"
     6 => "camel"
     _ => "rabbit"
-  }
-}
-
-///|
-fn logo_next_pattern_index(index : Int) -> Int {
-  if index + 1 >= logo_pattern_count() {
-    0
-  } else {
-    index + 1
   }
 }
 

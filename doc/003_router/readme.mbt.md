@@ -10,7 +10,9 @@ Rabbita adopts an Elm-style router. There is no hidden `router` object, and you 
 
 ## Register the route messages
 
-Use `App::with_route(url_changed? : Url -> Cmd, url_request? : UrlRequest -> Cmd)` to declare which commands are triggered for routing events.
+Use the root cell's `subscriptions` callback together with
+`@sub.on_url_changed(...)` and `@sub.on_url_request(...)` to declare which
+messages should be triggered for routing events.
 
 The `url_request` is a navigation **intention** (captured link click), and
 the `url_changed` is a navigation **fact** (the browser location has already changed).
@@ -26,17 +28,27 @@ enum Msg {
 }
 ```
 
-To register the `UrlChanged` and `UrlRequest` messages, use `cell_with_dispatch(...)` to obtain the main cell and the corresponding `dispatch` function. The `dispatch` function allows you to convert messages into the `Cmd` type:
+To register the `UrlChanged` and `UrlRequest` messages, use
+`cell_with_dispatch(...)` to obtain the main cell and the corresponding
+`dispatch` function, then wire the route subscriptions on the root cell:
 
 ```moonbit check
 ///|
 test {
-  let (dispatch, root) = @rabbita.cell_with_dispatch(model=home, update~, view~)
-  @rabbita.new(root)
-  ..with_route(url_changed=url => dispatch(UrlChanged(url)), url_request=req => {
-    dispatch(UrlRequest(req))
-  })
-  .mount("app")
+  fn subscriptions(dispatch : Dispatch[Msg], _ : Model) -> @sub.Sub {
+    @sub.batch([
+      @sub.on_url_changed(url => dispatch(UrlChanged(url))),
+      @sub.on_url_request(req => dispatch(UrlRequest(req))),
+    ])
+  }
+
+  let (_dispatch, root) = @rabbita.cell_with_dispatch(
+    model=home,
+    subscriptions~,
+    update~,
+    view~,
+  )
+  ignore(root)
 }
 ```
 

@@ -5,7 +5,12 @@
 pub(all) enum UrlRequest {
   Internal(Url)
   External(String)
-} derive(Show, Eq, Compare)
+} derive(Debug, Eq, Compare)
+
+///|
+pub impl Show for UrlRequest with output(self, buf) {
+  self.to_repr().output(buf)
+}
 
 ///|
 /// Url
@@ -25,14 +30,24 @@ pub(all) struct Url {
   path : String
   query : String?
   fragment : String?
-} derive(Show, Eq, Compare)
+} derive(Debug, Eq, Compare)
+
+///|
+pub impl Show for Url with output(self, buf) {
+  self.to_repr().output(buf)
+}
 
 ///|
 pub(all) enum Protocol {
   Http
   Https
   Other(String)
-} derive(Show, Eq, Compare)
+} derive(Debug, Eq, Compare)
+
+///|
+pub impl Show for Protocol with output(self, buf) {
+  self.to_repr().output(buf)
+}
 
 ///|
 pub fn Url::to_string(self : Url) -> String {

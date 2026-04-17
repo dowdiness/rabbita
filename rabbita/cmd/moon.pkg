@@ -4,3 +4,5 @@ import {
   "moonbit-community/rabbita/internal/key",
   "moonbitlang/core/queue",
 }
+
+supported_targets = "js+native"
