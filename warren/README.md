@@ -12,7 +12,7 @@ moon install moonbit-community/warren
 
 This gives you the `warren` command.
 
-## Use
+## dev build
 
 Run inside your MoonBit project:
 
@@ -20,15 +20,22 @@ Run inside your MoonBit project:
 warren dev
 ```
 
-Then open:
-
-```txt
-http://127.0.0.1:3070
-```
+Then open the link in terminal.
 
 Your project should have a runnable main package.
 
-## `public/`
+## release build
+
+```sh
+warren build
+```
+
+It builds the current module in release mode and writes the output to `dist/`.
+
+`warren build` tries to compress the generated JavaScript with `terser`.
+If `terser` is not available, it falls back to the uncompressed release JS.
+
+## `public/` directory
 
 `public/` is optional.
 
@@ -47,5 +54,5 @@ Common usage:
 
 - [x] `warren dev`
 - [ ] `moon.work` support
-- [ ] `warren build`
+- [x] `warren build`
 - [ ] AI debugging utils
