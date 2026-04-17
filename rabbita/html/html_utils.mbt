@@ -27,6 +27,7 @@ fn push_click(value : Cmd?, attrs : Attrs) -> Unit {
 }
 
 ///|
+#cfg(target="js")
 fn mouse_from_dom(event : @dom.MouseEvent) -> Mouse {
   Mouse::new(
     screen={ x: event.get_screen_x(), y: event.get_screen_y() },
@@ -36,6 +37,7 @@ fn mouse_from_dom(event : @dom.MouseEvent) -> Mouse {
 }
 
 ///|
+#cfg(target="js")
 fn keyboard_from_dom(event : @dom.KeyboardEvent) -> Keyboard {
   Keyboard::new(
     key=event.key(),
@@ -64,6 +66,7 @@ fn scroll_from_dom(element : @dom.Element) -> Scroll {
 }
 
 ///|
+#cfg(target="js")
 fn push_mousedown(value : @cmd.Dispatch[Mouse]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(attrs.on_mousedown(event => v(mouse_from_dom(event))))
@@ -71,10 +74,23 @@ fn push_mousedown(value : @cmd.Dispatch[Mouse]?, attrs : Attrs) -> Unit {
 }
 
 ///|
+#cfg(not(target="js"))
+fn push_mousedown(value : @cmd.Dispatch[Mouse]?, attrs : Attrs) -> Unit {
+  ignore((value, attrs))
+}
+
+///|
+#cfg(target="js")
 fn push_mouseup(value : @cmd.Dispatch[Mouse]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(attrs.on_mouseup(event => v(mouse_from_dom(event))))
   }
+}
+
+///|
+#cfg(not(target="js"))
+fn push_mouseup(value : @cmd.Dispatch[Mouse]?, attrs : Attrs) -> Unit {
+  ignore((value, attrs))
 }
 
 ///|
@@ -97,6 +113,7 @@ fn push_scroll(value : @cmd.Dispatch[Scroll]?, attrs : Attrs) -> Unit {
 }
 
 ///|
+#cfg(target="js")
 fn push_keydown(value : @cmd.Dispatch[Keyboard]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(attrs.on_keydown(event => v(keyboard_from_dom(event))))
@@ -104,10 +121,23 @@ fn push_keydown(value : @cmd.Dispatch[Keyboard]?, attrs : Attrs) -> Unit {
 }
 
 ///|
+#cfg(not(target="js"))
+fn push_keydown(value : @cmd.Dispatch[Keyboard]?, attrs : Attrs) -> Unit {
+  ignore((value, attrs))
+}
+
+///|
+#cfg(target="js")
 fn push_keyup(value : @cmd.Dispatch[Keyboard]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(attrs.on_keyup(event => v(keyboard_from_dom(event))))
   }
+}
+
+///|
+#cfg(not(target="js"))
+fn push_keyup(value : @cmd.Dispatch[Keyboard]?, attrs : Attrs) -> Unit {
+  ignore((value, attrs))
 }
 
 ///|

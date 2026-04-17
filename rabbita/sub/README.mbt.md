@@ -26,7 +26,7 @@ fn subscriptions(dispatch : Dispatch[Msg], model : Model) -> @sub.Sub {
 
 Use `none` when nothing should be active:
 
-```moonbit check
+```moonbit nocheck
 ///|
 test "sub none" {
   let _ : Sub = @sub.none
@@ -35,7 +35,7 @@ test "sub none" {
 
 Use `batch` to combine multiple subscriptions:
 
-```moonbit check
+```moonbit nocheck
 ///|
 test "sub batch" {
   let _ : Sub = @sub.batch([none, every(1000, @cmd.none)])

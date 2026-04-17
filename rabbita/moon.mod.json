@@ -13,5 +13,6 @@
     "TEA"
   ],
   "description": "functional Web UI framework for MoonBit",
-  "preferred-target": "js"
+  "preferred-target": "js",
+  "supported-targets": "js+native"
 }

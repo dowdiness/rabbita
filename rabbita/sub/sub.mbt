@@ -50,6 +50,7 @@ priv suberror BuiltinSub {
 }
 
 ///|
+#cfg(target="js")
 fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
   match payload {
     Every(ms, cmd) => {
@@ -290,6 +291,7 @@ pub fn Sub::to_map(
 }
 
 ///|
+#cfg(target="js")
 fn keyboard_from_dom(event : @dom.KeyboardEvent) -> Keyboard {
   Keyboard::new(
     key=event.key(),
@@ -305,6 +307,7 @@ fn keyboard_from_dom(event : @dom.KeyboardEvent) -> Keyboard {
 }
 
 ///|
+#cfg(target="js")
 fn mouse_from_dom(event : @dom.MouseEvent) -> Mouse {
   Mouse::new(
     screen={ x: event.get_screen_x(), y: event.get_screen_y() },
@@ -314,6 +317,7 @@ fn mouse_from_dom(event : @dom.MouseEvent) -> Mouse {
 }
 
 ///|
+#cfg(target="js")
 fn window_scroll() -> Scroll {
   let root = @dom.document().query_selector("html").unwrap()
   Scroll::new(
@@ -325,6 +329,7 @@ fn window_scroll() -> Scroll {
 
 ///|
 /// Repeatedly enqueue `cmd` every `ms` milliseconds.
+#cfg(target="js")
 pub fn every(ms : Int, cmd : @cmd.Cmd) -> Sub {
   custom_sub("every(\{ms})", Local, Every(ms, cmd), builtin_sub_loader)
 }
@@ -333,6 +338,7 @@ pub fn every(ms : Int, cmd : @cmd.Cmd) -> Sub {
 /// Subscribe to window resize events.
 ///
 /// The handler receives the latest viewport width and height.
+#cfg(target="js")
 pub fn on_resize(msg : @cmd.Dispatch[Viewport]) -> Sub {
   custom_sub("on_resize", Local, Resize(msg), builtin_sub_loader)
 }
@@ -342,6 +348,7 @@ pub fn on_resize(msg : @cmd.Dispatch[Viewport]) -> Sub {
 ///
 /// The handler receives the browser timestamp for each frame while the
 /// subscription is active.
+#cfg(target="js")
 pub fn on_animation_frame(msg : @cmd.Dispatch[Double]) -> Sub {
   custom_sub(
     "on_animation_frame",
@@ -355,6 +362,7 @@ pub fn on_animation_frame(msg : @cmd.Dispatch[Double]) -> Sub {
 /// Subscribe to document `keydown` events.
 ///
 /// The handler receives a normalized `Keyboard` value from `@common`.
+#cfg(target="js")
 pub fn on_key_down(msg : @cmd.Dispatch[Keyboard]) -> Sub {
   custom_sub("on_key_down", Local, Keydown(msg), builtin_sub_loader)
 }
@@ -363,6 +371,7 @@ pub fn on_key_down(msg : @cmd.Dispatch[Keyboard]) -> Sub {
 /// Subscribe to document `keyup` events.
 ///
 /// The handler receives a normalized `Keyboard` value from `@common`.
+#cfg(target="js")
 pub fn on_key_up(msg : @cmd.Dispatch[Keyboard]) -> Sub {
   custom_sub("on_key_up", Local, Keyup(msg), builtin_sub_loader)
 }
@@ -372,6 +381,7 @@ pub fn on_key_up(msg : @cmd.Dispatch[Keyboard]) -> Sub {
 ///
 /// The handler receives `true` when the document is hidden, and `false`
 /// when it becomes visible again.
+#cfg(target="js")
 pub fn on_visibility_change(msg : @cmd.Dispatch[Bool]) -> Sub {
   custom_sub(
     "on_visibility_change",
@@ -385,6 +395,7 @@ pub fn on_visibility_change(msg : @cmd.Dispatch[Bool]) -> Sub {
 /// Subscribe to document `mousemove` events.
 ///
 /// The handler receives a normalized `Mouse` value from `@common`.
+#cfg(target="js")
 pub fn on_mouse_move(msg : @cmd.Dispatch[Mouse]) -> Sub {
   custom_sub("on_mouse_move", Local, MouseMove(msg), builtin_sub_loader)
 }
@@ -395,6 +406,7 @@ pub fn on_mouse_move(msg : @cmd.Dispatch[Mouse]) -> Sub {
 /// This reports page-level scrolling on `window`, not scrolling of an inner
 /// element. The handler receives the current scroll offset and document scroll
 /// size as a `Scroll` value.
+#cfg(target="js")
 pub fn on_scroll(msg : @cmd.Dispatch[Scroll]) -> Sub {
   custom_sub("on_scroll", Local, Scroll(msg), builtin_sub_loader)
 }
@@ -405,6 +417,7 @@ pub fn on_scroll(msg : @cmd.Dispatch[Scroll]) -> Sub {
 /// This is an app-scoped subscription. It is only active when returned from
 /// the root cell's `subscriptions` callback; if a non-root cell returns it,
 /// the subscription is ignored.
+#cfg(target="js")
 pub fn on_url_changed(msg : @cmd.Dispatch[@url.Url]) -> Sub {
   custom_sub("on_url_changed", Global, UrlChanged(msg), builtin_sub_loader)
 }
@@ -415,6 +428,7 @@ pub fn on_url_changed(msg : @cmd.Dispatch[@url.Url]) -> Sub {
 /// This is an app-scoped subscription. It is only active when returned from
 /// the root cell's `subscriptions` callback; if a non-root cell returns it,
 /// the subscription is ignored.
+#cfg(target="js")
 pub fn on_url_request(msg : @cmd.Dispatch[@url.UrlRequest]) -> Sub {
   custom_sub("on_url_request", Global, UrlRequest(msg), builtin_sub_loader)
 }

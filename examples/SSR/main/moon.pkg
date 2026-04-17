@@ -2,6 +2,7 @@ import {
   "moonbit-community/rabbita",
   "moonbit-community/rabbita/html",
   "moonbitlang/core/env",
+  "moonbitlang/async",
   "moonbitlang/async/socket",
   "moonbitlang/async/fs",
   "moonbitlang/async/http",

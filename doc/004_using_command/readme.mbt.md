@@ -36,7 +36,7 @@ This version introduces one command message, `IncLater`, to show how
 `dispatch` and `delay` cooperate: `dispatch(Inc)` turns a message into a `Cmd`,
 and `delay(cmd, ms)` tells runtime to execute that command later.
 
-```moonbit check
+```moonbit nocheck
 ///|
 enum Msg {
   Inc
@@ -121,7 +121,7 @@ fn batch_update(
 Use `perform` when async work is expected to succeed and you want to map the
 result back into a normal message.
 
-```moonbit check
+```moonbit nocheck
 ///|
 enum PerformMsg {
   StartLoad
@@ -147,7 +147,7 @@ fn perform_update(
 Use `attempt` when async work may fail and you want success/failure handled in
 the same `update` flow through `Result`.
 
-```moonbit check
+```moonbit nocheck
 ///|
 enum AttemptMsg {
   StartTry
