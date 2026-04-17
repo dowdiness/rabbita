@@ -66,7 +66,6 @@ async fn inject_html(path : SourcePath, vfs : @vfs.VirtualFileSystem) -> Unit {
 ///|
 type Mtime = (Int64, Int)
 
-///|
 struct Model {
   event_queue : @async.Queue[DevEvent]
   cwd : SourcePath

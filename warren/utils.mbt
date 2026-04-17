@@ -118,7 +118,7 @@ async fn serve_dev_events(
 
 ///|
 async fn serve(
-  port? : UInt = 3070,
+  port? : UInt = 0,
   get_channel : () -> @async.Queue[DevEvent],
   get_vfs : () -> @vfs.VirtualFileSystem,
 ) -> Unit {
@@ -128,6 +128,7 @@ async fn serve(
     reuse_addr=true,
   )
 
+  let port = server.addr.port()
   log("info", "Running server on http://\{ip}:\{port}")
 
   server.run_forever((request, _body, conn) => {
