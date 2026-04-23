@@ -496,8 +496,6 @@ pub(all) enum AutoComplete {
 #alias(T)
 pub(all) struct Html(@runtime.VNode)
 pub fn Html::from_vnode(@runtime.VNode) -> Self
-#deprecated
-pub fn Html::inner(Self) -> @runtime.VNode
 pub fn Html::to_virtual_dom(Self) -> @runtime.VNode
 pub impl IsChildren for Html
 

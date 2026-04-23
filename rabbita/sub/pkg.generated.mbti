@@ -50,8 +50,6 @@ pub(all) enum Scope {
 type Sub
 
 pub(all) struct SubLoader((Error, &@cmd.Scheduler) -> RunningSub?)
-#deprecated
-pub fn SubLoader::inner(Self) -> (Error, &@cmd.Scheduler) -> RunningSub?
 
 // Type aliases
 

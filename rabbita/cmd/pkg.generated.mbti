@@ -31,8 +31,6 @@ pub fn[A] perform((A) -> Cmd, async () -> A noraise) -> Cmd
 type Cmd
 
 pub(all) struct Dispatch[Msg]((Msg) -> Cmd)
-#deprecated
-pub fn[Msg] Dispatch::inner(Self[Msg]) -> (Msg) -> Cmd
 pub fn[A, B] Dispatch::map(Self[A], (B) -> A) -> Self[B]
 
 pub(all) enum EffectKind {

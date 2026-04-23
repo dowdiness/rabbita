@@ -344,8 +344,6 @@ pub fn Attrs::z(Self, String) -> Self
 #alias(T)
 pub(all) struct Svg(@runtime.VNode)
 pub fn Svg::from_vnode(@runtime.VNode) -> Self
-#deprecated
-pub fn Svg::inner(Self) -> @runtime.VNode
 pub fn Svg::to_html(Self) -> @html.Html
 pub fn Svg::to_virtual_dom(Self) -> @runtime.VNode
 
