@@ -1,5 +1,5 @@
 ///|
-using @rabbita {type Dispatch}
+using @rabbita {type Emit}
 
 ///|
 using @html {type Html, type Mouse, div, h1, button, node}

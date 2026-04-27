@@ -13,9 +13,9 @@ callback of a cell.
 
 ```mbt nocheck
 ///|
-fn subscriptions(dispatch : Dispatch[Msg], model : Model) -> @sub.Sub {
+fn subscriptions(emit : Emit[Msg], model : Model) -> @sub.Sub {
   if model.running {
-    @sub.every(1000, dispatch(Tick))
+    @sub.every(1000, emit(Tick))
   } else {
     @sub.none
   }
@@ -42,9 +42,9 @@ test "sub batch" {
 }
 ```
 
-## Dispatching messages
+## Emitting messages
 
-Event-based subscriptions usually work with `dispatch.map(...)`, just like
+Event-based subscriptions usually work with `emit.map(...)`, just like
 HTML event handlers.
 
 ```mbt nocheck
@@ -55,10 +55,10 @@ enum Msg {
 }
 
 ///|
-fn subscriptions(dispatch : Dispatch[Msg], _model : Model) -> @sub.Sub {
+fn subscriptions(emit : Emit[Msg], _model : Model) -> @sub.Sub {
   @sub.batch([
-    @sub.on_resize(v => dispatch(Resized(v))),
-    @sub.on_mouse_move(m => dispatch(MouseMoved(m))),
+    @sub.on_resize(v => emit(Resized(v))),
+    @sub.on_mouse_move(m => emit(MouseMoved(m))),
   ])
 }
 ```

@@ -10,8 +10,8 @@ The main challenge is determining whether a subscription is truly new.
 In practice, closures cannot be compared reliably. For example:
 
 ```mbt nocheck
-fn subscriptions(dispatch : Dispatch[Msg], model : Model) -> Sub {
-  @sub.on_resize(rect => dispatch(Resize(rect)))
+fn subscriptions(emit : Emit[Msg], model : Model) -> Sub {
+  @sub.on_resize(rect => emit(Resize(rect)))
 }
 ```
 

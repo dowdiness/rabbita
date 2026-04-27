@@ -2,21 +2,25 @@
 priv struct TypedCell[Model, Msg] {
   mut has_init : Bool
   model : Ref[Model]
-  dispatch : @cmd.Dispatch[Msg]
+  emit : @cmd.Emit[Msg]
   inbox : @queue.Queue[Msg]
-  update : (Dispatch[Msg], Msg, Model) -> (Cmd, Model)
-  view : (Dispatch[Msg], Model) -> @html.Html
-  subscriptions : ((Dispatch[Msg], Model) -> @sub.Sub)?
+  update : (Emit[Msg], Msg, Model) -> (Cmd, Model)
+  view : (Emit[Msg], Model) -> @html.Html
+  subscriptions : ((Emit[Msg], Model) -> @sub.Sub)?
   mut sub_map : Map[String, @sub.RunningSub]
   flags : @runtime.Flags
 }
 
 ///|
-/// Message dispatcher type used by a `Cell`.
+/// Message emitter type used by a `Cell`.
 ///
-/// Calling `dispatch(msg)` returns a `Cmd` that enqueues `msg` into the cell's
+/// Calling `emit(msg)` returns a `Cmd` that enqueues `msg` into the cell's
 /// update loop.
-pub type Dispatch[Msg] = @cmd.Dispatch[Msg]
+pub type Emit[Msg] = @cmd.Emit[Msg]
+
+///|
+#deprecated("Use Emit[Msg] instead.")
+pub type Dispatch[Msg] = Emit[Msg]
 
 ///|
 impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with init(
@@ -26,7 +30,7 @@ impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with init(
   guard !self.has_init else { return }
   self.has_init = true
   if self.subscriptions is Some(subscriptions) {
-    let subs = subscriptions(self.dispatch, self.model.val).to_map(
+    let subs = subscriptions(self.emit, self.model.val).to_map(
       @key.key,
       filter_global=!self.flags().is_root,
     )
@@ -68,9 +72,9 @@ impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with step(
   scheduler,
 ) {
   if self.inbox.pop() is Some(msg) {
-    let (cmd, model) = (self.update)(self.dispatch, msg, self.model.val)
+    let (cmd, model) = (self.update)(self.emit, msg, self.model.val)
     if self.subscriptions is Some(subscriptions) {
-      let new_subs = subscriptions(self.dispatch, model).to_map(
+      let new_subs = subscriptions(self.emit, model).to_map(
         @key.key,
         filter_global=!self.flags().is_root,
       )
@@ -87,7 +91,7 @@ impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with step(
 
 ///|
 impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with view(self) {
-  (self.view)(self.dispatch, self.model.val).0
+  (self.view)(self.emit, self.model.val).0
 }
 
 ///|
@@ -118,14 +122,14 @@ pub fn Cell::view(self : Self) -> Html {
 /// - `model : Model`:
 ///    initial `Model` value of the cell.
 /// 
-/// - `update : (Dispatch[Msg], Msg,Model) -> (Cmd,Model)`:
+/// - `update : (Emit[Msg], Msg,Model) -> (Cmd,Model)`:
 ///    Describe how to compute new `Model` from `Msg` and old `Model`. 
-///    This callback also receives a `Dispatch[Msg]`, which converts a `Msg`
+///    This callback also receives an `Emit[Msg]`, which converts a `Msg`
 ///    into a `Cmd`.
 /// 
-/// - `view : (Dispatch[Msg], Model) -> Html`:
+/// - `view : (Emit[Msg], Model) -> Html`:
 ///    Describe how to compute `Html` from `Model`.
-///    This callback also receives a `Dispatch[Msg]`, which converts a `Msg`
+///    This callback also receives an `Emit[Msg]`, which converts a `Msg`
 ///    into a `Cmd`.
 ///
 /// ## The update loop
@@ -162,20 +166,20 @@ pub fn Cell::view(self : Self) -> Html {
 ///
 pub fn[Model, Msg] cell(
   model~ : Model,
-  update~ : (Dispatch[Msg], Msg, Model) -> (Cmd, Model),
-  view~ : (Dispatch[Msg], Model) -> Html,
-  subscriptions? : (Dispatch[Msg], Model) -> @sub.Sub,
+  update~ : (Emit[Msg], Msg, Model) -> (Cmd, Model),
+  view~ : (Emit[Msg], Model) -> Html,
+  subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
 ) -> Cell {
   let flags = @runtime.Flags::new()
   let inbox = @queue.Queue::new()
-  let dispatch = @cmd.make_dispatcher(@key.key, flags.id, inbox)
+  let emit = @cmd.make_emitter(@key.key, flags.id, inbox)
   let model = @ref.new(model)
   Cell({
     has_init: false,
     inbox,
     view,
     update,
-    dispatch,
+    emit,
     model,
     flags,
     subscriptions,
@@ -184,7 +188,7 @@ pub fn[Model, Msg] cell(
 }
 
 ///|
-/// Create a cell and also return its `Dispatch`.
+/// Create a cell and also return its `Emit`.
 ///
 /// This is useful when messages need to be sent from outside.
 /// 
@@ -198,14 +202,14 @@ pub fn[Model, Msg] cell(
 /// - `model : Model`:
 ///    initial `Model` value of the cell.
 /// 
-/// - `update : (Dispatch[Msg], Msg,Model) -> (Cmd,Model)`:
+/// - `update : (Emit[Msg], Msg,Model) -> (Cmd,Model)`:
 ///    Describe how to compute new `Model` from `Msg` and old `Model`. 
-///    This callback also receives a `Dispatch[Msg]`, which converts a `Msg`
+///    This callback also receives an `Emit[Msg]`, which converts a `Msg`
 ///    into a `Cmd`.
 /// 
-/// - `view : (Dispatch[Msg], Model) -> Html`:
+/// - `view : (Emit[Msg], Model) -> Html`:
 ///    Describe how to compute `Html` from `Model`.
-///    This callback also receives a `Dispatch[Msg]`, which converts a `Msg`
+///    This callback also receives an `Emit[Msg]`, which converts a `Msg`
 ///    into a `Cmd`.
 ///
 /// ## The update loop
@@ -240,24 +244,52 @@ pub fn[Model, Msg] cell(
 /// side effect. That side effect is executed by the runtime and may produce
 /// another message.
 ///
-pub fn[Model, Msg] cell_with_dispatch(
+pub fn[Model, Msg] cell_with_emit(
   model~ : Model,
-  update~ : (Dispatch[Msg], Msg, Model) -> (Cmd, Model),
-  view~ : (Dispatch[Msg], Model) -> Html,
-  subscriptions? : (Dispatch[Msg], Model) -> @sub.Sub,
-) -> (Dispatch[Msg], Cell) {
+  update~ : (Emit[Msg], Msg, Model) -> (Cmd, Model),
+  view~ : (Emit[Msg], Model) -> Html,
+  subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
+) -> (Emit[Msg], Cell) {
   let flags = @runtime.Flags::new()
   let inbox = @queue.Queue::new()
-  let dispatch = @cmd.make_dispatcher(@key.key, flags.id, inbox)
+  let emit = @cmd.make_emitter(@key.key, flags.id, inbox)
   let model = @ref.new(model)
   (
-    dispatch,
+    emit,
     Cell({
       has_init: false,
       inbox,
       view,
       update,
-      dispatch,
+      emit,
+      model,
+      flags,
+      subscriptions,
+      sub_map: {},
+    }),
+  )
+}
+
+///|
+#deprecated("Use cell_with_emit instead.")
+pub fn[Model, Msg] cell_with_dispatch(
+  model~ : Model,
+  update~ : (Emit[Msg], Msg, Model) -> (Cmd, Model),
+  view~ : (Emit[Msg], Model) -> Html,
+  subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
+) -> (Emit[Msg], Cell) {
+  let flags = @runtime.Flags::new()
+  let inbox = @queue.Queue::new()
+  let emit = @cmd.make_emitter(@key.key, flags.id, inbox)
+  let model = @ref.new(model)
+  (
+    emit,
+    Cell({
+      has_init: false,
+      inbox,
+      view,
+      update,
+      emit,
       model,
       flags,
       subscriptions,
@@ -278,8 +310,8 @@ pub fn[Model, Msg] cell_with_dispatch(
 /// 
 /// - `model : Model`: initial Model value of the cell.
 /// - `update : (Msg, Model) -> Model`: describe how to compute new Model from Msg and old Model.
-/// - `view : (Dispatch[Msg], Model) -> Html`: describes how to render Html from Model.
-///   This callback also receives a dispatch argument, which converts a Msg
+/// - `view : (Emit[Msg], Model) -> Html`: describes how to render Html from Model.
+///   This callback also receives an `emit` argument, which converts a Msg
 ///   into a Cmd.
 /// 
 /// ## The update loop
@@ -304,7 +336,7 @@ pub fn[Model, Msg] cell_with_dispatch(
 /// HTML can include message-producing command, for example:
 /// 
 /// ```moonbit nocheck
-/// button(on_click=dispatch(MyMsg), "click me")
+/// button(on_click=emit(MyMsg), "click me")
 /// ```
 ///
 /// When the user clicks the button, `MyMsg` is sent to `update` with the current
@@ -328,10 +360,10 @@ pub fn[Model, Msg] cell_with_dispatch(
 ///         Click => { count: model.count + 1 }
 ///       }
 ///     },
-///     view=(dispatch, model) => {
+///     view=(emit, model) => {
 ///       div([
 ///         h1("You clicked \{model.count} times."),
-///         button(on_click=dispatch(Click), "+"),
+///         button(on_click=emit(Click), "+"),
 ///       ])
 ///     },
 ///   )
@@ -341,30 +373,58 @@ pub fn[Model, Msg] cell_with_dispatch(
 pub fn[Model, Msg] simple_cell(
   model~ : Model,
   update~ : (Msg, Model) -> Model,
-  view~ : (Dispatch[Msg], Model) -> Html,
+  view~ : (Emit[Msg], Model) -> Html,
 ) -> Cell {
   cell(model~, update=(_, msg, model) => (none, update(msg, model)), view~)
 }
 
 ///|
-pub fn[Model, Msg] simple_cell_with_dispatch(
+pub fn[Model, Msg] simple_cell_with_emit(
   model~ : Model,
   update~ : (Msg, Model) -> Model,
-  view~ : (Dispatch[Msg], Model) -> Html,
-  subscriptions? : (Dispatch[Msg], Model) -> @sub.Sub,
-) -> (Dispatch[Msg], Cell) {
+  view~ : (Emit[Msg], Model) -> Html,
+  subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
+) -> (Emit[Msg], Cell) {
   let flags = @runtime.Flags::new()
   let inbox = @queue.Queue::new()
-  let dispatch = @cmd.make_dispatcher(@key.key, flags.id, inbox)
+  let emit = @cmd.make_emitter(@key.key, flags.id, inbox)
   let model = @ref.new(model)
   (
-    dispatch,
+    emit,
     Cell({
       has_init: false,
       inbox,
       view,
       update: (_, msg, model) => (none, update(msg, model)),
-      dispatch,
+      emit,
+      model,
+      flags,
+      subscriptions,
+      sub_map: {},
+    }),
+  )
+}
+
+///|
+#deprecated("Use simple_cell_with_emit instead.")
+pub fn[Model, Msg] simple_cell_with_dispatch(
+  model~ : Model,
+  update~ : (Msg, Model) -> Model,
+  view~ : (Emit[Msg], Model) -> Html,
+  subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
+) -> (Emit[Msg], Cell) {
+  let flags = @runtime.Flags::new()
+  let inbox = @queue.Queue::new()
+  let emit = @cmd.make_emitter(@key.key, flags.id, inbox)
+  let model = @ref.new(model)
+  (
+    emit,
+    Cell({
+      has_init: false,
+      inbox,
+      view,
+      update: (_, msg, model) => (none, update(msg, model)),
+      emit,
       model,
       flags,
       subscriptions,

@@ -29,20 +29,20 @@ enum Msg {
 ```
 
 To register the `UrlChanged` and `UrlRequest` messages, use
-`cell_with_dispatch(...)` to obtain the main cell and the corresponding
-`dispatch` function, then wire the route subscriptions on the root cell:
+`cell_with_emit(...)` to obtain the main cell and the corresponding
+`emit` function, then wire the route subscriptions on the root cell:
 
 ```moonbit check
 ///|
 test {
-  fn subscriptions(dispatch : Dispatch[Msg], _ : Model) -> @sub.Sub {
+  fn subscriptions(emit : Emit[Msg], _ : Model) -> @sub.Sub {
     @sub.batch([
-      @sub.on_url_changed(url => dispatch(UrlChanged(url))),
-      @sub.on_url_request(req => dispatch(UrlRequest(req))),
+      @sub.on_url_changed(url => emit(UrlChanged(url))),
+      @sub.on_url_request(req => emit(UrlRequest(req))),
     ])
   }
 
-  let (_dispatch, root) = @rabbita.cell_with_dispatch(
+  let (_emit, root) = @rabbita.cell_with_emit(
     model=home,
     subscriptions~,
     update~,
@@ -123,7 +123,7 @@ For internal links, it uses `@nav.push_url` to change the URL without reloading 
 
 ```moonbit check
 ///|
-fn update(_ : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
+fn update(_ : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
   match msg {
     // handle clicks on @html.a(...) link
     UrlRequest(request) =>
@@ -155,7 +155,7 @@ Instead, navigation is triggered by links (`a(href=...)`), which produce a `url_
 
 ```moonbit check
 ///|
-fn view(_ : Dispatch[Msg], model : Model) -> Html {
+fn view(_ : Emit[Msg], model : Model) -> Html {
   match model {
     Home(items) =>
       ul(items.map((id, title) => li(a(href="/article/\{id}", title))))

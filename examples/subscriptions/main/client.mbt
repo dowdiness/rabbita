@@ -5,7 +5,7 @@ using @html {button, code, div, h1, nothing, p}
 using @common {type Keyboard, type Mouse, type Scroll, type Viewport}
 
 ///|
-using @rabbita {type Cmd, type Dispatch, type Html}
+using @rabbita {type Cmd, type Emit, type Html}
 
 ///|
 enum Tab {
@@ -92,14 +92,14 @@ fn tab_title(tab : Tab) -> String {
 ///|
 fn tab_signature(tab : Tab) -> String {
   match tab {
-    Every => "@sub.every(1000, dispatch(Tick))"
-    Resize => "@sub.on_resize(v => dispatch(ViewportChanged(v)))"
-    Scroll => "@sub.on_scroll(s => dispatch(PageScrolled(s)))"
-    KeyDown => "@sub.on_key_down(k => dispatch(KeyPressed(k)))"
-    KeyUp => "@sub.on_key_up(k => dispatch(KeyReleased(k)))"
+    Every => "@sub.every(1000, emit(Tick))"
+    Resize => "@sub.on_resize(v => emit(ViewportChanged(v)))"
+    Scroll => "@sub.on_scroll(s => emit(PageScrolled(s)))"
+    KeyDown => "@sub.on_key_down(k => emit(KeyPressed(k)))"
+    KeyUp => "@sub.on_key_up(k => emit(KeyReleased(k)))"
     VisibilityChange =>
-      "@sub.on_visibility_change(hidden => dispatch(VisibilityChanged(hidden)))"
-    MouseMove => "@sub.on_mouse_move(m => dispatch(MouseMoved(m)))"
+      "@sub.on_visibility_change(hidden => emit(VisibilityChanged(hidden)))"
+    MouseMove => "@sub.on_mouse_move(m => emit(MouseMoved(m)))"
   }
 }
 
@@ -121,9 +121,9 @@ fn line(label : String, value : String) -> Html {
 }
 
 ///|
-fn tab_button(dispatch : Dispatch[Msg], active : Tab, tab : Tab) -> Html {
+fn tab_button(emit : Emit[Msg], active : Tab, tab : Tab) -> Html {
   let class = if tab_id(active) == tab_id(tab) { "tab active" } else { "tab" }
-  button(class~, on_click=dispatch(SelectTab(tab)), tab_title(tab))
+  button(class~, on_click=emit(SelectTab(tab)), tab_title(tab))
 }
 
 ///|
@@ -176,13 +176,13 @@ fn output_lines(model : Model) -> Array[Html] {
 }
 
 ///|
-fn active_actions(dispatch : Dispatch[Msg], model : Model) -> Array[Html] {
+fn active_actions(emit : Emit[Msg], model : Model) -> Array[Html] {
   match model.active_tab {
     Every =>
       [
         button(
           class="toggle",
-          on_click=dispatch(ToggleTicker),
+          on_click=emit(ToggleTicker),
           if model.ticking {
             "pause"
           } else {
@@ -195,7 +195,7 @@ fn active_actions(dispatch : Dispatch[Msg], model : Model) -> Array[Html] {
 }
 
 ///|
-fn update(_ : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
+fn update(_ : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
   match msg {
     SelectTab(tab) => (@rabbita.none, { ..model, active_tab: tab })
     Tick => (@rabbita.none, { ..model, tick_count: model.tick_count + 1 })
@@ -270,26 +270,26 @@ fn update(_ : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
 }
 
 ///|
-fn subscriptions(dispatch : Dispatch[Msg], model : Model) -> @sub.Sub {
+fn subscriptions(emit : Emit[Msg], model : Model) -> @sub.Sub {
   match model.active_tab {
     Every =>
       if model.ticking {
-        @sub.every(1000, dispatch(Tick))
+        @sub.every(1000, emit(Tick))
       } else {
         @sub.none
       }
-    Resize => @sub.on_resize(v => dispatch(ViewportChanged(v)))
-    Scroll => @sub.on_scroll(s => dispatch(PageScrolled(s)))
-    KeyDown => @sub.on_key_down(k => dispatch(KeyPressed(k)))
-    KeyUp => @sub.on_key_up(k => dispatch(KeyReleased(k)))
+    Resize => @sub.on_resize(v => emit(ViewportChanged(v)))
+    Scroll => @sub.on_scroll(s => emit(PageScrolled(s)))
+    KeyDown => @sub.on_key_down(k => emit(KeyPressed(k)))
+    KeyUp => @sub.on_key_up(k => emit(KeyReleased(k)))
     VisibilityChange =>
-      @sub.on_visibility_change(h => dispatch(VisibilityChanged(h)))
-    MouseMove => @sub.on_mouse_move(m => dispatch(MouseMoved(m)))
+      @sub.on_visibility_change(h => emit(VisibilityChanged(h)))
+    MouseMove => @sub.on_mouse_move(m => emit(MouseMoved(m)))
   }
 }
 
 ///|
-fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
+fn view(emit : Emit[Msg], model : Model) -> Html {
   let page_class = if tab_id(model.active_tab) == tab_id(Scroll) {
     "page scroll-mode"
   } else {
@@ -299,13 +299,13 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
     div(class="panel") <| [
       h1(class="title", "subscriptions"),
       div(class="tabs") <| tabs().map(tab => {
-        tab_button(dispatch, model.active_tab, tab)
+        tab_button(emit, model.active_tab, tab)
       }),
       div(class="section") <| [
         p(class="section-title", "subscription"),
         code(class="snippet", tab_signature(model.active_tab)),
       ],
-      div(class="actions") <| active_actions(dispatch, model),
+      div(class="actions") <| active_actions(emit, model),
       div(class="section") <| [
         p(class="section-title", "output"),
         div(class="output") <| output_lines(model),

@@ -45,7 +45,7 @@ fn not_found_message(id : String) -> String {
 #cfg(target="js")
 fn report_failure(
   scheduler : &Scheduler,
-  failed : @cmd.Dispatch[String]?,
+  failed : @cmd.Emit[String]?,
   message : String,
 ) -> Unit {
   match failed {
@@ -90,8 +90,8 @@ pub fn connect(
   id : String,
   url : String,
   protocols? : Array[String] = [],
-  on_event~ : @cmd.Dispatch[Event],
-  failed? : @cmd.Dispatch[String],
+  on_event~ : @cmd.Emit[Event],
+  failed? : @cmd.Emit[String],
 ) -> Cmd {
   @cmd.custom_cmd(kind=Immediately, scheduler => {
     let listeners : Map[String, @dom.Listener] = {}
@@ -147,11 +147,7 @@ pub fn connect(
 ///|
 /// Send an outbound payload through a named WebSocket connection.
 #cfg(target="js")
-pub fn send(
-  id : String,
-  payload : Payload,
-  failed? : @cmd.Dispatch[String],
-) -> Cmd {
+pub fn send(id : String, payload : Payload, failed? : @cmd.Emit[String]) -> Cmd {
   @cmd.custom_cmd(kind=Immediately, scheduler => {
     match connections.get(id) {
       Some(entry) =>
@@ -173,7 +169,7 @@ pub fn close(
   id : String,
   code? : Int,
   reason? : String,
-  failed? : @cmd.Dispatch[String],
+  failed? : @cmd.Emit[String],
 ) -> Cmd {
   @cmd.custom_cmd(kind=Immediately, scheduler => {
     match connections.get(id) {
@@ -197,10 +193,7 @@ pub fn close(
 ///|
 /// Read the current state of a named WebSocket connection.
 #cfg(target="js")
-pub fn state(
-  id : String,
-  reply~ : @cmd.Dispatch[Result[Snapshot, String]],
-) -> Cmd {
+pub fn state(id : String, reply~ : @cmd.Emit[Result[Snapshot, String]]) -> Cmd {
   @cmd.custom_cmd(kind=Immediately, scheduler => {
     match connections.get(id) {
       Some(entry) => scheduler.add(reply(Ok(snapshot_of(id, entry.socket))))

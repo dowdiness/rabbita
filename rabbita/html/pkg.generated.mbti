@@ -34,13 +34,13 @@ pub fn[C : IsChildren] bdo(style? : Array[String], id? : String, class? : String
 
 pub fn[C : IsChildren] blockquote(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
-pub fn[C : IsChildren] body(style? : Array[String], id? : String, class? : String, title? : String, lang? : String, dir? : String, hidden? : Bool, on_scroll? : @cmd.Dispatch[@common.Scroll], on_keydown? : @cmd.Dispatch[@common.Keyboard], on_keyup? : @cmd.Dispatch[@common.Keyboard], attrs? : Attrs, C) -> Html
+pub fn[C : IsChildren] body(style? : Array[String], id? : String, class? : String, title? : String, lang? : String, dir? : String, hidden? : Bool, on_scroll? : @cmd.Emit[@common.Scroll], on_keydown? : @cmd.Emit[@common.Keyboard], on_keyup? : @cmd.Emit[@common.Keyboard], attrs? : Attrs, C) -> Html
 
 pub fn br(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs) -> Html
 
 pub fn[C : IsChildren] button(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, type_? : String, disabled? : Bool, name? : String, value? : String, autofocus? : Bool, on_click? : @cmd.Cmd, attrs? : Attrs, C) -> Html
 
-pub fn[C : IsChildren] canvas(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, on_mousedown? : @cmd.Dispatch[@common.Mouse], on_mouseup? : @cmd.Dispatch[@common.Mouse], on_scroll? : @cmd.Dispatch[@common.Scroll], on_keydown? : @cmd.Dispatch[@common.Keyboard], on_keyup? : @cmd.Dispatch[@common.Keyboard], attrs? : Attrs, C) -> Html
+pub fn[C : IsChildren] canvas(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, on_mousedown? : @cmd.Emit[@common.Mouse], on_mouseup? : @cmd.Emit[@common.Mouse], on_scroll? : @cmd.Emit[@common.Scroll], on_keydown? : @cmd.Emit[@common.Keyboard], on_keyup? : @cmd.Emit[@common.Keyboard], attrs? : Attrs, C) -> Html
 
 pub fn[C : IsChildren] caption(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
@@ -64,9 +64,9 @@ pub fn[C : IsChildren] details(style? : Array[String], id? : String, class? : St
 
 pub fn[C : IsChildren] dfn(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
-pub fn[C : IsChildren] dialog(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, open? : Bool, on_close? : @cmd.Dispatch[String], on_cancel? : @cmd.Cmd, attrs? : Attrs, C) -> Html
+pub fn[C : IsChildren] dialog(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, open? : Bool, on_close? : @cmd.Emit[String], on_cancel? : @cmd.Cmd, attrs? : Attrs, C) -> Html
 
-pub fn[C : IsChildren] div(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, on_click? : @cmd.Cmd, on_mousedown? : @cmd.Dispatch[@common.Mouse], on_mouseup? : @cmd.Dispatch[@common.Mouse], on_scroll? : @cmd.Dispatch[@common.Scroll], on_keydown? : @cmd.Dispatch[@common.Keyboard], on_keyup? : @cmd.Dispatch[@common.Keyboard], attrs? : Attrs, C) -> Html
+pub fn[C : IsChildren] div(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, on_click? : @cmd.Cmd, on_mousedown? : @cmd.Emit[@common.Mouse], on_mouseup? : @cmd.Emit[@common.Mouse], on_scroll? : @cmd.Emit[@common.Scroll], on_keydown? : @cmd.Emit[@common.Keyboard], on_keyup? : @cmd.Emit[@common.Keyboard], attrs? : Attrs, C) -> Html
 
 pub fn[C : IsChildren] dl(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
@@ -120,7 +120,7 @@ pub fn iframe(style? : Array[String], id? : String, class? : String, hidden? : B
 
 pub fn[C : IsChildren] img(style? : Array[String], id? : String, class? : String, hidden? : Bool, src? : String, alt? : String, title? : String, width? : Int, height? : Int, srcset? : String, sizes? : String, loading? : String, decoding? : String, attrs? : Attrs, C) -> Html
 
-pub fn[C : IsChildren] input(input_type? : InputType, name? : String, value? : String, checked? : Bool, read_only? : Bool, multiple? : Bool, accept? : String, placeholder? : String, auto_complete? : AutoComplete, style? : Array[String], max? : Int, min? : Int, step? : Int, maxlength? : Int, minlength? : Int, pattern? : String, size? : Int, width? : Int, height? : Int, id? : String, class? : String, title? : String, hidden? : Bool, required? : Bool, autofocus? : Bool, list? : String, inputmode? : String, on_change? : @cmd.Dispatch[String], on_input? : @cmd.Dispatch[String], attrs? : Attrs, C) -> Html
+pub fn[C : IsChildren] input(input_type? : InputType, name? : String, value? : String, checked? : Bool, read_only? : Bool, multiple? : Bool, accept? : String, placeholder? : String, auto_complete? : AutoComplete, style? : Array[String], max? : Int, min? : Int, step? : Int, maxlength? : Int, minlength? : Int, pattern? : String, size? : Int, width? : Int, height? : Int, id? : String, class? : String, title? : String, hidden? : Bool, required? : Bool, autofocus? : Bool, list? : String, inputmode? : String, on_change? : @cmd.Emit[String], on_input? : @cmd.Emit[String], attrs? : Attrs, C) -> Html
 
 pub fn[C : IsChildren] ins(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
@@ -192,7 +192,7 @@ pub fn[C : IsChildren] search(style? : Array[String], id? : String, class? : Str
 
 pub fn[C : IsChildren] section(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
-pub fn[C : IsChildren] select(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, disabled? : Bool, name? : String, multiple? : Bool, size? : Int, required? : Bool, autofocus? : Bool, on_change? : @cmd.Dispatch[String], attrs? : Attrs, C) -> Html
+pub fn[C : IsChildren] select(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, disabled? : Bool, name? : String, multiple? : Bool, size? : Int, required? : Bool, autofocus? : Bool, on_change? : @cmd.Emit[String], attrs? : Attrs, C) -> Html
 
 pub fn[C : IsChildren] selectedcontent(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
@@ -226,7 +226,7 @@ pub fn[C : IsChildren] template(style? : Array[String], id? : String, class? : S
 
 pub fn text(String) -> Html
 
-pub fn[C : IsChildren] textarea(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, name? : String, value? : String, rows? : Int, cols? : Int, placeholder? : String, read_only? : Bool, disabled? : Bool, maxlength? : Int, minlength? : Int, required? : Bool, autofocus? : Bool, wrap? : String, on_change? : @cmd.Dispatch[String], on_input? : @cmd.Dispatch[String], attrs? : Attrs, C) -> Html
+pub fn[C : IsChildren] textarea(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, name? : String, value? : String, rows? : Int, cols? : Int, placeholder? : String, read_only? : Bool, disabled? : Bool, maxlength? : Int, minlength? : Int, required? : Bool, autofocus? : Bool, wrap? : String, on_change? : @cmd.Emit[String], on_input? : @cmd.Emit[String], attrs? : Attrs, C) -> Html
 
 pub fn[C : IsChildren] tfoot(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 

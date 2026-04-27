@@ -19,7 +19,7 @@ effects, and DOM patching:
 
 The runtime executes updates in two phases: message draining and frame flushing.
 
-1. A dispatch function returns `Cmd::Message(id, send)`.
+1. An emit function returns `Cmd::Message(id, send)`.
 2. `Scheduler::add` executes the command:
    - `Empty`: no-op
    - `Batch`: enqueue each command recursively
@@ -63,7 +63,7 @@ At insert time it becomes an actual `<a>` element. The listener classifies URLs:
 - same origin -> `@url.Internal(url)`
 - different origin -> `@url.External(href)`
 
-When `App::with_route(url_request=...)` is configured, it dispatches
+When `App::with_route(url_request=...)` is configured, it emits
 `add_url_request`. Without that callback, the listener keeps native `<a>`
 navigation behavior (no interception).
 
@@ -74,6 +74,5 @@ navigation behavior (no interception).
 - Async work is represented as `Cmd` and re-enters the loop as messages.
 - Rendering is batched to animation frames to avoid repeated DOM work within a
   burst of updates.
-
 
 

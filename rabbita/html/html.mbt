@@ -2,7 +2,7 @@
 using @runtime {type VNode}
 
 ///|
-using @cmd {type Cmd, type Dispatch}
+using @cmd {type Cmd, type Emit}
 
 ///|
 #alias(T)
@@ -206,11 +206,11 @@ pub fn[C : IsChildren] div(
   title? : String,
   hidden? : Bool,
   on_click? : Cmd,
-  on_mousedown? : Dispatch[Mouse],
-  on_mouseup? : Dispatch[Mouse],
-  on_scroll? : Dispatch[Scroll],
-  on_keydown? : Dispatch[Keyboard],
-  on_keyup? : Dispatch[Keyboard],
+  on_mousedown? : Emit[Mouse],
+  on_mouseup? : Emit[Mouse],
+  on_scroll? : Emit[Scroll],
+  on_keydown? : Emit[Keyboard],
+  on_keyup? : Emit[Keyboard],
   attrs? : Attrs,
   children : C,
 ) -> Html {
@@ -1437,8 +1437,8 @@ pub fn[C : IsChildren] input(
   autofocus? : Bool,
   list? : String,
   inputmode? : String,
-  on_change? : Dispatch[String],
-  on_input? : Dispatch[String],
+  on_change? : Emit[String],
+  on_input? : Emit[String],
   attrs? : Attrs,
   children : C,
 ) -> Html {
@@ -1523,8 +1523,8 @@ pub fn[C : IsChildren] textarea(
   required? : Bool,
   autofocus? : Bool,
   wrap? : String,
-  on_change? : Dispatch[String],
-  on_input? : Dispatch[String],
+  on_change? : Emit[String],
+  on_input? : Emit[String],
   attrs? : Attrs,
   children : C,
 ) -> Html {
@@ -1565,7 +1565,7 @@ pub fn[C : IsChildren] select(
   size? : Int,
   required? : Bool,
   autofocus? : Bool,
-  on_change? : Dispatch[String],
+  on_change? : Emit[String],
   attrs? : Attrs,
   children : C,
 ) -> Html {
@@ -2038,7 +2038,7 @@ pub fn[C : IsChildren] dialog(
   title? : String,
   hidden? : Bool,
   open? : Bool,
-  on_close? : Dispatch[String],
+  on_close? : Emit[String],
   on_cancel? : Cmd,
   attrs? : Attrs,
   children : C,
@@ -2111,9 +2111,9 @@ pub fn[C : IsChildren] body(
   lang? : String,
   dir? : String,
   hidden? : Bool,
-  on_scroll? : Dispatch[Scroll],
-  on_keydown? : Dispatch[Keyboard],
-  on_keyup? : Dispatch[Keyboard],
+  on_scroll? : Emit[Scroll],
+  on_keydown? : Emit[Keyboard],
+  on_keyup? : Emit[Keyboard],
   attrs? : Attrs,
   children : C,
 ) -> Html {
@@ -2551,11 +2551,11 @@ pub fn[C : IsChildren] canvas(
   class? : String,
   title? : String,
   hidden? : Bool,
-  on_mousedown? : Dispatch[Mouse],
-  on_mouseup? : Dispatch[Mouse],
-  on_scroll? : Dispatch[Scroll],
-  on_keydown? : Dispatch[Keyboard],
-  on_keyup? : Dispatch[Keyboard],
+  on_mousedown? : Emit[Mouse],
+  on_mouseup? : Emit[Mouse],
+  on_scroll? : Emit[Scroll],
+  on_keydown? : Emit[Keyboard],
+  on_keyup? : Emit[Keyboard],
   attrs? : Attrs,
   children : C,
 ) -> Html {

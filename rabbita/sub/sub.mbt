@@ -7,7 +7,7 @@ using @cmd {trait Scheduler}
 
 ///|
 #cfg(target="js")
-using @cmd {type Cmd, type Dispatch}
+using @cmd {type Cmd, type Emit}
 
 ///|
 /// A long-lived subscription managed by the Rabbita runtime.
@@ -44,15 +44,15 @@ pub fn custom_sub(
 #cfg(target="js")
 priv suberror BuiltinSub {
   Every(Int, Cmd)
-  AnimationFrame(Dispatch[Double])
-  Keydown(Dispatch[Keyboard])
-  Keyup(Dispatch[Keyboard])
-  MouseMove(Dispatch[Mouse])
-  Resize(Dispatch[Viewport])
-  UrlChanged(Dispatch[@url.Url])
-  UrlRequest(Dispatch[@url.UrlRequest])
-  Scroll(Dispatch[Scroll])
-  VisibilityChange(Dispatch[Bool])
+  AnimationFrame(Emit[Double])
+  Keydown(Emit[Keyboard])
+  Keyup(Emit[Keyboard])
+  MouseMove(Emit[Mouse])
+  Resize(Emit[Viewport])
+  UrlChanged(Emit[@url.Url])
+  UrlRequest(Emit[@url.UrlRequest])
+  Scroll(Emit[Scroll])
+  VisibilityChange(Emit[Bool])
 }
 
 ///|
@@ -345,7 +345,7 @@ pub fn every(ms : Int, cmd : @cmd.Cmd) -> Sub {
 ///
 /// The handler receives the latest viewport width and height.
 #cfg(target="js")
-pub fn on_resize(msg : @cmd.Dispatch[Viewport]) -> Sub {
+pub fn on_resize(msg : @cmd.Emit[Viewport]) -> Sub {
   custom_sub("on_resize", Local, Resize(msg), builtin_sub_loader)
 }
 
@@ -355,7 +355,7 @@ pub fn on_resize(msg : @cmd.Dispatch[Viewport]) -> Sub {
 /// The handler receives the browser timestamp for each frame while the
 /// subscription is active.
 #cfg(target="js")
-pub fn on_animation_frame(msg : @cmd.Dispatch[Double]) -> Sub {
+pub fn on_animation_frame(msg : @cmd.Emit[Double]) -> Sub {
   custom_sub(
     "on_animation_frame",
     Local,
@@ -369,7 +369,7 @@ pub fn on_animation_frame(msg : @cmd.Dispatch[Double]) -> Sub {
 ///
 /// The handler receives a normalized `Keyboard` value from `@common`.
 #cfg(target="js")
-pub fn on_key_down(msg : @cmd.Dispatch[Keyboard]) -> Sub {
+pub fn on_key_down(msg : @cmd.Emit[Keyboard]) -> Sub {
   custom_sub("on_key_down", Local, Keydown(msg), builtin_sub_loader)
 }
 
@@ -378,7 +378,7 @@ pub fn on_key_down(msg : @cmd.Dispatch[Keyboard]) -> Sub {
 ///
 /// The handler receives a normalized `Keyboard` value from `@common`.
 #cfg(target="js")
-pub fn on_key_up(msg : @cmd.Dispatch[Keyboard]) -> Sub {
+pub fn on_key_up(msg : @cmd.Emit[Keyboard]) -> Sub {
   custom_sub("on_key_up", Local, Keyup(msg), builtin_sub_loader)
 }
 
@@ -388,7 +388,7 @@ pub fn on_key_up(msg : @cmd.Dispatch[Keyboard]) -> Sub {
 /// The handler receives `true` when the document is hidden, and `false`
 /// when it becomes visible again.
 #cfg(target="js")
-pub fn on_visibility_change(msg : @cmd.Dispatch[Bool]) -> Sub {
+pub fn on_visibility_change(msg : @cmd.Emit[Bool]) -> Sub {
   custom_sub(
     "on_visibility_change",
     Local,
@@ -402,7 +402,7 @@ pub fn on_visibility_change(msg : @cmd.Dispatch[Bool]) -> Sub {
 ///
 /// The handler receives a normalized `Mouse` value from `@common`.
 #cfg(target="js")
-pub fn on_mouse_move(msg : @cmd.Dispatch[Mouse]) -> Sub {
+pub fn on_mouse_move(msg : @cmd.Emit[Mouse]) -> Sub {
   custom_sub("on_mouse_move", Local, MouseMove(msg), builtin_sub_loader)
 }
 
@@ -413,7 +413,7 @@ pub fn on_mouse_move(msg : @cmd.Dispatch[Mouse]) -> Sub {
 /// element. The handler receives the current scroll offset and document scroll
 /// size as a `Scroll` value.
 #cfg(target="js")
-pub fn on_scroll(msg : @cmd.Dispatch[Scroll]) -> Sub {
+pub fn on_scroll(msg : @cmd.Emit[Scroll]) -> Sub {
   custom_sub("on_scroll", Local, Scroll(msg), builtin_sub_loader)
 }
 
@@ -424,7 +424,7 @@ pub fn on_scroll(msg : @cmd.Dispatch[Scroll]) -> Sub {
 /// the root cell's `subscriptions` callback; if a non-root cell returns it,
 /// the subscription is ignored.
 #cfg(target="js")
-pub fn on_url_changed(msg : @cmd.Dispatch[@url.Url]) -> Sub {
+pub fn on_url_changed(msg : @cmd.Emit[@url.Url]) -> Sub {
   custom_sub("on_url_changed", Global, UrlChanged(msg), builtin_sub_loader)
 }
 
@@ -435,7 +435,7 @@ pub fn on_url_changed(msg : @cmd.Dispatch[@url.Url]) -> Sub {
 /// the root cell's `subscriptions` callback; if a non-root cell returns it,
 /// the subscription is ignored.
 #cfg(target="js")
-pub fn on_url_request(msg : @cmd.Dispatch[@url.UrlRequest]) -> Sub {
+pub fn on_url_request(msg : @cmd.Emit[@url.UrlRequest]) -> Sub {
   custom_sub("on_url_request", Global, UrlRequest(msg), builtin_sub_loader)
 }
 

@@ -1,5 +1,5 @@
 ///|
-using @cmd {type Cmd, trait Scheduler, type Dispatch}
+using @cmd {type Cmd, trait Scheduler, type Emit}
 
 ///|
 using @dom {type Blob}
@@ -28,7 +28,7 @@ struct RequestWithBody {
 /// Encode `x` as JSON and attach it to the request body.
 /// 
 /// ```mbt nocheck
-/// @http.post("api/user").with_json(payload).expect_empty(x => dispatch(UserCreated(x)))
+/// @http.post("api/user").with_json(payload).expect_empty(x => emit(UserCreated(x)))
 /// ```
 pub fn[T : ToJson] RequestWithBody::with_json(
   self : RequestWithBody,
@@ -41,7 +41,7 @@ pub fn[T : ToJson] RequestWithBody::with_json(
 /// Attach plain text to the request body.
 /// 
 /// ```mbt nocheck
-/// @http.post("api/raw").with_text("hello").expect_text(x => dispatch(Sent(x)))
+/// @http.post("api/raw").with_text("hello").expect_text(x => emit(Sent(x)))
 /// ```
 pub fn RequestWithBody::with_text(
   self : RequestWithBody,
@@ -56,7 +56,7 @@ pub fn RequestWithBody::with_text(
 /// `content_type` is used as the request `Content-Type` header.
 ///
 /// ```mbt nocheck
-/// @http.post("api/file").with_bytes("application/pdf", data).expect_empty(x => dispatch(FileSent(x)))
+/// @http.post("api/file").with_bytes("application/pdf", data).expect_empty(x => emit(FileSent(x)))
 /// ```
 pub fn RequestWithBody::with_bytes(
   self : RequestWithBody,
@@ -76,7 +76,7 @@ pub fn RequestWithBody::with_bytes(
 /// The request `Content-Type` header is taken from `x.get_type()`.
 ///
 /// ```mbt nocheck
-/// @http.post("api/file").with_blob(file).expect_empty(x => dispatch(FileSent(x)))
+/// @http.post("api/file").with_blob(file).expect_empty(x => emit(FileSent(x)))
 /// ```
 pub fn RequestWithBody::with_blob(self : RequestWithBody, x : Blob) -> Request {
   {
@@ -95,7 +95,7 @@ pub fn RequestWithBody::with_blob(self : RequestWithBody, x : Blob) -> Request {
 /// first, the request is sent with an empty body.
 /// 
 /// ```mbt nocheck
-/// @http.post("api/ping").expect_json(x => dispatch(PingLoaded(x)))
+/// @http.post("api/ping").expect_json(x => emit(PingLoaded(x)))
 /// ```
 /// 
 /// It is recommended to process the decoded value when handling the
@@ -107,16 +107,16 @@ pub fn RequestWithBody::with_blob(self : RequestWithBody, x : Blob) -> Request {
 ///     ```mbt nocheck
 ///     @http.post("api/ping").expect_json(result => {
 ///       let processed = process(result)
-///       dispatch(PingLoaded(processed))
+///       emit(PingLoaded(processed))
 ///     })
 ///     ```
 /// - ignoring the returned `Cmd`
 ///     ```
-///     @http.post("api/ping").expect_json(x => dispatch(PingLoaded(x))) |> ignore
+///     @http.post("api/ping").expect_json(x => emit(PingLoaded(x))) |> ignore
 ///     ```
 pub fn[T : FromJson] RequestWithBody::expect_json(
   self : RequestWithBody,
-  msg : Dispatch[Result[T, Error]],
+  msg : Emit[Result[T, Error]],
 ) -> Cmd {
   { url: self.url, http_method: self.http_method, body: Empty }.expect_json(msg)
 }
@@ -130,7 +130,7 @@ pub fn[T : FromJson] RequestWithBody::expect_json(
 /// first, the request is sent with an empty body.
 /// 
 /// ```mbt nocheck
-/// @http.post("api/file").expect_blob(x => dispatch(FileLoaded(x)))
+/// @http.post("api/file").expect_blob(x => emit(FileLoaded(x)))
 /// ```
 /// 
 /// It is recommended to process the blob when handling the `FileLoaded`
@@ -142,16 +142,16 @@ pub fn[T : FromJson] RequestWithBody::expect_json(
 ///     ```mbt nocheck
 ///     @http.post("api/file").expect_blob(result => {
 ///       let processed = process(result)
-///       dispatch(FileLoaded(processed))
+///       emit(FileLoaded(processed))
 ///     })
 ///     ```
 /// - ignoring the returned `Cmd`
 ///     ```
-///     @http.post("api/file").expect_blob(x => dispatch(FileLoaded(x))) |> ignore
+///     @http.post("api/file").expect_blob(x => emit(FileLoaded(x))) |> ignore
 ///     ```
 pub fn RequestWithBody::expect_blob(
   self : RequestWithBody,
-  msg : Dispatch[Result[Blob, Error]],
+  msg : Emit[Result[Blob, Error]],
 ) -> Cmd {
   { url: self.url, http_method: self.http_method, body: Empty }.expect_blob(msg)
 }
@@ -165,7 +165,7 @@ pub fn RequestWithBody::expect_blob(
 /// first, the request is sent with an empty body.
 /// 
 /// ```mbt nocheck
-/// @http.post("api/file").expect_bytes(x => dispatch(FileBytesLoaded(x)))
+/// @http.post("api/file").expect_bytes(x => emit(FileBytesLoaded(x)))
 /// ```
 /// 
 /// It is recommended to process the bytes when handling the
@@ -177,16 +177,16 @@ pub fn RequestWithBody::expect_blob(
 ///     ```mbt nocheck
 ///     @http.post("api/file").expect_bytes(result => {
 ///       let processed = process(result)
-///       dispatch(FileBytesLoaded(processed))
+///       emit(FileBytesLoaded(processed))
 ///     })
 ///     ```
 /// - ignoring the returned `Cmd`
 ///     ```
-///     @http.post("api/file").expect_bytes(x => dispatch(FileBytesLoaded(x))) |> ignore
+///     @http.post("api/file").expect_bytes(x => emit(FileBytesLoaded(x))) |> ignore
 ///     ```
 pub fn RequestWithBody::expect_bytes(
   self : RequestWithBody,
-  msg : Dispatch[Result[(ContentType, Bytes), Error]],
+  msg : Emit[Result[(ContentType, Bytes), Error]],
 ) -> Cmd {
   { url: self.url, http_method: self.http_method, body: Empty }.expect_bytes(
     msg,
@@ -202,7 +202,7 @@ pub fn RequestWithBody::expect_bytes(
 /// first, the request is sent with an empty body.
 /// 
 /// ```mbt nocheck
-/// @http.post("api/ping").expect_text(x => dispatch(PingTextLoaded(x)))
+/// @http.post("api/ping").expect_text(x => emit(PingTextLoaded(x)))
 /// ```
 /// 
 /// It is recommended to process the text when handling the
@@ -214,16 +214,16 @@ pub fn RequestWithBody::expect_bytes(
 ///     ```mbt nocheck
 ///     @http.post("api/ping").expect_text(result => {
 ///       let processed = process(result)
-///       dispatch(PingTextLoaded(processed))
+///       emit(PingTextLoaded(processed))
 ///     })
 ///     ```
 /// - ignoring the returned `Cmd`
 ///     ```
-///     @http.post("api/ping").expect_text(x => dispatch(PingTextLoaded(x))) |> ignore
+///     @http.post("api/ping").expect_text(x => emit(PingTextLoaded(x))) |> ignore
 ///     ```
 pub fn RequestWithBody::expect_text(
   self : RequestWithBody,
-  msg : Dispatch[Result[String, Error]],
+  msg : Emit[Result[String, Error]],
 ) -> Cmd {
   { url: self.url, http_method: self.http_method, body: Empty }.expect_text(msg)
 }
@@ -237,7 +237,7 @@ pub fn RequestWithBody::expect_text(
 /// first, the request is sent with an empty body.
 /// 
 /// ```mbt nocheck
-/// @http.post("api/ping").expect_empty(x => dispatch(PingFinished(x)))
+/// @http.post("api/ping").expect_empty(x => emit(PingFinished(x)))
 /// ```
 /// 
 /// It is recommended to handle the success or failure state when handling the
@@ -249,16 +249,16 @@ pub fn RequestWithBody::expect_text(
 ///     ```mbt nocheck
 ///     @http.post("api/ping").expect_empty(result => {
 ///       let status = result.is_none()
-///       dispatch(PingStatus(status))
+///       emit(PingStatus(status))
 ///     })
 ///     ```
 /// - ignoring the returned `Cmd`
 ///     ```
-///     @http.post("api/ping").expect_empty(x => dispatch(PingFinished(x))) |> ignore
+///     @http.post("api/ping").expect_empty(x => emit(PingFinished(x))) |> ignore
 ///     ```
 pub fn RequestWithBody::expect_empty(
   self : RequestWithBody,
-  msg : Dispatch[Error?],
+  msg : Emit[Error?],
 ) -> Cmd {
   { url: self.url, http_method: self.http_method, body: Empty }.expect_empty(
     msg,
@@ -272,7 +272,7 @@ pub fn RequestWithBody::expect_empty(
 /// The response body is parsed as JSON and decoded into `T`.
 /// 
 /// ```mbt nocheck
-/// @http.get("api/user").expect_json(x => dispatch(UserLoaded(x)))
+/// @http.get("api/user").expect_json(x => emit(UserLoaded(x)))
 /// ```
 /// 
 /// It is recommended to process the decoded value when handling the
@@ -284,16 +284,16 @@ pub fn RequestWithBody::expect_empty(
 ///     ```mbt nocheck
 ///     @http.get("api/user").expect_json(result => {
 ///       let processed = process(result)
-///       dispatch(UserLoaded(processed))
+///       emit(UserLoaded(processed))
 ///     })
 ///     ```
 /// - ignoring the returned `Cmd`
 ///     ```
-///     @http.get("api/user").expect_json(x => dispatch(UserLoaded(x))) |> ignore
+///     @http.get("api/user").expect_json(x => emit(UserLoaded(x))) |> ignore
 ///     ```
 pub fn[T : FromJson] Request::expect_json(
   self : Request,
-  msg : Dispatch[Result[T, Error]],
+  msg : Emit[Result[T, Error]],
 ) -> Cmd {
   self.send_response(
     response_kind="text",
@@ -314,7 +314,7 @@ pub fn[T : FromJson] Request::expect_json(
 /// The response body is returned as a `Blob`.
 /// 
 /// ```mbt nocheck
-/// @http.get("api/file").expect_blob(x => dispatch(FileLoaded(x)))
+/// @http.get("api/file").expect_blob(x => emit(FileLoaded(x)))
 /// ```
 /// 
 /// It is recommended to process the blob when handling the `FileLoaded`
@@ -326,16 +326,16 @@ pub fn[T : FromJson] Request::expect_json(
 ///     ```mbt nocheck
 ///     @http.get("api/file").expect_blob(result => {
 ///       let processed = process(result)
-///       dispatch(FileLoaded(processed))
+///       emit(FileLoaded(processed))
 ///     })
 ///     ```
 /// - ignoring the returned `Cmd`
 ///     ```
-///     @http.get("api/file").expect_blob(x => dispatch(FileLoaded(x))) |> ignore
+///     @http.get("api/file").expect_blob(x => emit(FileLoaded(x))) |> ignore
 ///     ```
 pub fn Request::expect_blob(
   self : Request,
-  msg : Dispatch[Result[Blob, Error]],
+  msg : Emit[Result[Blob, Error]],
 ) -> Cmd {
   self.send_response(
     response_kind="blob",
@@ -353,7 +353,7 @@ pub fn Request::expect_blob(
 /// on failure, it contains an `Error`.
 /// 
 /// ```mbt nocheck
-/// @http.get("api/file").expect_bytes(x => dispatch(FileBytesLoaded(x)))
+/// @http.get("api/file").expect_bytes(x => emit(FileBytesLoaded(x)))
 /// ```
 /// 
 /// It is recommended to process the bytes when handling the
@@ -365,16 +365,16 @@ pub fn Request::expect_blob(
 ///     ```mbt nocheck
 ///     @http.get("api/file").expect_bytes(result => {
 ///       let processed = process(result)
-///       dispatch(FileBytesLoaded(processed))
+///       emit(FileBytesLoaded(processed))
 ///     })
 ///     ```
 /// - ignoring the returned `Cmd`
 ///     ```
-///     @http.get("api/file").expect_bytes(x => dispatch(FileBytesLoaded(x))) |> ignore
+///     @http.get("api/file").expect_bytes(x => emit(FileBytesLoaded(x))) |> ignore
 ///     ```
 pub fn Request::expect_bytes(
   self : Request,
-  msg : Dispatch[Result[(ContentType, Bytes), Error]],
+  msg : Emit[Result[(ContentType, Bytes), Error]],
 ) -> Cmd {
   self.send_response(
     response_kind="bytes",
@@ -392,7 +392,7 @@ pub fn Request::expect_bytes(
 /// The response body is returned as plain text.
 /// 
 /// ```mbt nocheck
-/// @http.get("api/text").expect_text(x => dispatch(CustomMsg(x)))
+/// @http.get("api/text").expect_text(x => emit(CustomMsg(x)))
 /// ```
 /// 
 /// It is recommended to process the text when handling the
@@ -404,16 +404,16 @@ pub fn Request::expect_bytes(
 ///     ```mbt nocheck
 ///     @http.get("api/text").expect_text(result => {
 ///       let processed = process(result)
-///       dispatch(CustomMsg(processed))
+///       emit(CustomMsg(processed))
 ///     })
 ///     ```
 /// - ignoring the returned `Cmd`
 ///     ```
-///     @http.get("api/text").expect_text(x => dispatch(CustomMsg(x))) |> ignore
+///     @http.get("api/text").expect_text(x => emit(CustomMsg(x))) |> ignore
 ///     ```
 pub fn Request::expect_text(
   self : Request,
-  msg : Dispatch[Result[String, Error]],
+  msg : Emit[Result[String, Error]],
 ) -> Cmd {
   self.send_response(
     response_kind="text",
@@ -431,7 +431,7 @@ pub fn Request::expect_text(
 /// The response body is ignored.
 /// 
 /// ```mbt nocheck
-/// @http.delete("api/user/1").expect_empty(x => dispatch(UserDeleted(x)))
+/// @http.delete("api/user/1").expect_empty(x => emit(UserDeleted(x)))
 /// ```
 /// 
 /// It is recommended to handle the success or failure state when handling the
@@ -443,14 +443,14 @@ pub fn Request::expect_text(
 ///     ```mbt nocheck
 ///     @http.delete("api/user/1").expect_empty(result => {
 ///       let status = result.is_none()
-///       dispatch(UserDeletedStatus(status))
+///       emit(UserDeletedStatus(status))
 ///     })
 ///     ```
 /// - ignoring the returned `Cmd`
 ///     ```
-///     @http.delete("api/user/1").expect_empty(x => dispatch(UserDeleted(x))) |> ignore
+///     @http.delete("api/user/1").expect_empty(x => emit(UserDeleted(x))) |> ignore
 ///     ```
-pub fn Request::expect_empty(self : Request, msg : Dispatch[Error?]) -> Cmd {
+pub fn Request::expect_empty(self : Request, msg : Emit[Error?]) -> Cmd {
   self.send_response(
     response_kind="text",
     on_text=_ => msg(None),
@@ -468,7 +468,7 @@ pub fn Request::expect_empty(self : Request, msg : Dispatch[Error?]) -> Cmd {
 /// `expect_text`, or `expect_empty` to turn it into a `Cmd`.
 /// 
 /// ```mbt nocheck
-/// @http.get("api/user").expect_json(x => dispatch(UserLoaded(x)))
+/// @http.get("api/user").expect_json(x => emit(UserLoaded(x)))
 /// ```
 /// 
 /// It is recommended to build and finish the request in one expression.
@@ -482,12 +482,12 @@ pub fn Request::expect_empty(self : Request, msg : Dispatch[Error?]) -> Cmd {
 /// - storing the `Request` or `Cmd` in a variable
 ///     ```
 ///     let user_api_request = @http.get("api/user")
-///     let user_api_cmd = @http.get("api/user").expect_json(x => dispatch(x))
+///     let user_api_cmd = @http.get("api/user").expect_json(x => emit(x))
 ///     ```
 /// - wrapping the request construction in a helper function
 ///     ```mbt nocheck
-///     fn fetch_user(dispatch : Dispatch[Msg]) -> Cmd {
-///       @http.get("api/user").expect_json(x => dispatch(UserLoaded(x)))
+///     fn fetch_user(emit : Emit[Msg]) -> Cmd {
+///       @http.get("api/user").expect_json(x => emit(UserLoaded(x)))
 ///     }
 ///     ```
 pub fn get(url : String) -> Request {
@@ -502,7 +502,7 @@ pub fn get(url : String) -> Request {
 /// `expect_text`, or `expect_empty` to turn it into a `Cmd`.
 /// 
 /// ```mbt nocheck
-/// @http.delete("api/user/1").expect_empty(x => dispatch(UserDeleted(x)))
+/// @http.delete("api/user/1").expect_empty(x => emit(UserDeleted(x)))
 /// ```
 /// 
 /// It is recommended to build and finish the request in one expression.
@@ -516,12 +516,12 @@ pub fn get(url : String) -> Request {
 /// - storing the `Request` or `Cmd` in a variable
 ///     ```
 ///     let delete_user_request = @http.delete("api/user/1")
-///     let delete_user_cmd = @http.delete("api/user/1").expect_empty(x => dispatch(x))
+///     let delete_user_cmd = @http.delete("api/user/1").expect_empty(x => emit(x))
 ///     ```
 /// - wrapping the request construction in a helper function
 ///     ```mbt nocheck
-///     fn delete_user(dispatch : Dispatch[Msg]) -> Cmd {
-///       @http.delete("api/user/1").expect_empty(x => dispatch(UserDeleted(x)))
+///     fn delete_user(emit : Emit[Msg]) -> Cmd {
+///       @http.delete("api/user/1").expect_empty(x => emit(UserDeleted(x)))
 ///     }
 ///     ```
 pub fn delete(url : String) -> Request {
@@ -537,7 +537,7 @@ pub fn delete(url : String) -> Request {
 /// `expect_text`, or `expect_empty`.
 /// 
 /// ```mbt nocheck
-/// @http.post("api/user").with_json(payload).expect_empty(x => dispatch(UserCreated(x)))
+/// @http.post("api/user").with_json(payload).expect_empty(x => emit(UserCreated(x)))
 /// ```
 /// 
 /// It is recommended to build and finish the request in one expression.
@@ -552,14 +552,14 @@ pub fn delete(url : String) -> Request {
 ///     ```
 ///     let create_user_request = @http.post("api/user")
 ///     let create_user_built = @http.post("api/user").with_json(payload)
-///     let create_user_cmd = @http.post("api/user").with_json(payload).expect_empty(x => dispatch(x))
+///     let create_user_cmd = @http.post("api/user").with_json(payload).expect_empty(x => emit(x))
 ///     ```
 /// - wrapping the request construction in a helper function
 ///     ```mbt nocheck
-///     fn create_user(dispatch : Dispatch[Msg]) -> Cmd {
+///     fn create_user(emit : Emit[Msg]) -> Cmd {
 ///       @http.post("api/user")
 ///       .with_json(payload)
-///       .expect_empty(x => dispatch(UserCreated(x)))
+///       .expect_empty(x => emit(UserCreated(x)))
 ///     }
 ///     ```
 pub fn post(url : String) -> RequestWithBody {
@@ -575,7 +575,7 @@ pub fn post(url : String) -> RequestWithBody {
 /// `expect_text`, or `expect_empty`.
 /// 
 /// ```mbt nocheck
-/// @http.patch("api/user/1").with_json(payload).expect_empty(x => dispatch(UserPatched(x)))
+/// @http.patch("api/user/1").with_json(payload).expect_empty(x => emit(UserPatched(x)))
 /// ```
 /// 
 /// It is recommended to build and finish the request in one expression.
@@ -590,14 +590,14 @@ pub fn post(url : String) -> RequestWithBody {
 ///     ```
 ///     let patch_user_request = @http.patch("api/user/1")
 ///     let patch_user_built = @http.patch("api/user/1").with_json(payload)
-///     let patch_user_cmd = @http.patch("api/user/1").with_json(payload).expect_empty(x => dispatch(x))
+///     let patch_user_cmd = @http.patch("api/user/1").with_json(payload).expect_empty(x => emit(x))
 ///     ```
 /// - wrapping the request construction in a helper function
 ///     ```mbt nocheck
-///     fn patch_user(dispatch : Dispatch[Msg]) -> Cmd {
+///     fn patch_user(emit : Emit[Msg]) -> Cmd {
 ///       @http.patch("api/user/1")
 ///       .with_json(payload)
-///       .expect_empty(x => dispatch(UserPatched(x)))
+///       .expect_empty(x => emit(UserPatched(x)))
 ///     }
 ///     ```
 pub fn patch(url : String) -> RequestWithBody {
@@ -613,7 +613,7 @@ pub fn patch(url : String) -> RequestWithBody {
 /// `expect_text`, or `expect_empty`.
 /// 
 /// ```mbt nocheck
-/// @http.put("api/user/1").with_json(payload).expect_empty(x => dispatch(UserReplaced(x)))
+/// @http.put("api/user/1").with_json(payload).expect_empty(x => emit(UserReplaced(x)))
 /// ```
 /// 
 /// It is recommended to build and finish the request in one expression.
@@ -632,14 +632,14 @@ pub fn patch(url : String) -> RequestWithBody {
 ///
 ///     let replace_user_cmd = @http.put("api/user/1")
 ///       .with_json(payload)
-///       .expect_empty(x => dispatch(x))
+///       .expect_empty(x => emit(x))
 ///     ```
 /// - wrapping the request construction in a helper function
 ///     ```mbt nocheck
-///     fn replace_user(dispatch : Dispatch[Msg]) -> Cmd {
+///     fn replace_user(emit : Emit[Msg]) -> Cmd {
 ///       @http.put("api/user/1")
 ///       .with_json(payload)
-///       .expect_empty(x => dispatch(UserReplaced(x)))
+///       .expect_empty(x => emit(UserReplaced(x)))
 ///     }
 ///     ```
 pub fn put(url : String) -> RequestWithBody {

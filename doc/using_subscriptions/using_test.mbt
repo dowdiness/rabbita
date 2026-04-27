@@ -1,5 +1,5 @@
 ///|
-using @rabbita {type Dispatch, type Cell, none}
+using @rabbita {type Emit, type Cell, none}
 
 ///|
 using @html {div, h1, p}

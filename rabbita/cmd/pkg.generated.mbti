@@ -30,13 +30,14 @@ pub fn[A] perform((A) -> Cmd, async () -> A noraise) -> Cmd
 // Types and methods
 type Cmd
 
-pub(all) struct Dispatch[Msg]((Msg) -> Cmd)
-pub fn[A, B] Dispatch::map(Self[A], (B) -> A) -> Self[B]
-
 pub(all) enum EffectKind {
   Immediately
   AfterRender
 }
+
+#alias(Dispatch, deprecated)
+pub(all) struct Emit[Msg]((Msg) -> Cmd)
+pub fn[A, B] Emit::map(Self[A], (B) -> A) -> Self[B]
 
 pub(all) struct Hooks {
   mut url_request : ((&Scheduler, String) -> Unit)?

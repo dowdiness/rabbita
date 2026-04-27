@@ -67,7 +67,7 @@ fn scroll_from_dom(element : @dom.Element) -> Scroll {
 
 ///|
 #cfg(target="js")
-fn push_mousedown(value : @cmd.Dispatch[Mouse]?, attrs : Attrs) -> Unit {
+fn push_mousedown(value : @cmd.Emit[Mouse]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(attrs.on_mousedown(event => v(mouse_from_dom(event))))
   }
@@ -75,13 +75,13 @@ fn push_mousedown(value : @cmd.Dispatch[Mouse]?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(not(target="js"))
-fn push_mousedown(value : @cmd.Dispatch[Mouse]?, attrs : Attrs) -> Unit {
+fn push_mousedown(value : @cmd.Emit[Mouse]?, attrs : Attrs) -> Unit {
   ignore((value, attrs))
 }
 
 ///|
 #cfg(target="js")
-fn push_mouseup(value : @cmd.Dispatch[Mouse]?, attrs : Attrs) -> Unit {
+fn push_mouseup(value : @cmd.Emit[Mouse]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(attrs.on_mouseup(event => v(mouse_from_dom(event))))
   }
@@ -89,13 +89,13 @@ fn push_mouseup(value : @cmd.Dispatch[Mouse]?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(not(target="js"))
-fn push_mouseup(value : @cmd.Dispatch[Mouse]?, attrs : Attrs) -> Unit {
+fn push_mouseup(value : @cmd.Emit[Mouse]?, attrs : Attrs) -> Unit {
   ignore((value, attrs))
 }
 
 ///|
 #cfg(target="js")
-fn push_scroll(value : @cmd.Dispatch[Scroll]?, attrs : Attrs) -> Unit {
+fn push_scroll(value : @cmd.Emit[Scroll]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(
       attrs.on_scroll(event => {
@@ -108,13 +108,13 @@ fn push_scroll(value : @cmd.Dispatch[Scroll]?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(not(target="js"))
-fn push_scroll(value : @cmd.Dispatch[Scroll]?, attrs : Attrs) -> Unit {
+fn push_scroll(value : @cmd.Emit[Scroll]?, attrs : Attrs) -> Unit {
   ignore((value, attrs))
 }
 
 ///|
 #cfg(target="js")
-fn push_keydown(value : @cmd.Dispatch[Keyboard]?, attrs : Attrs) -> Unit {
+fn push_keydown(value : @cmd.Emit[Keyboard]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(attrs.on_keydown(event => v(keyboard_from_dom(event))))
   }
@@ -122,13 +122,13 @@ fn push_keydown(value : @cmd.Dispatch[Keyboard]?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(not(target="js"))
-fn push_keydown(value : @cmd.Dispatch[Keyboard]?, attrs : Attrs) -> Unit {
+fn push_keydown(value : @cmd.Emit[Keyboard]?, attrs : Attrs) -> Unit {
   ignore((value, attrs))
 }
 
 ///|
 #cfg(target="js")
-fn push_keyup(value : @cmd.Dispatch[Keyboard]?, attrs : Attrs) -> Unit {
+fn push_keyup(value : @cmd.Emit[Keyboard]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(attrs.on_keyup(event => v(keyboard_from_dom(event))))
   }
@@ -136,7 +136,7 @@ fn push_keyup(value : @cmd.Dispatch[Keyboard]?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(not(target="js"))
-fn push_keyup(value : @cmd.Dispatch[Keyboard]?, attrs : Attrs) -> Unit {
+fn push_keyup(value : @cmd.Emit[Keyboard]?, attrs : Attrs) -> Unit {
   ignore((value, attrs))
 }
 
@@ -399,7 +399,7 @@ fn form_event_value(event : @dom.Event) -> String {
 
 ///|
 #cfg(target="js")
-fn push_change(value : @cmd.Dispatch[String]?, attrs : Attrs) -> Unit {
+fn push_change(value : @cmd.Emit[String]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(
       attrs.handler("change", (event, scheduler) => {
@@ -411,13 +411,13 @@ fn push_change(value : @cmd.Dispatch[String]?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(not(target="js"))
-fn push_change(value : @cmd.Dispatch[String]?, attrs : Attrs) -> Unit {
+fn push_change(value : @cmd.Emit[String]?, attrs : Attrs) -> Unit {
   ignore((value, attrs))
 }
 
 ///|
 #cfg(target="js")
-fn push_input(value : @cmd.Dispatch[String]?, attrs : Attrs) -> Unit {
+fn push_input(value : @cmd.Emit[String]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(
       attrs.handler("input", (event, scheduler) => {
@@ -429,7 +429,7 @@ fn push_input(value : @cmd.Dispatch[String]?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(not(target="js"))
-fn push_input(value : @cmd.Dispatch[String]?, attrs : Attrs) -> Unit {
+fn push_input(value : @cmd.Emit[String]?, attrs : Attrs) -> Unit {
   ignore((value, attrs))
 }
 
@@ -483,7 +483,7 @@ fn push_scope(value : Scope?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(target="js")
-fn push_close(value : @cmd.Dispatch[String]?, attrs : Attrs) -> Unit {
+fn push_close(value : @cmd.Emit[String]?, attrs : Attrs) -> Unit {
   if value is Some(close) {
     ignore(
       attrs.handler("close", (event, scheduler) => {
@@ -496,7 +496,7 @@ fn push_close(value : @cmd.Dispatch[String]?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(not(target="js"))
-fn push_close(value : @cmd.Dispatch[String]?, attrs : Attrs) -> Unit {
+fn push_close(value : @cmd.Emit[String]?, attrs : Attrs) -> Unit {
   ignore((value, attrs))
 }
 

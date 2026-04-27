@@ -1,7 +1,12 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "example/ssr/main"
 
+import {
+  "moonbitlang/async/http",
+}
+
 // Values
+pub async fn server_main(@http.Server, path~ : String, html~ : String, log? : (String) -> Unit) -> Unit
 
 // Errors
 

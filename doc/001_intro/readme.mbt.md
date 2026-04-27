@@ -59,11 +59,11 @@ let app : Cell = @rabbita.simple_cell(
       Dec => { count: model.count - 1 }
     }
   },
-  view=(dispatch, model) => {
+  view=(emit, model) => {
     div([
       h1("\{model.count}"),
-      button(on_click=dispatch(Inc), "+"),
-      button(on_click=dispatch(Dec), "-"),
+      button(on_click=emit(Inc), "+"),
+      button(on_click=emit(Dec), "-"),
     ])
   },
 )
@@ -107,7 +107,7 @@ The user will see:
 
 ![Counter UI](counter.png)
 
-When the user clicks the `+` button, the `Inc` message is dispatched to the 
+When the user clicks the `+` button, the `Inc` message is emitted to the 
 `update` function to produce a new model. After the model changes, it is passed 
 to `view` again to update the page.
 

@@ -34,7 +34,7 @@ pub fn MooncakesPath::to_string(Self) -> String
 pub impl Show for MooncakesPath
 pub impl @debug.Debug for MooncakesPath
 
-type SourcePath derive(Eq)
+type SourcePath derive(Compare, Eq, Hash)
 pub fn SourcePath::join(Self, String) -> Self
 pub fn SourcePath::new(String) -> Self
 pub fn SourcePath::relative(Self, Self) -> String

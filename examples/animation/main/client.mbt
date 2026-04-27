@@ -2,7 +2,7 @@
 using @html {div, h1}
 
 ///|
-using @rabbita {type Cmd, type Dispatch, type Html}
+using @rabbita {type Cmd, type Emit, type Html}
 
 ///|
 enum Msg {
@@ -19,7 +19,7 @@ struct Model {
 }
 
 ///|
-fn update(_ : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
+fn update(_ : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
   match msg {
     SelectPattern(index) => (@rabbita.none, set_animation_pattern(index, model))
     AnimationFrameTick(timestamp) =>
@@ -28,20 +28,18 @@ fn update(_ : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
 }
 
 ///|
-fn subscriptions(dispatch : Dispatch[Msg], _ : Model) -> @sub.Sub {
-  @sub.on_animation_frame(
-    dispatch.map(timestamp => AnimationFrameTick(timestamp)),
-  )
+fn subscriptions(emit : Emit[Msg], _ : Model) -> @sub.Sub {
+  @sub.on_animation_frame(emit.map(timestamp => AnimationFrameTick(timestamp)))
 }
 
 ///|
-fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
+fn view(emit : Emit[Msg], model : Model) -> Html {
   div(class="page") <| [
     h1(class="title", "Rabbita Animation"),
     div(class="stage") <| [
       logo_view(model.logo),
     ],
-    div(class="actions") <| animation_actions(dispatch, model),
+    div(class="actions") <| animation_actions(emit, model),
   ]
 }
 

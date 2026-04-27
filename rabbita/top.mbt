@@ -14,7 +14,7 @@ pub type Html = @html.Html
 ///|
 /// Create an application from a root `Cell`.
 ///
-/// Use `simple_cell()`, `static_cell()`, `cell()`, `cell_with_dispatch()` to create a cell.
+/// Use `simple_cell()`, `static_cell()`, `cell()`, `cell_with_emit()` to create a cell.
 /// Call `mount` to attach it to a DOM element.
 /// Optionally call `with_route` to install routing callbacks.
 /// 
@@ -49,8 +49,8 @@ pub fn new(root : Cell) -> App {
 #deprecated("use subscriptions and @sub.on_url_changed/@sub.on_url_request instead")
 pub fn App::with_route(
   self : Self,
-  url_changed? : Dispatch[@url.Url],
-  url_request? : Dispatch[@url.UrlRequest],
+  url_changed? : Emit[@url.Url],
+  url_request? : Emit[@url.UrlRequest],
 ) -> Unit {
   if url_changed is Some(msg) {
     for _, sub in @sub.on_url_changed(msg).to_map(@key.key, filter_global=false) {
@@ -79,7 +79,7 @@ pub fn App::with_init(self : Self, cmd : Cmd) -> Unit {
 /// Mount the app into the DOM element identified by `element_id`.
 ///
 /// This initializes the runtime and schedules the first render flush.
-/// If routing is configured, the current URL is also dispatched on mount.
+/// If routing is configured, the current URL is also emitted on mount.
 #cfg(target="js")
 pub fn App::mount(self : Self, element_id : String) -> Unit {
   self.sandbox.mount = element_id

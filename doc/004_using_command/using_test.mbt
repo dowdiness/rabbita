@@ -1,16 +1,16 @@
 ///|
-using @rabbita {type Dispatch, type Cmd, type Html, none, batch}
+using @rabbita {type Emit, type Cmd, type Html, none, batch}
 
 ///|
 using @html {div, h1, p, button}
 
 ///|
 test {
-  let render : (Dispatch[BatchMsg], Html) -> Html = (dispatch, child) => {
+  let render : (Emit[BatchMsg], Html) -> Html = (emit, child) => {
     div([
       h1("batch"),
       p("command"),
-      button(on_click=dispatch(RunBatch), "run"),
+      button(on_click=emit(RunBatch), "run"),
       child,
     ])
   }

@@ -39,7 +39,7 @@ using @html {
 }
 
 ///|
-using @rabbita {type Dispatch, type Html, type Cmd, batch}
+using @rabbita {type Emit, type Html, type Cmd, batch}
 
 ///|
 enum Theme {
@@ -97,7 +97,7 @@ struct Model {
 }
 
 ///|
-fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
+fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
   match msg {
     ToggleMenu => (@rabbita.none, { ..model, menu_open: !model.menu_open })
     CycleTheme =>
@@ -134,7 +134,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
       match model.page {
         Home(hm) =>
           (
-            @rabbita.delay(dispatch(NextCmpIdx), 12000),
+            @rabbita.delay(emit(NextCmpIdx), 12000),
             {
               ..model,
               page: Home({
@@ -150,7 +150,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
       match model.page {
         Home(hm) =>
           (
-            @rabbita.delay(dispatch(ClearCopied), 1500),
+            @rabbita.delay(emit(ClearCopied), 1500),
             { ..model, page: Home({ ..hm, copied_step: Some(i) }) },
           )
         _ => (@rabbita.none, model)
@@ -235,7 +235,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
             batch([
               @http.get(
                 chapter_base_url(model.chapters[safe_idx]) + "readme.mbt.md",
-              ).expect_text(x => dispatch(ChapterFetched(x))),
+              ).expect_text(x => emit(ChapterFetched(x))),
               scroll_cmd,
             ]),
             {
@@ -259,10 +259,10 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
 }
 
 ///|
-fn subscriptions(dispatch : Dispatch[Msg], _ : Model) -> @sub.Sub {
+fn subscriptions(emit : Emit[Msg], _ : Model) -> @sub.Sub {
   @sub.batch([
-    @sub.on_url_changed(url => dispatch(UrlChanged(url))),
-    @sub.on_url_request(req => dispatch(UrlRequest(req))),
+    @sub.on_url_changed(url => emit(UrlChanged(url))),
+    @sub.on_url_request(req => emit(UrlRequest(req))),
   ])
 }
 
@@ -288,8 +288,8 @@ let code_counter : String =
   #|        Click => count + 1
   #|      }
   #|    },
-  #|    view=(dispatch, count) => {
-  #|      button(on_click=dispatch(Click), "You clicked \{count} times")
+  #|    view=(emit, count) => {
+  #|      button(on_click=emit(Click), "You clicked \{count} times")
   #|    },
   #|  )
   #|  new(app).mount("app")
@@ -567,7 +567,7 @@ fn hamburger(is_open : Bool) -> Html {
 }
 
 ///|
-fn view_nav(dispatch : Dispatch[Msg], model : Model) -> Html {
+fn view_nav(emit : Emit[Msg], model : Model) -> Html {
   let is_home = match model.page {
     Home(_) => true
     _ => false
@@ -604,10 +604,10 @@ fn view_nav(dispatch : Dispatch[Msg], model : Model) -> Html {
         ]),
       ]),
       div(class="nav-actions", [
-        button(class="theme-toggle", on_click=dispatch(CycleTheme), [
+        button(class="theme-toggle", on_click=emit(CycleTheme), [
           theme_icon(model.theme),
         ]),
-        button(class="nav-toggle", on_click=dispatch(ToggleMenu), [
+        button(class="nav-toggle", on_click=emit(ToggleMenu), [
           hamburger(model.menu_open),
         ]),
       ]),
@@ -646,7 +646,7 @@ let hero_tabs : Array[HeroTabEntry] = [
 ]
 
 ///|
-fn view_hero(dispatch : Dispatch[Msg], model : Model, hm : HomeModel) -> Html {
+fn view_hero(emit : Emit[Msg], model : Model, hm : HomeModel) -> Html {
   let src = hero_tabs[hm.hero_tab].src
   let code_block = match model.highlighter {
     Some(hl) =>
@@ -685,7 +685,7 @@ fn view_hero(dispatch : Dispatch[Msg], model : Model, hm : HomeModel) -> Html {
             } else {
               "hero-tab"
             }
-            button(class=cls, on_click=dispatch(SelectTab(i)), t.label)
+            button(class=cls, on_click=emit(SelectTab(i)), t.label)
           }),
         ),
         div(class="hero-code", [code_block]),
@@ -768,11 +768,7 @@ fn cmp_card(hl : @shiki.Highlighter?, js_src : String, mb_src : String) -> Html 
 }
 
 ///|
-fn view_comparison(
-  dispatch : Dispatch[Msg],
-  model : Model,
-  hm : HomeModel,
-) -> Html {
+fn view_comparison(emit : Emit[Msg], model : Model, hm : HomeModel) -> Html {
   let entry = cmp_entries[hm.cmp_idx]
   let card = cmp_card(model.highlighter, entry.js_src, entry.mb_src)
   section(class="comparison", [
@@ -787,7 +783,7 @@ fn view_comparison(
             } else {
               "cmp-tab"
             }
-            button(class=cls, on_click=dispatch(SelectCmpIdx(i)), e.label)
+            button(class=cls, on_click=emit(SelectCmpIdx(i)), e.label)
           }),
         ),
         div(
@@ -901,7 +897,7 @@ fn icon_check() -> Html {
 
 ///|
 fn qs_step(
-  dispatch : Dispatch[Msg],
+  emit : Emit[Msg],
   idx : Int,
   num : String,
   title : String,
@@ -923,7 +919,7 @@ fn qs_step(
         },
         on_click=batch([
           @clipboard.copy(@clipboard.Text(cmd)),
-          dispatch(CopiedStep(idx)),
+          emit(CopiedStep(idx)),
         ]),
         [if is_copied { icon_check() } else { icon_copy() }],
       ),
@@ -932,7 +928,7 @@ fn qs_step(
 }
 
 ///|
-fn view_quickstart(dispatch : Dispatch[Msg], hm : HomeModel) -> Html {
+fn view_quickstart(emit : Emit[Msg], hm : HomeModel) -> Html {
   let copied = hm.copied_step
   section(class="quickstart", [
     div(class="quickstart-inner", [
@@ -940,7 +936,7 @@ fn view_quickstart(dispatch : Dispatch[Msg], hm : HomeModel) -> Html {
       p(class="section-desc", "From zero to a running app in three steps."),
       div(class="qs-steps", [
         qs_step(
-          dispatch,
+          emit,
           0,
           "1",
           "Clone the template",
@@ -948,7 +944,7 @@ fn view_quickstart(dispatch : Dispatch[Msg], hm : HomeModel) -> Html {
           copied == Some(0),
         ),
         qs_step(
-          dispatch,
+          emit,
           1,
           "2",
           "Add Rabbita",
@@ -956,7 +952,7 @@ fn view_quickstart(dispatch : Dispatch[Msg], hm : HomeModel) -> Html {
           copied == Some(1),
         ),
         qs_step(
-          dispatch,
+          emit,
           2,
           "3",
           "Start the dev server",
@@ -1001,7 +997,7 @@ fn view_footer() -> Html {
 // ─── Root View ────────────────────────────────────────────────────────────
 
 ///|
-fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
+fn view(emit : Emit[Msg], model : Model) -> Html {
   let site_class = match model.theme {
     System => "site"
     Light => "site light"
@@ -1010,13 +1006,13 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
   let body = match model.page {
     Home(hm) =>
       main_(class="site-main", [
-        view_hero(dispatch, model, hm),
+        view_hero(emit, model, hm),
         view_features(),
-        view_comparison(dispatch, model, hm),
+        view_comparison(emit, model, hm),
         view_showcase(),
-        view_quickstart(dispatch, hm),
+        view_quickstart(emit, hm),
       ])
-    Tour(tm) => view_tour(dispatch, model, tm)
+    Tour(tm) => view_tour(emit, model, tm)
   }
   div(class=site_class, [
     div(class="wip-banner", [
@@ -1024,7 +1020,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
         "🚧  This website is a work in progress. Content may be incomplete or inaccurate.",
       ),
     ]),
-    view_nav(dispatch, model),
+    view_nav(emit, model),
     body,
     view_footer(),
   ])
@@ -1035,7 +1031,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
 /// see README.md to get started.
 #warnings("-alert_unstable")
 fn main {
-  let (dispatch, app) = @rabbita.cell_with_dispatch(
+  let (emit, app) = @rabbita.cell_with_emit(
     model={
       menu_open: false,
       theme: System,
@@ -1051,14 +1047,14 @@ fn main {
   ..with_init(
     batch([
       @http.get(site_base_url() + "doc/menu.json").expect_json(x => {
-        dispatch(MenuFetched(x))
+        emit(MenuFetched(x))
       }),
       @shiki.load(
         ["moonbit", "javascript"],
         ["github-light", "github-dark-default"],
-        x => dispatch(LoadResult(x)),
+        x => emit(LoadResult(x)),
       ),
-      @rabbita.delay(dispatch(NextCmpIdx), 12000),
+      @rabbita.delay(emit(NextCmpIdx), 12000),
     ]),
   )
   .mount("app")

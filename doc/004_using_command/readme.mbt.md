@@ -22,18 +22,18 @@ update : (Msg, Model) -> Model
 When you need follow-up effects, use `@rabbita.cell`:
 
 ```text
-update : (Dispatch[Msg], Msg, Model) -> (Cmd, Model)
+update : (Emit[Msg], Msg, Model) -> (Cmd, Model)
 ```
 
 This update shape lets you return an extra `Cmd`.
-`Dispatch[Msg]` turns messages into command values (for example, `dispatch(Inc)`),
+`Emit[Msg]` turns messages into command values (for example, `emit(Inc)`),
 so `update` can coordinate side effects while `view` stays declarative.
 
 ## A minimal command-powered app
 
 To keep continuity with previous tours, we still use a counter example.
 This version introduces one command message, `IncLater`, to show how
-`dispatch` and `delay` cooperate: `dispatch(Inc)` turns a message into a `Cmd`,
+`emit` and `delay` cooperate: `emit(Inc)` turns a message into a `Cmd`,
 and `delay(cmd, ms)` tells runtime to execute that command later.
 
 ```moonbit nocheck
@@ -48,22 +48,22 @@ enum Msg {
 type Model = Int
 
 ///|
-fn update(dispatch : Dispatch[Msg], msg : Msg, count : Model) -> (Cmd, Model) {
+fn update(emit : Emit[Msg], msg : Msg, count : Model) -> (Cmd, Model) {
   match msg {
     Inc => (none, count + 1)
-    IncLater => (delay(dispatch(Inc), 300), count)
+    IncLater => (delay(emit(Inc), 300), count)
     Reset => (none, 0)
   }
 }
 
 ///|
-fn view(dispatch : Dispatch[Msg], count : Model) -> Html {
+fn view(emit : Emit[Msg], count : Model) -> Html {
   div([
     h1("count = \{count}"),
-    p("`IncLater` is implemented by `delay(dispatch(Inc), 300)`."),
-    button(on_click=dispatch(Inc), "+1"),
-    button(on_click=dispatch(IncLater), "+1 after 300ms"),
-    button(on_click=dispatch(Reset), "reset"),
+    p("`IncLater` is implemented by `delay(emit(Inc), 300)`."),
+    button(on_click=emit(Inc), "+1"),
+    button(on_click=emit(IncLater), "+1 after 300ms"),
+    button(on_click=emit(Reset), "reset"),
   ])
 }
 ```
@@ -71,15 +71,15 @@ fn view(dispatch : Dispatch[Msg], count : Model) -> Html {
 In this update function, `none` means "no extra managed effect".
 So `Inc` and `Reset` both return `none` because they only change state
 immediately. `IncLater` is different: it returns a real command
-(`delay(dispatch(Inc), 300)`) and keeps state unchanged for now.
+(`delay(emit(Inc), 300)`) and keeps state unchanged for now.
 
 `Inc` and `Reset` are immediate state transitions, while `IncLater` returns
-`(delay(dispatch(Inc), 300), count)` and leaves `count` unchanged for now.
+`(delay(emit(Inc), 300), count)` and leaves `count` unchanged for now.
 If you click `+1 after 300ms`, the sequence is:
 
-1. `view` dispatches `IncLater`.
-2. `update` returns `(delay(dispatch(Inc), 300), count)`, so state stays unchanged.
-3. After 300ms, runtime executes the delayed command and dispatches `Inc`.
+1. `view` emits `IncLater`.
+2. `update` returns `(delay(emit(Inc), 300), count)`, so state stays unchanged.
+3. After 300ms, runtime executes the delayed command and emits `Inc`.
 4. `update` handles `Inc` and increments `count`.
 
 The key mental model is that `update` can return both a new state and a managed
@@ -88,7 +88,7 @@ effect that may emit future messages.
 
 ## Common command helpers
 
-After `dispatch + delay`, the most common helpers are `batch`, `perform`, and
+After `emit + delay`, the most common helpers are `batch`, `perform`, and
 `attempt`. Use them based on whether you need to combine commands, run async
 work that should succeed, or handle async failure explicitly.
 
@@ -105,12 +105,12 @@ enum BatchMsg {
 
 ///|
 fn batch_update(
-  dispatch : Dispatch[BatchMsg],
+  emit : Emit[BatchMsg],
   msg : BatchMsg,
   model : Int,
 ) -> (Cmd, Int) {
   match msg {
-    RunBatch => (batch([dispatch(Applied(1)), dispatch(Applied(2))]), model)
+    RunBatch => (batch([emit(Applied(1)), emit(Applied(2))]), model)
     Applied(value) => (none, model + value)
   }
 }
@@ -130,13 +130,13 @@ enum PerformMsg {
 
 ///|
 fn perform_update(
-  dispatch : Dispatch[PerformMsg],
+  emit : Emit[PerformMsg],
   msg : PerformMsg,
   model : Int,
 ) -> (Cmd, Int) {
   match msg {
     StartLoad =>
-      (@rabbita.perform(value => dispatch(Loaded(value)), () => 42), model)
+      (@rabbita.perform(value => emit(Loaded(value)), () => 42), model)
     Loaded(value) => (none, model + value)
   }
 }
@@ -156,14 +156,14 @@ enum AttemptMsg {
 
 ///|
 fn attempt_update(
-  dispatch : Dispatch[AttemptMsg],
+  emit : Emit[AttemptMsg],
   msg : AttemptMsg,
   model : Int,
 ) -> (Cmd, Int) {
   match msg {
     StartTry =>
       (
-        @rabbita.attempt(result => dispatch(Tried(result)), () => {
+        @rabbita.attempt(result => emit(Tried(result)), () => {
           if model % 2 == 0 {
             10
           } else {
@@ -186,7 +186,7 @@ fn attempt_update(
 ## Key takeaways
 
 - `Cmd` keeps side effects out of pure rendering logic.
-- `view` stays the same shape: `(Dispatch[Msg], Model) -> Html`.
+- `view` stays the same shape: `(Emit[Msg], Model) -> Html`.
 - `update` becomes command-aware and returns `(Cmd, Model)`.
 - Use `none` when no side effect is needed, and use `batch` when multiple commands should run.
 

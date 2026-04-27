@@ -400,7 +400,7 @@ fn render_markdown(
 
 ///|
 fn view_tour_sidebar(
-  dispatch : Dispatch[Msg],
+  emit : Emit[Msg],
   tm : TourModel,
   chapters : Array[TourChapter],
 ) -> Html {
@@ -426,7 +426,7 @@ fn view_tour_sidebar(
     }
     current_items.push(
       li(class="tour-chapter-li", [
-        button(class=cls, on_click=dispatch(SelectChapter(i)), ch.title),
+        button(class=cls, on_click=emit(SelectChapter(i)), ch.title),
       ]),
     )
   }
@@ -453,7 +453,7 @@ fn view_tour_toc(toc : Array[TocEntry]) -> Html {
 }
 
 ///|
-fn view_tour(dispatch : Dispatch[Msg], model : Model, tm : TourModel) -> Html {
+fn view_tour(emit : Emit[Msg], model : Model, tm : TourModel) -> Html {
   let chapters = model.chapters
   let chapter_idx = if tm.chapter_idx < chapters.length() {
     tm.chapter_idx
@@ -468,7 +468,7 @@ fn view_tour(dispatch : Dispatch[Msg], model : Model, tm : TourModel) -> Html {
   let toc = if tm.content.is_empty() { [] } else { extract_toc(tm.content) }
   div(class="tour-main", [
     div(class="tour-layout", [
-      view_tour_sidebar(dispatch, tm, chapters),
+      view_tour_sidebar(emit, tm, chapters),
       div(class="tour-content", [
         div(class="md-body", [
           if tm.failed {

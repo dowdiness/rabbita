@@ -53,11 +53,11 @@ test {
         Dec => { count: count - 1 }
       }
     },
-    view=(dispatch, model) => {
+    view=(emit, model) => {
       div([
         h1("\{model.count}"),
-        button(on_click=dispatch(Inc), "+"),
-        button(on_click=dispatch(Dec), "-"),
+        button(on_click=emit(Inc), "+"),
+        button(on_click=emit(Dec), "-"),
       ])
     },
   )
@@ -102,25 +102,20 @@ fn plan(name : String) -> Cell {
         Change(value) => { ..model, value, }
       }
     },
-    view=(dispatch, model) => {
+    view=(emit, model) => {
       let { value, items } = model
       let items = items.map((todo, done) => {
         let text_style = if done { "text-decoration: line-through" } else { "" }
         li(style=[text_style], [
           p(todo),
-          button(on_click=dispatch(Done(todo)), "done"),
+          button(on_click=emit(Done(todo)), "done"),
         ])
       })
       div(style=["border: 1px solid black", "padding: 1em"], [
         h1(name),
         ul(items),
-        input(
-          input_type=Text,
-          value~,
-          on_change=s => dispatch(Change(s)),
-          nothing,
-        ),
-        button(on_click=dispatch(Add), "add"),
+        input(input_type=Text, value~, on_change=s => emit(Change(s)), nothing),
+        button(on_click=emit(Add), "add"),
       ])
     },
   )
@@ -144,10 +139,10 @@ test {
         NewPlan => { plans: model.plans.add(plan("plan \{id}")) }
       }
     },
-    view=(dispatch, model) => {
+    view=(emit, model) => {
       fragment([
         div(model.plans.map(x => x.view())),
-        button(on_click=dispatch(NewPlan), "new plan"),
+        button(on_click=emit(NewPlan), "new plan"),
       ])
     },
   )

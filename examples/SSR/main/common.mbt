@@ -2,7 +2,7 @@
 using @html {a, div, h1, h2, li, text, ul}
 
 ///|
-using @rabbita {type Cmd, type Dispatch, type Html}
+using @rabbita {type Cmd, type Emit, type Html}
 
 ///|
 enum Msg {
@@ -25,12 +25,12 @@ fn button(text : String, on_click~ : Cmd) -> Html {
 }
 
 ///|
-fn view(dispatch : Dispatch[Msg], count : Model) -> Html {
+fn view(emit : Emit[Msg], count : Model) -> Html {
   div(class="app", [
     h1(class="title", "Hello Rabbita"),
     div(class="lead", "You built it successfully!"),
     div(class="actions", [
-      button("You clicked \{count} times", on_click=dispatch(Clicked)),
+      button("You clicked \{count} times", on_click=emit(Clicked)),
     ]),
     div(class="next", [
       h2(class="next-title", "What's next"),

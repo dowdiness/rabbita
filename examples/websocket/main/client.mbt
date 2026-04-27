@@ -2,7 +2,7 @@
 using @html {button, code, div, h1, h2, input, nothing, p, textarea}
 
 ///|
-using @rabbita {type Cmd, type Dispatch, type Html}
+using @rabbita {type Cmd, type Emit, type Html}
 
 ///|
 using @websocket {type CloseInfo, type Event, type ReadyState, type Snapshot}
@@ -215,36 +215,36 @@ fn command_connecting(model : Model) -> Bool {
 }
 
 ///|
-fn connect_cmd(dispatch : Dispatch[Msg], model : Model) -> Cmd {
+fn connect_cmd(emit : Emit[Msg], model : Model) -> Cmd {
   @websocket.connect(
     command_socket_id(),
     normalized_url(model.url_input),
     protocols=parse_protocols(model.protocols_input),
-    on_event=dispatch.map(event => ClientSocketEvent(event)),
-    failed=dispatch.map(message => ClientFailed(message)),
+    on_event=emit.map(event => ClientSocketEvent(event)),
+    failed=emit.map(message => ClientFailed(message)),
   )
 }
 
 ///|
-fn disconnect_cmd(dispatch : Dispatch[Msg]) -> Cmd {
+fn disconnect_cmd(emit : Emit[Msg]) -> Cmd {
   @websocket.close(
     command_socket_id(),
     code=1000,
     reason="user disconnect",
-    failed=dispatch.map(message => ClientFailed(message)),
+    failed=emit.map(message => ClientFailed(message)),
   )
 }
 
 ///|
-fn refresh_state_cmd(dispatch : Dispatch[Msg]) -> Cmd {
+fn refresh_state_cmd(emit : Emit[Msg]) -> Cmd {
   @websocket.state(
     command_socket_id(),
-    reply=dispatch.map(reply => ClientStateUpdated(reply)),
+    reply=emit.map(reply => ClientStateUpdated(reply)),
   )
 }
 
 ///|
-fn send_chat_cmd(dispatch : Dispatch[Msg], model : Model) -> Cmd {
+fn send_chat_cmd(emit : Emit[Msg], model : Model) -> Cmd {
   @websocket.send(
     command_socket_id(),
     @websocket.Payload::Json({
@@ -252,16 +252,16 @@ fn send_chat_cmd(dispatch : Dispatch[Msg], model : Model) -> Cmd {
       "user": normalized_nickname(model.nickname_input),
       "text": trimmed_draft(model.draft_input),
     }),
-    failed=dispatch.map(message => ClientFailed(message)),
+    failed=emit.map(message => ClientFailed(message)),
   )
 }
 
 ///|
-fn send_raw_cmd(dispatch : Dispatch[Msg], model : Model) -> Cmd {
+fn send_raw_cmd(emit : Emit[Msg], model : Model) -> Cmd {
   @websocket.send(
     command_socket_id(),
     @websocket.Payload::Text(trimmed_draft(model.draft_input)),
-    failed=dispatch.map(message => ClientFailed(message)),
+    failed=emit.map(message => ClientFailed(message)),
   )
 }
 
@@ -292,7 +292,7 @@ fn decode_chat_message(raw : String) -> (String, String)? {
 }
 
 ///|
-fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
+fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
   match msg {
     UrlChanged(url) => {
       let next = { ..model, url_input: url }
@@ -411,10 +411,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
         )
       } else {
         (
-          @rabbita.batch([
-            connect_cmd(dispatch, model),
-            refresh_state_cmd(dispatch),
-          ]),
+          @rabbita.batch([connect_cmd(emit, model), refresh_state_cmd(emit)]),
           with_transcript(
             {
               ..model,
@@ -433,7 +430,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
     }
     ClientDisconnectRequested =>
       (
-        disconnect_cmd(dispatch),
+        disconnect_cmd(emit),
         with_transcript(
           {
             ..model,
@@ -462,10 +459,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
           text,
         )
         (
-          @rabbita.batch([
-            send_chat_cmd(dispatch, model),
-            refresh_state_cmd(dispatch),
-          ]),
+          @rabbita.batch([send_chat_cmd(emit, model), refresh_state_cmd(emit)]),
           sent_model,
         )
       }
@@ -487,21 +481,18 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
           text,
         )
         (
-          @rabbita.batch([
-            send_raw_cmd(dispatch, model),
-            refresh_state_cmd(dispatch),
-          ]),
+          @rabbita.batch([send_raw_cmd(emit, model), refresh_state_cmd(emit)]),
           sent_model,
         )
       }
     }
-    ClientRefreshState => (refresh_state_cmd(dispatch), model)
+    ClientRefreshState => (refresh_state_cmd(emit), model)
     ClearTranscript => (@rabbita.none, { ..model, transcript: [] })
     ClientSocketEvent(event) =>
       match event {
         Event::Opened =>
           (
-            refresh_state_cmd(dispatch),
+            refresh_state_cmd(emit),
             with_transcript(
               {
                 ..model,
@@ -523,12 +514,12 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
             Some((user, body)) => with_transcript(next, "echo", user, body)
             None => with_transcript(next, "echo", "raw echo", text)
           }
-          (refresh_state_cmd(dispatch), next)
+          (refresh_state_cmd(emit), next)
         }
         Event::Closed(info) => {
           let summary = close_summary(info)
           (
-            refresh_state_cmd(dispatch),
+            refresh_state_cmd(emit),
             with_transcript(
               {
                 ..model,
@@ -545,7 +536,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
         }
         Event::Errored =>
           (
-            refresh_state_cmd(dispatch),
+            refresh_state_cmd(emit),
             with_transcript(
               {
                 ..model,
@@ -600,16 +591,16 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
 }
 
 ///|
-fn subscriptions(dispatch : Dispatch[Msg], model : Model) -> @sub.Sub {
+fn subscriptions(emit : Emit[Msg], model : Model) -> @sub.Sub {
   let url = normalized_url(model.url_input)
   if model.listening && url != "" {
     @websocket.listen(
       url,
       protocols=parse_protocols(model.protocols_input),
-      open=dispatch(ListenOpened),
-      message=dispatch.map(text => ListenMessage(text)),
-      close=dispatch.map(info => ListenClosed(info)),
-      error=dispatch(ListenErrored),
+      open=emit(ListenOpened),
+      message=emit.map(text => ListenMessage(text)),
+      close=emit.map(info => ListenClosed(info)),
+      error=emit(ListenErrored),
     )
   } else {
     @sub.none
@@ -627,7 +618,7 @@ fn transcript_entry(entry : ChatEntry) -> Html {
 }
 
 ///|
-fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
+fn view(emit : Emit[Msg], model : Model) -> Html {
   let url_missing = normalized_url(model.url_input) == ""
   let listen_button = if model.listening {
     "stop listen"
@@ -654,7 +645,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
               class="field-input",
               value=model.url_input,
               placeholder="wss://example.com/socket",
-              on_input=dispatch.map(url => UrlChanged(url)),
+              on_input=emit.map(url => UrlChanged(url)),
               nothing,
             ),
           ],
@@ -664,7 +655,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
               class="field-input",
               value=model.protocols_input,
               placeholder="chat, superchat",
-              on_input=dispatch.map(protocols => ProtocolsChanged(protocols)),
+              on_input=emit.map(protocols => ProtocolsChanged(protocols)),
               nothing,
             ),
           ],
@@ -674,7 +665,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
               class="field-input",
               value=model.nickname_input,
               placeholder="guest",
-              on_input=dispatch.map(nickname => NicknameChanged(nickname)),
+              on_input=emit.map(nickname => NicknameChanged(nickname)),
               nothing,
             ),
           ],
@@ -687,12 +678,12 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
           button(
             class="primary",
             disabled=url_missing,
-            on_click=dispatch(ToggleListen),
+            on_click=emit(ToggleListen),
             listen_button,
           ),
           button(
             class="ghost",
-            on_click=dispatch(ClearListenLog),
+            on_click=emit(ClearListenLog),
             "clear watcher log",
           ),
         ],
@@ -719,18 +710,18 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
           button(
             class="primary",
             disabled=url_missing,
-            on_click=dispatch(ClientConnectRequested),
+            on_click=emit(ClientConnectRequested),
             connect_button,
           ),
           button(
             class="secondary",
             disabled=!command_connecting(model),
-            on_click=dispatch(ClientDisconnectRequested),
+            on_click=emit(ClientDisconnectRequested),
             "disconnect client",
           ),
           button(
             class="ghost",
-            on_click=dispatch(ClientRefreshState),
+            on_click=emit(ClientRefreshState),
             "refresh state",
           ),
         ],
@@ -754,7 +745,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
             rows=4,
             value=model.draft_input,
             placeholder="Type a chat message or raw frame",
-            on_input=dispatch.map(draft => DraftChanged(draft)),
+            on_input=emit.map(draft => DraftChanged(draft)),
             nothing,
           ),
         ],
@@ -762,18 +753,18 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
           button(
             class="primary",
             disabled=!command_can_send(model),
-            on_click=dispatch(ClientSendChat),
+            on_click=emit(ClientSendChat),
             "send chat json",
           ),
           button(
             class="secondary",
             disabled=!command_can_send(model),
-            on_click=dispatch(ClientSendRaw),
+            on_click=emit(ClientSendRaw),
             "send raw text",
           ),
           button(
             class="ghost",
-            on_click=dispatch(ClearTranscript),
+            on_click=emit(ClearTranscript),
             "clear transcript",
           ),
         ],

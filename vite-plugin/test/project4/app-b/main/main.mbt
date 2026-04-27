@@ -7,8 +7,8 @@ pub(all) enum Msg {
 }
 
 ///|
-fn view(dispatch : @rabbita.Dispatch[Msg], _ : Unit) -> @rabbita.Html {
-  ignore(dispatch)
+fn view(emit : @rabbita.Emit[Msg], _ : Unit) -> @rabbita.Html {
+  ignore(emit)
   div([text("local project4 app-b")])
 }
 

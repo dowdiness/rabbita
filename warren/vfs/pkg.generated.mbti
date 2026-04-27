@@ -11,10 +11,12 @@ import {
 
 // Types and methods
 type VirtualFileSystem
+pub fn VirtualFileSystem::clear(Self) -> Unit
 pub fn VirtualFileSystem::mount(Self, String, VirtualFs) -> Unit
 #as_free_fn
 pub fn VirtualFileSystem::new(Map[String, VirtualFs]) -> Self
 pub async fn VirtualFileSystem::read(Self, String) -> String?
+pub fn VirtualFileSystem::unmount(Self, String) -> Unit
 
 pub(all) enum VirtualFs {
   DirectoryMapping(@path.SourcePath)

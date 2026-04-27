@@ -2,7 +2,7 @@
 using @html {div, h1, option, p, select, textarea, nothing}
 
 ///|
-using @rabbita {type Dispatch, type Html}
+using @rabbita {type Emit, type Html}
 
 ///|
 enum Msg {
@@ -142,7 +142,7 @@ fn stack_class(theme : String) -> String {
 }
 
 ///|
-fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
+fn view(emit : Emit[Msg], model : Model) -> Html {
   let { lang, theme, code, highlighter } = model
 
   div(class="shiki-playground", [
@@ -156,7 +156,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
         select(
           id="lang-select",
           class="control-select",
-          on_change=dispatch.map(lang => LangChanged(lang)),
+          on_change=emit.map(lang => LangChanged(lang)),
           language_items.map(p => option(value=p.0, selected=lang == p.0, p.1)),
         ),
       ]),
@@ -165,7 +165,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
         select(
           id="theme-select",
           class="control-select",
-          on_change=dispatch.map(theme => ThemeChanged(theme)),
+          on_change=emit.map(theme => ThemeChanged(theme)),
           [
             ..light_theme_items.map(p => {
               option(value=p.0, selected=theme == p.0, p.1)
@@ -190,7 +190,7 @@ fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
           id="code-input",
           class="input-layer",
           value=code,
-          on_input=dispatch.map(code => Input(code)),
+          on_input=emit.map(code => Input(code)),
           nothing,
         ),
       ]),
@@ -229,7 +229,7 @@ let initial_model : Model = {
 ///|
 #warnings("-alert_unstable")
 fn main {
-  let (dispatch, app) = @rabbita.simple_cell_with_dispatch(
+  let (emit, app) = @rabbita.simple_cell_with_emit(
     model=initial_model,
     update~,
     view~,
@@ -239,7 +239,7 @@ fn main {
     @shiki.load(
       language_items.map(p => p.0),
       [..light_theme_items, ..dark_theme_items].map(p => p.0),
-      x => dispatch(LoadResult(x)),
+      x => emit(LoadResult(x)),
     ),
   )
   .mount("app")

@@ -28,14 +28,14 @@ fn update(msg : Message, model : Model) -> Model {
 }
 
 ///|
-fn view(dispatch : @rabbita.Dispatch[Message], model : Model) -> @rabbita.Html {
+fn view(emit : @rabbita.Emit[Message], model : Model) -> @rabbita.Html {
   div(class="w-[600px] h-[100px] m-10", [
     h1(class="text-2xl font-bold text-center select-none", [
       text("\{model.count}"),
     ]),
     div(class="flex justify-center gap-8 m-8", [
-      @views.button("+", on_click=dispatch(Increment)),
-      @views.button("-", on_click=dispatch(Decrement)),
+      @views.button("+", on_click=emit(Increment)),
+      @views.button("-", on_click=emit(Decrement)),
     ]),
   ])
 }

@@ -8,15 +8,15 @@ import {
 }
 
 // Values
-pub fn close(String, code? : Int, reason? : String, failed? : @cmd.Dispatch[String]) -> @cmd.Cmd
+pub fn close(String, code? : Int, reason? : String, failed? : @cmd.Emit[String]) -> @cmd.Cmd
 
-pub fn connect(String, String, protocols? : Array[String], on_event~ : @cmd.Dispatch[Event], failed? : @cmd.Dispatch[String]) -> @cmd.Cmd
+pub fn connect(String, String, protocols? : Array[String], on_event~ : @cmd.Emit[Event], failed? : @cmd.Emit[String]) -> @cmd.Cmd
 
-pub fn listen(String, protocols? : Array[String], open? : @cmd.Cmd, message? : @cmd.Dispatch[String], close? : @cmd.Dispatch[CloseInfo], error? : @cmd.Cmd) -> @sub.Sub
+pub fn listen(String, protocols? : Array[String], open? : @cmd.Cmd, message? : @cmd.Emit[String], close? : @cmd.Emit[CloseInfo], error? : @cmd.Cmd) -> @sub.Sub
 
-pub fn send(String, Payload, failed? : @cmd.Dispatch[String]) -> @cmd.Cmd
+pub fn send(String, Payload, failed? : @cmd.Emit[String]) -> @cmd.Cmd
 
-pub fn state(String, reply~ : @cmd.Dispatch[Result[Snapshot, String]]) -> @cmd.Cmd
+pub fn state(String, reply~ : @cmd.Emit[Result[Snapshot, String]]) -> @cmd.Cmd
 
 // Errors
 

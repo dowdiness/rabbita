@@ -4,11 +4,11 @@ The `html` package provides wrapper functions for all HTML elements. Basic usage
 
 ```moonbit check
 ///|
-fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
+fn view(emit : Emit[Msg], model : Model) -> Html {
   div(id="counter", style=["border: 1px solid black"], [
     h1(id="title", "the count is \{model.count}"),
-    button(class="...", on_click=dispatch(Inc), "+"),
-    button(class="...", on_click=dispatch(Dec), "-"),
+    button(class="...", on_click=emit(Inc), "+"),
+    button(class="...", on_click=emit(Dec), "-"),
   ])
 }
 ```
@@ -114,10 +114,10 @@ fn update2(msg : Msg2, _ : Model2) -> Model2 {
 }
 
 ///|
-fn view2(dispatch : Dispatch[Msg2], _ : Model2) -> Html {
+fn view2(emit : Emit[Msg2], _ : Model2) -> Html {
   canvas(
-    on_mousedown=m => dispatch(StartDraw(m)),
-    on_mouseup=m => dispatch(EndDraw(m)),
+    on_mousedown=m => emit(StartDraw(m)),
+    on_mouseup=m => emit(EndDraw(m)),
     nothing,
   )
 }

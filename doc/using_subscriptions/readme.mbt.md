@@ -27,9 +27,9 @@ struct Model {
 }
 
 ///|
-fn subscriptions(dispatch : Dispatch[Msg], model : Model) -> @sub.Sub {
+fn subscriptions(emit : Emit[Msg], model : Model) -> @sub.Sub {
   ignore(model)
-  @sub.on_resize(v => dispatch(ViewportChanged(v)))
+  @sub.on_resize(v => emit(ViewportChanged(v)))
 }
 
 ///|
@@ -66,10 +66,10 @@ enum EventMsg {
 }
 
 ///|
-fn event_subscriptions(dispatch : Dispatch[EventMsg], _ : Int) -> @sub.Sub {
+fn event_subscriptions(emit : Emit[EventMsg], _ : Int) -> @sub.Sub {
   @sub.batch([
-    @sub.on_resize(v => dispatch(Resized(v))),
-    @sub.on_visibility_change(h => dispatch(HiddenChanged(h))),
+    @sub.on_resize(v => emit(Resized(v))),
+    @sub.on_visibility_change(h => emit(HiddenChanged(h))),
   ])
 }
 ```

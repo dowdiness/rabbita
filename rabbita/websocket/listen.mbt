@@ -1,5 +1,5 @@
 ///|
-using @cmd {type Dispatch}
+using @cmd {type Emit}
 
 ///|
 priv suberror WebsocketSubscription {
@@ -7,8 +7,8 @@ priv suberror WebsocketSubscription {
     String,
     Array[String],
     open~ : Cmd?,
-    message~ : Dispatch[String]?,
-    close~ : Dispatch[CloseInfo]?,
+    message~ : Emit[String]?,
+    close~ : Emit[CloseInfo]?,
     error~ : Cmd?
   )
 }
@@ -98,8 +98,8 @@ pub fn listen(
   url : String,
   protocols? : Array[String] = [],
   open? : Cmd,
-  message? : @cmd.Dispatch[String],
-  close? : @cmd.Dispatch[CloseInfo],
+  message? : @cmd.Emit[String],
+  close? : @cmd.Emit[CloseInfo],
   error? : Cmd,
 ) -> @sub.Sub {
   let has_open = open is Some(_)

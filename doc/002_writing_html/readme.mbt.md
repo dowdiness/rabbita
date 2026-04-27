@@ -27,11 +27,11 @@ struct Model {
 }
 
 ///|
-fn view(dispatch : Dispatch[Msg], model : Model) -> Html {
+fn view(emit : Emit[Msg], model : Model) -> Html {
   div(id="counter", style=["border: 1px solid #ddd", "padding: 8px"], [
     h1("count = \{model.count}"),
-    button(on_click=dispatch(Inc), "+"),
-    button(on_click=dispatch(Dec), "-"),
+    button(on_click=emit(Inc), "+"),
+    button(on_click=emit(Dec), "-"),
   ])
 }
 ```
@@ -119,10 +119,10 @@ fn handle_draw(msg : DrawMsg) -> Unit {
 }
 
 ///|
-fn canvas_view(dispatch : Dispatch[DrawMsg]) -> Html {
+fn canvas_view(emit : Emit[DrawMsg]) -> Html {
   canvas(
-    on_mousedown=mouse => dispatch(Start(mouse)),
-    on_mouseup=mouse => dispatch(End(mouse)),
+    on_mousedown=m => emit(Start(m)),
+    on_mouseup=m => emit(End(m)),
     nothing,
   )
 }

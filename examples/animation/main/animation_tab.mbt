@@ -52,24 +52,24 @@ fn set_animation_pattern(index : Int, model : Model) -> Model {
 
 ///|
 fn animation_pattern_button(
-  dispatch : @rabbita.Dispatch[Msg],
+  emit : @rabbita.Emit[Msg],
   active_index : Int,
   index : Int,
 ) -> @rabbita.Html {
   let class = if active_index == index { "tab active" } else { "tab" }
   @html.button(
     class~,
-    on_click=dispatch(SelectPattern(index)),
+    on_click=emit(SelectPattern(index)),
     logo_pattern_name(index),
   )
 }
 
 ///|
 fn animation_actions(
-  dispatch : @rabbita.Dispatch[Msg],
+  emit : @rabbita.Emit[Msg],
   model : Model,
 ) -> Array[@rabbita.Html] {
   animation_pattern_indices().map(index => {
-    animation_pattern_button(dispatch, model.logo_pattern_index, index)
+    animation_pattern_button(emit, model.logo_pattern_index, index)
   })
 }
