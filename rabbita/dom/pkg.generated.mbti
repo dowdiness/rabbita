@@ -561,10 +561,10 @@ pub fn Window::push_url(Self, String) -> Unit
 pub fn Window::reload_url(Self) -> Unit
 pub fn Window::replace_url(Self, String) -> Unit
 pub fn Window::request_animation_frame(Self, (Double) -> Unit) -> Double
-pub fn Window::scroll_by(Self, Int, Int) -> Unit
-pub fn Window::scroll_to(Self, Int, Int) -> Unit
-pub fn Window::scroll_to_bottom(Self) -> Unit
-pub fn Window::scroll_to_top(Self) -> Unit
+pub fn Window::scroll_by(Self, Int, Int, behavior? : String) -> Unit
+pub fn Window::scroll_to(Self, Int, Int, behavior? : String) -> Unit
+pub fn Window::scroll_to_bottom(Self, behavior? : String) -> Unit
+pub fn Window::scroll_to_top(Self, behavior? : String) -> Unit
 pub fn Window::scroll_x(Self) -> Int
 pub fn Window::scroll_y(Self) -> Int
 pub fn Window::set_interval(Self, () -> Unit, Int) -> Int
@@ -589,7 +589,7 @@ pub trait IsElement : IsNode {
   set_property(Self, String, @js.Value) -> Unit
   get_property(Self, String) -> @js.Optional[String]
   remove_property(Self, String) -> Unit
-  scroll_into_view(Self) -> Unit
+  scroll_into_view(Self, behavior? : String) -> Unit
   get_scroll_top(Self) -> Double
   set_scroll_top(Self, Double) -> Unit
   get_scroll_left(Self) -> Double

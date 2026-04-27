@@ -20,23 +20,72 @@ pub impl @js.Cast for Window with from(value) {
 
 ///|
 #cfg(target="js")
-pub extern "js" fn Window::scroll_to(self : Self, x : Int, y : Int) =
-  #| (self, x, y) => { self.scrollTo(x, y); }
+pub fn Window::scroll_to(
+  self : Self,
+  x : Int,
+  y : Int,
+  behavior? : String = "auto",
+) -> Unit {
+  ffi_window_scroll_to(self, x, y, behavior)
+}
 
 ///|
 #cfg(target="js")
-pub extern "js" fn Window::scroll_by(self : Self, x : Int, y : Int) =
-  #| (self, x, y) => { self.scrollBy(x, y); }
+pub fn Window::scroll_by(
+  self : Self,
+  x : Int,
+  y : Int,
+  behavior? : String = "auto",
+) -> Unit {
+  ffi_window_scroll_by(self, x, y, behavior)
+}
 
 ///|
 #cfg(target="js")
-pub extern "js" fn Window::scroll_to_top(self : Self) =
-  #| (self) => { self.scrollTo(0, 0); }
+pub fn Window::scroll_to_top(self : Self, behavior? : String = "auto") -> Unit {
+  self.scroll_to(0, 0, behavior~)
+}
 
 ///|
 #cfg(target="js")
-pub extern "js" fn Window::scroll_to_bottom(self : Self) =
-  #| (self) => { self.scrollTo(0, document.body.scrollHeight); }
+pub fn Window::scroll_to_bottom(
+  self : Self,
+  behavior? : String = "auto",
+) -> Unit {
+  ffi_window_scroll_to_bottom(self, behavior)
+}
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_window_scroll_to(
+  win : Window,
+  x : Int,
+  y : Int,
+  behavior : String,
+) =
+  #| (self, x, y, behavior) => {
+  #|   self.scrollTo({ left: x, top: y, behavior });
+  #| }
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_window_scroll_by(
+  win : Window,
+  x : Int,
+  y : Int,
+  behavior : String,
+) =
+  #| (self, x, y, behavior) => {
+  #|   self.scrollBy({ left: x, top: y, behavior });
+  #| }
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_window_scroll_to_bottom(win : Window, behavior : String) =
+  #| (self, behavior) => {
+  #|   const root = self.document.scrollingElement || self.document.documentElement || self.document.body;
+  #|   self.scrollTo({ left: 0, top: root.scrollHeight, behavior });
+  #| }
 
 ///|
 #cfg(target="js")

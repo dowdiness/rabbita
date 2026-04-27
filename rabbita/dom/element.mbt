@@ -14,7 +14,7 @@ pub trait IsElement: IsNode {
   set_property(Self, String, @js.Value) -> Unit = _
   get_property(Self, String) -> @js.Optional[String] = _
   remove_property(Self, String) -> Unit = _
-  scroll_into_view(Self) -> Unit = _
+  scroll_into_view(Self, behavior? : String) -> Unit = _
   get_scroll_top(Self) -> Double = _
   set_scroll_top(Self, Double) -> Unit = _
   get_scroll_left(Self) -> Double = _
@@ -99,8 +99,12 @@ impl IsElement with remove_property(s, prop) {
 
 ///|
 #cfg(target="js")
-impl IsElement with scroll_into_view(s) {
-  s |> js_identity |> ffi_element_scroll_into_view
+impl IsElement with scroll_into_view(s, behavior?) {
+  let behavior = match behavior {
+    Some(behavior) => behavior
+    None => "auto"
+  }
+  s |> js_identity |> ffi_element_scroll_into_view(behavior)
 }
 
 ///|
@@ -202,7 +206,8 @@ extern "js" fn ffi_element_get_property(
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
 #cfg(target="js")
-extern "js" fn ffi_element_scroll_into_view(x : @js.Value) = "(self) => self.scrollIntoView()"
+extern "js" fn ffi_element_scroll_into_view(x : @js.Value, behavior : String) =
+  #| (self, behavior) => self.scrollIntoView({ behavior })
 
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTop
