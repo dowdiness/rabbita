@@ -47,15 +47,6 @@ extern "js" fn load_assets_promise() -> @js.Promise =
   #| }
 
 ///|
-extern "js" fn fetch_text_promise(path : String) -> @js.Promise =
-  #| (path) => fetch(path, { cache: 'no-store' }).then((response) => {
-  #|   if (!response.ok) {
-  #|     throw new Error(`Failed to load ${path}: ${response.status} ${response.statusText}`)
-  #|   }
-  #|   return response.text()
-  #| })
-
-///|
 extern "js" fn js_result_ok(value : @js.Value) -> Bool =
   #| (value) => value.ok === true
 

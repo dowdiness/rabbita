@@ -129,11 +129,7 @@ function collectReachablePackages(manifest, mainImports) {
 }
 
 async function fileSpecsToWorkerFiles(files) {
-  const out = [];
-  for (const file of files) {
-    out.push([file.spec, await fetchBytes(file.url)]);
-  }
-  return out;
+  return Promise.all(files.map(async (file) => [file.spec, await fetchBytes(file.url)]));
 }
 
 async function stdMiFilesForManifest(manifest) {
@@ -144,11 +140,7 @@ async function stdMiFilesForManifest(manifest) {
 }
 
 async function sourceFiles(pkg) {
-  const out = [];
-  for (const source of pkg.sources) {
-    out.push([source.name, await fetchText(source.url)]);
-  }
-  return out;
+  return Promise.all(pkg.sources.map(async (source) => [source.name, await fetchText(source.url)]));
 }
 
 function transitivePackageIds(manifest, id, seen = new Set()) {
@@ -187,20 +179,17 @@ function miSpecForCorePackage(manifest, id, alias) {
 }
 
 async function directMiFilesForDeps(manifest, deps, builtPackages) {
-  const out = [];
-  for (const dep of deps) {
+  return Promise.all(deps.map(async (dep) => {
     if (isCorePackage(dep.path)) {
       const iface = coreInterfaceForPackage(manifest, dep.path);
-      out.push([miSpecForCorePackage(manifest, dep.path, dep.alias), await fetchBytes(iface.url)]);
-    } else {
-      const built = builtPackages.get(dep.path);
-      if (!built?.mi) {
-        throw new Error(`Package ${dep.path} was not built before its dependent package.`);
-      }
-      out.push([miSpecForPackage(dep.path, dep.alias), built.mi]);
+      return [miSpecForCorePackage(manifest, dep.path, dep.alias), await fetchBytes(iface.url)];
     }
-  }
-  return out;
+    const built = builtPackages.get(dep.path);
+    if (!built?.mi) {
+      throw new Error(`Package ${dep.path} was not built before its dependent package.`);
+    }
+    return [miSpecForPackage(dep.path, dep.alias), built.mi];
+  }));
 }
 
 function indirectMiFilesForPackage(manifest, id, builtPackages) {
@@ -396,15 +385,12 @@ export async function compileMbtToJs(mbtSource, moonPkgSource = "") {
     }
 
     const dependencyCoreFiles = reachableOrder.map((id) => builtPackages.get(id).core);
-    const coreFiles = [];
-    if (manifest.core.abort) {
-      coreFiles.push(await fetchBytes(manifest.core.abort));
-    }
-    coreFiles.push(
-      await fetchBytes(manifest.core.core),
+    const coreFiles = await Promise.all([
+      ...(manifest.core.abort ? [fetchBytes(manifest.core.abort)] : []),
+      fetchBytes(manifest.core.core),
       ...dependencyCoreFiles,
       buildResult.core,
-    );
+    ]);
 
     let linkResult;
     try {

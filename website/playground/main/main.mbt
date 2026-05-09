@@ -23,7 +23,7 @@ enum Msg {
   TogglePackageMenu
   ClosePackageMenu
   ExampleChanged(String)
-  ExampleLoaded(Int, Result[LoadedExample, Error])
+  ExampleFileLoaded(Int, ExampleAsset, Result[String, Error])
   MbtChanged(String)
   HtmlChanged(String)
   CssChanged(String)
@@ -43,6 +43,13 @@ enum SourceTab {
 } derive(Eq)
 
 ///|
+enum ExampleAsset {
+  RepoSource(Int)
+  RepoCss
+  RepoMoonPkg
+}
+
+///|
 struct Model {
   active_tab : SourceTab
   mbt : String
@@ -59,6 +66,7 @@ struct Model {
   compiling : Bool
   run_id : Int
   example_id : String
+  example_load : ExampleLoad?
 }
 
 ///|
@@ -81,6 +89,15 @@ struct LoadedExample {
   html : String
   css : String
   moon_pkg : String
+}
+
+///|
+struct ExampleLoad {
+  token : Int
+  example_id : String
+  sources : Array[String?]
+  css : String?
+  moon_pkg : String?
 }
 
 ///|
@@ -156,6 +173,7 @@ fn initial_model() -> Model {
     compiling: false,
     run_id: 0,
     example_id: read_source("example", "counter"),
+    example_load: None,
   }
 }
 
@@ -248,23 +266,50 @@ fn join_blocks(items : Array[String]) -> String {
 }
 
 ///|
-async fn fetch_text(path : String) -> String {
-  fetch_text_promise(path).wait().cast()
+fn new_example_load(token : Int, example : Example) -> ExampleLoad {
+  {
+    token,
+    example_id: example.id,
+    sources: Array::makei(example.repo_sources.length(), _ => None),
+    css: None,
+    moon_pkg: None,
+  }
 }
 
 ///|
-async fn load_repo_example(example : Example) -> LoadedExample {
+fn update_example_load(
+  load : ExampleLoad,
+  asset : ExampleAsset,
+  body : String,
+) -> ExampleLoad {
+  match asset {
+    RepoSource(index) => {
+      let sources = load.sources.copy()
+      sources.set(index, Some(body))
+      { ..load, sources, }
+    }
+    RepoCss => { ..load, css: Some(body) }
+    RepoMoonPkg => { ..load, moon_pkg: Some(body) }
+  }
+}
+
+///|
+fn loaded_example_from_load(load : ExampleLoad) -> LoadedExample? {
+  guard load.css is Some(css) else { None }
+  guard load.moon_pkg is Some(moon_pkg) else { None }
+  let example = example_by_id(load.example_id)
   let parts : Array[String] = []
-  for path in example.repo_sources {
-    let source = fetch_text(path)
+  for index, source in load.sources {
+    guard source is Some(source) else { return None }
+    let path = example.repo_sources[index]
     parts.push("// \{example.label} / \{basename(path)}\n\{source}")
   }
-  {
+  Some({
     mbt: join_blocks(parts),
     html: html_document(example.label),
-    css: fetch_text(example.repo_css),
-    moon_pkg: fetch_text(example.repo_moon_pkg),
-  }
+    css,
+    moon_pkg,
+  })
 }
 
 ///|
@@ -273,9 +318,25 @@ fn load_example_cmd(
   token : Int,
   example : Example,
 ) -> Cmd {
-  @rabbita.attempt(result => dispatch(ExampleLoaded(token, result)), async fn() {
-    load_repo_example(example)
-  })
+  let cmds : Array[Cmd] = []
+  for index, path in example.repo_sources {
+    cmds.push(
+      @http.get(path).expect_text(result => {
+        dispatch(ExampleFileLoaded(token, RepoSource(index), result))
+      }),
+    )
+  }
+  cmds.push(
+    @http.get(example.repo_css).expect_text(result => {
+      dispatch(ExampleFileLoaded(token, RepoCss, result))
+    }),
+  )
+  cmds.push(
+    @http.get(example.repo_moon_pkg).expect_text(result => {
+      dispatch(ExampleFileLoaded(token, RepoMoonPkg, result))
+    }),
+  )
+  @rabbita.batch(cmds)
 }
 
 ///|
@@ -356,6 +417,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
           diagnostics: [],
           compiling: false,
           run_id: token,
+          example_load: Some(new_example_load(token, example)),
         }
         (load_example_cmd(dispatch, token, example), next)
       } else {
@@ -372,6 +434,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
           diagnostics: [],
           compiling: false,
           run_id: token,
+          example_load: None,
         }
         (
           @rabbita.batch([
@@ -383,33 +446,44 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
         )
       }
     }
-    ExampleLoaded(token, result) =>
+    ExampleFileLoaded(token, asset, result) =>
       if token != model.run_id {
         (@rabbita.none, model)
       } else {
         match result {
-          Ok(loaded) => {
-            let next = {
-              ..model,
-              mbt: loaded.mbt,
-              html: loaded.html,
-              css: loaded.css,
-              moon_pkg: loaded.moon_pkg,
-              compiled_js: None,
-              status: "Pending",
-              log: "",
-              diagnostics: [],
-              compiling: false,
+          Ok(body) =>
+            match model.example_load {
+              Some(load) if load.token == token => {
+                let load = update_example_load(load, asset, body)
+                match loaded_example_from_load(load) {
+                  Some(loaded) => {
+                    let next = {
+                      ..model,
+                      mbt: loaded.mbt,
+                      html: loaded.html,
+                      css: loaded.css,
+                      moon_pkg: loaded.moon_pkg,
+                      compiled_js: None,
+                      status: "Pending",
+                      log: "",
+                      diagnostics: [],
+                      compiling: false,
+                      example_load: None,
+                    }
+                    (
+                      @rabbita.batch([
+                        persist_cmd(next),
+                        dispatch(Run(token)),
+                        editor_sync_cmd(dispatch, next),
+                      ]),
+                      next,
+                    )
+                  }
+                  None => (@rabbita.none, { ..model, example_load: Some(load) })
+                }
+              }
+              _ => (@rabbita.none, model)
             }
-            (
-              @rabbita.batch([
-                persist_cmd(next),
-                dispatch(Run(token)),
-                editor_sync_cmd(dispatch, next),
-              ]),
-              next,
-            )
-          }
           Err(error) =>
             (
               @rabbita.none,
@@ -419,6 +493,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
                 log: "\{error}",
                 diagnostics: [],
                 compiling: false,
+                example_load: None,
               },
             )
         }
@@ -521,6 +596,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
         diagnostics: [],
         compiling: false,
         run_id: token,
+        example_load: None,
       }
       (
         @rabbita.batch([
@@ -531,11 +607,11 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
       )
     }
     HtmlChanged(source) => {
-      let next = { ..model, html: source }
+      let next = { ..model, html: source, example_load: None }
       (@rabbita.batch([persist_cmd(next), preview_refresh_cmd(next)]), next)
     }
     CssChanged(source) => {
-      let next = { ..model, css: source }
+      let next = { ..model, css: source, example_load: None }
       (@rabbita.batch([persist_cmd(next), preview_refresh_cmd(next)]), next)
     }
     MoonPkgChanged(source) => {
@@ -548,6 +624,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
         diagnostics: [],
         compiling: false,
         run_id: token,
+        example_load: None,
       }
       (
         @rabbita.batch([
@@ -565,6 +642,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
         log: "",
         diagnostics: [],
         run_id: token,
+        example_load: None,
       }
       (dispatch(Run(token)), next)
     }
@@ -593,6 +671,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
           diagnostics: [],
           compiling: false,
           run_id: token,
+          example_load: Some(new_example_load(token, example)),
         }
         (
           @rabbita.batch([
@@ -618,6 +697,7 @@ fn update(dispatch : Dispatch[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
           compiling: false,
           run_id: token,
           example_id: example.id,
+          example_load: None,
         }
         (
           @rabbita.batch([
