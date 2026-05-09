@@ -1,0 +1,7 @@
+import {
+  "moonbit-community/rabbita",
+  "moonbit-community/rabbita/html",
+  "moonbit-community/rabbita/http",
+} for "test"
+
+supported_targets = "js"

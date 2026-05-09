@@ -1,0 +1,11 @@
+import {
+  "moonbit-community/rabbita",
+  "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita/html",
+  "moonbit-community/rabbita/js",
+  "moonbit-community/rabbita/svg",
+}
+
+options(
+  "is-main": true,
+)

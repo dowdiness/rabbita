@@ -594,6 +594,12 @@ fn view_nav(emit : Emit[Msg], model : Model) -> Html {
       div(class="nav-links", [
         a(href=site_base_url(), class=home_cls, "Home"),
         a(href=tour_base_url(), class=tour_cls, "Tour"),
+        a(
+          href=playground_url(),
+          class="nav-link nav-link--ext",
+          escape=true,
+          [text("Playground"), icon_ext_link()],
+        ),
         a(href=docs_url, target=Blank, class="nav-link nav-link--ext", [
           text("Docs"),
           icon_ext_link(),
@@ -616,6 +622,12 @@ fn view_nav(emit : Emit[Msg], model : Model) -> Html {
       div(class="mobile-menu", [
         a(href=site_base_url(), class=home_m, "Home"),
         a(href=tour_base_url(), class=tour_m, "Tour"),
+        a(
+          href=playground_url(),
+          class="mobile-link mobile-link--ext",
+          escape=true,
+          [text("Playground"), icon_ext_link()],
+        ),
         a(href=docs_url, target=Blank, class="mobile-link mobile-link--ext", [
           text("Docs"),
           icon_ext_link(),

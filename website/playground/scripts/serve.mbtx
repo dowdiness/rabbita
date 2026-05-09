@@ -1,0 +1,131 @@
+///|
+import {
+  "moonbitlang/async@0.18.1",
+  "moonbitlang/async@0.18.1/fs",
+  "moonbitlang/async@0.18.1/http",
+  "moonbitlang/async@0.18.1/socket",
+  "moonbitlang/core/env",
+}
+
+///|
+fn content_type(path : String) -> String {
+  match path {
+    [.., .. ".html"] => "text/html; charset=utf-8"
+    [.., .. ".css"] => "text/css; charset=utf-8"
+    [.., .. ".js"] => "text/javascript; charset=utf-8"
+    [.., .. ".json"] => "application/json; charset=utf-8"
+    [.., .. ".mbt"] => "text/plain; charset=utf-8"
+    [.., .. ".core"] | [.., .. ".mi"] => "application/octet-stream"
+    _ => "application/octet-stream"
+  }
+}
+
+///|
+fn request_path(path : String) -> String? {
+  let clean = match path.split_once("?") {
+    Some((head, _)) => head.to_owned()
+    None => path
+  }
+  if clean.contains("..") {
+    None
+  } else if clean == "/" || clean == "" {
+    Some("index.html")
+  } else {
+    Some(clean[1:].to_owned())
+  }
+}
+
+///|
+fn join_path(left : String, right : String) -> String {
+  if left == "" {
+    right
+  } else if left.has_suffix("/") {
+    left + right
+  } else {
+    left + "/" + right
+  }
+}
+
+///|
+async fn static_file_path(path : String) -> String? raise {
+  let file_path = join_path("dist", path)
+  if @fs.exists(file_path) && @fs.kind(file_path) is Regular {
+    Some(file_path)
+  } else {
+    None
+  }
+}
+
+///|
+async fn send_text(
+  conn : @http.ServerConnection,
+  code : Int,
+  reason : String,
+  body : String,
+) -> Unit {
+  conn
+  ..send_response(code, reason, extra_headers={
+    "Content-Type": "text/plain; charset=utf-8",
+  })
+  ..write(body)
+  .end_response()
+}
+
+///|
+async fn serve_file(conn : @http.ServerConnection, path : String) -> Unit raise {
+  let file = @fs.open(path, mode=ReadOnly)
+  defer file.close()
+  conn
+  ..send_response(200, "OK", extra_headers={
+    "Content-Type": content_type(path),
+    "Cache-Control": "no-store, max-age=0",
+    "Pragma": "no-cache",
+  })
+  ..write_reader(file)
+  .end_response()
+}
+
+///|
+async fn handle(request : @http.Request, conn : @http.ServerConnection) -> Unit {
+  guard request.meth is Get else {
+    send_text(conn, 405, "Method Not Allowed", "Method Not Allowed")
+    return
+  }
+  match request_path(request.path) {
+    Some(path) => {
+      let file_path = static_file_path(path) catch {
+        err => {
+          send_text(conn, 500, "Internal Server Error", "\{err}")
+          return
+        }
+      }
+      match file_path {
+        Some(file_path) => serve_file(conn, file_path) catch {
+          err => send_text(conn, 500, "Internal Server Error", "\{err}")
+        }
+        None => send_text(conn, 404, "Not Found", "Not Found")
+      }
+    }
+    None => send_text(conn, 403, "Forbidden", "Forbidden")
+  }
+}
+
+///|
+async fn main raise {
+  let port = match @env.args() {
+    [_, value, ..] => value
+    _ => env_or("PORT", "5174")
+  }
+  let addr = @socket.Addr::parse("127.0.0.1:\{port}")
+  let server = @http.Server::new(addr, reuse_addr=true)
+  println("Serving http://127.0.0.1:\{port}")
+  server.run_forever((request, _body, conn) => handle(request, conn))
+}
+
+///|
+fn env_or(name : String, fallback : String) -> String {
+  match @env.get_env_var(name) {
+    Some(value) => value
+    None => fallback
+  }
+}

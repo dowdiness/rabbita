@@ -36,13 +36,24 @@ let tour_chapters : Array[TourChapter] = [
 
 ///|
 extern "js" fn site_base_url() -> String =
-  #| () => import.meta.env.BASE_URL
+  #| () => {
+  #|   const moduleUrl = import.meta.url
+  #|   return new URL("../", moduleUrl).pathname
+  #| }
 
 // Returns the base URL for tour pages, e.g. "/tour/" or "/rabbita/tour/"
 
 ///|
 extern "js" fn tour_base_url() -> String =
-  #| () => import.meta.env.BASE_URL + "tour/"
+  #| () => {
+  #|   const moduleUrl = import.meta.url
+  #|   return new URL("tour/", new URL("../", moduleUrl)).pathname
+  #| }
+
+///|
+fn playground_url() -> String {
+  site_base_url() + "playground/"
+}
 
 ///|
 fn scroll_to_heading(id : String) -> @rabbita.Cmd {

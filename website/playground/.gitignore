@@ -1,0 +1,6 @@
+_build/
+.mooncakes/
+**/_build/
+**/.mooncakes/
+.moon-home/
+dist/

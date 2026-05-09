@@ -1,0 +1,465 @@
+///|
+import {
+  "moonbitlang/async@0.18.1",
+  "moonbitlang/async@0.18.1/fs",
+  "moonbitlang/async@0.18.1/process",
+  "moonbitlang/core/env",
+  "moonbitlang/core/json",
+}
+
+///|
+struct SourceAsset {
+  name : String
+  url : String
+}
+
+///|
+struct DepAsset {
+  path : String
+  alias_ : String
+}
+
+///|
+struct PackageAsset {
+  id : String
+  sources : Array[SourceAsset]
+  deps : Array[DepAsset]
+}
+
+///|
+struct CoreInterface {
+  spec : String
+  path : String
+  url : String
+}
+
+///|
+let default_moon_bin = "moon"
+
+///|
+fn env_or(name : String, fallback : String) -> String {
+  match @env.get_env_var(name) {
+    Some(value) => value
+    None => fallback
+  }
+}
+
+///|
+fn join_path(left : String, right : String) -> String {
+  if left == "" {
+    right
+  } else if left.has_suffix("/") {
+    left + right
+  } else {
+    left + "/" + right
+  }
+}
+
+///|
+fn dirname(path : String) -> String {
+  match path.rev_find("/") {
+    Some(index) => if index == 0 { "/" } else { path[:index].to_owned() }
+    None => "."
+  }
+}
+
+///|
+fn relative(root : String, path : String) -> String {
+  let normalized_root = if root.has_suffix("/") {
+    root[:-1].to_owned()
+  } else {
+    root
+  }
+  let prefix = normalized_root + "/"
+  if path.has_prefix(prefix) {
+    path[prefix.length():].to_owned()
+  } else {
+    path
+  }
+}
+
+///|
+fn public_url(path : String) -> String {
+  if path.has_prefix("dist/moonbit-assets/") {
+    path["dist/moonbit-assets/".length():].to_owned()
+  } else if path.has_prefix("dist/") {
+    path["dist/".length():].to_owned()
+  } else {
+    path
+  }
+}
+
+///|
+async fn ensure_parent(path : String) -> Unit raise {
+  let dir = dirname(path)
+  if dir != "." && dir != "" && !@fs.exists(dir) {
+    @fs.mkdir(dir, permission=0o755, recursive=true)
+  }
+}
+
+///|
+async fn copy_file(source : String, target : String) -> Unit raise {
+  ensure_parent(target)
+  @fs.write_file(target, @fs.read_file(source), create=0o644, truncate=true)
+}
+
+///|
+async fn copy_core_file(source : String, target : String) -> Unit raise {
+  ensure_parent(target)
+  if source.has_suffix(".gz") {
+    let (code, data) = @process.collect_stdout(
+      "gzip",
+      ["-dc", source],
+      inherit_env=true,
+    )
+    if code != 0 {
+      abort("gzip failed for \{source}")
+    }
+    @fs.write_file(target, data, create=0o644, truncate=true)
+  } else {
+    copy_file(source, target)
+  }
+}
+
+///|
+async fn first_existing(candidates : Array[String]) -> String? {
+  let mut found : String? = None
+  for path in candidates {
+    if found is None && path != "" && @fs.exists(path) {
+      found = Some(path)
+    }
+  }
+  found
+}
+
+///|
+async fn ensure_package_graph() -> Unit raise {
+  if @fs.exists("_build/packages.json") {
+    return
+  }
+  let code = @process.run(
+    env_or("MOON_BIN", default_moon_bin),
+    ["build", "--target", "js", "--release"],
+    inherit_env=true,
+  )
+  if code != 0 {
+    abort("moon build failed with exit code \{code}")
+  }
+}
+
+///|
+fn json_object(value : Json) -> Map[String, Json] {
+  match value {
+    Object(obj) => obj
+    _ => abort("Expected JSON object")
+  }
+}
+
+///|
+fn json_array(value : Json) -> Array[Json] {
+  match value {
+    Array(items) => items
+    _ => abort("Expected JSON array")
+  }
+}
+
+///|
+fn json_string(value : Json) -> String {
+  match value {
+    String(text) => text
+    _ => abort("Expected JSON string")
+  }
+}
+
+///|
+fn field(obj : Map[String, Json], name : String) -> Json {
+  obj.get(name).unwrap()
+}
+
+///|
+fn string_field(obj : Map[String, Json], name : String) -> String {
+  json_string(field(obj, name))
+}
+
+///|
+fn package_id(pkg : Map[String, Json]) -> String {
+  let root = string_field(pkg, "root")
+  let rel = string_field(pkg, "rel")
+  if rel == "" {
+    root
+  } else {
+    root + "/" + rel
+  }
+}
+
+///|
+fn core_package_rel(core_bundle_root : String, mi_file : String) -> String {
+  dirname(relative(core_bundle_root, mi_file))
+}
+
+///|
+fn json_escape(value : String) -> String {
+  value
+  .replace_all(old="\\", new="\\\\")
+  .replace_all(old="\"", new="\\\"")
+  .replace_all(old="\n", new="\\n")
+  .replace_all(old="\r", new="\\r")
+  .replace_all(old="\t", new="\\t")
+}
+
+///|
+fn quoted(value : String) -> String {
+  "\"\{json_escape(value)}\""
+}
+
+///|
+fn field_str(name : String, value : String) -> String {
+  quoted(name) + ":" + quoted(value)
+}
+
+///|
+fn field_raw(name : String, value : String) -> String {
+  quoted(name) + ":" + value
+}
+
+///|
+fn join_json(items : Array[String]) -> String {
+  let out = StringBuilder::new()
+  for i in 0..<items.length() {
+    if i > 0 {
+      out.write_string(",")
+    }
+    out.write_string(items[i])
+  }
+  out.to_string()
+}
+
+///|
+fn render_source(source : SourceAsset) -> String {
+  "{" + field_str("name", source.name) + "," + field_str("url", source.url) + "}"
+}
+
+///|
+fn render_dep(dep : DepAsset) -> String {
+  "{" + field_str("path", dep.path) + "," + field_str("alias", dep.alias_) + "}"
+}
+
+///|
+fn render_core_interface(item : CoreInterface) -> String {
+  "{" + field_str("spec", item.spec) + "," + field_str("path", item.path) + "," + field_str("url", item.url) + "}"
+}
+
+///|
+fn render_package(pkg : PackageAsset) -> String {
+  let sources : Array[String] = []
+  for source in pkg.sources {
+    sources.push(render_source(source))
+  }
+  let deps : Array[String] = []
+  for dep in pkg.deps {
+    deps.push(render_dep(dep))
+  }
+  "{" + field_raw("sources", "[\{join_json(sources)}]") + "," + field_raw("deps", "[\{join_json(deps)}]") + "}"
+}
+
+///|
+fn render_manifest(
+  core_url : String,
+  abort_url : String?,
+  core_interfaces : Array[CoreInterface],
+  packages : Array[PackageAsset],
+) -> String {
+  let pkg_sources : Array[String] = [
+    quoted("moonbitlang/core:moonbit-core:/lib/core"),
+  ]
+  for pkg in packages {
+    pkg_sources.push(quoted("\{pkg.id}:rabbita:/packages/\{pkg.id}"))
+  }
+  pkg_sources.push(quoted("user/app/main:playground:/main"))
+
+  let imports : Array[String] = [
+    "{" + field_str("path", "moonbit-community/rabbita") + "," + field_str("alias", "rabbita") + "}",
+    "{" + field_str("path", "moonbit-community/rabbita/html") + "," + field_str("alias", "html") + "}",
+    "{" + field_str("path", "moonbitlang/core/prelude") + "," + field_str("alias", "prelude") + "}",
+  ]
+
+  let interfaces : Array[String] = []
+  for item in core_interfaces {
+    interfaces.push(render_core_interface(item))
+  }
+
+  let package_entries : Array[String] = []
+  for pkg in packages {
+    package_entries.push(quoted(pkg.id) + ":" + render_package(pkg))
+  }
+
+  let abort_entry = match abort_url {
+    Some(url) => "," + quoted("abort") + ":" + quoted(url)
+    None => ""
+  }
+
+  let out = StringBuilder::new()
+  out.write_string("{")
+  out.write_string(field_str("generatedAt", "\{@env.now()}") + ",")
+  out.write_string(field_str("target", "js"))
+  out.write_string("," + field_str("mainPackage", "user/app/main"))
+  out.write_string("," + field_raw("mainImports", "[\{join_json(imports)}]"))
+  out.write_string("," + field_raw("pkgSources", "[\{join_json(pkg_sources)}]"))
+  out.write_string("," + quoted("core") + ":{")
+  out.write_string(field_str("core", core_url) + abort_entry + ",")
+  out.write_string(field_raw("interfaces", "[\{join_json(interfaces)}]") + "}")
+  out.write_string("," + field_raw("packages", "{\{join_json(package_entries)}}"))
+  out.write_string("}\n")
+  out.to_string()
+}
+
+///|
+async fn collect_core_interfaces(core_bundle_root : String) -> Array[CoreInterface] raise {
+  let mi_files : Array[String] = []
+  @fs.walk(core_bundle_root, (dir, files) => {
+    for file in files {
+      let full = join_path(dir, file)
+      if full.has_suffix(".mi") {
+        mi_files.push(full)
+      }
+    }
+  })
+  mi_files.sort()
+
+  let interfaces : Array[CoreInterface] = []
+  for mi_file in mi_files {
+    let rel = relative(core_bundle_root, mi_file)
+    let pkg_rel = core_package_rel(core_bundle_root, mi_file)
+    let target = join_path("dist/moonbit-assets/core", rel)
+    copy_file(mi_file, target)
+    interfaces.push({
+      spec: "/lib/core/\{pkg_rel}:\{pkg_rel}",
+      path: "moonbitlang/core/\{pkg_rel}",
+      url: public_url(target),
+    })
+  }
+  interfaces
+}
+
+///|
+async fn collect_rabbita_packages() -> Array[PackageAsset] raise {
+  let parsed = @json.parse(@fs.read_file("_build/packages.json").text())
+  let root = json_object(parsed)
+  let package_values = json_array(field(root, "packages"))
+  let packages : Array[PackageAsset] = []
+
+  for pkg_value in package_values {
+    let pkg = json_object(pkg_value)
+    if string_field(pkg, "root") == "moonbit-community/rabbita" {
+      let id = package_id(pkg)
+      let root_path = string_field(pkg, "root-path")
+      let files = json_object(field(pkg, "files"))
+      let source_paths : Array[String] = []
+      for file, _ in files {
+        if file.has_suffix(".mbt") {
+          source_paths.push(file)
+        }
+      }
+      source_paths.sort()
+
+      let sources : Array[SourceAsset] = []
+      for file in source_paths {
+        let rel = relative(root_path, file)
+        let target = join_path(join_path("dist/moonbit-assets/sources", id), rel)
+        copy_file(file, target)
+        sources.push({ name: rel, url: public_url(target) })
+      }
+
+      if sources.length() > 0 {
+        let deps : Array[DepAsset] = []
+        for dep_value in json_array(field(pkg, "deps")) {
+          let dep = json_object(dep_value)
+          deps.push({
+            path: string_field(dep, "path"),
+            alias_: string_field(dep, "alias"),
+          })
+        }
+        packages.push({ id, sources, deps })
+      }
+    }
+  }
+  packages.sort_by_key(pkg => pkg.id)
+  packages
+}
+
+///|
+async fn main raise {
+  ensure_package_graph()
+
+  if !@fs.exists("dist") {
+    @fs.mkdir("dist", permission=0o755, recursive=true)
+  }
+  if @fs.exists("dist/moonbit-assets") {
+    @fs.rmdir("dist/moonbit-assets", recursive=true)
+  }
+  @fs.mkdir("dist/moonbit-assets", permission=0o755, recursive=true)
+  if !@fs.exists("dist/vendor") {
+    @fs.mkdir("dist/vendor", permission=0o755, recursive=true)
+  }
+
+  let core_candidates : Array[String] = []
+  match @env.get_env_var("MOONBIT_PLAYGROUND_CORE_BUNDLE") {
+    Some(path) => core_candidates.push(path)
+    None => ()
+  }
+  let worker_candidates : Array[String] = []
+  match @env.get_env_var("MOONBIT_PLAYGROUND_WORKER") {
+    Some(path) => worker_candidates.push(path)
+    None => ()
+  }
+
+  let core_bundle_root = match first_existing(core_candidates) {
+    Some(path) => path
+    None =>
+      abort(
+        "Set MOONBIT_PLAYGROUND_CORE_BUNDLE to a local MoonBit core bundle directory.",
+      )
+  }
+  let worker_source = match first_existing(worker_candidates) {
+    Some(path) => path
+    None =>
+      abort("Set MOONBIT_PLAYGROUND_WORKER to a local moonc-worker.js file.")
+  }
+
+  copy_file(worker_source, "dist/vendor/moonc-worker.js")
+
+  let core_core = first_existing([
+    join_path(core_bundle_root, "core.core"),
+    join_path(core_bundle_root, "core.core.gz"),
+  ]).unwrap()
+  copy_core_file(core_core, "dist/moonbit-assets/core/core.core")
+
+  let abort_source = first_existing([
+    join_path(core_bundle_root, "abort/abort.core"),
+  ])
+  let abort_url = match abort_source {
+    Some(path) => {
+      copy_file(path, "dist/moonbit-assets/core/abort/abort.core")
+      Some(public_url("dist/moonbit-assets/core/abort/abort.core"))
+    }
+    None => None
+  }
+
+  let core_interfaces = collect_core_interfaces(core_bundle_root)
+  let packages = collect_rabbita_packages()
+  let manifest = render_manifest(
+    public_url("dist/moonbit-assets/core/core.core"),
+    abort_url,
+    core_interfaces,
+    packages,
+  )
+  @fs.write_file(
+    "dist/moonbit-assets/manifest.json",
+    manifest,
+    create=0o644,
+    truncate=true,
+  )
+
+  println("Generated \{packages.length()} Rabbita package source assets.")
+  println("Generated \{core_interfaces.length()} core interface assets.")
+}

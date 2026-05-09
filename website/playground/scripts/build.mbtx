@@ -1,0 +1,111 @@
+///|
+import {
+  "moonbitlang/async@0.18.1",
+  "moonbitlang/async@0.18.1/fs",
+  "moonbitlang/async@0.18.1/process",
+  "moonbitlang/core/env",
+}
+
+///|
+let default_moon_bin = "moon"
+
+///|
+fn env_or(name : String, fallback : String) -> String {
+  match @env.get_env_var(name) {
+    Some(value) => value
+    None => fallback
+  }
+}
+
+///|
+fn dirname(path : String) -> String {
+  match path.rev_find("/") {
+    Some(index) => if index == 0 { "/" } else { path[:index].to_owned() }
+    None => "."
+  }
+}
+
+///|
+fn join_path(left : String, right : String) -> String {
+  if left == "" {
+    right
+  } else if left.has_suffix("/") {
+    left + right
+  } else {
+    left + "/" + right
+  }
+}
+
+///|
+async fn ensure_parent(path : String) -> Unit raise {
+  let dir = dirname(path)
+  if dir != "." && dir != "" && !@fs.exists(dir) {
+    @fs.mkdir(dir, permission=0o755, recursive=true)
+  }
+}
+
+///|
+async fn copy_file(source : String, target : String) -> Unit raise {
+  ensure_parent(target)
+  let file = @fs.create(target, permission=0o644)
+  defer file.close()
+  file.write(@fs.read_file(source).binary())
+}
+
+///|
+async fn copy_repo_example_asset(example : String, path : String) -> Unit raise {
+  copy_file(
+    join_path(join_path("../../examples", example), path),
+    join_path(join_path("dist/repo-examples", example), path),
+  )
+}
+
+///|
+async fn copy_repo_examples() -> Unit raise {
+  if @fs.exists("dist/repo-examples") {
+    @fs.rmdir("dist/repo-examples", recursive=true)
+  }
+  copy_repo_example_asset("sokobank", "main/main.mbt")
+  copy_repo_example_asset("sokobank", "main/moon.pkg")
+  copy_repo_example_asset("sokobank", "public/styles.css")
+  copy_repo_example_asset("animation", "main/client.mbt")
+  copy_repo_example_asset("animation", "main/logo_animation.mbt")
+  copy_repo_example_asset("animation", "main/animation_tab.mbt")
+  copy_repo_example_asset("animation", "main/moon.pkg")
+  copy_repo_example_asset("animation", "public/styles.css")
+}
+
+///|
+async fn copy_static_site_files() -> Unit raise {
+  if !@fs.exists("dist") {
+    @fs.mkdir("dist", permission=0o755, recursive=true)
+  }
+  copy_file("public/index.html", "dist/index.html")
+  copy_file("public/styles.css", "dist/styles.css")
+  copy_file("support/compiler.js", "dist/support/compiler.js")
+  copy_file("support/editor.js", "dist/support/editor.js")
+  copy_file("support/rpc.js", "dist/support/rpc.js")
+}
+
+///|
+async fn main raise {
+  let code = @process.run(
+    env_or("MOON_BIN", default_moon_bin),
+    ["build", "--target", "js", "--release"],
+    inherit_env=true,
+  )
+  if code != 0 {
+    abort("moon build failed with exit code \{code}")
+  }
+
+  let source = "_build/js/release/build/main/main.js"
+  let target = "dist/app.js"
+  copy_static_site_files()
+  copy_file(source, target)
+  copy_repo_examples()
+  println("Wrote dist/index.html")
+  println("Wrote dist/styles.css")
+  println("Wrote dist/support")
+  println("Wrote \{target}")
+  println("Wrote dist/repo-examples")
+}

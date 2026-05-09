@@ -6,6 +6,11 @@ on:
       - main
     paths:
       - 'website/**'
+      - 'doc/**'
+      - 'examples/animation/**'
+      - 'examples/sokobank/**'
+      - 'rabbita/**'
+      - 'utils/shiki/**'
       - '.github/workflows/deploy-website.yml'
   workflow_dispatch:
 
@@ -30,12 +35,11 @@ jobs:
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: MoonBit version
-        working-directory: website
         run: |
           moon version --all
 
-      - name: Update MoonBit registry and install dependencies
-        working-directory: website
+      - name: Update homepage dependencies
+        working-directory: website/homepage
         run: |
           moon update
 
@@ -48,17 +52,42 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: Install dependencies
-        working-directory: website
+      - name: Install homepage dependencies
+        working-directory: website/homepage
         run: npm install
 
-      - name: Build
-        working-directory: website
+      - name: Build homepage
+        working-directory: website/homepage
         run: |
           moon check --target js
           npm run build
-        env:
-          VITE_BASE: ${{ steps.pages.outputs.base_path }}
+
+      - name: Update playground dependencies
+        working-directory: website/playground
+        run: moon update
+
+      - name: Fetch moonc worker asset
+        run: |
+          mkdir -p /tmp/moonc-worker
+          WORKER_TARBALL="$(npm view @moonbit/moonc-worker dist.tarball)"
+          curl -fsSL "$WORKER_TARBALL" | tar -xz -C /tmp/moonc-worker --strip-components=1 package/moonc-worker.js
+
+      - name: Build playground
+        working-directory: website/playground
+        run: |
+          moon check --target js
+          MOONBIT_PLAYGROUND_WORKER=/tmp/moonc-worker/moonc-worker.js \
+          MOONBIT_PLAYGROUND_CORE_BUNDLE="$HOME/.moon/lib/core/_build/js/release/bundle" \
+          moon run --target native scripts/assets.mbtx
+          moon run --target native scripts/build.mbtx
+
+      - name: Assemble Pages artifact
+        run: |
+          rm -rf website/dist
+          mkdir -p website/dist
+          cp -R website/homepage/dist/. website/dist/
+          mkdir -p website/dist/playground
+          cp -R website/playground/dist/. website/dist/playground/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

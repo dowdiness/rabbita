@@ -1,19 +1,9 @@
 ///|
 using @common {type Keyboard}
-
-///|
 using @html {div, input, label, main_, nothing, section, span}
-
-///|
 using @rabbita {type Emit, type Html, new, simple_cell_with_emit}
-
-///|
 using @string {parse_int}
-
-///|
 using @sub {type Sub, on_key_down}
-
-///|
 using @vector {type Vector, from_array, singleton}
 
 ///|
@@ -39,13 +29,6 @@ struct World {
 enum Msg {
   KeyPressed(Keyboard)
   JumpTo(String)
-}
-
-///|
-struct Model {
-  world : World
-  history : Vector[World]
-  cursor : Int
 }
 
 ///|
@@ -120,29 +103,34 @@ fn delta_from_key(event : Keyboard) -> Pos? {
 }
 
 ///|
+struct Model {
+  history : Vector[World]
+  cursor : Int
+}
+
+///|
 fn update(msg : Msg, model : Model) -> Model {
   match msg {
-    KeyPressed(event) =>
-      delta_from_key(event)
-      .bind(delta => try_move(delta, model.world))
-      .map(next => {
-        let history = model.history.take(model.cursor + 1).push(next)
-        { world: next, history, cursor: model.cursor + 1 }
-      })
-      .unwrap_or(model)
-    JumpTo(value) => {
-      let max_index = model.history.length() - 1
-      let cursor = Int::min(
-        Int::max(0, parse_int(value) catch { _ => 0 }),
-        max_index,
-      )
-      {
-        ..model,
-        world: model.history.get(cursor).unwrap_or(model.world),
-        cursor,
+    KeyPressed(keyboard) => {
+      guard delta_from_key(keyboard) is Some(delta) else { model }
+      guard try_move(delta, model.history[model.cursor]) is Some(next) else {
+        model
       }
+      let cursor = model.cursor + 1
+      let history = model.history.take(cursor).push(next)
+      { history, cursor }
+    }
+    JumpTo(point) => {
+      let idx = parse_int(point) catch { _ => 0 }
+      let cursor = clamp(0, model.history.length() - 1, idx)
+      { ..model, cursor, }
     }
   }
+}
+
+///|
+fn clamp(min : Int, max : Int, idx : Int) -> Int {
+  Int::min(Int::max(min, idx), max)
 }
 
 ///|
@@ -229,7 +217,7 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
   main_(class="page") <| [
     section(class="hero") <| [
       div(class="stage-wrap") <| [
-        board_view(model.world),
+        board_view(model.history[model.cursor]),
       ],
       div(class="bottom-deck") <| [
         timeline_view(emit, model),
@@ -246,7 +234,7 @@ fn main {
     crates: from_array([{ x: 3, y: 2 }, { x: 3, y: 3 }, { x: 3, y: 4 }]),
   }
   let (_, app) = simple_cell_with_emit(
-    model={ world: initial_world, history: singleton(initial_world), cursor: 0 },
+    model={ history: singleton(initial_world), cursor: 0 },
     update~,
     view~,
     subscriptions~,
