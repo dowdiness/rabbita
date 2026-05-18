@@ -51,10 +51,12 @@ fn diff_subs(
 ) -> Map[String, @sub.RunningSub] {
   let sub_map = {}
   for key, sub in old_subs {
-    if !new_subs.contains(key) {
-      (sub.unload)(scheduler)
-    } else {
-      sub_map[key] = sub
+    match new_subs.get(key) {
+      None => (sub.unload)(scheduler)
+      Some((new_payload, _loader)) => {
+        (sub.update_tagger)(new_payload)
+        sub_map[key] = sub
+      }
     }
   }
   for key, sub in new_subs {
