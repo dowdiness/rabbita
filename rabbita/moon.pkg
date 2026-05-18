@@ -18,3 +18,7 @@ import {
 warnings = "-unused_package"
 
 supported_targets = "js+native"
+
+options(
+  formatter: { "ignore": [ "README.mbt.md" ] },
+)

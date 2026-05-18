@@ -30,38 +30,27 @@ Use the [rabbita-template](https://github.com/moonbit-community/rabbita-template
 
 ### Counter 
 
-```mbt check
-///|
+```mbt nocheck
 using @html {div, h1, button}
+enum Msg { 
+  Inc
+  Dec 
+}
 
-///|
-#cfg(target="js")
-test {
-  struct Model {
-    count : Int
-  }
-  enum Msg {
-    Inc
-    Dec
-  }
-  let app = @rabbita.simple_cell(
-    model={ count: 0 },
-    update=(msg, model) => {
-      let { count } = model
-      match msg {
-        Inc => { count: count + 1 }
-        Dec => { count: count - 1 }
-      }
+fn main {
+  let app = simple_cell(
+    model=0,
+    update=(msg, model) => match msg {
+      Inc => model + 1
+      Dec => model - 1
     },
-    view=(emit, model) => {
-      div([
-        h1("\{model.count}"),
-        button(on_click=emit(Inc), "+"),
-        button(on_click=emit(Dec), "-"),
-      ])
-    },
+    view=(emit, model) => div <| [
+      h1("\{model}"),
+      button(on_click=emit(Inc), "+"),
+      button(on_click=emit(Dec), "-"),
+    ],
   )
-  new(app).mount("main")
+  new(app).mount("app")
 }
 ```
 
@@ -70,28 +59,23 @@ test {
 Each cell maintains its own model, view, and update logic, and only dirty cells
 need VDOM diffing and patching.
 
-```moonbit check
-///|
-#cfg(target="js")
+```moonbit nocheck
 using @html {fragment, input, nothing, ul, li, p}
-
-///|
-#cfg(target="js")
 using @list {type List, empty}
 
-///|
+struct Model {
+  value : String
+  items : Map[String, Bool]
+}
+
+enum Msg {
+  Add
+  Change(String)
+  Done(String)
+}
+
 /// The todo plan
-#cfg(target="js")
 fn plan(name : String) -> Cell {
-  struct Model {
-    value : String
-    items : Map[String, Bool]
-  }
-  enum Msg {
-    Add
-    Change(String)
-    Done(String)
-  }
   @rabbita.simple_cell(
     model={ value: "", items: {} },
     update=(msg, model) => {
@@ -121,9 +105,7 @@ fn plan(name : String) -> Cell {
   )
 }
 
-///|
 /// Main app
-#cfg(target="js")
 test {
   struct Model {
     plans : List[Cell]
