@@ -1,7 +1,6 @@
 import {
   "moonbit-community/rabbita",
   "moonbit-community/rabbita/html",
-  "moonbit-community/rabbita/svg",
   "moonbitlang/core/immut/vector",
 }
 
