@@ -7,8 +7,7 @@ on:
     paths:
       - 'website/**'
       - 'doc/**'
-      - 'examples/animation/**'
-      - 'examples/sokobank/**'
+      - 'examples/**'
       - 'rabbita/**'
       - 'utils/shiki/**'
       - '.github/workflows/deploy-website.yml'
