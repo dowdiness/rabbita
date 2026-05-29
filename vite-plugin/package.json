@@ -15,6 +15,7 @@
     "test3": "cd test/project3/app-a && moon check --target js && npm run build",
     "test4": "cd test/project4/app-a && moon check --target js && npm run build",
     "test5": "cd test/project5 && node verify-no-mod.mjs",
+    "test6": "cd test/project6 && moon check --target js && npm run build",
     "dev1": "cd test/project1 && npm run dev -- --host 127.0.0.1 --port 5181 --strictPort",
     "dev2": "cd test/project2 && npm run dev -- --host 127.0.0.1 --port 5182 --strictPort",
     "prepublishOnly": "npm run build"

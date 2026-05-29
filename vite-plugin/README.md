@@ -26,10 +26,27 @@ export default defineConfig({
 })
 ```
 
-The current Vite directory must contain `moon.mod` or legacy `moon.mod.json`.
+By default, the current Vite directory must contain `moon.mod` or legacy
+`moon.mod.json`.
+
+If your Vite root is different from your MoonBit module root, pass
+`moonModDir`:
+
+```ts
+import { defineConfig } from 'vite'
+import rabbita from '@rabbita/vite'
+
+export default defineConfig({
+  root: 'src',
+  plugins: [rabbita({ moonModDir: '.' })],
+})
+```
+
+`moonModDir` is resolved from the current working directory. It should point to
+the directory containing `moon.mod` or legacy `moon.mod.json`.
 
 If a parent `moon.work` exists, the plugin still runs `moon build` in the
-current module directory, then looks for generated artifacts in this order:
+MoonBit module directory, then looks for generated artifacts in this order:
 
 1. the parent workspace `_build`
 2. the current module `_build`

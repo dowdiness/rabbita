@@ -29,6 +29,7 @@ type JsOutput = {
 
 type RabbitaOptions = {
   main?: string;
+  moonModDir?: string;
 };
 
 const VIRTUAL_MAIN_ENTRY_ID = '\0rabbita:main-entry';
@@ -334,14 +335,18 @@ function shouldRebuildForFile(filePath: string): boolean {
  */
 export function rabbita(options: RabbitaOptions = {}): Plugin {
   const mainPackagePath = options.main;
+  const explicitMoonModDir = options.moonModDir
+    ? path.resolve(options.moonModDir)
+    : undefined;
   let project: MoonProjectConfig | undefined = undefined;
   let isBuild = false;
   let latestOutput: JsOutput | undefined = undefined;
   let rebuildTimer: ReturnType<typeof setTimeout> | undefined = undefined;
 
   function ensureProject(root: string = defaultProjectRoot()): MoonProjectConfig {
-    if (!project || project.moduleRoot !== root) {
-      project = probeMoonBitProject(root);
+    const moduleRoot = explicitMoonModDir ?? root;
+    if (!project || project.moduleRoot !== moduleRoot) {
+      project = probeMoonBitProject(moduleRoot);
     }
     return project;
   }
