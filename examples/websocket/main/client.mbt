@@ -646,7 +646,6 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
               value=model.url_input,
               placeholder="wss://example.com/socket",
               on_input=emit.map(url => UrlChanged(url)),
-              nothing,
             ),
           ],
           div(class="field") <| [
@@ -656,7 +655,6 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
               value=model.protocols_input,
               placeholder="chat, superchat",
               on_input=emit.map(protocols => ProtocolsChanged(protocols)),
-              nothing,
             ),
           ],
           div(class="field") <| [
@@ -666,7 +664,6 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
               value=model.nickname_input,
               placeholder="guest",
               on_input=emit.map(nickname => NicknameChanged(nickname)),
-              nothing,
             ),
           ],
         ],

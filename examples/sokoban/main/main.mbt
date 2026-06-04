@@ -216,7 +216,6 @@ fn timeline_view(emit : Emit[Msg], model : Model) -> Html {
         step=1,
         value="\{model.cursor}",
         on_input=emit.map(value => JumpTo(value)),
-        nothing,
       ),
     ],
   ]

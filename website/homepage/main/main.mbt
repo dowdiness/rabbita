@@ -821,7 +821,7 @@ fn showcase_card(
 ) -> Html {
   a(class="showcase-card", href=url, target=Blank, [
     div(class="showcase-thumb", [
-      img(class="showcase-thumb-img", src=img_src, alt=title, nothing),
+      img(class="showcase-thumb-img", src=img_src, alt=title),
     ]),
     div(class="showcase-info", [
       span(class="showcase-title", title),

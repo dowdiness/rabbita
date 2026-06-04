@@ -98,7 +98,7 @@ fn plan(name : String) -> Cell {
       div(style=["border: 1px solid black", "padding: 1em"], [
         h1(name),
         ul(items),
-        input(input_type=Text, value~, on_change=s => emit(Change(s)), nothing),
+        input(input_type=Text, value~, on_change=s => emit(Change(s))),
         button(on_click=emit(Add), "add"),
       ])
     },

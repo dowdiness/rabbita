@@ -251,14 +251,13 @@ pub fn[C : IsChildren] p(
 
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/hr)
-pub fn[C : IsChildren] hr(
+pub fn hr(
   style? : Array[String] = [],
   id? : String,
   class? : String,
   title? : String,
   hidden? : Bool,
   attrs? : Attrs,
-  children : C,
 ) -> Html {
   let attrs = resolve_attrs(attrs)
   push_title(title, attrs)
@@ -266,7 +265,7 @@ pub fn[C : IsChildren] hr(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("hr", attrs, children)
+  node("hr", attrs, ([] : Array[Html]))
 }
 
 ///|
@@ -1165,7 +1164,7 @@ pub fn[C : IsChildren] dd(
 
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img)
-pub fn[C : IsChildren] img(
+pub fn img(
   style? : Array[String] = [],
   id? : String,
   class? : String,
@@ -1180,7 +1179,6 @@ pub fn[C : IsChildren] img(
   loading? : String,
   decoding? : String,
   attrs? : Attrs,
-  children : C,
 ) -> Html {
   let attrs = resolve_attrs(attrs)
   push_hidden(hidden, attrs)
@@ -1196,7 +1194,7 @@ pub fn[C : IsChildren] img(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("img", attrs, children)
+  node("img", attrs, ([] : Array[Html]))
 }
 
 ///|
@@ -1409,7 +1407,7 @@ pub fn[C : IsChildren] legend(
 
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input)
-pub fn[C : IsChildren] input(
+pub fn input(
   input_type? : InputType = Text,
   name? : String,
   value? : String,
@@ -1440,7 +1438,6 @@ pub fn[C : IsChildren] input(
   on_change? : Emit[String],
   on_input? : Emit[String],
   attrs? : Attrs,
-  children : C,
 ) -> Html {
   let input_type = match input_type {
     Button => "button"
@@ -1500,7 +1497,7 @@ pub fn[C : IsChildren] input(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("input", attrs, children)
+  node("input", attrs, ([] : Array[Html]))
 }
 
 ///|
@@ -1835,7 +1832,7 @@ pub fn[C : IsChildren] tbody(
 
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/col)
-pub fn[C : IsChildren] col(
+pub fn col(
   style? : Array[String] = [],
   id? : String,
   span? : Int,
@@ -1843,7 +1840,6 @@ pub fn[C : IsChildren] col(
   title? : String,
   hidden? : Bool,
   attrs? : Attrs,
-  children : C,
 ) -> Html {
   let attrs = resolve_attrs(attrs)
   push_title(title, attrs)
@@ -1852,7 +1848,7 @@ pub fn[C : IsChildren] col(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("col", attrs, children)
+  node("col", attrs, ([] : Array[Html]))
 }
 
 ///|
