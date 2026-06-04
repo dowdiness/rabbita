@@ -9,12 +9,16 @@ struct DiffSubsTestScheduler {
 }
 
 ///|
-impl @cmd.Scheduler for DiffSubsTestScheduler with run_effect(self, _kind, _f) {
+impl @cmd.Scheduler for DiffSubsTestScheduler with fn run_effect(
+  self,
+  _kind,
+  _f,
+) {
   ignore(self)
 }
 
 ///|
-impl @cmd.Scheduler for DiffSubsTestScheduler with queue_message(
+impl @cmd.Scheduler for DiffSubsTestScheduler with fn queue_message(
   self,
   _id,
   _send_message,
@@ -23,12 +27,12 @@ impl @cmd.Scheduler for DiffSubsTestScheduler with queue_message(
 }
 
 ///|
-impl @cmd.Scheduler for DiffSubsTestScheduler with drain_message(self) {
+impl @cmd.Scheduler for DiffSubsTestScheduler with fn drain_message(self) {
   ignore(self)
 }
 
 ///|
-impl @cmd.Scheduler for DiffSubsTestScheduler with hooks(self) {
+impl @cmd.Scheduler for DiffSubsTestScheduler with fn hooks(self) {
   self.hooks
 }
 
