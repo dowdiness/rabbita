@@ -218,7 +218,7 @@ fn render_link(
     } else {
       dest
     }
-    img(class="md-img", src~, alt=inline_to_text(lnk.text), nothing)
+    img(class="md-img", src~, alt=inline_to_text(lnk.text))
   } else {
     a(class="md-link", href=dest, [render_inline(defs, lnk.text, base_url)])
   }
@@ -388,7 +388,7 @@ fn render_block(
       }
       fragment(children)
     }
-    ThematicBreak(_) => hr(class="md-hr", nothing)
+    ThematicBreak(_) => hr(class="md-hr")
     ExtTable({ v: tbl, .. }) => render_table(defs, tbl, base_url)
     BlankLine(_)
     | HtmlBlock(_)

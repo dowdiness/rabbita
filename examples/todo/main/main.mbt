@@ -1,6 +1,6 @@
 using @sorted_map {type SortedMap}
 using @rabbita {simple_cell, new, type Emit, type Html}
-using @html {button, div, h1, input, li, span, ul, nothing, form}
+using @html {button, div, h1, input, li, span, ul, form}
 
 ///|
 struct Todo {
@@ -36,9 +36,8 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
         value=title,
         placeholder="What needs doing?",
         on_input=emit.map(s => TitleChanged(s)),
-        nothing,
       ),
-      input(input_type=Submit, "add"),
+      input(input_type=Submit, value="add"),
     ],
     ul <| [
       for id, x in items => {
@@ -47,7 +46,6 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
             input_type=Checkbox,
             checked=x.done,
             on_change=emit.map(_ => Toggle(id, x)),
-            nothing,
           ),
           span(x.title),
           button(on_click=emit(Delete(id)), "delete"),

@@ -231,15 +231,19 @@ fn VNode::insert(
         sheet.set_property(n, val)
       }
       let n = element.as_node()
-      let childs = match childs {
-        Array(xs) =>
-          Array(xs.map(x => x.insert(sandbox, parent_inst, n, null())))
-        Map(mp) => {
-          let imp = {}
-          for k, v in mp {
-            imp[k] = v.insert(sandbox, parent_inst, n, null())
+      let childs : Children[INode] = if is_html_void_element(tag) {
+        Array([])
+      } else {
+        match childs {
+          Array(xs) =>
+            Array(xs.map(x => x.insert(sandbox, parent_inst, n, null())))
+          Map(mp) => {
+            let imp = {}
+            for k, v in mp {
+              imp[k] = v.insert(sandbox, parent_inst, n, null())
+            }
+            Map(imp)
           }
-          Map(imp)
         }
       }
       parent.insert_before(n, before)

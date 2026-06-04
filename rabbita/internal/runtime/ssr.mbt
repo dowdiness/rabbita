@@ -97,6 +97,27 @@ fn write_property_attrs(
 }
 
 ///|
+fn is_html_void_element(tag : String) -> Bool {
+  match tag {
+    "area"
+    | "base"
+    | "br"
+    | "col"
+    | "embed"
+    | "hr"
+    | "img"
+    | "input"
+    | "link"
+    | "meta"
+    | "param"
+    | "source"
+    | "track"
+    | "wbr" => true
+    _ => false
+  }
+}
+
+///|
 fn vnode_to_string(buf : StringBuilder, vnode : VNode) -> Unit {
   match vnode {
     Elem(tag, props, children, namespace_uri=ns) => {
@@ -117,18 +138,22 @@ fn vnode_to_string(buf : StringBuilder, vnode : VNode) -> Unit {
       }
       write_styles_attr(buf, attrs, styles)
       write_property_attrs(buf, attrs, props)
-      buf.write_char('>')
-      if props.get("innerHTML") is Some(String(raw_html)) {
-        buf.write_string(raw_html)
-      }
-      if props.get("textContent") is Some(text_content) {
-        write_variant_text(buf, text_content)
-      }
-      children_to_string(buf, children)
+      if is_html_void_element(tag) {
+        buf.write_char('>')
+      } else {
+        buf.write_char('>')
+        if props.get("innerHTML") is Some(String(raw_html)) {
+          buf.write_string(raw_html)
+        }
+        if props.get("textContent") is Some(text_content) {
+          write_variant_text(buf, text_content)
+        }
+        children_to_string(buf, children)
 
-      buf.write_string("</")
-      buf.write_string(tag)
-      buf.write_char('>')
+        buf.write_string("</")
+        buf.write_string(tag)
+        buf.write_char('>')
+      }
     }
     Text(s) => write_escaped_text(buf, s)
     Frag(c) => children_to_string(buf, Array(c))

@@ -48,7 +48,7 @@ pub fn[C : IsChildren] cite(style? : Array[String], id? : String, class? : Strin
 
 pub fn[C : IsChildren] code(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
-pub fn[C : IsChildren] col(style? : Array[String], id? : String, span? : Int, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
+pub fn col(style? : Array[String], id? : String, span? : Int, class? : String, title? : String, hidden? : Bool, attrs? : Attrs) -> Html
 
 pub fn[C : IsChildren] colgroup(style? : Array[String], id? : String, span? : Int, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
@@ -110,7 +110,7 @@ pub fn[C : IsChildren] header(style? : Array[String], id? : String, class? : Str
 
 pub fn[C : IsChildren] hgroup(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
-pub fn[C : IsChildren] hr(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
+pub fn hr(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs) -> Html
 
 pub fn[C : IsChildren] html(style? : Array[String], id? : String, class? : String, title? : String, lang? : String, dir? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
@@ -118,9 +118,9 @@ pub fn[C : IsChildren] i(style? : Array[String], id? : String, class? : String, 
 
 pub fn iframe(style? : Array[String], id? : String, class? : String, hidden? : Bool, src? : String, title? : String, width? : Int, height? : Int, loading? : String, allow? : String, sandbox? : String, allowfullscreen? : Bool, attrs? : Attrs) -> Html
 
-pub fn[C : IsChildren] img(style? : Array[String], id? : String, class? : String, hidden? : Bool, src? : String, alt? : String, title? : String, width? : Int, height? : Int, srcset? : String, sizes? : String, loading? : String, decoding? : String, attrs? : Attrs, C) -> Html
+pub fn img(style? : Array[String], id? : String, class? : String, hidden? : Bool, src? : String, alt? : String, title? : String, width? : Int, height? : Int, srcset? : String, sizes? : String, loading? : String, decoding? : String, attrs? : Attrs) -> Html
 
-pub fn[C : IsChildren] input(input_type? : InputType, name? : String, value? : String, checked? : Bool, read_only? : Bool, multiple? : Bool, accept? : String, placeholder? : String, auto_complete? : AutoComplete, style? : Array[String], max? : Int, min? : Int, step? : Int, maxlength? : Int, minlength? : Int, pattern? : String, size? : Int, width? : Int, height? : Int, id? : String, class? : String, title? : String, hidden? : Bool, required? : Bool, autofocus? : Bool, list? : String, inputmode? : String, on_change? : @cmd.Emit[String], on_input? : @cmd.Emit[String], attrs? : Attrs, C) -> Html
+pub fn input(input_type? : InputType, name? : String, value? : String, checked? : Bool, read_only? : Bool, multiple? : Bool, accept? : String, placeholder? : String, auto_complete? : AutoComplete, style? : Array[String], max? : Int, min? : Int, step? : Int, maxlength? : Int, minlength? : Int, pattern? : String, size? : Int, width? : Int, height? : Int, id? : String, class? : String, title? : String, hidden? : Bool, required? : Bool, autofocus? : Bool, list? : String, inputmode? : String, on_change? : @cmd.Emit[String], on_input? : @cmd.Emit[String], attrs? : Attrs) -> Html
 
 pub fn[C : IsChildren] ins(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
