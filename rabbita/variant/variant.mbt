@@ -7,6 +7,6 @@ pub(all) enum Variant {
 } derive(Debug, Eq, Compare, Hash)
 
 ///|
-pub impl Show for Variant with output(self, buf) {
+pub impl Show for Variant with fn output(self, buf) {
   self.to_repr().output(buf)
 }

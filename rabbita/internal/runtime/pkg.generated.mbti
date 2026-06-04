@@ -65,9 +65,9 @@ pub fn VNode::text(String) -> Self
 
 // Traits
 pub(open) trait IsCell {
-  init(Self, &@cmd.Scheduler) -> Unit
-  step(Self, &@cmd.Scheduler) -> Unit
-  view(Self) -> VNode
-  flags(Self) -> Flags
+  fn init(Self, &@cmd.Scheduler) -> Unit
+  fn step(Self, &@cmd.Scheduler) -> Unit
+  fn view(Self) -> VNode
+  fn flags(Self) -> Flags
 }
 

@@ -5,13 +5,13 @@ type Text
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for Text with into(value) {
+pub impl @js.Cast for Text with fn into(value) {
   value |> ffi_to_text |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for Text with from(value) {
+pub impl @js.Cast for Text with fn from(value) {
   value |> js_identity
 }
 

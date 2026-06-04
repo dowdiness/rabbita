@@ -48,7 +48,7 @@ pub fn read_mod(source : String) -> ModConfigs raise {
 
       { deps, preferred_target, name, version }
     }
-    _ => fail("invalid module configuration: \n \{json}")
+    _ => fail("invalid module configuration: \n \{to_repr(json)}")
   }
 }
 

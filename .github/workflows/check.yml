@@ -75,3 +75,32 @@ jobs:
 
       - name: check typos
         run: typos
+
+  vite-plugin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: MoonBit version
+        run: |
+          moon version --all
+          moonrun --version
+
+      - name: Install plugin dependencies
+        working-directory: vite-plugin
+        run: npm install
+
+      - name: Test Vite plugin
+        working-directory: vite-plugin
+        run: npm test

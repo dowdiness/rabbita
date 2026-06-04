@@ -9,13 +9,13 @@ pub impl IsEvent for CloseEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CloseEvent with into(value) {
+pub impl @js.Cast for CloseEvent with fn into(value) {
   value |> ffi_to_close_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CloseEvent with from(value) {
+pub impl @js.Cast for CloseEvent with fn from(value) {
   value |> js_identity
 }
 

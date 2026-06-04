@@ -21,12 +21,12 @@ pub impl IsSVGElement for SVGImageElement
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for SVGImageElement with into(value) {
+pub impl @js.Cast for SVGImageElement with fn into(value) {
   value |> ffi_to_svg_image_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for SVGImageElement with from(value) {
+pub impl @js.Cast for SVGImageElement with fn from(value) {
   value |> js_identity
 }

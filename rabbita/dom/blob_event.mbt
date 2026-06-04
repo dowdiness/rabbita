@@ -9,13 +9,13 @@ pub impl IsEvent for BlobEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for BlobEvent with into(value) {
+pub impl @js.Cast for BlobEvent with fn into(value) {
   value |> ffi_to_blob_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for BlobEvent with from(value) {
+pub impl @js.Cast for BlobEvent with fn from(value) {
   value |> js_identity
 }
 

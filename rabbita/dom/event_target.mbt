@@ -6,29 +6,29 @@ type EventTarget
 ///|
 #cfg(target="js")
 pub trait IsEventTarget: @js.Cast {
-  as_event_target(Self) -> EventTarget = _
-  add_event_listener(Self, String, Listener) -> Unit = _
-  remove_event_listener(Self, String, Listener) -> Unit = _
-  dispatch_event(Self, Event) -> Unit = _
-  to_clipboard(Self) -> Clipboard? = _
-  to_node(Self) -> Node? = _
-  to_document(Self) -> Document? = _
-  to_document_fragment(Self) -> DocumentFragment? = _
-  to_element(Self) -> Element? = _
-  to_html_element(Self) -> HTMLElement? = _
-  to_html_canvas_element(Self) -> HTMLCanvasElement? = _
-  to_html_input_element(Self) -> HTMLInputElement? = _
-  to_html_dialog_element(Self) -> HTMLDialogElement? = _
-  to_html_image_element(Self) -> HTMLImageElement? = _
-  to_html_select_element(Self) -> HTMLSelectElement? = _
-  to_html_media_element(Self) -> HTMLMediaElement? = _
-  to_html_video_element(Self) -> HTMLVideoElement? = _
-  to_text(Self) -> Text? = _
-  to_comment(Self) -> Comment? = _
-  to_svg_element(Self) -> SVGElement? = _
-  to_svg_graphics_element(Self) -> SVGGraphicsElement? = _
-  to_svg_image_element(Self) -> SVGImageElement? = _
-  to_window(Self) -> Window? = _
+  fn as_event_target(Self) -> EventTarget = _
+  fn add_event_listener(Self, String, Listener) -> Unit = _
+  fn remove_event_listener(Self, String, Listener) -> Unit = _
+  fn dispatch_event(Self, Event) -> Unit = _
+  fn to_clipboard(Self) -> Clipboard? = _
+  fn to_node(Self) -> Node? = _
+  fn to_document(Self) -> Document? = _
+  fn to_document_fragment(Self) -> DocumentFragment? = _
+  fn to_element(Self) -> Element? = _
+  fn to_html_element(Self) -> HTMLElement? = _
+  fn to_html_canvas_element(Self) -> HTMLCanvasElement? = _
+  fn to_html_input_element(Self) -> HTMLInputElement? = _
+  fn to_html_dialog_element(Self) -> HTMLDialogElement? = _
+  fn to_html_image_element(Self) -> HTMLImageElement? = _
+  fn to_html_select_element(Self) -> HTMLSelectElement? = _
+  fn to_html_media_element(Self) -> HTMLMediaElement? = _
+  fn to_html_video_element(Self) -> HTMLVideoElement? = _
+  fn to_text(Self) -> Text? = _
+  fn to_comment(Self) -> Comment? = _
+  fn to_svg_element(Self) -> SVGElement? = _
+  fn to_svg_graphics_element(Self) -> SVGGraphicsElement? = _
+  fn to_svg_image_element(Self) -> SVGImageElement? = _
+  fn to_window(Self) -> Window? = _
 }
 
 ///|
@@ -41,151 +41,151 @@ pub impl IsEventTarget for EventTarget
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for EventTarget with into(value) {
+pub impl @js.Cast for EventTarget with fn into(value) {
   value |> ffi_to_event_target |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for EventTarget with from(value) {
+pub impl @js.Cast for EventTarget with fn from(value) {
   value |> js_identity
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with add_event_listener(s, type_, callback) {
+impl IsEventTarget with fn add_event_listener(s, type_, callback) {
   s |> js_identity |> ffi_add_event_listener(type_, callback)
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with remove_event_listener(s, type_, callback) {
+impl IsEventTarget with fn remove_event_listener(s, type_, callback) {
   s |> js_identity |> ffi_remove_event_listener(type_, callback)
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with dispatch_event(s, event) {
+impl IsEventTarget with fn dispatch_event(s, event) {
   s |> js_identity |> ffi_dispatch_event(event)
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with as_event_target(s) {
+impl IsEventTarget with fn as_event_target(s) {
   js_identity(s)
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_clipboard(s) {
+impl IsEventTarget with fn to_clipboard(s) {
   s |> js_identity |> ffi_to_clipboard |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_node(s) {
+impl IsEventTarget with fn to_node(s) {
   s |> js_identity |> ffi_to_node |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_document(s) {
+impl IsEventTarget with fn to_document(s) {
   s |> js_identity |> ffi_to_document |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_document_fragment(s) {
+impl IsEventTarget with fn to_document_fragment(s) {
   s |> js_identity |> ffi_to_document_fragment |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_element(s) {
+impl IsEventTarget with fn to_element(s) {
   s |> js_identity |> ffi_to_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_html_element(s) {
+impl IsEventTarget with fn to_html_element(s) {
   s |> js_identity |> ffi_to_html_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_html_canvas_element(s) {
+impl IsEventTarget with fn to_html_canvas_element(s) {
   s |> js_identity |> ffi_to_html_canvas_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_html_input_element(s) {
+impl IsEventTarget with fn to_html_input_element(s) {
   s |> js_identity |> ffi_to_html_input_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_html_dialog_element(s) {
+impl IsEventTarget with fn to_html_dialog_element(s) {
   s |> js_identity |> ffi_to_html_dialog_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_html_image_element(s) {
+impl IsEventTarget with fn to_html_image_element(s) {
   s |> js_identity |> ffi_to_html_image_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_html_select_element(s) {
+impl IsEventTarget with fn to_html_select_element(s) {
   s |> js_identity |> ffi_to_html_select_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_text(s) {
+impl IsEventTarget with fn to_text(s) {
   s |> js_identity |> ffi_to_text |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_comment(s) {
+impl IsEventTarget with fn to_comment(s) {
   s |> js_identity |> ffi_to_comment |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_svg_element(s) {
+impl IsEventTarget with fn to_svg_element(s) {
   s |> js_identity |> ffi_to_svg_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_svg_graphics_element(s) {
+impl IsEventTarget with fn to_svg_graphics_element(s) {
   s |> js_identity |> ffi_to_svg_graphics_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_svg_image_element(s) {
+impl IsEventTarget with fn to_svg_image_element(s) {
   s |> js_identity |> ffi_to_svg_image_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_html_media_element(s) {
+impl IsEventTarget with fn to_html_media_element(s) {
   s |> js_identity |> ffi_to_html_media_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_html_video_element(s) {
+impl IsEventTarget with fn to_html_video_element(s) {
   s |> js_identity |> ffi_to_html_video_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEventTarget with to_window(s) {
+impl IsEventTarget with fn to_window(s) {
   s |> js_identity |> ffi_to_window |> y => { y.to_option() }
 }
 

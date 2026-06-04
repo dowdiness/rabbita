@@ -9,13 +9,13 @@ pub impl IsEvent for MessageEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for MessageEvent with into(value) {
+pub impl @js.Cast for MessageEvent with fn into(value) {
   value |> ffi_to_message_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for MessageEvent with from(value) {
+pub impl @js.Cast for MessageEvent with fn from(value) {
   value |> js_identity
 }
 

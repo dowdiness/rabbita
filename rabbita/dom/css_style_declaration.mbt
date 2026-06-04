@@ -13,13 +13,13 @@ type CSSRule
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CSSStyleDeclaration with into(value) {
+pub impl @js.Cast for CSSStyleDeclaration with fn into(value) {
   value |> ffi_to_css_style_declaration |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CSSStyleDeclaration with from(value) {
+pub impl @js.Cast for CSSStyleDeclaration with fn from(value) {
   value |> js_identity
 }
 

@@ -137,7 +137,7 @@ fn update(_ : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
     UrlChanged(url) =>
       match url.path {
         "/" | "/home" => (none, home)
-        [.. "/article/", .. id] if articles.get(id.to_string())
+        [.. "/article/", .. id] if articles.get(id.to_owned())
           is Some((title, content)) => (none, Article(title, content))
         _ => (none, NotFound)
       }

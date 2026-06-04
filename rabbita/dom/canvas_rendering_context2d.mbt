@@ -12,13 +12,13 @@ extern "js" fn checked_to_canvas_rendering_context_2d(
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CanvasRenderingContext2D with into(value) {
+pub impl @js.Cast for CanvasRenderingContext2D with fn into(value) {
   checked_to_canvas_rendering_context_2d(value).to_option()
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CanvasRenderingContext2D with from(value) {
+pub impl @js.Cast for CanvasRenderingContext2D with fn from(value) {
   @js.Value::cast_from(value)
 }
 

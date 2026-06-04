@@ -5,13 +5,13 @@ type Document
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for Document with into(value) {
+pub impl @js.Cast for Document with fn into(value) {
   value |> ffi_to_document |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for Document with from(value) {
+pub impl @js.Cast for Document with fn from(value) {
   value |> js_identity
 }
 

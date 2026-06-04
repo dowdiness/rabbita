@@ -6,12 +6,12 @@ type UIEvent
 ///|
 #cfg(target="js")
 pub trait IsUIEvent: IsEvent {
-  as_ui_event(Self) -> UIEvent = _
+  fn as_ui_event(Self) -> UIEvent = _
 }
 
 ///|
 #cfg(target="js")
-impl IsUIEvent with as_ui_event(s) {
+impl IsUIEvent with fn as_ui_event(s) {
   s |> js_identity
 }
 
@@ -25,12 +25,12 @@ pub impl IsUIEvent for UIEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for UIEvent with into(value) {
+pub impl @js.Cast for UIEvent with fn into(value) {
   value |> ffi_to_ui_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for UIEvent with from(value) {
+pub impl @js.Cast for UIEvent with fn from(value) {
   value |> js_identity
 }

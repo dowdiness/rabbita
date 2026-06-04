@@ -13,13 +13,13 @@ pub impl IsUIEvent for CompositionEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CompositionEvent with into(value) {
+pub impl @js.Cast for CompositionEvent with fn into(value) {
   value |> ffi_to_composition_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CompositionEvent with from(value) {
+pub impl @js.Cast for CompositionEvent with fn from(value) {
   value |> js_identity
 }
 

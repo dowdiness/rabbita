@@ -26,24 +26,24 @@ pub impl IsSVGGraphicsElement for SVGGraphicsElement
 ///|
 #cfg(target="js")
 pub trait IsSVGGraphicsElement: IsSVGElement {
-  as_svg_graphics_element(Self) -> SVGGraphicsElement = _
-  get_required_extensions(Self) -> String = _
-  get_system_language(Self) -> SVGStringList = _
-  get_transform(Self) -> SVGAnimatedTransformList = _
-  get_bbox(Self) -> DOMRect = _
-  get_ctm(Self) -> DOMMatrix = _
-  get_screen_ctm(Self) -> DOMMatrix = _
+  fn as_svg_graphics_element(Self) -> SVGGraphicsElement = _
+  fn get_required_extensions(Self) -> String = _
+  fn get_system_language(Self) -> SVGStringList = _
+  fn get_transform(Self) -> SVGAnimatedTransformList = _
+  fn get_bbox(Self) -> DOMRect = _
+  fn get_ctm(Self) -> DOMMatrix = _
+  fn get_screen_ctm(Self) -> DOMMatrix = _
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for SVGGraphicsElement with into(value) {
+pub impl @js.Cast for SVGGraphicsElement with fn into(value) {
   value |> ffi_to_svg_graphics_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for SVGGraphicsElement with from(value) {
+pub impl @js.Cast for SVGGraphicsElement with fn from(value) {
   value |> js_identity
 }
 
@@ -61,43 +61,43 @@ type DOMMatrix
 
 ///|
 #cfg(target="js")
-impl IsSVGGraphicsElement with as_svg_graphics_element(s) {
+impl IsSVGGraphicsElement with fn as_svg_graphics_element(s) {
   s |> js_identity
 }
 
 ///|
 #cfg(target="js")
-impl IsSVGGraphicsElement with get_required_extensions(s) {
+impl IsSVGGraphicsElement with fn get_required_extensions(s) {
   s |> js_identity |> ffi_get_required_extensions
 }
 
 ///|
 #cfg(target="js")
-impl IsSVGGraphicsElement with get_system_language(s) {
+impl IsSVGGraphicsElement with fn get_system_language(s) {
   s |> js_identity |> ffi_get_system_language
 }
 
 ///|
 #cfg(target="js")
-impl IsSVGGraphicsElement with get_transform(s) {
+impl IsSVGGraphicsElement with fn get_transform(s) {
   s |> js_identity |> ffi_get_transform
 }
 
 ///|
 #cfg(target="js")
-impl IsSVGGraphicsElement with get_bbox(s) {
+impl IsSVGGraphicsElement with fn get_bbox(s) {
   s |> js_identity |> ffi_get_bbox
 }
 
 ///|
 #cfg(target="js")
-impl IsSVGGraphicsElement with get_ctm(s) {
+impl IsSVGGraphicsElement with fn get_ctm(s) {
   s |> js_identity |> ffi_get_ctm
 }
 
 ///|
 #cfg(target="js")
-impl IsSVGGraphicsElement with get_screen_ctm(s) {
+impl IsSVGGraphicsElement with fn get_screen_ctm(s) {
   s |> js_identity |> ffi_get_screen_ctm
 }
 

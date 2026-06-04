@@ -9,13 +9,13 @@ pub impl IsEvent for CustomEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CustomEvent with into(value) {
+pub impl @js.Cast for CustomEvent with fn into(value) {
   value |> ffi_to_custom_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CustomEvent with from(value) {
+pub impl @js.Cast for CustomEvent with fn from(value) {
   value |> js_identity
 }
 

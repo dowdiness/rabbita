@@ -8,7 +8,7 @@ import {
   "moonbitlang/async/http",
 }
 
-warnings = "-unused_package"
+warnings = "-unused_package-alert_unstable"
 
 supported_targets = "js+native"
 

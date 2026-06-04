@@ -7,3 +7,4 @@ bun.lock
 main.js
 main.js.map
 dist
+dist-legacy/

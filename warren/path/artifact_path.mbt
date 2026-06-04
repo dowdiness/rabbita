@@ -26,7 +26,7 @@ pub(all) enum Mode {
 } derive(Eq, Hash, Debug)
 
 ///|
-pub impl Debug for ArtifactPath with to_repr(self) {
+pub impl Debug for ArtifactPath with fn to_repr(self) {
   @debug.Repr::string(self.to_string(Js, Debug, Build).to_string())
 }
 

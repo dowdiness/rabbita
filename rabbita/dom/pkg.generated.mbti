@@ -581,275 +581,275 @@ pub type PredefinedColorSpace = String
 
 // Traits
 pub trait IsElement : IsNode {
-  as_element(Self) -> Element
-  get_children(Self) -> Array[Element]
-  set_attribute(Self, String, String) -> Unit
-  get_attribute(Self, String) -> String
-  remove_attribute(Self, String) -> Unit
-  set_property(Self, String, @js.Value) -> Unit
-  get_property(Self, String) -> @js.Optional[String]
-  remove_property(Self, String) -> Unit
-  scroll_into_view(Self, behavior? : String) -> Unit
-  get_scroll_top(Self) -> Double
-  set_scroll_top(Self, Double) -> Unit
-  get_scroll_left(Self) -> Double
-  set_scroll_left(Self, Double) -> Unit
-  get_scroll_width(Self) -> Double
-  get_scroll_height(Self) -> Double
-  set_inner_html(Self, String) -> Unit
-  get_bounding_client_rect(Self) -> DOMRect
+  fn as_element(Self) -> Element
+  fn get_children(Self) -> Array[Element]
+  fn set_attribute(Self, String, String) -> Unit
+  fn get_attribute(Self, String) -> String
+  fn remove_attribute(Self, String) -> Unit
+  fn set_property(Self, String, @js.Value) -> Unit
+  fn get_property(Self, String) -> @js.Optional[String]
+  fn remove_property(Self, String) -> Unit
+  fn scroll_into_view(Self, behavior? : String) -> Unit
+  fn get_scroll_top(Self) -> Double
+  fn set_scroll_top(Self, Double) -> Unit
+  fn get_scroll_left(Self) -> Double
+  fn set_scroll_left(Self, Double) -> Unit
+  fn get_scroll_width(Self) -> Double
+  fn get_scroll_height(Self) -> Double
+  fn set_inner_html(Self, String) -> Unit
+  fn get_bounding_client_rect(Self) -> DOMRect
 }
 
 pub trait IsEvent : @js.Cast {
-  target(Self) -> EventTarget
-  current_target(Self) -> @js.Nullable[EventTarget]
-  prevent_default(Self) -> Unit
-  stop_propagation(Self) -> Unit
-  as_event(Self) -> Event
-  to_ui_event(Self) -> UIEvent?
-  to_clipboard_event(Self) -> ClipboardEvent?
-  to_mouse_event(Self) -> MouseEvent?
-  to_input_event(Self) -> InputEvent?
-  to_focus_event(Self) -> FocusEvent?
-  to_keyboard_event(Self) -> KeyboardEvent?
-  to_animation_event(Self) -> AnimationEvent?
-  to_before_unload_event(Self) -> BeforeUnloadEvent?
-  to_blob_event(Self) -> BlobEvent?
-  to_close_event(Self) -> CloseEvent?
-  to_composition_event(Self) -> CompositionEvent?
-  to_custom_event(Self) -> CustomEvent?
-  to_drag_event(Self) -> DragEvent?
-  to_message_event(Self) -> MessageEvent?
-  to_wheel_event(Self) -> WheelEvent?
+  fn target(Self) -> EventTarget
+  fn current_target(Self) -> @js.Nullable[EventTarget]
+  fn prevent_default(Self) -> Unit
+  fn stop_propagation(Self) -> Unit
+  fn as_event(Self) -> Event
+  fn to_ui_event(Self) -> UIEvent?
+  fn to_clipboard_event(Self) -> ClipboardEvent?
+  fn to_mouse_event(Self) -> MouseEvent?
+  fn to_input_event(Self) -> InputEvent?
+  fn to_focus_event(Self) -> FocusEvent?
+  fn to_keyboard_event(Self) -> KeyboardEvent?
+  fn to_animation_event(Self) -> AnimationEvent?
+  fn to_before_unload_event(Self) -> BeforeUnloadEvent?
+  fn to_blob_event(Self) -> BlobEvent?
+  fn to_close_event(Self) -> CloseEvent?
+  fn to_composition_event(Self) -> CompositionEvent?
+  fn to_custom_event(Self) -> CustomEvent?
+  fn to_drag_event(Self) -> DragEvent?
+  fn to_message_event(Self) -> MessageEvent?
+  fn to_wheel_event(Self) -> WheelEvent?
 }
 
 pub trait IsEventTarget : @js.Cast {
-  as_event_target(Self) -> EventTarget
-  add_event_listener(Self, String, (Event) -> Unit) -> Unit
-  remove_event_listener(Self, String, (Event) -> Unit) -> Unit
-  dispatch_event(Self, Event) -> Unit
-  to_clipboard(Self) -> Clipboard?
-  to_node(Self) -> Node?
-  to_document(Self) -> Document?
-  to_document_fragment(Self) -> DocumentFragment?
-  to_element(Self) -> Element?
-  to_html_element(Self) -> HTMLElement?
-  to_html_canvas_element(Self) -> HTMLCanvasElement?
-  to_html_input_element(Self) -> HTMLInputElement?
-  to_html_dialog_element(Self) -> HTMLDialogElement?
-  to_html_image_element(Self) -> HTMLImageElement?
-  to_html_select_element(Self) -> HTMLSelectElement?
-  to_html_media_element(Self) -> HTMLMediaElement?
-  to_html_video_element(Self) -> HTMLVideoElement?
-  to_text(Self) -> Text?
-  to_comment(Self) -> Comment?
-  to_svg_element(Self) -> SVGElement?
-  to_svg_graphics_element(Self) -> SVGGraphicsElement?
-  to_svg_image_element(Self) -> SVGImageElement?
-  to_window(Self) -> Window?
+  fn as_event_target(Self) -> EventTarget
+  fn add_event_listener(Self, String, (Event) -> Unit) -> Unit
+  fn remove_event_listener(Self, String, (Event) -> Unit) -> Unit
+  fn dispatch_event(Self, Event) -> Unit
+  fn to_clipboard(Self) -> Clipboard?
+  fn to_node(Self) -> Node?
+  fn to_document(Self) -> Document?
+  fn to_document_fragment(Self) -> DocumentFragment?
+  fn to_element(Self) -> Element?
+  fn to_html_element(Self) -> HTMLElement?
+  fn to_html_canvas_element(Self) -> HTMLCanvasElement?
+  fn to_html_input_element(Self) -> HTMLInputElement?
+  fn to_html_dialog_element(Self) -> HTMLDialogElement?
+  fn to_html_image_element(Self) -> HTMLImageElement?
+  fn to_html_select_element(Self) -> HTMLSelectElement?
+  fn to_html_media_element(Self) -> HTMLMediaElement?
+  fn to_html_video_element(Self) -> HTMLVideoElement?
+  fn to_text(Self) -> Text?
+  fn to_comment(Self) -> Comment?
+  fn to_svg_element(Self) -> SVGElement?
+  fn to_svg_graphics_element(Self) -> SVGGraphicsElement?
+  fn to_svg_image_element(Self) -> SVGImageElement?
+  fn to_window(Self) -> Window?
 }
 
 pub trait IsHTMLMediaElement : IsHtmlElement {
-  as_html_media_element(Self) -> HTMLMediaElement
-  get_audio_tracks(Self) -> AudioTrackList
-  get_autoplay(Self) -> Bool
-  set_autoplay(Self, Bool) -> Unit
-  get_buffered(Self) -> TimeRanges
-  get_controls(Self) -> Bool
-  set_controls(Self, Bool) -> Unit
-  get_controls_list(Self) -> DOMTokenList
-  get_cross_origin(Self) -> String?
-  set_cross_origin(Self, String?) -> Unit
-  get_current_src(Self) -> String
-  get_current_time(Self) -> Double
-  set_current_time(Self, Double) -> Unit
-  get_default_muted(Self) -> Bool
-  set_default_muted(Self, Bool) -> Unit
-  get_default_playback_rate(Self) -> Double
-  set_default_playback_rate(Self, Double) -> Unit
-  get_disable_remote_playback(Self) -> Bool
-  set_disable_remote_playback(Self, Bool) -> Unit
-  get_duration(Self) -> Double
-  get_ended(Self) -> Bool
-  get_error(Self) -> MediaError?
-  get_loop(Self) -> Bool
-  set_loop(Self, Bool) -> Unit
-  get_media_keys(Self) -> MediaKeys?
-  get_muted(Self) -> Bool
-  set_muted(Self, Bool) -> Unit
-  get_network_state(Self) -> Int
-  get_paused(Self) -> Bool
-  get_playback_rate(Self) -> Double
-  set_playback_rate(Self, Double) -> Unit
-  get_played(Self) -> TimeRanges
-  get_preload(Self) -> String
-  set_preload(Self, String) -> Unit
-  get_preserves_pitch(Self) -> Bool
-  set_preserves_pitch(Self, Bool) -> Unit
-  get_ready_state(Self) -> Int
-  get_remote(Self) -> RemotePlayback
-  get_seekable(Self) -> TimeRanges
-  get_seeking(Self) -> Bool
-  get_sink_id(Self) -> String
-  get_src(Self) -> String
-  set_src(Self, String) -> Unit
-  get_src_object(Self) -> @js.Value?
-  set_src_object(Self, @js.Value?) -> Unit
-  get_text_tracks(Self) -> TextTrackList
-  get_video_tracks(Self) -> VideoTrackList
-  get_volume(Self) -> Double
-  set_volume(Self, Double) -> Unit
-  add_text_track(Self, String, String?, String?) -> TextTrack
-  capture_stream(Self) -> MediaStream
-  can_play_type(Self, String) -> String
-  fast_seek(Self, Double) -> Unit
-  load(Self) -> Unit
-  pause(Self) -> Unit
-  seek_to_next_frame(Self) -> Unit
+  fn as_html_media_element(Self) -> HTMLMediaElement
+  fn get_audio_tracks(Self) -> AudioTrackList
+  fn get_autoplay(Self) -> Bool
+  fn set_autoplay(Self, Bool) -> Unit
+  fn get_buffered(Self) -> TimeRanges
+  fn get_controls(Self) -> Bool
+  fn set_controls(Self, Bool) -> Unit
+  fn get_controls_list(Self) -> DOMTokenList
+  fn get_cross_origin(Self) -> String?
+  fn set_cross_origin(Self, String?) -> Unit
+  fn get_current_src(Self) -> String
+  fn get_current_time(Self) -> Double
+  fn set_current_time(Self, Double) -> Unit
+  fn get_default_muted(Self) -> Bool
+  fn set_default_muted(Self, Bool) -> Unit
+  fn get_default_playback_rate(Self) -> Double
+  fn set_default_playback_rate(Self, Double) -> Unit
+  fn get_disable_remote_playback(Self) -> Bool
+  fn set_disable_remote_playback(Self, Bool) -> Unit
+  fn get_duration(Self) -> Double
+  fn get_ended(Self) -> Bool
+  fn get_error(Self) -> MediaError?
+  fn get_loop(Self) -> Bool
+  fn set_loop(Self, Bool) -> Unit
+  fn get_media_keys(Self) -> MediaKeys?
+  fn get_muted(Self) -> Bool
+  fn set_muted(Self, Bool) -> Unit
+  fn get_network_state(Self) -> Int
+  fn get_paused(Self) -> Bool
+  fn get_playback_rate(Self) -> Double
+  fn set_playback_rate(Self, Double) -> Unit
+  fn get_played(Self) -> TimeRanges
+  fn get_preload(Self) -> String
+  fn set_preload(Self, String) -> Unit
+  fn get_preserves_pitch(Self) -> Bool
+  fn set_preserves_pitch(Self, Bool) -> Unit
+  fn get_ready_state(Self) -> Int
+  fn get_remote(Self) -> RemotePlayback
+  fn get_seekable(Self) -> TimeRanges
+  fn get_seeking(Self) -> Bool
+  fn get_sink_id(Self) -> String
+  fn get_src(Self) -> String
+  fn set_src(Self, String) -> Unit
+  fn get_src_object(Self) -> @js.Value?
+  fn set_src_object(Self, @js.Value?) -> Unit
+  fn get_text_tracks(Self) -> TextTrackList
+  fn get_video_tracks(Self) -> VideoTrackList
+  fn get_volume(Self) -> Double
+  fn set_volume(Self, Double) -> Unit
+  fn add_text_track(Self, String, String?, String?) -> TextTrack
+  fn capture_stream(Self) -> MediaStream
+  fn can_play_type(Self, String) -> String
+  fn fast_seek(Self, Double) -> Unit
+  fn load(Self) -> Unit
+  fn pause(Self) -> Unit
+  fn seek_to_next_frame(Self) -> Unit
 }
 
 pub trait IsHtmlElement : IsElement {
-  as_html_element(Self) -> HTMLElement
-  get_access_key(Self) -> String
-  set_access_key(Self, String) -> Unit
-  get_access_key_label(Self) -> String
-  get_anchor_element(Self) -> Element?
-  get_attribute_style_map(Self) -> StylePropertyMap
-  get_auto_capitalize(Self) -> String
-  set_auto_capitalize(Self, String) -> Unit
-  get_auto_focus(Self) -> Bool
-  set_auto_focus(Self, Bool) -> Unit
-  get_auto_correct(Self) -> Bool
-  set_auto_correct(Self, Bool) -> Unit
-  get_content_editable(Self) -> String
-  set_content_editable(Self, String) -> Unit
-  get_dataset(Self) -> DOMStringMap
-  get_dir(Self) -> String
-  set_dir(Self, String) -> Unit
-  get_draggable(Self) -> Bool
-  set_draggable(Self, Bool) -> Unit
-  get_edit_context(Self) -> EditContext?
-  set_edit_context(Self, EditContext?) -> Unit
-  get_enter_key_hint(Self) -> String
-  set_enter_key_hint(Self, String) -> Unit
-  get_hidden(Self) -> @js.Value
-  set_hidden(Self, @js.Value) -> Unit
-  get_inert(Self) -> Bool
-  set_inert(Self, Bool) -> Unit
-  get_inner_text(Self) -> String
-  set_inner_text(Self, String) -> Unit
-  get_input_mode(Self) -> String
-  set_input_mode(Self, String) -> Unit
-  get_is_content_editable(Self) -> Bool
-  get_lang(Self) -> String
-  set_lang(Self, String) -> Unit
-  get_nonce(Self) -> String
-  set_nonce(Self, String) -> Unit
-  get_offset_height(Self) -> Double
-  get_offset_left(Self) -> Double
-  get_offset_parent(Self) -> Element?
-  get_offset_top(Self) -> Double
-  get_offset_width(Self) -> Double
-  get_outer_text(Self) -> String
-  set_outer_text(Self, String) -> Unit
-  get_popover(Self) -> String?
-  set_popover(Self, String?) -> Unit
-  get_spellcheck(Self) -> Bool
-  set_spellcheck(Self, Bool) -> Unit
-  get_style(Self) -> CSSStyleDeclaration
-  set_style_declaration(Self, CSSStyleDeclaration) -> Unit
-  get_tab_index(Self) -> Int
-  set_tab_index(Self, Int) -> Unit
-  get_title(Self) -> String
-  set_title(Self, String) -> Unit
-  get_translate(Self) -> Bool
-  set_translate(Self, Bool) -> Unit
-  get_virtual_keyboard_policy(Self) -> String
-  set_virtual_keyboard_policy(Self, String) -> Unit
-  get_writing_suggestions(Self) -> String
-  set_writing_suggestions(Self, String) -> Unit
-  attach_internals(Self) -> ElementInternals
-  blur(Self) -> Unit
-  click(Self) -> Unit
-  focus(Self) -> Unit
-  hide_popover(Self) -> Unit
-  show_popover(Self) -> Unit
-  toggle_popover(Self, Bool?) -> Bool
+  fn as_html_element(Self) -> HTMLElement
+  fn get_access_key(Self) -> String
+  fn set_access_key(Self, String) -> Unit
+  fn get_access_key_label(Self) -> String
+  fn get_anchor_element(Self) -> Element?
+  fn get_attribute_style_map(Self) -> StylePropertyMap
+  fn get_auto_capitalize(Self) -> String
+  fn set_auto_capitalize(Self, String) -> Unit
+  fn get_auto_focus(Self) -> Bool
+  fn set_auto_focus(Self, Bool) -> Unit
+  fn get_auto_correct(Self) -> Bool
+  fn set_auto_correct(Self, Bool) -> Unit
+  fn get_content_editable(Self) -> String
+  fn set_content_editable(Self, String) -> Unit
+  fn get_dataset(Self) -> DOMStringMap
+  fn get_dir(Self) -> String
+  fn set_dir(Self, String) -> Unit
+  fn get_draggable(Self) -> Bool
+  fn set_draggable(Self, Bool) -> Unit
+  fn get_edit_context(Self) -> EditContext?
+  fn set_edit_context(Self, EditContext?) -> Unit
+  fn get_enter_key_hint(Self) -> String
+  fn set_enter_key_hint(Self, String) -> Unit
+  fn get_hidden(Self) -> @js.Value
+  fn set_hidden(Self, @js.Value) -> Unit
+  fn get_inert(Self) -> Bool
+  fn set_inert(Self, Bool) -> Unit
+  fn get_inner_text(Self) -> String
+  fn set_inner_text(Self, String) -> Unit
+  fn get_input_mode(Self) -> String
+  fn set_input_mode(Self, String) -> Unit
+  fn get_is_content_editable(Self) -> Bool
+  fn get_lang(Self) -> String
+  fn set_lang(Self, String) -> Unit
+  fn get_nonce(Self) -> String
+  fn set_nonce(Self, String) -> Unit
+  fn get_offset_height(Self) -> Double
+  fn get_offset_left(Self) -> Double
+  fn get_offset_parent(Self) -> Element?
+  fn get_offset_top(Self) -> Double
+  fn get_offset_width(Self) -> Double
+  fn get_outer_text(Self) -> String
+  fn set_outer_text(Self, String) -> Unit
+  fn get_popover(Self) -> String?
+  fn set_popover(Self, String?) -> Unit
+  fn get_spellcheck(Self) -> Bool
+  fn set_spellcheck(Self, Bool) -> Unit
+  fn get_style(Self) -> CSSStyleDeclaration
+  fn set_style_declaration(Self, CSSStyleDeclaration) -> Unit
+  fn get_tab_index(Self) -> Int
+  fn set_tab_index(Self, Int) -> Unit
+  fn get_title(Self) -> String
+  fn set_title(Self, String) -> Unit
+  fn get_translate(Self) -> Bool
+  fn set_translate(Self, Bool) -> Unit
+  fn get_virtual_keyboard_policy(Self) -> String
+  fn set_virtual_keyboard_policy(Self, String) -> Unit
+  fn get_writing_suggestions(Self) -> String
+  fn set_writing_suggestions(Self, String) -> Unit
+  fn attach_internals(Self) -> ElementInternals
+  fn blur(Self) -> Unit
+  fn click(Self) -> Unit
+  fn focus(Self) -> Unit
+  fn hide_popover(Self) -> Unit
+  fn show_popover(Self) -> Unit
+  fn toggle_popover(Self, Bool?) -> Bool
 }
 
 pub trait IsMouseEvent : IsUIEvent {
-  as_mouse_event(Self) -> MouseEvent
-  get_alt_key(Self) -> Bool
-  get_button(Self) -> Int
-  get_buttons(Self) -> Int
-  get_client_x(Self) -> Int
-  get_client_y(Self) -> Int
-  get_ctrl_key(Self) -> Bool
-  get_meta_key(Self) -> Bool
-  get_movement_x(Self) -> Int
-  get_movement_y(Self) -> Int
-  get_offset_x(Self) -> Int
-  get_offset_y(Self) -> Int
-  get_page_x(Self) -> Int
-  get_page_y(Self) -> Int
-  get_related_target(Self) -> EventTarget
-  get_screen_x(Self) -> Int
-  get_screen_y(Self) -> Int
-  get_shift_key(Self) -> Bool
-  get_x(Self) -> Int
-  get_y(Self) -> Int
-  get_modifier_state(Self) -> Int
+  fn as_mouse_event(Self) -> MouseEvent
+  fn get_alt_key(Self) -> Bool
+  fn get_button(Self) -> Int
+  fn get_buttons(Self) -> Int
+  fn get_client_x(Self) -> Int
+  fn get_client_y(Self) -> Int
+  fn get_ctrl_key(Self) -> Bool
+  fn get_meta_key(Self) -> Bool
+  fn get_movement_x(Self) -> Int
+  fn get_movement_y(Self) -> Int
+  fn get_offset_x(Self) -> Int
+  fn get_offset_y(Self) -> Int
+  fn get_page_x(Self) -> Int
+  fn get_page_y(Self) -> Int
+  fn get_related_target(Self) -> EventTarget
+  fn get_screen_x(Self) -> Int
+  fn get_screen_y(Self) -> Int
+  fn get_shift_key(Self) -> Bool
+  fn get_x(Self) -> Int
+  fn get_y(Self) -> Int
+  fn get_modifier_state(Self) -> Int
 }
 
 pub trait IsNode : IsEventTarget {
-  as_node(Self) -> Node
-  get_node_type(Self) -> Int
-  get_node_name(Self) -> String
-  get_node_value(Self) -> String
-  set_node_value(Self, @js.Nullable[String]) -> Unit
-  get_first_child(Self) -> Node
-  get_last_child(Self) -> Node
-  get_next_sibling(Self) -> @js.Nullable[Node]
-  get_previous_sibling(Self) -> @js.Nullable[Node]
-  get_parent_node(Self) -> @js.Nullable[Node]
-  append_child(Self, Node) -> Unit
-  remove_child(Self, Node) -> Unit
-  replace_child(Self, Node, Node) -> Unit
-  insert_before(Self, Node, @js.Nullable[Node]) -> Unit
-  get_child(Self, Int) -> Node
-  get_child_count(Self) -> Int
-  is_same_node(Self, Node) -> Bool
+  fn as_node(Self) -> Node
+  fn get_node_type(Self) -> Int
+  fn get_node_name(Self) -> String
+  fn get_node_value(Self) -> String
+  fn set_node_value(Self, @js.Nullable[String]) -> Unit
+  fn get_first_child(Self) -> Node
+  fn get_last_child(Self) -> Node
+  fn get_next_sibling(Self) -> @js.Nullable[Node]
+  fn get_previous_sibling(Self) -> @js.Nullable[Node]
+  fn get_parent_node(Self) -> @js.Nullable[Node]
+  fn append_child(Self, Node) -> Unit
+  fn remove_child(Self, Node) -> Unit
+  fn replace_child(Self, Node, Node) -> Unit
+  fn insert_before(Self, Node, @js.Nullable[Node]) -> Unit
+  fn get_child(Self, Int) -> Node
+  fn get_child_count(Self) -> Int
+  fn is_same_node(Self, Node) -> Bool
 }
 
 pub trait IsSVGElement : IsElement {
-  as_svg_element(Self) -> SVGElement
-  get_attribute_style_map(Self) -> StylePropertyMap
-  get_auto_focus(Self) -> Bool
-  set_auto_focus(Self, Bool) -> Unit
-  get_data_set(Self) -> DOMStringMap
-  get_nonce(Self) -> String
-  set_nonce(Self, String) -> Unit
-  get_owner_svg_element(Self) -> SVGElement?
-  get_style(Self) -> CSSStyleDeclaration
-  set_style(Self, CSSStyleDeclaration) -> Unit
-  get_tab_index(Self) -> Int
-  set_tab_index(Self, Int) -> Unit
-  get_viewport_element(Self) -> SVGElement?
-  blur(Self) -> Unit
-  focus(Self) -> Unit
+  fn as_svg_element(Self) -> SVGElement
+  fn get_attribute_style_map(Self) -> StylePropertyMap
+  fn get_auto_focus(Self) -> Bool
+  fn set_auto_focus(Self, Bool) -> Unit
+  fn get_data_set(Self) -> DOMStringMap
+  fn get_nonce(Self) -> String
+  fn set_nonce(Self, String) -> Unit
+  fn get_owner_svg_element(Self) -> SVGElement?
+  fn get_style(Self) -> CSSStyleDeclaration
+  fn set_style(Self, CSSStyleDeclaration) -> Unit
+  fn get_tab_index(Self) -> Int
+  fn set_tab_index(Self, Int) -> Unit
+  fn get_viewport_element(Self) -> SVGElement?
+  fn blur(Self) -> Unit
+  fn focus(Self) -> Unit
 }
 
 pub trait IsSVGGraphicsElement : IsSVGElement {
-  as_svg_graphics_element(Self) -> SVGGraphicsElement
-  get_required_extensions(Self) -> String
-  get_system_language(Self) -> SVGStringList
-  get_transform(Self) -> SVGAnimatedTransformList
-  get_bbox(Self) -> DOMRect
-  get_ctm(Self) -> DOMMatrix
-  get_screen_ctm(Self) -> DOMMatrix
+  fn as_svg_graphics_element(Self) -> SVGGraphicsElement
+  fn get_required_extensions(Self) -> String
+  fn get_system_language(Self) -> SVGStringList
+  fn get_transform(Self) -> SVGAnimatedTransformList
+  fn get_bbox(Self) -> DOMRect
+  fn get_ctm(Self) -> DOMMatrix
+  fn get_screen_ctm(Self) -> DOMMatrix
 }
 
 pub trait IsUIEvent : IsEvent {
-  as_ui_event(Self) -> UIEvent
+  fn as_ui_event(Self) -> UIEvent
 }
 

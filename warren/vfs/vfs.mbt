@@ -33,7 +33,7 @@ pub fn VirtualFileSystem::mount(
 ) -> Unit {
   let parts = Path::join("/", "\{path}").normalize().0
     .split("/")
-    .map(part => part.to_string())
+    .map(part => part.to_owned())
     .filter(part => part != "")
     .collect()
   guard !parts.is_empty() else {
@@ -65,7 +65,7 @@ pub fn VirtualFileSystem::mount(
 pub fn VirtualFileSystem::unmount(self : Self, path : String) -> Unit {
   let parts = Path::join("/", "\{path}").normalize().0
     .split("/")
-    .map(part => part.to_string())
+    .map(part => part.to_owned())
     .filter(part => part != "")
     .collect()
   guard !parts.is_empty() else {
@@ -109,7 +109,7 @@ pub fn VirtualFileSystem::clear(self : Self) -> Unit {
 pub async fn VirtualFileSystem::read(self : Self, path : String) -> String? {
   let parts = Path::join("/", "\{path}").normalize().0
     .split("/")
-    .map(part => part.to_string())
+    .map(part => part.to_owned())
     .filter(part => part != "")
     .collect()
   let (current, i) = match parts {

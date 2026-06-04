@@ -12,7 +12,7 @@ pub struct CloseInfo {
 } derive(Debug)
 
 ///|
-pub impl Show for CloseInfo with output(self, buf) {
+pub impl Show for CloseInfo with fn output(self, buf) {
   self.to_repr().output(buf)
 }
 
@@ -27,7 +27,7 @@ pub(all) enum Event {
 } derive(Debug)
 
 ///|
-pub impl Show for Event with output(self, buf) {
+pub impl Show for Event with fn output(self, buf) {
   self.to_repr().output(buf)
 }
 
@@ -40,7 +40,7 @@ pub(all) enum Payload {
 }
 
 ///|
-pub impl Show for Payload with output(self, buf) {
+pub impl Show for Payload with fn output(self, buf) {
   match self {
     Text(text) => {
       buf.write_string("Text(")
@@ -49,7 +49,7 @@ pub impl Show for Payload with output(self, buf) {
     }
     Json(value) => {
       buf.write_string("Json(")
-      value.output(buf)
+      buf.write_string(value.stringify())
       buf.write_string(")")
     }
   }
@@ -57,7 +57,7 @@ pub impl Show for Payload with output(self, buf) {
 
 ///|
 #cfg(target="js")
-pub impl Debug for Payload with to_repr(self) {
+pub impl Debug for Payload with fn to_repr(self) {
   Repr::literal(self.to_string())
 }
 
@@ -72,7 +72,7 @@ pub(all) enum ReadyState {
 } derive(Debug)
 
 ///|
-pub impl Show for ReadyState with output(self, buf) {
+pub impl Show for ReadyState with fn output(self, buf) {
   self.to_repr().output(buf)
 }
 
@@ -88,6 +88,6 @@ pub struct Snapshot {
 } derive(Debug)
 
 ///|
-pub impl Show for Snapshot with output(self, buf) {
+pub impl Show for Snapshot with fn output(self, buf) {
   self.to_repr().output(buf)
 }

@@ -203,11 +203,9 @@ function languageFor(lang, StreamLanguage) {
 function updateDoc(nextValue) {
   const oldValue = view.state.doc.toString()
   if (oldValue === nextValue) return
-  const selection = view.state.selection
   suppressChange = true
   view.dispatch({
     changes: { from: 0, to: view.state.doc.length, insert: nextValue },
-    selection,
   })
   suppressChange = false
 }

@@ -12,26 +12,26 @@ fn[A, B] js_identity(a : A) -> B {
 ///|
 #cfg(target="js")
 pub trait IsEvent: @js.Cast {
-  target(Self) -> EventTarget = _
-  current_target(Self) -> @js.Nullable[EventTarget] = _
-  prevent_default(Self) -> Unit = _
-  stop_propagation(Self) -> Unit = _
-  as_event(Self) -> Event = _
-  to_ui_event(Self) -> UIEvent? = _
-  to_clipboard_event(Self) -> ClipboardEvent? = _
-  to_mouse_event(Self) -> MouseEvent? = _
-  to_input_event(Self) -> InputEvent? = _
-  to_focus_event(Self) -> FocusEvent? = _
-  to_keyboard_event(Self) -> KeyboardEvent? = _
-  to_animation_event(Self) -> AnimationEvent? = _
-  to_before_unload_event(Self) -> BeforeUnloadEvent? = _
-  to_blob_event(Self) -> BlobEvent? = _
-  to_close_event(Self) -> CloseEvent? = _
-  to_composition_event(Self) -> CompositionEvent? = _
-  to_custom_event(Self) -> CustomEvent? = _
-  to_drag_event(Self) -> DragEvent? = _
-  to_message_event(Self) -> MessageEvent? = _
-  to_wheel_event(Self) -> WheelEvent? = _
+  fn target(Self) -> EventTarget = _
+  fn current_target(Self) -> @js.Nullable[EventTarget] = _
+  fn prevent_default(Self) -> Unit = _
+  fn stop_propagation(Self) -> Unit = _
+  fn as_event(Self) -> Event = _
+  fn to_ui_event(Self) -> UIEvent? = _
+  fn to_clipboard_event(Self) -> ClipboardEvent? = _
+  fn to_mouse_event(Self) -> MouseEvent? = _
+  fn to_input_event(Self) -> InputEvent? = _
+  fn to_focus_event(Self) -> FocusEvent? = _
+  fn to_keyboard_event(Self) -> KeyboardEvent? = _
+  fn to_animation_event(Self) -> AnimationEvent? = _
+  fn to_before_unload_event(Self) -> BeforeUnloadEvent? = _
+  fn to_blob_event(Self) -> BlobEvent? = _
+  fn to_close_event(Self) -> CloseEvent? = _
+  fn to_composition_event(Self) -> CompositionEvent? = _
+  fn to_custom_event(Self) -> CustomEvent? = _
+  fn to_drag_event(Self) -> DragEvent? = _
+  fn to_message_event(Self) -> MessageEvent? = _
+  fn to_wheel_event(Self) -> WheelEvent? = _
 }
 
 ///|
@@ -40,133 +40,133 @@ pub impl IsEvent for Event
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for Event with into(value) {
+pub impl @js.Cast for Event with fn into(value) {
   value |> ffi_to_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for Event with from(value) {
+pub impl @js.Cast for Event with fn from(value) {
   value |> js_identity
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with target(s) {
+impl IsEvent with fn target(s) {
   s |> js_identity |> ffi_event_target
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with current_target(s) {
+impl IsEvent with fn current_target(s) {
   s |> js_identity |> ffi_event_current_target
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with prevent_default(s) {
+impl IsEvent with fn prevent_default(s) {
   s.as_event() |> ffi_event_prevent_default
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with stop_propagation(s) {
+impl IsEvent with fn stop_propagation(s) {
   s.as_event() |> ffi_event_stop_propagation
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with as_event(s) {
+impl IsEvent with fn as_event(s) {
   js_identity(s)
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_ui_event(s) {
+impl IsEvent with fn to_ui_event(s) {
   s |> js_identity |> ffi_to_ui_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_clipboard_event(s) {
+impl IsEvent with fn to_clipboard_event(s) {
   s |> js_identity |> ffi_to_clipboard_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_mouse_event(s) {
+impl IsEvent with fn to_mouse_event(s) {
   s |> js_identity |> ffi_to_mouse_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_input_event(s) {
+impl IsEvent with fn to_input_event(s) {
   s |> js_identity |> ffi_to_input_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_focus_event(s) {
+impl IsEvent with fn to_focus_event(s) {
   s |> js_identity |> ffi_to_focus_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_keyboard_event(s) {
+impl IsEvent with fn to_keyboard_event(s) {
   s |> js_identity |> ffi_to_keyboard_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_animation_event(s) {
+impl IsEvent with fn to_animation_event(s) {
   s |> js_identity |> ffi_to_animation_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_before_unload_event(s) {
+impl IsEvent with fn to_before_unload_event(s) {
   s |> js_identity |> ffi_to_before_unload_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_blob_event(s) {
+impl IsEvent with fn to_blob_event(s) {
   s |> js_identity |> ffi_to_blob_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_close_event(s) {
+impl IsEvent with fn to_close_event(s) {
   s |> js_identity |> ffi_to_close_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_composition_event(s) {
+impl IsEvent with fn to_composition_event(s) {
   s |> js_identity |> ffi_to_composition_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_custom_event(s) {
+impl IsEvent with fn to_custom_event(s) {
   s |> js_identity |> ffi_to_custom_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_drag_event(s) {
+impl IsEvent with fn to_drag_event(s) {
   s |> js_identity |> ffi_to_drag_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_message_event(s) {
+impl IsEvent with fn to_message_event(s) {
   s |> js_identity |> ffi_to_message_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-impl IsEvent with to_wheel_event(s) {
+impl IsEvent with fn to_wheel_event(s) {
   s |> js_identity |> ffi_to_wheel_event |> y => { y.to_option() }
 }
 

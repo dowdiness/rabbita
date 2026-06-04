@@ -7,7 +7,7 @@ extern "js" fn sync_editor_js(
   on_change : (String) -> Unit,
 ) -> Unit =
   #| (hostId, key, value, lang, onChange) => {
-  #|   import('./support/editor.js?v=cm-24')
+  #|   import('./support/editor.js?v=cm-25')
   #|     .then(({ syncEditor }) =>
   #|       syncEditor({ hostId, key, value, lang, onChange })
   #|     )
@@ -44,7 +44,7 @@ extern "js" fn focus_editor_range_js(
   end_column : Int,
 ) -> Unit =
   #| (hostId, key, value, lang, onChange, line, column, endLine, endColumn) => {
-  #|   import('./support/editor.js?v=cm-24')
+  #|   import('./support/editor.js?v=cm-25')
   #|     .then(async ({ syncEditor, selectEditorRange }) => {
   #|       if (await syncEditor({ hostId, key, value, lang, onChange })) {
   #|         selectEditorRange({ key, line, column, endLine, endColumn })

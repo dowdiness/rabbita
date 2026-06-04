@@ -8,13 +8,13 @@ pub impl IsEventTarget for Window
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for Window with into(value) {
+pub impl @js.Cast for Window with fn into(value) {
   value |> ffi_to_window |> x => { x.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for Window with from(value) {
+pub impl @js.Cast for Window with fn from(value) {
   value |> js_identity
 }
 

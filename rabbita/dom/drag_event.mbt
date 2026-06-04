@@ -16,13 +16,13 @@ pub impl IsMouseEvent for DragEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for DragEvent with into(value) {
+pub impl @js.Cast for DragEvent with fn into(value) {
   value |> ffi_to_drag_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for DragEvent with from(value) {
+pub impl @js.Cast for DragEvent with fn from(value) {
   value |> js_identity
 }
 

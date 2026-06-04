@@ -66,65 +66,65 @@ type MediaStream
 ///|
 #cfg(target="js")
 pub trait IsHTMLMediaElement: IsHtmlElement {
-  as_html_media_element(Self) -> HTMLMediaElement = _
-  get_audio_tracks(Self) -> AudioTrackList = _
-  get_autoplay(Self) -> Bool = _
-  set_autoplay(Self, Bool) -> Unit = _
-  get_buffered(Self) -> TimeRanges = _
-  get_controls(Self) -> Bool = _
-  set_controls(Self, Bool) -> Unit = _
-  get_controls_list(Self) -> DOMTokenList = _
-  get_cross_origin(Self) -> String? = _
-  set_cross_origin(Self, String?) -> Unit = _
-  get_current_src(Self) -> String = _
-  get_current_time(Self) -> Double = _
-  set_current_time(Self, Double) -> Unit = _
-  get_default_muted(Self) -> Bool = _
-  set_default_muted(Self, Bool) -> Unit = _
-  get_default_playback_rate(Self) -> Double = _
-  set_default_playback_rate(Self, Double) -> Unit = _
-  get_disable_remote_playback(Self) -> Bool = _
-  set_disable_remote_playback(Self, Bool) -> Unit = _
-  get_duration(Self) -> Double = _
-  get_ended(Self) -> Bool = _
-  get_error(Self) -> MediaError? = _
-  get_loop(Self) -> Bool = _
-  set_loop(Self, Bool) -> Unit = _
-  get_media_keys(Self) -> MediaKeys? = _
-  get_muted(Self) -> Bool = _
-  set_muted(Self, Bool) -> Unit = _
-  get_network_state(Self) -> Int = _
-  get_paused(Self) -> Bool = _
-  get_playback_rate(Self) -> Double = _
-  set_playback_rate(Self, Double) -> Unit = _
-  get_played(Self) -> TimeRanges = _
-  get_preload(Self) -> String = _
-  set_preload(Self, String) -> Unit = _
-  get_preserves_pitch(Self) -> Bool = _
-  set_preserves_pitch(Self, Bool) -> Unit = _
-  get_ready_state(Self) -> Int = _
-  get_remote(Self) -> RemotePlayback = _
-  get_seekable(Self) -> TimeRanges = _
-  get_seeking(Self) -> Bool = _
-  get_sink_id(Self) -> String = _
-  get_src(Self) -> String = _
-  set_src(Self, String) -> Unit = _
-  get_src_object(Self) -> @js.Value? = _
-  set_src_object(Self, @js.Value?) -> Unit = _
-  get_text_tracks(Self) -> TextTrackList = _
-  get_video_tracks(Self) -> VideoTrackList = _
-  get_volume(Self) -> Double = _
-  set_volume(Self, Double) -> Unit = _
+  fn as_html_media_element(Self) -> HTMLMediaElement = _
+  fn get_audio_tracks(Self) -> AudioTrackList = _
+  fn get_autoplay(Self) -> Bool = _
+  fn set_autoplay(Self, Bool) -> Unit = _
+  fn get_buffered(Self) -> TimeRanges = _
+  fn get_controls(Self) -> Bool = _
+  fn set_controls(Self, Bool) -> Unit = _
+  fn get_controls_list(Self) -> DOMTokenList = _
+  fn get_cross_origin(Self) -> String? = _
+  fn set_cross_origin(Self, String?) -> Unit = _
+  fn get_current_src(Self) -> String = _
+  fn get_current_time(Self) -> Double = _
+  fn set_current_time(Self, Double) -> Unit = _
+  fn get_default_muted(Self) -> Bool = _
+  fn set_default_muted(Self, Bool) -> Unit = _
+  fn get_default_playback_rate(Self) -> Double = _
+  fn set_default_playback_rate(Self, Double) -> Unit = _
+  fn get_disable_remote_playback(Self) -> Bool = _
+  fn set_disable_remote_playback(Self, Bool) -> Unit = _
+  fn get_duration(Self) -> Double = _
+  fn get_ended(Self) -> Bool = _
+  fn get_error(Self) -> MediaError? = _
+  fn get_loop(Self) -> Bool = _
+  fn set_loop(Self, Bool) -> Unit = _
+  fn get_media_keys(Self) -> MediaKeys? = _
+  fn get_muted(Self) -> Bool = _
+  fn set_muted(Self, Bool) -> Unit = _
+  fn get_network_state(Self) -> Int = _
+  fn get_paused(Self) -> Bool = _
+  fn get_playback_rate(Self) -> Double = _
+  fn set_playback_rate(Self, Double) -> Unit = _
+  fn get_played(Self) -> TimeRanges = _
+  fn get_preload(Self) -> String = _
+  fn set_preload(Self, String) -> Unit = _
+  fn get_preserves_pitch(Self) -> Bool = _
+  fn set_preserves_pitch(Self, Bool) -> Unit = _
+  fn get_ready_state(Self) -> Int = _
+  fn get_remote(Self) -> RemotePlayback = _
+  fn get_seekable(Self) -> TimeRanges = _
+  fn get_seeking(Self) -> Bool = _
+  fn get_sink_id(Self) -> String = _
+  fn get_src(Self) -> String = _
+  fn set_src(Self, String) -> Unit = _
+  fn get_src_object(Self) -> @js.Value? = _
+  fn set_src_object(Self, @js.Value?) -> Unit = _
+  fn get_text_tracks(Self) -> TextTrackList = _
+  fn get_video_tracks(Self) -> VideoTrackList = _
+  fn get_volume(Self) -> Double = _
+  fn set_volume(Self, Double) -> Unit = _
   // Methods
-  add_text_track(Self, String, String?, String?) -> TextTrack = _
-  capture_stream(Self) -> MediaStream = _
-  can_play_type(Self, String) -> String = _
-  fast_seek(Self, Double) -> Unit = _
-  load(Self) -> Unit = _
-  pause(Self) -> Unit = _
+  fn add_text_track(Self, String, String?, String?) -> TextTrack = _
+  fn capture_stream(Self) -> MediaStream = _
+  fn can_play_type(Self, String) -> String = _
+  fn fast_seek(Self, Double) -> Unit = _
+  fn load(Self) -> Unit = _
+  fn pause(Self) -> Unit = _
   // TODO: play() returns Promise<void>
   // play(Self) -> @js.Promise[Unit] = _
-  seek_to_next_frame(Self) -> Unit = _
+  fn seek_to_next_frame(Self) -> Unit = _
   // TODO: setMediaKeys() returns Promise<void>
   // set_media_keys(Self, MediaKeys?) -> @js.Promise[Unit] = _
   // TODO: setSinkId() returns Promise<void>  
@@ -133,115 +133,115 @@ pub trait IsHTMLMediaElement: IsHtmlElement {
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for HTMLMediaElement with into(value) {
+pub impl @js.Cast for HTMLMediaElement with fn into(value) {
   value |> ffi_to_html_media_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for HTMLMediaElement with from(value) {
+pub impl @js.Cast for HTMLMediaElement with fn from(value) {
   value |> js_identity
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with as_html_media_element(s) {
+impl IsHTMLMediaElement with fn as_html_media_element(s) {
   s |> js_identity
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_audio_tracks(s) {
+impl IsHTMLMediaElement with fn get_audio_tracks(s) {
   ffi_html_media_element_get_audio_tracks(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_autoplay(s) {
+impl IsHTMLMediaElement with fn get_autoplay(s) {
   ffi_html_media_element_get_autoplay(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_autoplay(s, value) {
+impl IsHTMLMediaElement with fn set_autoplay(s, value) {
   ffi_html_media_element_set_autoplay(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_buffered(s) {
+impl IsHTMLMediaElement with fn get_buffered(s) {
   ffi_html_media_element_get_buffered(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_controls(s) {
+impl IsHTMLMediaElement with fn get_controls(s) {
   ffi_html_media_element_get_controls(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_controls(s, value) {
+impl IsHTMLMediaElement with fn set_controls(s, value) {
   ffi_html_media_element_set_controls(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_controls_list(s) {
+impl IsHTMLMediaElement with fn get_controls_list(s) {
   ffi_html_media_element_get_controls_list(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_cross_origin(s) {
+impl IsHTMLMediaElement with fn get_cross_origin(s) {
   ffi_html_media_element_get_cross_origin(s.as_html_media_element()).to_option()
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_cross_origin(s, value) {
+impl IsHTMLMediaElement with fn set_cross_origin(s, value) {
   ffi_html_media_element_set_cross_origin(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_current_src(s) {
+impl IsHTMLMediaElement with fn get_current_src(s) {
   ffi_html_media_element_get_current_src(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_current_time(s) {
+impl IsHTMLMediaElement with fn get_current_time(s) {
   ffi_html_media_element_get_current_time(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_current_time(s, value) {
+impl IsHTMLMediaElement with fn set_current_time(s, value) {
   ffi_html_media_element_set_current_time(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_default_muted(s) {
+impl IsHTMLMediaElement with fn get_default_muted(s) {
   ffi_html_media_element_get_default_muted(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_default_muted(s, value) {
+impl IsHTMLMediaElement with fn set_default_muted(s, value) {
   ffi_html_media_element_set_default_muted(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_default_playback_rate(s) {
+impl IsHTMLMediaElement with fn get_default_playback_rate(s) {
   ffi_html_media_element_get_default_playback_rate(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_default_playback_rate(s, value) {
+impl IsHTMLMediaElement with fn set_default_playback_rate(s, value) {
   ffi_html_media_element_set_default_playback_rate(
     s.as_html_media_element(),
     value,
@@ -250,13 +250,13 @@ impl IsHTMLMediaElement with set_default_playback_rate(s, value) {
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_disable_remote_playback(s) {
+impl IsHTMLMediaElement with fn get_disable_remote_playback(s) {
   ffi_html_media_element_get_disable_remote_playback(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_disable_remote_playback(s, value) {
+impl IsHTMLMediaElement with fn set_disable_remote_playback(s, value) {
   ffi_html_media_element_set_disable_remote_playback(
     s.as_html_media_element(),
     value,
@@ -265,187 +265,187 @@ impl IsHTMLMediaElement with set_disable_remote_playback(s, value) {
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_duration(s) {
+impl IsHTMLMediaElement with fn get_duration(s) {
   ffi_html_media_element_get_duration(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_ended(s) {
+impl IsHTMLMediaElement with fn get_ended(s) {
   ffi_html_media_element_get_ended(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_error(s) {
+impl IsHTMLMediaElement with fn get_error(s) {
   ffi_html_media_element_get_error(s.as_html_media_element()).to_option()
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_loop(s) {
+impl IsHTMLMediaElement with fn get_loop(s) {
   ffi_html_media_element_get_loop(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_loop(s, value) {
+impl IsHTMLMediaElement with fn set_loop(s, value) {
   ffi_html_media_element_set_loop(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_media_keys(s) {
+impl IsHTMLMediaElement with fn get_media_keys(s) {
   ffi_html_media_element_get_media_keys(s.as_html_media_element()).to_option()
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_muted(s) {
+impl IsHTMLMediaElement with fn get_muted(s) {
   ffi_html_media_element_get_muted(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_muted(s, value) {
+impl IsHTMLMediaElement with fn set_muted(s, value) {
   ffi_html_media_element_set_muted(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_network_state(s) {
+impl IsHTMLMediaElement with fn get_network_state(s) {
   ffi_html_media_element_get_network_state(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_paused(s) {
+impl IsHTMLMediaElement with fn get_paused(s) {
   ffi_html_media_element_get_paused(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_playback_rate(s) {
+impl IsHTMLMediaElement with fn get_playback_rate(s) {
   ffi_html_media_element_get_playback_rate(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_playback_rate(s, value) {
+impl IsHTMLMediaElement with fn set_playback_rate(s, value) {
   ffi_html_media_element_set_playback_rate(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_played(s) {
+impl IsHTMLMediaElement with fn get_played(s) {
   ffi_html_media_element_get_played(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_preload(s) {
+impl IsHTMLMediaElement with fn get_preload(s) {
   ffi_html_media_element_get_preload(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_preload(s, value) {
+impl IsHTMLMediaElement with fn set_preload(s, value) {
   ffi_html_media_element_set_preload(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_preserves_pitch(s) {
+impl IsHTMLMediaElement with fn get_preserves_pitch(s) {
   ffi_html_media_element_get_preserves_pitch(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_preserves_pitch(s, value) {
+impl IsHTMLMediaElement with fn set_preserves_pitch(s, value) {
   ffi_html_media_element_set_preserves_pitch(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_ready_state(s) {
+impl IsHTMLMediaElement with fn get_ready_state(s) {
   ffi_html_media_element_get_ready_state(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_remote(s) {
+impl IsHTMLMediaElement with fn get_remote(s) {
   ffi_html_media_element_get_remote(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_seekable(s) {
+impl IsHTMLMediaElement with fn get_seekable(s) {
   ffi_html_media_element_get_seekable(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_seeking(s) {
+impl IsHTMLMediaElement with fn get_seeking(s) {
   ffi_html_media_element_get_seeking(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_sink_id(s) {
+impl IsHTMLMediaElement with fn get_sink_id(s) {
   ffi_html_media_element_get_sink_id(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_src(s) {
+impl IsHTMLMediaElement with fn get_src(s) {
   ffi_html_media_element_get_src(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_src(s, value) {
+impl IsHTMLMediaElement with fn set_src(s, value) {
   ffi_html_media_element_set_src(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_src_object(s) {
+impl IsHTMLMediaElement with fn get_src_object(s) {
   ffi_html_media_element_get_src_object(s.as_html_media_element()).to_option()
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_src_object(s, value) {
+impl IsHTMLMediaElement with fn set_src_object(s, value) {
   ffi_html_media_element_set_src_object(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_text_tracks(s) {
+impl IsHTMLMediaElement with fn get_text_tracks(s) {
   ffi_html_media_element_get_text_tracks(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_video_tracks(s) {
+impl IsHTMLMediaElement with fn get_video_tracks(s) {
   ffi_html_media_element_get_video_tracks(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with get_volume(s) {
+impl IsHTMLMediaElement with fn get_volume(s) {
   ffi_html_media_element_get_volume(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with set_volume(s, value) {
+impl IsHTMLMediaElement with fn set_volume(s, value) {
   ffi_html_media_element_set_volume(s.as_html_media_element(), value)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with add_text_track(s, kind, label, language) {
+impl IsHTMLMediaElement with fn add_text_track(s, kind, label, language) {
   ffi_html_media_element_add_text_track(
     s.as_html_media_element(),
     kind,
@@ -456,37 +456,37 @@ impl IsHTMLMediaElement with add_text_track(s, kind, label, language) {
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with capture_stream(s) {
+impl IsHTMLMediaElement with fn capture_stream(s) {
   ffi_html_media_element_capture_stream(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with can_play_type(s, mime_type) {
+impl IsHTMLMediaElement with fn can_play_type(s, mime_type) {
   ffi_html_media_element_can_play_type(s.as_html_media_element(), mime_type)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with fast_seek(s, time) {
+impl IsHTMLMediaElement with fn fast_seek(s, time) {
   ffi_html_media_element_fast_seek(s.as_html_media_element(), time)
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with load(s) {
+impl IsHTMLMediaElement with fn load(s) {
   ffi_html_media_element_load(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with pause(s) {
+impl IsHTMLMediaElement with fn pause(s) {
   ffi_html_media_element_pause(s.as_html_media_element())
 }
 
 ///|
 #cfg(target="js")
-impl IsHTMLMediaElement with seek_to_next_frame(s) {
+impl IsHTMLMediaElement with fn seek_to_next_frame(s) {
   ffi_html_media_element_seek_to_next_frame(s.as_html_media_element())
 }
 

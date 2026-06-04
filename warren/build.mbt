@@ -19,15 +19,14 @@ fn inject_build_entry_script(html : String) -> String {
   guard !has_build_entry_script(html) else { html }
   let patch = build_entry_script + "\n"
   match html.rev_find("</head>") {
-    Some(index) => html[:index].to_string() + patch + html[index:].to_string()
+    Some(index) => html[:index].to_owned() + patch + html[index:].to_owned()
     None =>
       match html.rev_find("</body>") {
-        Some(index) =>
-          html[:index].to_string() + patch + html[index:].to_string()
+        Some(index) => html[:index].to_owned() + patch + html[index:].to_owned()
         None =>
           match html.rev_find("</html>") {
             Some(index) =>
-              html[:index].to_string() + patch + html[index:].to_string()
+              html[:index].to_owned() + patch + html[index:].to_owned()
             None =>
               if html.has_suffix("\n") {
                 html + patch

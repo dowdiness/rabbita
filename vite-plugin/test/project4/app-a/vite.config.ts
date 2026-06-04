@@ -1,4 +1,4 @@
-import { defineConfig } from '../../../../website/node_modules/vite/dist/node/index.js';
+import { defineConfig } from 'vite';
 import rabbita from '../../../src/index';
 
-export default defineConfig({ plugins: [rabbita()] });
+export default defineConfig({ plugins: [rabbita({ mainPkgDir: 'main' })] });

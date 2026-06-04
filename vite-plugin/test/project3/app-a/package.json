@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "node ../../../../website/node_modules/vite/bin/vite.js build && node verify-dist.mjs"
+    "build": "vite build && node verify-dist.mjs"
   },
   "type": "module"
 }

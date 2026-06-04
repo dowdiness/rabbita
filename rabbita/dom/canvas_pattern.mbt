@@ -12,13 +12,13 @@ extern "js" fn checked_to_canvas_pattern(
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CanvasPattern with into(value) {
+pub impl @js.Cast for CanvasPattern with fn into(value) {
   checked_to_canvas_pattern(value).to_option()
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CanvasPattern with from(value) {
+pub impl @js.Cast for CanvasPattern with fn from(value) {
   @js.Value::cast_from(value)
 }
 

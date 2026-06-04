@@ -1,8 +1,11 @@
 members = [
   "./doc",
+  "./examples/counter",
+  "./examples/grocery",
+  "./examples/todo",
   "./examples/shiki_editor",
   "./examples/animation",
-  "./examples/sokobank",
+  "./examples/sokoban",
   "./examples/SSR",
   "./examples/subscriptions",
   "./examples/websocket",

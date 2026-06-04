@@ -6,18 +6,6 @@ const buildDir = path.join(buildRoot, 'js', 'release', 'build', 'test', 'project
 
 fs.mkdirSync(buildDir, { recursive: true });
 fs.writeFileSync(
-  path.join(buildRoot, 'packages.json'),
-  JSON.stringify({
-    packages: [
-      {
-        'is-main': true,
-        root: 'test/project4-a',
-        rel: 'main',
-      },
-    ],
-  }, null, 2),
-);
-fs.writeFileSync(
   path.join(buildDir, 'main.js'),
   [
     'const mount = document.getElementById("app");',

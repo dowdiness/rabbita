@@ -1,10 +1,10 @@
 ///|
 pub(open) trait Scheduler {
-  run_effect(Self, EffectKind, OnExecute) -> Unit
-  queue_message(Self, @common.Id, MessageSender) -> Unit
-  drain_message(Self) -> Unit
-  add(Self, Cmd) -> Unit = _
-  hooks(Self) -> Hooks
+  fn run_effect(Self, EffectKind, OnExecute) -> Unit
+  fn queue_message(Self, @common.Id, MessageSender) -> Unit
+  fn drain_message(Self) -> Unit
+  fn add(Self, Cmd) -> Unit = _
+  fn hooks(Self) -> Hooks
 }
 
 ///|
@@ -20,7 +20,7 @@ pub type Hook[Arg] = (&Scheduler, Arg) -> Unit
 pub type MessageSender = () -> Unit
 
 ///|
-impl Scheduler with add(self, cmd) {
+impl Scheduler with fn add(self, cmd) {
   fn go(cmd) {
     match cmd {
       Batch(xs) => xs.each(x => go(x))

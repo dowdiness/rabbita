@@ -1,0 +1,43 @@
+{
+  "examples": [
+    {
+      "id": "counter",
+      "label": "Counter",
+      "sources": ["examples/counter/main/main.mbt"],
+      "css": "examples/counter/public/styles.css",
+      "moon_pkg": "examples/counter/main/moon.pkg"
+    },
+    {
+      "id": "grocery",
+      "label": "Grocery List",
+      "sources": ["examples/grocery/main/main.mbt"],
+      "css": "examples/grocery/public/styles.css",
+      "moon_pkg": "examples/grocery/main/moon.pkg"
+    },
+    {
+      "id": "todo",
+      "label": "Todo App",
+      "sources": ["examples/todo/main/main.mbt"],
+      "css": "examples/todo/public/styles.css",
+      "moon_pkg": "examples/todo/main/moon.pkg"
+    },
+    {
+      "id": "sokoban",
+      "label": "Sokoban",
+      "sources": ["examples/sokoban/main/main.mbt"],
+      "css": "examples/sokoban/public/styles.css",
+      "moon_pkg": "examples/sokoban/main/moon.pkg"
+    },
+    {
+      "id": "animation",
+      "label": "Animation",
+      "sources": [
+        "examples/animation/main/client.mbt",
+        "examples/animation/main/logo_animation.mbt",
+        "examples/animation/main/animation_tab.mbt"
+      ],
+      "css": "examples/animation/public/styles.css",
+      "moon_pkg": "examples/animation/main/moon.pkg"
+    }
+  ]
+}

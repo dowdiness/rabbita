@@ -4,7 +4,20 @@ import {
   "moonbitlang/async@0.18.1/fs",
   "moonbitlang/async@0.18.1/process",
   "moonbitlang/core/env",
+  "moonbitlang/core/json",
 }
+
+///|
+struct ExampleManifest {
+  examples : Array[ExampleConfig]
+} derive(FromJson)
+
+///|
+struct ExampleConfig {
+  sources : Array[String]
+  css : String
+  moon_pkg : String
+} derive(FromJson)
 
 ///|
 let default_moon_bin = "moon"
@@ -53,10 +66,10 @@ async fn copy_file(source : String, target : String) -> Unit raise {
 }
 
 ///|
-async fn copy_repo_example_asset(example : String, path : String) -> Unit raise {
+async fn copy_repo_example_asset(path : String) -> Unit raise {
   copy_file(
-    join_path(join_path("../../examples", example), path),
-    join_path(join_path("dist/repo-examples", example), path),
+    join_path("../..", path),
+    join_path("dist/repo-examples", path),
   )
 }
 
@@ -65,14 +78,16 @@ async fn copy_repo_examples() -> Unit raise {
   if @fs.exists("dist/repo-examples") {
     @fs.rmdir("dist/repo-examples", recursive=true)
   }
-  copy_repo_example_asset("sokobank", "main/main.mbt")
-  copy_repo_example_asset("sokobank", "main/moon.pkg")
-  copy_repo_example_asset("sokobank", "public/styles.css")
-  copy_repo_example_asset("animation", "main/client.mbt")
-  copy_repo_example_asset("animation", "main/logo_animation.mbt")
-  copy_repo_example_asset("animation", "main/animation_tab.mbt")
-  copy_repo_example_asset("animation", "main/moon.pkg")
-  copy_repo_example_asset("animation", "public/styles.css")
+  let manifest : ExampleManifest = @json.from_json(
+    @json.parse(@fs.read_file("examples.json").text()),
+  )
+  for example in manifest.examples {
+    for source in example.sources {
+      copy_repo_example_asset(source)
+    }
+    copy_repo_example_asset(example.css)
+    copy_repo_example_asset(example.moon_pkg)
+  }
 }
 
 ///|
@@ -81,6 +96,7 @@ async fn copy_static_site_files() -> Unit raise {
     @fs.mkdir("dist", permission=0o755, recursive=true)
   }
   copy_file("public/index.html", "dist/index.html")
+  copy_file("examples.json", "dist/examples.json")
   copy_file("public/styles.css", "dist/styles.css")
   copy_file("support/compiler.js", "dist/support/compiler.js")
   copy_file("support/editor.js", "dist/support/editor.js")
@@ -105,6 +121,7 @@ async fn main raise {
   copy_file(source, target)
   copy_repo_examples()
   println("Wrote dist/index.html")
+  println("Wrote dist/examples.json")
   println("Wrote dist/styles.css")
   println("Wrote dist/support")
   println("Wrote \{target}")

@@ -51,10 +51,10 @@ pub type MessageSender = () -> Unit
 
 // Traits
 pub(open) trait Scheduler {
-  run_effect(Self, EffectKind, (&Scheduler) -> Unit) -> Unit
-  queue_message(Self, @common.Id, () -> Unit) -> Unit
-  drain_message(Self) -> Unit
-  add(Self, Cmd) -> Unit = _
-  hooks(Self) -> Hooks
+  fn run_effect(Self, EffectKind, (&Scheduler) -> Unit) -> Unit
+  fn queue_message(Self, @common.Id, () -> Unit) -> Unit
+  fn drain_message(Self) -> Unit
+  fn add(Self, Cmd) -> Unit = _
+  fn hooks(Self) -> Hooks
 }
 

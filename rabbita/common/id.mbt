@@ -5,7 +5,7 @@ let global_id_count : Ref[Int] = Ref(0)
 struct Id(Int) derive(Eq, Hash, Compare)
 
 ///|
-pub impl Show for Id with output(self, buf) {
+pub impl Show for Id with fn output(self, buf) {
   self.0.output(buf)
 }
 

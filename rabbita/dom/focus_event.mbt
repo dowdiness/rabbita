@@ -13,13 +13,13 @@ pub impl IsUIEvent for FocusEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for FocusEvent with into(value) {
+pub impl @js.Cast for FocusEvent with fn into(value) {
   value |> ffi_to_focus_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for FocusEvent with from(value) {
+pub impl @js.Cast for FocusEvent with fn from(value) {
   value |> js_identity
 }
 

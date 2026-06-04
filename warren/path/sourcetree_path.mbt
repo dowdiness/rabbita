@@ -5,7 +5,7 @@ pub type Path = @p.Path
 struct SourcePath(String) derive(Eq, Compare, Hash)
 
 ///|
-pub impl Debug for SourcePath with to_repr(self) {
+pub impl Debug for SourcePath with fn to_repr(self) {
   @debug.Repr::string(self.0)
 }
 
@@ -15,7 +15,7 @@ pub fn SourcePath::new(s : String) -> Self {
 }
 
 ///|
-pub impl Show for SourcePath with output(self, buf) {
+pub impl Show for SourcePath with fn output(self, buf) {
   buf.write_string(self.0)
 }
 

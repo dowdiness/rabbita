@@ -20,12 +20,12 @@ extern "js" fn checked_to_canvas_gradient(
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CanvasGradient with into(value) {
+pub impl @js.Cast for CanvasGradient with fn into(value) {
   checked_to_canvas_gradient(value).to_option()
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for CanvasGradient with from(value) {
+pub impl @js.Cast for CanvasGradient with fn from(value) {
   @js.Value::cast_from(value)
 }

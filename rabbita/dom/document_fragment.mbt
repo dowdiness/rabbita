@@ -5,13 +5,13 @@ type DocumentFragment
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for DocumentFragment with into(value) {
+pub impl @js.Cast for DocumentFragment with fn into(value) {
   value |> ffi_to_document_fragment |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for DocumentFragment with from(value) {
+pub impl @js.Cast for DocumentFragment with fn from(value) {
   value |> js_identity
 }
 

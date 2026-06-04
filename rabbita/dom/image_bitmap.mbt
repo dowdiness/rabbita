@@ -5,13 +5,13 @@ type ImageBitmap
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for ImageBitmap with into(value) {
+pub impl @js.Cast for ImageBitmap with fn into(value) {
   value |> ffi_to_image_bitmap |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for ImageBitmap with from(value) {
+pub impl @js.Cast for ImageBitmap with fn from(value) {
   value |> js_identity
 }
 

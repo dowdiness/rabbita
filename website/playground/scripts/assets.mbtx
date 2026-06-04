@@ -100,7 +100,12 @@ async fn ensure_parent(path : String) -> Unit raise {
 ///|
 async fn copy_file(source : String, target : String) -> Unit raise {
   ensure_parent(target)
-  @fs.write_file(target, @fs.read_file(source), create=0o644, truncate=true)
+  @fs.write_file(
+    target,
+    @fs.read_file(source),
+    create_mode=CreateOrTruncate,
+    permission=0o644,
+  )
 }
 
 ///|
@@ -115,7 +120,12 @@ async fn copy_core_file(source : String, target : String) -> Unit raise {
     if code != 0 {
       abort("gzip failed for \{source}")
     }
-    @fs.write_file(target, data, create=0o644, truncate=true)
+    @fs.write_file(
+      target,
+      data,
+      create_mode=CreateOrTruncate,
+      permission=0o644,
+    )
   } else {
     copy_file(source, target)
   }
@@ -456,8 +466,8 @@ async fn main raise {
   @fs.write_file(
     "dist/moonbit-assets/manifest.json",
     manifest,
-    create=0o644,
-    truncate=true,
+    create_mode=CreateOrTruncate,
+    permission=0o644,
   )
 
   println("Generated \{packages.length()} Rabbita package source assets.")

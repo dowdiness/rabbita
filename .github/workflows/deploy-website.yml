@@ -7,8 +7,7 @@ on:
     paths:
       - 'website/**'
       - 'doc/**'
-      - 'examples/animation/**'
-      - 'examples/sokobank/**'
+      - 'examples/**'
       - 'rabbita/**'
       - 'utils/shiki/**'
       - '.github/workflows/deploy-website.yml'
@@ -71,14 +70,13 @@ jobs:
       - name: Fetch moonc worker asset
         run: |
           mkdir -p /tmp/moonc-worker
-          WORKER_TARBALL="$(npm view @moonbit/moonc-worker dist.tarball)"
-          curl -fsSL "$WORKER_TARBALL" | tar -xz -C /tmp/moonc-worker --strip-components=1 package/moonc-worker.js
+          npm install --prefix /tmp/moonc-worker --no-save --omit=dev @moonbit/moonc-worker@latest
 
       - name: Build playground
         working-directory: website/playground
         run: |
           moon check --target js
-          MOONBIT_PLAYGROUND_WORKER=/tmp/moonc-worker/moonc-worker.js \
+          MOONBIT_PLAYGROUND_WORKER=/tmp/moonc-worker/node_modules/@moonbit/moonc-worker/moonc-worker.js \
           MOONBIT_PLAYGROUND_CORE_BUNDLE="$HOME/.moon/lib/core/_build/js/release/bundle" \
           moon run --target native scripts/assets.mbtx
           moon run --target native scripts/build.mbtx

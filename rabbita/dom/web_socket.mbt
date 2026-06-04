@@ -9,13 +9,13 @@ pub impl IsEventTarget for WebSocket
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for WebSocket with into(value) {
+pub impl @js.Cast for WebSocket with fn into(value) {
   value |> ffi_to_web_socket |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for WebSocket with from(value) {
+pub impl @js.Cast for WebSocket with fn from(value) {
   value |> js_identity
 }
 

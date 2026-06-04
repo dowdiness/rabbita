@@ -32,7 +32,7 @@ pub(all) struct Pos {
 } derive(Debug)
 
 ///|
-pub impl Show for Pos with output(self, buf) {
+pub impl Show for Pos with fn output(self, buf) {
   self.to_repr().output(buf)
 }
 
@@ -153,6 +153,6 @@ pub(all) struct Viewport {
 } derive(Debug)
 
 ///|
-pub impl Show for Viewport with output(self, buf) {
+pub impl Show for Viewport with fn output(self, buf) {
   self.to_repr().output(buf)
 }

@@ -10,13 +10,13 @@ pub impl IsEventTarget for HTMLImageElement
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for HTMLImageElement with into(value) {
+pub impl @js.Cast for HTMLImageElement with fn into(value) {
   value |> ffi_to_html_image_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for HTMLImageElement with from(value) {
+pub impl @js.Cast for HTMLImageElement with fn from(value) {
   value |> js_identity
 }
 

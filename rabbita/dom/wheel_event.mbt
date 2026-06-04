@@ -16,13 +16,13 @@ pub impl IsMouseEvent for WheelEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for WheelEvent with into(value) {
+pub impl @js.Cast for WheelEvent with fn into(value) {
   value |> ffi_to_wheel_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for WheelEvent with from(value) {
+pub impl @js.Cast for WheelEvent with fn from(value) {
   value |> js_identity
 }
 

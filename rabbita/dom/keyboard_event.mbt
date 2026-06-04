@@ -13,13 +13,13 @@ pub impl IsUIEvent for KeyboardEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for KeyboardEvent with into(value) {
+pub impl @js.Cast for KeyboardEvent with fn into(value) {
   value |> ffi_to_keyboard_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for KeyboardEvent with from(value) {
+pub impl @js.Cast for KeyboardEvent with fn from(value) {
   value |> js_identity
 }
 

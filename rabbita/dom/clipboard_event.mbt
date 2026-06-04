@@ -9,13 +9,13 @@ pub impl IsEvent for ClipboardEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for ClipboardEvent with into(value) {
+pub impl @js.Cast for ClipboardEvent with fn into(value) {
   value |> ffi_to_clipboard_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for ClipboardEvent with from(value) {
+pub impl @js.Cast for ClipboardEvent with fn from(value) {
   value |> js_identity
 }
 

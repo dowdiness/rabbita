@@ -198,8 +198,8 @@ pub impl @json.FromJson for Value
 
 // Traits
 pub(open) trait Cast {
-  into(Value) -> Self?
-  from(Self) -> Value
+  fn into(Value) -> Self?
+  fn from(Self) -> Value
 }
 pub impl Cast for Bool
 pub impl Cast for Int

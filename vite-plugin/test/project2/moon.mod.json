@@ -1,8 +1,0 @@
-{
-  "name": "test/project2",
-  "deps": {
-    "moonbit-community/rabbita": {
-      "path": "../../../rabbita"
-    }
-  }
-}

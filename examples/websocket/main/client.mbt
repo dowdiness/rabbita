@@ -74,12 +74,12 @@ fn command_socket_id() -> String {
 
 ///|
 fn normalized_url(url : String) -> String {
-  url.trim().to_string()
+  url.trim().to_owned()
 }
 
 ///|
 fn normalized_nickname(name : String) -> String {
-  let nickname = name.trim().to_string()
+  let nickname = name.trim().to_owned()
   if nickname == "" {
     "guest"
   } else {
@@ -89,14 +89,14 @@ fn normalized_nickname(name : String) -> String {
 
 ///|
 fn trimmed_draft(draft : String) -> String {
-  draft.trim().to_string()
+  draft.trim().to_owned()
 }
 
 ///|
 fn parse_protocols(input : String) -> Array[String] {
   let protocols = []
   for part in input.split(",") {
-    let protocol = part.trim().to_string()
+    let protocol = part.trim().to_owned()
     if protocol != "" {
       protocols.push(protocol)
     }
@@ -646,7 +646,6 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
               value=model.url_input,
               placeholder="wss://example.com/socket",
               on_input=emit.map(url => UrlChanged(url)),
-              nothing,
             ),
           ],
           div(class="field") <| [
@@ -656,7 +655,6 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
               value=model.protocols_input,
               placeholder="chat, superchat",
               on_input=emit.map(protocols => ProtocolsChanged(protocols)),
-              nothing,
             ),
           ],
           div(class="field") <| [
@@ -666,7 +664,6 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
               value=model.nickname_input,
               placeholder="guest",
               on_input=emit.map(nickname => NicknameChanged(nickname)),
-              nothing,
             ),
           ],
         ],

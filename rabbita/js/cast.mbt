@@ -5,8 +5,8 @@
 /// It is useful for safely handling dynamic types in MoonBit.
 #cfg(target="js")
 pub(open) trait Cast {
-  into(Value) -> Self?
-  from(Self) -> Value
+  fn into(Value) -> Self?
+  fn from(Self) -> Value
 }
 
 // NOTE: Do we need a default implementation for the `from` method in `Cast` trait?
@@ -48,55 +48,55 @@ extern "js" fn checked_cast_array_ffi(value : Value) -> Nullable[Array[Value]] =
 
 ///|
 #cfg(target="js")
-pub impl Cast for String with into(value) {
+pub impl Cast for String with fn into(value) {
   checked_cast_string_ffi(value).to_option()
 }
 
 ///|
 #cfg(target="js")
-pub impl Cast for String with from(value) {
+pub impl Cast for String with fn from(value) {
   Value::cast_from(value)
 }
 
 ///|
 #cfg(target="js")
-pub impl Cast for Int with into(value) {
+pub impl Cast for Int with fn into(value) {
   checked_cast_int_ffi(value).to_option()
 }
 
 ///|
 #cfg(target="js")
-pub impl Cast for Int with from(value) {
+pub impl Cast for Int with fn from(value) {
   Value::cast_from(value)
 }
 
 ///|
 #cfg(target="js")
-pub impl Cast for Double with into(value) {
+pub impl Cast for Double with fn into(value) {
   checked_cast_double_ffi(value).to_option()
 }
 
 ///|
 #cfg(target="js")
-pub impl Cast for Double with from(value) {
+pub impl Cast for Double with fn from(value) {
   Value::cast_from(value)
 }
 
 ///|
 #cfg(target="js")
-pub impl Cast for Bool with into(value) {
+pub impl Cast for Bool with fn into(value) {
   checked_cast_bool_ffi(value).to_option()
 }
 
 ///|
 #cfg(target="js")
-pub impl Cast for Bool with from(value) {
+pub impl Cast for Bool with fn from(value) {
   Value::cast_from(value)
 }
 
 ///|
 #cfg(target="js")
-pub impl[A : Cast] Cast for Array[A] with into(value) {
+pub impl[A : Cast] Cast for Array[A] with fn into(value) {
   checked_cast_array_ffi(value)
   .to_option()
   .bind(fn(arr) {
@@ -111,6 +111,6 @@ pub impl[A : Cast] Cast for Array[A] with into(value) {
 
 ///|
 #cfg(target="js")
-pub impl[A : Cast] Cast for Array[A] with from(value) {
+pub impl[A : Cast] Cast for Array[A] with fn from(value) {
   Value::cast_from(value)
 }

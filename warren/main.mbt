@@ -59,7 +59,7 @@ async fn inject_html(path : SourcePath, vfs : @vfs.VirtualFileSystem) -> Unit {
   guard tag is Some(p) else {
     log("warn", "No </head> or </html> tag in index.html")
   }
-  let s = (html[:p] + html_patch + html[p:]).to_string()
+  let s = (html[:p] + html_patch + html[p:]).to_owned()
   vfs.mount("/index.html", FileContent(s))
 }
 

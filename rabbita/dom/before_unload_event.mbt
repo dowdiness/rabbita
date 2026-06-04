@@ -9,12 +9,12 @@ pub impl IsEvent for BeforeUnloadEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for BeforeUnloadEvent with into(value) {
+pub impl @js.Cast for BeforeUnloadEvent with fn into(value) {
   value |> ffi_to_before_unload_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for BeforeUnloadEvent with from(value) {
+pub impl @js.Cast for BeforeUnloadEvent with fn from(value) {
   value |> js_identity
 }

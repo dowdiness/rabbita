@@ -1,9 +1,9 @@
 ///|
 pub(open) trait IsCell {
-  init(Self, &Scheduler) -> Unit
-  step(Self, &Scheduler) -> Unit
-  view(Self) -> VNode
-  flags(Self) -> Flags
+  fn init(Self, &Scheduler) -> Unit
+  fn step(Self, &Scheduler) -> Unit
+  fn view(Self) -> VNode
+  fn flags(Self) -> Flags
 }
 
 ///|

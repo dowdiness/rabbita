@@ -1,0 +1,14 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "example/counter/main"
+
+// Values
+
+// Errors
+
+// Types and methods
+type Msg
+
+// Type aliases
+
+// Traits
+

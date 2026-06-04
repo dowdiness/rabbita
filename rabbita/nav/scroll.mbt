@@ -15,7 +15,7 @@ pub(all) enum ScrollBehavior {
 
 ///|
 #cfg(target="js")
-pub impl Show for ScrollBehavior with output(self, buf) {
+pub impl Show for ScrollBehavior with fn output(self, buf) {
   match self {
     Auto => buf.write_string("auto")
     Instant => buf.write_string("instant")

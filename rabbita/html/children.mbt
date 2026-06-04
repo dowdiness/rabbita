@@ -1,30 +1,30 @@
 ///|
 pub trait IsChildren {
-  to_children(Self) -> @runtime.Children[VNode]
+  fn to_children(Self) -> @runtime.Children[VNode]
 }
 
 ///|
-pub impl IsChildren for Html with to_children(html) {
+pub impl IsChildren for Html with fn to_children(html) {
   Array([html.0])
 }
 
 ///|
-pub impl IsChildren for String with to_children(str) {
+pub impl IsChildren for String with fn to_children(str) {
   Array([text(str).0])
 }
 
 ///|
-pub impl IsChildren for Map[String, Html] with to_children(self) {
+pub impl IsChildren for Map[String, Html] with fn to_children(self) {
   Map(self.map((_, v) => v.0))
 }
 
 ///|
-pub impl IsChildren for Array[Html] with to_children(self) {
+pub impl IsChildren for Array[Html] with fn to_children(self) {
   Array(self.map(x => x.0))
 }
 
 ///|
-pub impl IsChildren for @list.List[Html] with to_children(self) {
+pub impl IsChildren for @list.List[Html] with fn to_children(self) {
   Array(self.map(x => x.0).to_array())
 }
 
@@ -34,6 +34,6 @@ pub impl IsChildren for @list.List[Html] with to_children(self) {
 // }
 
 ///|
-pub impl IsChildren for @runtime.Children[VNode] with to_children(children) {
+pub impl IsChildren for @runtime.Children[VNode] with fn to_children(children) {
   children
 }

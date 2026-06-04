@@ -15,7 +15,7 @@ import {
   "moonbitlang/core/list",
 } for "test"
 
-warnings = "-unused_package"
+warnings = "-unused_package-alert_unstable"
 
 supported_targets = "js+native"
 

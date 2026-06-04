@@ -1,24 +1,8 @@
-import type { Plugin, ViteDevServer } from 'vite';
+import type { Plugin, ViteDevServer, WatchOptions } from 'vite';
 import { spawnSync } from 'child_process';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
-
-type MoonProjectConfig = {
-  moduleRoot: string;
-  modPath: string;
-  workspaceRoot?: string;
-};
-
-type MoonBuildPackage = {
-  'is-main'?: boolean;
-  root?: string;
-  rel?: string;
-  'root-path'?: string;
-};
-
-type MoonBuildMetadata = {
-  packages?: MoonBuildPackage[];
-};
 
 type BuildMode = 'debug' | 'release';
 
@@ -28,249 +12,141 @@ type JsOutput = {
 };
 
 type RabbitaOptions = {
+  mainPkgDir?: string;
+  /** @deprecated Use mainPkgDir instead. */
   main?: string;
+  /** @deprecated Use mainPkgDir instead. */
+  moonModDir?: string;
 };
 
 const VIRTUAL_MAIN_ENTRY_ID = '\0rabbita:main-entry';
-
-function defaultProjectRoot(): string {
-  return process.env.INIT_CWD ?? process.cwd();
-}
+const WATCH_IGNORED_DIRS = ['**/.mooncakes/**', '**/_build/**'];
 
 function normalizePathLike(input: string): string {
   return input.replaceAll('\\', '/').replace(/^\/+|\/+$/g, '');
 }
 
-function moduleOutputName(modPath: string): string {
-  const normalized = normalizePathLike(modPath);
-  const segments = normalized.split('/').filter(Boolean);
-  return segments[segments.length - 1] ?? normalized;
-}
-
-function findNearestMoonWork(startDir: string): string | undefined {
-  let current = startDir;
-  while (true) {
-    const workPath = path.join(current, 'moon.work');
-    if (fs.existsSync(workPath)) {
-      return current;
-    }
-    const parent = path.dirname(current);
-    if (parent === current) {
-      return undefined;
-    }
-    current = parent;
-  }
-}
-
-function probeMoonBitProject(moduleRoot: string): MoonProjectConfig {
-  const modJsonPath = path.join(moduleRoot, 'moon.mod.json');
-  if (!fs.existsSync(modJsonPath)) {
-    throw new Error(`Cannot find moon.mod.json in ${moduleRoot}`);
-  }
-
-  const json = JSON.parse(fs.readFileSync(modJsonPath, 'utf8')) as { name?: string };
-  if (!json.name) {
-    throw new Error(`Field "name" is missing in ${modJsonPath}`);
-  }
-
-  return {
-    moduleRoot,
-    modPath: json.name,
-    workspaceRoot: findNearestMoonWork(moduleRoot),
-  };
-}
-
-function buildRootCandidates(project: MoonProjectConfig): Array<string> {
-  const candidates = project.workspaceRoot
-    ? [path.join(project.workspaceRoot, '_build'), path.join(project.moduleRoot, '_build')]
-    : [path.join(project.moduleRoot, '_build')];
-  return [...new Set(candidates.map(candidate => path.resolve(candidate)))];
-}
-
-function readBuildMetadata(buildRoot: string): MoonBuildMetadata | undefined {
-  const metadataPath = path.join(buildRoot, 'packages.json');
-  if (fs.existsSync(metadataPath)) {
-    return JSON.parse(fs.readFileSync(metadataPath, 'utf8')) as MoonBuildMetadata;
-  }
-  return undefined;
-}
-
-function pickMainPackage(
-  metadata: MoonBuildMetadata | undefined,
-  modulePath: string,
-  preferredPackagePath?: string,
-  allowFallback = true,
-): MoonBuildPackage | undefined {
-  const mainPackages = (metadata?.packages ?? []).filter(pkg => pkg['is-main'] === true);
-  if (mainPackages.length === 0) {
-    return undefined;
-  }
-
-  if (preferredPackagePath) {
-    const normalizedExpected = normalizePathLike(preferredPackagePath);
-    const matched = mainPackages.find(pkg => {
-      const rel = normalizePathLike(pkg.rel ?? '');
-      const rootPath = normalizePathLike(pkg['root-path'] ?? '');
-      return rel === normalizedExpected
-        || rel.endsWith(`/${normalizedExpected}`)
-        || rootPath.endsWith(`/${normalizedExpected}`);
-    });
-    if (matched) {
-      return matched;
-    }
-  }
-
-  const ownModuleMain = mainPackages.find(pkg => pkg.root === modulePath);
-  if (ownModuleMain) {
-    return ownModuleMain;
-  }
-
-  if (!allowFallback) {
-    return undefined;
-  }
-
-  return mainPackages[0];
-}
-
-function collectJsFiles(buildDir: string): Array<string> {
+function findJsOutputs(buildDir: string, selector?: string): Array<string> {
   if (!fs.existsSync(buildDir)) {
     return [];
   }
 
-  const files: Array<string> = [];
-  const worklist: Array<string> = [buildDir];
-  while (worklist.length > 0) {
-    const current = worklist.pop()!;
-    for (const entry of fs.readdirSync(current)) {
-      if (entry === '.mooncakes') {
-        continue;
-      }
-      const fullPath = path.join(current, entry);
-      const stat = fs.statSync(fullPath);
-      if (stat.isDirectory()) {
-        worklist.push(fullPath);
-      } else if (entry.endsWith('.js')) {
-        files.push(fullPath);
-      }
+  const run = (args: Array<string>) => {
+    const result = spawnSync('find', [buildDir, ...args, '-print0'], { encoding: 'utf8' });
+    if (result.error) {
+      throw result.error;
+    }
+    if (result.status !== 0) {
+      throw new Error((result.stdout ?? '') + (result.stderr ?? ''));
+    }
+    return result.stdout.split('\0').filter(Boolean);
+  };
+  const sort = (files: Array<string>) => [...new Set(files)].sort((a, b) => {
+    const relA = normalizePathLike(path.relative(buildDir, a));
+    const relB = normalizePathLike(path.relative(buildDir, b));
+    const depthDiff = relA.split('/').length - relB.split('/').length;
+    return depthDiff === 0 ? relA.localeCompare(relB) : depthDiff;
+  });
+  const baseArgs = ['-path', '*/.mooncakes', '-prune', '-o', '-type', 'f'];
+
+  if (!selector) {
+    return sort(run([...baseArgs, '-name', '*.js']));
+  }
+
+  const expected = normalizePathLike(selector.endsWith('.js') ? selector.slice(0, -3) : selector);
+  const escapeGlob = (input: string) => input.replace(/[\\*?[\]]/g, '\\$&');
+  if (expected === '') {
+    return [];
+  }
+  const escaped = escapeGlob(expected);
+  const escapedBase = escapeGlob(path.posix.basename(expected));
+  const patterns = [
+    `*/${escaped}/${escapedBase}.js`,
+    `*/${escaped}.js`,
+  ];
+
+  for (const pattern of patterns) {
+    const matched = sort(run([...baseArgs, '-path', pattern]));
+    if (matched.length > 0) {
+      return matched;
     }
   }
-  return files;
+
+  return [];
 }
 
-function toJsOutput(jsPath: string): JsOutput {
-  const mapPath = `${jsPath}.map`;
+function findJsOutput(
+  buildDir: string,
+  preferredPackagePath?: string,
+  isMainPkgDirBuild = false,
+): JsOutput | undefined {
+  if (!fs.existsSync(buildDir)) {
+    return undefined;
+  }
+  const discovered = findJsOutputs(buildDir);
+
+  if (preferredPackagePath) {
+    let matched = findJsOutputs(buildDir, preferredPackagePath);
+    if (matched.length === 0) {
+      const parts = normalizePathLike(preferredPackagePath).split('/').filter(Boolean);
+      if (parts.length > 2) {
+        matched = findJsOutputs(buildDir, parts.slice(2).join('/'));
+      }
+    }
+    if (matched.length > 1) {
+      throw new Error(
+        `Multiple JS outputs match main "${preferredPackagePath}": `
+        + matched.map(file => `"${path.relative(buildDir, file)}"`).join(', '),
+      );
+    }
+    if (matched.length === 0) {
+      throw new Error(
+        `Cannot locate generated JS output for main "${preferredPackagePath}" under "${buildDir}".`
+        + (discovered.length > 0
+          ? ` Available JS outputs: ${discovered.map(file => `"${path.relative(buildDir, file)}"`).join(', ')}.`
+          : ''),
+      );
+    }
+    const mapPath = `${matched[0]}.map`;
+    return {
+      jsPath: matched[0],
+      sourceMapPath: fs.existsSync(mapPath) ? mapPath : undefined,
+    };
+  }
+
+  if (discovered.length === 0) {
+    return undefined;
+  }
+  if (discovered.length > 1) {
+    throw new Error(
+      isMainPkgDirBuild
+        ? `Multiple JS outputs generated under "${buildDir}" after building mainPkgDir. `
+        + discovered.map(file => `"${path.relative(buildDir, file)}"`).join(', ')
+        : `Multiple JS outputs generated under "${buildDir}". `
+        + 'Pass rabbita({ mainPkgDir: ... }) to select one: '
+        + discovered.map(file => `"${path.relative(buildDir, file)}"`).join(', '),
+    );
+  }
+
+  const mapPath = `${discovered[0]}.map`;
   return {
-    jsPath,
+    jsPath: discovered[0],
     sourceMapPath: fs.existsSync(mapPath) ? mapPath : undefined,
   };
 }
 
-function findJsOutputInBuildRoot(
-  buildRoot: string,
-  mode: BuildMode,
-  modPath: string,
-  mainPkg?: MoonBuildPackage,
-): JsOutput | undefined {
-  const buildDir = path.join(buildRoot, 'js', mode, 'build');
-  if (!fs.existsSync(buildDir)) {
-    return undefined;
-  }
-
-  const moduleName = moduleOutputName(modPath);
-  const packageRoot = normalizePathLike(mainPkg?.root ?? '');
-  const packageRel = normalizePathLike(mainPkg?.rel ?? '');
-
-  const explicitCandidates: Array<string> = [path.join(buildDir, `${moduleName}.js`)];
-  if (packageRel !== '') {
-    explicitCandidates.push(path.join(buildDir, packageRel, `${path.basename(packageRel)}.js`));
-    explicitCandidates.push(path.join(buildDir, `${packageRel}.js`));
-  }
-  if (packageRoot !== '' && packageRel !== '') {
-    explicitCandidates.push(
-      path.join(buildDir, packageRoot, packageRel, `${path.basename(packageRel)}.js`),
-    );
-  }
-  if (packageRoot !== '') {
-    explicitCandidates.push(path.join(buildDir, packageRoot, `${moduleOutputName(packageRoot)}.js`));
-  }
-
-  for (const candidate of explicitCandidates) {
-    if (fs.existsSync(candidate)) {
-      return toJsOutput(candidate);
-    }
-  }
-
-  const discovered = collectJsFiles(buildDir);
-  if (discovered.length === 0) {
-    return undefined;
-  }
-
-  const byModuleName = discovered.find(file => path.basename(file) === `${moduleName}.js`);
-  if (byModuleName) {
-    return toJsOutput(byModuleName);
-  }
-
-  if (packageRoot !== '' && packageRel !== '') {
-    const rootRelSuffix = normalizePathLike(
-      path.join(packageRoot, packageRel, `${path.basename(packageRel)}.js`),
-    );
-    const byRootAndRel = discovered.find(file => normalizePathLike(file).endsWith(rootRelSuffix));
-    if (byRootAndRel) {
-      return toJsOutput(byRootAndRel);
-    }
-  }
-
-  if (packageRel !== '') {
-    const relSuffix = normalizePathLike(path.join(packageRel, `${path.basename(packageRel)}.js`));
-    const byPackageRel = discovered.find(file => normalizePathLike(file).endsWith(relSuffix));
-    if (byPackageRel) {
-      return toJsOutput(byPackageRel);
-    }
-  }
-
-  if (discovered.length === 1) {
-    return toJsOutput(discovered[0]);
-  }
-
-  discovered.sort((a, b) => {
-    const depthDiff = a.split(path.sep).length - b.split(path.sep).length;
-    return depthDiff === 0 ? a.localeCompare(b) : depthDiff;
-  });
-  return toJsOutput(discovered[0]);
-}
-
-function resolveJsOutput(
-  buildRoots: Array<string>,
-  mode: BuildMode,
-  project: MoonProjectConfig,
-  preferredPackagePath?: string,
-): JsOutput | undefined {
-  const localBuildRoot = path.resolve(path.join(project.moduleRoot, '_build'));
-  for (const buildRoot of buildRoots) {
-    const metadata = readBuildMetadata(buildRoot);
-    if (!metadata) {
-      continue;
-    }
-    const allowFallback = path.resolve(buildRoot) === localBuildRoot;
-    const mainPkg = pickMainPackage(
-      metadata,
-      project.modPath,
-      preferredPackagePath,
-      allowFallback,
-    );
-    if (!mainPkg && !allowFallback) {
-      continue;
-    }
-    const output = findJsOutputInBuildRoot(buildRoot, mode, project.modPath, mainPkg);
-    if (output) {
-      return output;
-    }
-  }
-  return undefined;
-}
-
-function runMoonBuild(mode: BuildMode, cwd: string): void {
-  const args = ['build', '--target', 'js', mode === 'release' ? '--release' : '--debug'];
+function runMoonBuild(mode: BuildMode, cwd: string, targetDir: string, packagePath?: string): void {
+  fs.rmSync(targetDir, { recursive: true, force: true });
+  fs.mkdirSync(targetDir, { recursive: true });
+  const args = [
+    'build',
+    ...(packagePath ? [packagePath] : []),
+    '--target',
+    'js',
+    '--target-dir',
+    targetDir,
+    mode === 'release' ? '--release' : '--debug',
+  ];
   const result = spawnSync('moon', args, { cwd, encoding: 'utf8' });
   if (result.status === 0) {
     return;
@@ -282,26 +158,61 @@ function runMoonBuild(mode: BuildMode, cwd: string): void {
 }
 
 function shouldRebuildForFile(filePath: string): boolean {
-  const fileName = path.basename(filePath);
-  return filePath.endsWith('.mbt')
-    || filePath.endsWith('.mbti')
-    || fileName === 'moon.work'
-    || fileName === 'moon.mod.json'
-    || fileName === 'moon.pkg'
-    || fileName === 'moon.pkg.json';
+  const normalizedPath = filePath.replaceAll('\\', '/');
+  const pathParts = normalizedPath.split('/');
+  if (pathParts.includes('.mooncakes')
+    || pathParts.includes('_build')
+    || pathParts.includes('node_modules')
+    || pathParts.includes('dist')) {
+    return false;
+  }
+
+  return normalizedPath.endsWith('.mbt')
+    || normalizedPath.endsWith('.mbtp')
+    || normalizedPath.endsWith('.mbti')
+    || normalizedPath.endsWith('moon.mod.json')
+    || normalizedPath.endsWith('moon.pkg.json')
+    || normalizedPath.endsWith('moon.work')
+    || normalizedPath.endsWith('moon.mod')
+    || normalizedPath.endsWith('moon.pkg')
+    || normalizedPath.endsWith('.js')
+    || normalizedPath.endsWith('.css')
+    || normalizedPath.endsWith('.html')
+}
+
+function resolveInsideConfigDir(configDir: string, value: string, optionName: string): string {
+  const resolved = path.resolve(configDir, value);
+  assertInsideDirectory(configDir, resolved, `${optionName} must point inside the Vite config directory`);
+  return resolved;
+}
+
+function assertInsideDirectory(parentDir: string, childPath: string, message: string): void {
+  const parent = path.resolve(parentDir);
+  const child = path.resolve(childPath);
+  if (parent === child) {
+    return;
+  }
+  const relative = path.relative(parent, child);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error(`${message}: "${child}"`);
+  }
 }
 
 /**
  * Rabbita Vite plugin.
  *
  * Config:
- * - `main`:
- *   Optional relative package path for selecting the MoonBit main package
- *   (for example: `"main"` or `"app/web"`).
+ * - `mainPkgDir`:
+ *   Optional filesystem path to the main package directory, relative to the
+ *   Vite config file. The plugin builds it with `moon build .`.
+ * - `main` and `moonModDir`:
+ *   Deprecated compatibility options.
  *
- * Selection rule when `main` is not provided:
- * 1. Choose an `is-main` package whose `root` equals `moon.mod.json.name`.
- * 2. Fallback to the first `is-main` package in build metadata.
+ * Build behavior:
+ * - Uses a plugin-owned MoonBit target directory, so output discovery does not
+ *   depend on a workspace or module `_build` location.
+ * - `mainPkgDir` builds only that package and requires exactly one
+ *   generated JS output.
  *
  * Entry behavior:
  * - Keeps `index.html` unchanged (still supports `/main.js`).
@@ -309,37 +220,53 @@ function shouldRebuildForFile(filePath: string): boolean {
  *   the selected main package.
  */
 export function rabbita(options: RabbitaOptions = {}): Plugin {
-  const mainPackagePath = options.main;
-  let project: MoonProjectConfig | undefined = undefined;
+  const mainPkgDir = options.mainPkgDir;
+  const legacyMainPackagePath = options.main;
+  if (mainPkgDir && (options.main || options.moonModDir)) {
+    throw new Error('Do not use mainPkgDir together with deprecated main or moonModDir options.');
+  }
+  let moonBuildCwd: string | undefined = undefined;
   let isBuild = false;
   let latestOutput: JsOutput | undefined = undefined;
+  let latestLoggedJsPath: string | undefined = undefined;
   let rebuildTimer: ReturnType<typeof setTimeout> | undefined = undefined;
-
-  function ensureProject(root: string = defaultProjectRoot()): MoonProjectConfig {
-    if (!project || project.moduleRoot !== root) {
-      project = probeMoonBitProject(root);
-    }
-    return project;
-  }
+  let targetDir: string | undefined = undefined;
 
   function runMoonbitBuild(): JsOutput {
-    const currentProject = project ?? ensureProject();
-    const primaryMode: BuildMode = isBuild ? 'release' : 'debug';
-    const buildRoots = buildRootCandidates(currentProject);
-    runMoonBuild(primaryMode, currentProject.moduleRoot);
-
-    let output = resolveJsOutput(buildRoots, primaryMode, currentProject, mainPackagePath);
-
-    if (!output && primaryMode === 'release') {
-      runMoonBuild('debug', currentProject.moduleRoot);
-      output = resolveJsOutput(buildRoots, 'debug', currentProject, mainPackagePath);
+    if (!moonBuildCwd) {
+      throw new Error('Cannot determine MoonBit build directory.');
     }
+    const primaryMode: BuildMode = isBuild ? 'release' : 'debug';
+    if (!targetDir) {
+      targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rabbita-vite-'));
+    }
+    runMoonBuild(primaryMode, moonBuildCwd, targetDir, mainPkgDir ? '.' : undefined);
+
+    const buildDir = path.join(targetDir, 'js', primaryMode, 'build');
+    const output = findJsOutput(
+      buildDir,
+      mainPkgDir ? undefined : legacyMainPackagePath,
+      Boolean(mainPkgDir),
+    );
 
     if (!output) {
       throw new Error(
-        `Cannot locate generated JS output under ${buildRoots.map(root => `"${root}"`).join(', ')}. `
+        `Cannot locate generated JS output under "${targetDir}". `
         + 'Please verify your MoonBit main package and build artifacts.',
       );
+    }
+
+    const relativeJsPath = normalizePathLike(path.relative(buildDir, output.jsPath));
+    if (output.jsPath !== latestLoggedJsPath) {
+      const reason = mainPkgDir
+        ? `mainPkgDir "${mainPkgDir}"`
+        : legacyMainPackagePath
+          ? `deprecated main "${legacyMainPackagePath}"`
+          : 'unique generated JS output';
+      console.log(
+        `[vite-plugin-rabbita] selected ${relativeJsPath} (${reason})`,
+      );
+      latestLoggedJsPath = output.jsPath;
     }
 
     latestOutput = output;
@@ -347,13 +274,11 @@ export function rabbita(options: RabbitaOptions = {}): Plugin {
   }
 
   function ensureOutput(): JsOutput {
-    if (!latestOutput) {
-      return runMoonbitBuild();
-    }
-    if (!fs.existsSync(latestOutput.jsPath)) {
-      return runMoonbitBuild();
-    }
-    if (latestOutput.sourceMapPath && !fs.existsSync(latestOutput.sourceMapPath)) {
+    if (
+      !latestOutput
+      || !fs.existsSync(latestOutput.jsPath)
+      || (latestOutput.sourceMapPath && !fs.existsSync(latestOutput.sourceMapPath))
+    ) {
       return runMoonbitBuild();
     }
     return latestOutput;
@@ -397,43 +322,57 @@ export function rabbita(options: RabbitaOptions = {}): Plugin {
     name: 'vite-plugin-rabbita',
     enforce: 'pre',
 
-    config(_, { command }) {
+    config(config, { command }) {
       isBuild = command === 'build';
+      if (isBuild || config.server?.watch === null) {
+        return;
+      }
+
+      const watch: WatchOptions = config.server?.watch ?? {};
+      const ignored = watch.ignored
+        ? Array.isArray(watch.ignored) ? watch.ignored : [watch.ignored]
+        : [];
+
+      return {
+        server: {
+          watch: {
+            ...watch,
+            ignored: [
+              ...ignored,
+              ...WATCH_IGNORED_DIRS,
+            ],
+          },
+        },
+      };
     },
 
     configResolved(config) {
-      ensureProject(config.root);
+      const configDir = typeof config.configFile === 'string' ? path.dirname(config.configFile) : process.cwd();
+      if (mainPkgDir) {
+        const packageDir = resolveInsideConfigDir(configDir, mainPkgDir, 'mainPkgDir');
+        if (!fs.existsSync(packageDir) || !fs.statSync(packageDir).isDirectory()) {
+          throw new Error(`mainPkgDir must point to a directory: "${packageDir}"`);
+        }
+        moonBuildCwd = packageDir;
+      } else {
+        const buildCwd = options.moonModDir
+          ? resolveInsideConfigDir(configDir, options.moonModDir, 'moonModDir')
+          : config.root;
+        assertInsideDirectory(
+          configDir,
+          buildCwd,
+          'MoonBit build directory must point inside the Vite config directory',
+        );
+        moonBuildCwd = buildCwd;
+      }
     },
 
     buildStart() {
       try {
-        if (project) {
-          runMoonbitBuild();
-        }
+        runMoonbitBuild();
       } catch (err: any) {
         console.log('buildStart error', err);
       }
-    },
-
-    configureServer(server) {
-      const currentProject = ensureProject(server.config.root);
-      const watchTargets = [
-        path.join(currentProject.moduleRoot, '**/*.mbt'),
-        path.join(currentProject.moduleRoot, '**/*.mbti'),
-        path.join(currentProject.moduleRoot, '**/moon.pkg'),
-        path.join(currentProject.moduleRoot, '**/moon.pkg.json'),
-        path.join(currentProject.moduleRoot, 'moon.mod.json'),
-      ];
-      if (currentProject.workspaceRoot) {
-        watchTargets.push(path.join(currentProject.workspaceRoot, 'moon.work'));
-      }
-      server.watcher.add(watchTargets);
-      const onFsChange = (filePath: string) => {
-        scheduleRebuild(server, filePath);
-      };
-      server.watcher.on('add', onFsChange);
-      server.watcher.on('change', onFsChange);
-      server.watcher.on('unlink', onFsChange);
     },
 
     resolveId(source) {
@@ -442,7 +381,7 @@ export function rabbita(options: RabbitaOptions = {}): Plugin {
       if (cleanSource.endsWith('.js')) {
         try {
           const needsRefresh = !entryFileName
-            || (entryFileName && cleanSource !== `/${entryFileName}` && cleanSource !== entryFileName);
+            || (cleanSource !== `/${entryFileName}` && cleanSource !== entryFileName);
           if (needsRefresh) {
             latestOutput = undefined;
           }
@@ -478,9 +417,19 @@ export function rabbita(options: RabbitaOptions = {}): Plugin {
     },
 
     handleHotUpdate({ server, file, modules }) {
+      const logger = server.config.logger
+      const relpath = path.relative(process.cwd(), file)
       if (!shouldRebuildForFile(file)) {
+        logger.info(`${relpath} changes detected. Skipped.`, {
+          clear: true,
+          timestamp: true,
+        })
         return modules;
       }
+      logger.info(`${relpath} changes detected. Reloading...`, {
+        clear: true,
+        timestamp: true,
+      })
       scheduleRebuild(server, file);
       return [];
     },

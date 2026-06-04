@@ -79,7 +79,7 @@ test "Value::to_json_string" {
 ///|
 #cfg(target="js")
 test "Value::to_json" {
-  assert_eq(json_val.to_json(), json)
+  @debug.assert_eq(json_val.to_json(), json)
 }
 
 ///|

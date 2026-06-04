@@ -19,7 +19,7 @@ pub fn Error_::cause(self : Error_) -> Value? {
 
 ///|
 #cfg(target="js")
-pub impl Show for Error_ with output(self, logger) {
+pub impl Show for Error_ with fn output(self, logger) {
   logger.write_string("@js.Error: ")
   let Error_(inner) = self
   logger.write_object(inner)

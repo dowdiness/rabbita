@@ -6,27 +6,27 @@ type MouseEvent
 ///|
 #cfg(target="js")
 pub trait IsMouseEvent: IsUIEvent {
-  as_mouse_event(Self) -> MouseEvent = _
-  get_alt_key(Self) -> Bool = _
-  get_button(Self) -> Int = _
-  get_buttons(Self) -> Int = _
-  get_client_x(Self) -> Int = _
-  get_client_y(Self) -> Int = _
-  get_ctrl_key(Self) -> Bool = _
-  get_meta_key(Self) -> Bool = _
-  get_movement_x(Self) -> Int = _
-  get_movement_y(Self) -> Int = _
-  get_offset_x(Self) -> Int = _
-  get_offset_y(Self) -> Int = _
-  get_page_x(Self) -> Int = _
-  get_page_y(Self) -> Int = _
-  get_related_target(Self) -> EventTarget = _
-  get_screen_x(Self) -> Int = _
-  get_screen_y(Self) -> Int = _
-  get_shift_key(Self) -> Bool = _
-  get_x(Self) -> Int = _
-  get_y(Self) -> Int = _
-  get_modifier_state(Self) -> Int = _
+  fn as_mouse_event(Self) -> MouseEvent = _
+  fn get_alt_key(Self) -> Bool = _
+  fn get_button(Self) -> Int = _
+  fn get_buttons(Self) -> Int = _
+  fn get_client_x(Self) -> Int = _
+  fn get_client_y(Self) -> Int = _
+  fn get_ctrl_key(Self) -> Bool = _
+  fn get_meta_key(Self) -> Bool = _
+  fn get_movement_x(Self) -> Int = _
+  fn get_movement_y(Self) -> Int = _
+  fn get_offset_x(Self) -> Int = _
+  fn get_offset_y(Self) -> Int = _
+  fn get_page_x(Self) -> Int = _
+  fn get_page_y(Self) -> Int = _
+  fn get_related_target(Self) -> EventTarget = _
+  fn get_screen_x(Self) -> Int = _
+  fn get_screen_y(Self) -> Int = _
+  fn get_shift_key(Self) -> Bool = _
+  fn get_x(Self) -> Int = _
+  fn get_y(Self) -> Int = _
+  fn get_modifier_state(Self) -> Int = _
 }
 
 ///|
@@ -43,139 +43,139 @@ pub impl IsMouseEvent for MouseEvent
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for MouseEvent with into(value) {
+pub impl @js.Cast for MouseEvent with fn into(value) {
   value |> ffi_to_mouse_event |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for MouseEvent with from(value) {
+pub impl @js.Cast for MouseEvent with fn from(value) {
   value |> js_identity
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with as_mouse_event(s) {
+impl IsMouseEvent with fn as_mouse_event(s) {
   s |> js_identity
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_alt_key(s) {
+impl IsMouseEvent with fn get_alt_key(s) {
   s |> js_identity |> ffi_mouse_event_alt_key
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_button(s) {
+impl IsMouseEvent with fn get_button(s) {
   s |> js_identity |> ffi_mouse_event_button
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_buttons(s) {
+impl IsMouseEvent with fn get_buttons(s) {
   s |> js_identity |> ffi_mouse_event_buttons
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_client_x(s) {
+impl IsMouseEvent with fn get_client_x(s) {
   s |> js_identity |> ffi_mouse_event_client_x
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_client_y(s) {
+impl IsMouseEvent with fn get_client_y(s) {
   s |> js_identity |> ffi_mouse_event_client_y
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_ctrl_key(s) {
+impl IsMouseEvent with fn get_ctrl_key(s) {
   s |> js_identity |> ffi_mouse_event_ctrl_key
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_meta_key(s) {
+impl IsMouseEvent with fn get_meta_key(s) {
   s |> js_identity |> ffi_mouse_event_meta_key
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_movement_x(s) {
+impl IsMouseEvent with fn get_movement_x(s) {
   s |> js_identity |> ffi_mouse_event_movement_x
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_movement_y(s) {
+impl IsMouseEvent with fn get_movement_y(s) {
   s |> js_identity |> ffi_mouse_event_movement_y
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_offset_x(s) {
+impl IsMouseEvent with fn get_offset_x(s) {
   s |> js_identity |> ffi_mouse_event_offset_x
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_offset_y(s) {
+impl IsMouseEvent with fn get_offset_y(s) {
   s |> js_identity |> ffi_mouse_event_offset_y
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_page_x(s) {
+impl IsMouseEvent with fn get_page_x(s) {
   s |> js_identity |> ffi_mouse_event_page_x
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_page_y(s) {
+impl IsMouseEvent with fn get_page_y(s) {
   s |> js_identity |> ffi_mouse_event_page_y
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_related_target(s) {
+impl IsMouseEvent with fn get_related_target(s) {
   s |> js_identity |> ffi_mouse_event_related_target
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_screen_x(s) {
+impl IsMouseEvent with fn get_screen_x(s) {
   s |> js_identity |> ffi_mouse_event_screen_x
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_screen_y(s) {
+impl IsMouseEvent with fn get_screen_y(s) {
   s |> js_identity |> ffi_mouse_event_screen_y
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_shift_key(s) {
+impl IsMouseEvent with fn get_shift_key(s) {
   s |> js_identity |> ffi_mouse_event_shift_key
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_x(s) {
+impl IsMouseEvent with fn get_x(s) {
   s |> js_identity |> ffi_mouse_event_x
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_y(s) {
+impl IsMouseEvent with fn get_y(s) {
   s |> js_identity |> ffi_mouse_event_y
 }
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with get_modifier_state(s) {
+impl IsMouseEvent with fn get_modifier_state(s) {
   s |> js_identity |> ffi_mouse_event_modifier_state
 }
 

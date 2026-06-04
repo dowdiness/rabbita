@@ -6,23 +6,23 @@ type Element
 ///|
 #cfg(target="js")
 pub trait IsElement: IsNode {
-  as_element(Self) -> Element = _
-  get_children(Self) -> Array[Element] = _
-  set_attribute(Self, String, String) -> Unit = _
-  get_attribute(Self, String) -> String = _
-  remove_attribute(Self, String) -> Unit = _
-  set_property(Self, String, @js.Value) -> Unit = _
-  get_property(Self, String) -> @js.Optional[String] = _
-  remove_property(Self, String) -> Unit = _
-  scroll_into_view(Self, behavior? : String) -> Unit = _
-  get_scroll_top(Self) -> Double = _
-  set_scroll_top(Self, Double) -> Unit = _
-  get_scroll_left(Self) -> Double = _
-  set_scroll_left(Self, Double) -> Unit = _
-  get_scroll_width(Self) -> Double = _
-  get_scroll_height(Self) -> Double = _
-  set_inner_html(Self, String) -> Unit = _
-  get_bounding_client_rect(Self) -> DOMRect = _
+  fn as_element(Self) -> Element = _
+  fn get_children(Self) -> Array[Element] = _
+  fn set_attribute(Self, String, String) -> Unit = _
+  fn get_attribute(Self, String) -> String = _
+  fn remove_attribute(Self, String) -> Unit = _
+  fn set_property(Self, String, @js.Value) -> Unit = _
+  fn get_property(Self, String) -> @js.Optional[String] = _
+  fn remove_property(Self, String) -> Unit = _
+  fn scroll_into_view(Self, behavior? : String) -> Unit = _
+  fn get_scroll_top(Self) -> Double = _
+  fn set_scroll_top(Self, Double) -> Unit = _
+  fn get_scroll_left(Self) -> Double = _
+  fn set_scroll_left(Self, Double) -> Unit = _
+  fn get_scroll_width(Self) -> Double = _
+  fn get_scroll_height(Self) -> Double = _
+  fn set_inner_html(Self, String) -> Unit = _
+  fn get_bounding_client_rect(Self) -> DOMRect = _
 }
 
 ///|
@@ -31,13 +31,13 @@ pub impl IsEventTarget for Element
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for Element with into(value) {
+pub impl @js.Cast for Element with fn into(value) {
   value |> ffi_to_element |> y => { y.to_option() }
 }
 
 ///|
 #cfg(target="js")
-pub impl @js.Cast for Element with from(value) {
+pub impl @js.Cast for Element with fn from(value) {
   value |> js_identity
 }
 
@@ -51,55 +51,55 @@ pub impl IsElement for Element
 
 ///|
 #cfg(target="js")
-impl IsElement with as_element(s) {
+impl IsElement with fn as_element(s) {
   js_identity(s)
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with get_children(s) {
+impl IsElement with fn get_children(s) {
   s |> js_identity |> ffi_element_children
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with set_attribute(s, attr, value) {
+impl IsElement with fn set_attribute(s, attr, value) {
   s |> js_identity |> ffi_element_set_attribute(attr, value)
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with get_attribute(s, attr) {
+impl IsElement with fn get_attribute(s, attr) {
   s |> js_identity |> ffi_element_get_attribute(attr)
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with remove_attribute(s, attr) {
+impl IsElement with fn remove_attribute(s, attr) {
   s |> js_identity |> ffi_element_remove_attribute(attr)
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with set_property(s, prop, value) {
+impl IsElement with fn set_property(s, prop, value) {
   s |> js_identity |> ffi_element_set_property(prop, value)
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with get_property(s, prop) {
+impl IsElement with fn get_property(s, prop) {
   s |> js_identity |> ffi_element_get_property(prop)
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with remove_property(s, prop) {
+impl IsElement with fn remove_property(s, prop) {
   s |> js_identity |> ffi_element_remove_property(prop)
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with scroll_into_view(s, behavior?) {
+impl IsElement with fn scroll_into_view(s, behavior?) {
   let behavior = match behavior {
     Some(behavior) => behavior
     None => "auto"
@@ -109,49 +109,49 @@ impl IsElement with scroll_into_view(s, behavior?) {
 
 ///|
 #cfg(target="js")
-impl IsElement with get_scroll_top(s) {
+impl IsElement with fn get_scroll_top(s) {
   s |> js_identity |> ffi_element_get_scroll_top
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with set_scroll_top(s, value) {
+impl IsElement with fn set_scroll_top(s, value) {
   s |> js_identity |> ffi_element_set_scroll_top(value)
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with get_scroll_left(s) {
+impl IsElement with fn get_scroll_left(s) {
   s |> js_identity |> ffi_element_get_scroll_left
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with set_scroll_left(s, value) {
+impl IsElement with fn set_scroll_left(s, value) {
   s |> js_identity |> ffi_element_set_scroll_left(value)
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with get_scroll_width(s) {
+impl IsElement with fn get_scroll_width(s) {
   s |> js_identity |> ffi_element_get_scroll_width
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with get_scroll_height(s) {
+impl IsElement with fn get_scroll_height(s) {
   s |> js_identity |> ffi_element_get_scroll_height
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with set_inner_html(s, html) {
+impl IsElement with fn set_inner_html(s, html) {
   s |> js_identity |> ffi_element_set_inner_html(html)
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with get_bounding_client_rect(s) {
+impl IsElement with fn get_bounding_client_rect(s) {
   s |> js_identity |> ffi_element_get_bounding_client_rect
 }
 
