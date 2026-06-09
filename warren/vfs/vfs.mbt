@@ -1,5 +1,5 @@
 ///|
-using @path {type SourcePath, type Path}
+using @path {type SourcePath}
 
 ///|
 pub(all) enum VirtualFs {
@@ -31,7 +31,7 @@ pub fn VirtualFileSystem::mount(
   path : String,
   vfs : VirtualFs,
 ) -> Unit {
-  let parts = Path::join("/", "\{path}").normalize().0
+  let parts = path
     .split("/")
     .map(part => part.to_owned())
     .filter(part => part != "")
@@ -63,7 +63,7 @@ pub fn VirtualFileSystem::mount(
 
 ///|
 pub fn VirtualFileSystem::unmount(self : Self, path : String) -> Unit {
-  let parts = Path::join("/", "\{path}").normalize().0
+  let parts = path
     .split("/")
     .map(part => part.to_owned())
     .filter(part => part != "")
@@ -107,7 +107,7 @@ pub fn VirtualFileSystem::clear(self : Self) -> Unit {
 
 ///|
 pub async fn VirtualFileSystem::read(self : Self, path : String) -> String? {
-  let parts = Path::join("/", "\{path}").normalize().0
+  let parts = path
     .split("/")
     .map(part => part.to_owned())
     .filter(part => part != "")
