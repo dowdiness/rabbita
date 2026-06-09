@@ -157,8 +157,8 @@ async fn write_index_html(dist_dir : SourcePath) -> Unit {
     @fs.write_file(
       index_str,
       inject_build_entry_script(html),
-      create=0o644,
-      truncate=true,
+      create_mode=CreateOrTruncate,
+      permission=0o644,
     )
   } else {
     let has_stylesheet = @fs.exists(
@@ -167,8 +167,8 @@ async fn write_index_html(dist_dir : SourcePath) -> Unit {
     @fs.write_file(
       index_str,
       default_build_html(has_stylesheet),
-      create=0o644,
-      truncate=true,
+      create_mode=CreateOrTruncate,
+      permission=0o644,
     )
   }
 }

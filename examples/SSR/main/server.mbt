@@ -91,7 +91,7 @@ async fn main {
     $| </body>
     $| </html>
   let port = "8006"
-  let server = @http.Server::new(@socket.Addr::parse("0.0.0.0:\{port}"))
+  let server = @http.Server(@socket.Addr::parse("0.0.0.0:\{port}"))
   println("Listening on http://localhost:\{port} ...")
   server_main(server, path~, html~) catch {
     err => println("server terminate due to \{err}")

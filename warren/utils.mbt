@@ -15,7 +15,12 @@ pub async fn copy(src~ : SourcePath, dst~ : SourcePath) -> Unit {
     }
     let reader = @fs.open(src_str, mode=ReadOnly)
     defer reader.close()
-    let writer = @fs.open(dst_str, mode=WriteOnly, create=0o644, truncate=true)
+    let writer = @fs.open(
+      dst_str,
+      mode=WriteOnly,
+      create_mode=CreateOrTruncate,
+      permission=0o644,
+    )
     defer writer.close()
     writer.write_reader(reader)
   }
