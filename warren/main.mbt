@@ -244,20 +244,23 @@ async fn dev_server(
 
 ///|
 async fn find_js_in(dir : String) -> Array[String] {
-  let js_paths = []
-  guard @fs.exists(dir) else { js_paths }
-
-  let (reader, out) = @process.read_from_process()
-  let code = @process.run("find", [dir, "-name", "*.js"], stdout=out)
-  defer reader.close()
-  while reader.read_until("\n") is Some(line) {
-    if line != "" {
-      js_paths.push(line)
+  async fn collect_js_in(dir : String, js_paths : Array[String]) -> Unit {
+    guard @fs.kind(dir) is Directory else { return }
+    let handle = @fs.opendir(dir)
+    defer handle.close()
+    while handle.next() is Some(entry) {
+      let path = Path::join(dir, entry.name).to_string()
+      if entry.is_dir {
+        collect_js_in(path, js_paths)
+      } else if entry.name.has_suffix(".js") {
+        js_paths.push(path)
+      }
     }
   }
-  if code != 0 {
-    log("warn", "`find \{dir} -name '*.js'` exited with code \{code}")
-  }
+
+  let js_paths = []
+  guard @fs.exists(dir) else { js_paths }
+  collect_js_in(dir, js_paths)
   js_paths
 }
 
