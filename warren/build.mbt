@@ -213,7 +213,10 @@ async fn minify_or_copy_js(
 }
 
 ///|
-pub async fn build_project(main_pkg_dir : SourcePath) -> Unit {
+pub async fn build_project(
+  main_pkg_dir : SourcePath,
+  dist_dir? : SourcePath,
+) -> Unit {
   let main_pkg_dir_str = source_path_to_string(main_pkg_dir)
   let mod_root = if Path::basename(main_pkg_dir_str) == "main" {
     SourcePath::new(Path::dirname(main_pkg_dir_str).to_string())
@@ -221,7 +224,7 @@ pub async fn build_project(main_pkg_dir : SourcePath) -> Unit {
     main_pkg_dir
   }
   let target_dir = SourcePath::new(@fs.tmpdir(prefix="warren"))
-  let dist_dir = mod_root.join("dist")
+  let dist_dir = dist_dir.unwrap_or(mod_root.join("dist"))
   let public_dir = mod_root.join("public")
 
   run_release_build(main_pkg_dir, target_dir)

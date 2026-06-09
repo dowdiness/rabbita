@@ -6,7 +6,7 @@ import {
 }
 
 // Values
-pub async fn build_project(@path.SourcePath) -> Unit
+pub async fn build_project(@path.SourcePath, dist_dir? : @path.SourcePath) -> Unit
 
 pub async fn copy(src~ : @path.SourcePath, dst~ : @path.SourcePath) -> Unit
 

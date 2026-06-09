@@ -2,7 +2,7 @@
 
 `warren` helps you preview and build MoonBit web applications.
 
-Use it during development for a local browser preview with live reload, and use it before publishing to create a static `dist/` directory.
+Use it during development for a local browser preview with live reload, and use it before publishing to create a static output directory.
 
 ## Install
 
@@ -56,7 +56,14 @@ You can also pass the main package directory explicitly:
 warren build path/to/main
 ```
 
-The build output is written to `dist/` next to the app directory. If `public/` exists, its contents are copied into `dist/`.
+The build output is written to `./dist` by default. You can choose another output path:
+
+```sh
+warren build --dist path/to/dist
+warren build path/to/main --dist path/to/dist
+```
+
+If `public/` exists next to the app directory, its contents are copied into the output directory.
 
 `warren build` tries to compress the generated JavaScript with `terser`.
 If `terser` is not available, it falls back to the uncompressed release JS.

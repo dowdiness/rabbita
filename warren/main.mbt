@@ -73,7 +73,10 @@ async fn main {
             about="Main package directory to build. Defaults to ./main when present, otherwise the current directory.",
           ),
         ],
-        about="Build a release static site into dist/.",
+        options=[
+          OptionArg("dist", about="Build output directory. Default: ./dist."),
+        ],
+        about="Build a release static site into ./dist by default.",
       ),
     ],
     about="Preview and build MoonBit web applications.",
@@ -123,7 +126,14 @@ async fn main {
         _ if @fs.exists(cwd_main) => cwd_main
         _ => cwd
       }
-      build_project(SourcePath::new(main_pkg_dir))
+      let dist_dir = match submatches.values.get("dist") {
+        Some([path]) => Path::resolve(path).to_string()
+        _ => Path::join(cwd, "dist").to_string()
+      }
+      build_project(
+        SourcePath::new(main_pkg_dir),
+        dist_dir=SourcePath::new(dist_dir),
+      )
     }
     _ => ()
   }
