@@ -65,99 +65,6 @@ fn default_build_html(has_stylesheet : Bool) -> String {
 }
 
 ///|
-fn is_within_path(root : SourcePath, path : SourcePath) -> Bool {
-  let relative = path.relative(root)
-  relative == "." ||
-  relative == "" ||
-  !(relative == ".." ||
-  relative.has_prefix("../") ||
-  relative.has_prefix("..\\"))
-}
-
-///|
-fn select_workspace_member(
-  work : @discover.MoonWork,
-  cwd : SourcePath,
-) -> @discover.MoonMod? {
-  let mut selected = None
-  let mut selected_len = -1
-  for mod in work.members {
-    if is_within_path(mod.root, cwd) {
-      let root_len = source_path_to_string(mod.root).length()
-      if root_len > selected_len {
-        selected = Some(mod)
-        selected_len = root_len
-      }
-    }
-  }
-  selected
-}
-
-///|
-async fn resolve_module(cwd : SourcePath) -> @discover.MoonMod {
-  guard @discover.discover(source_path_to_string(cwd)) is Some(discover) else {
-    abort("Moonbit project not found in: \{cwd}")
-  }
-
-  match discover.kind {
-    MoonWork(work) => {
-      let mod = match select_workspace_member(work, cwd) {
-        Some(mod) => mod
-        None =>
-          abort(
-            "Current directory is not inside a MoonBit workspace member: \{cwd}",
-          )
-      }
-      mod
-    }
-    MoonMod(mod) => mod
-    _ => abort("`warren build` only supports MoonBit modules")
-  }
-}
-
-///|
-fn cmd_packages(mod : @discover.MoonMod) -> Array[@discover.MoonPkg] {
-  let mains = []
-  for pkg in mod.packages {
-    if pkg.kind is Cmd {
-      mains.push(pkg)
-    }
-  }
-  mains
-}
-
-///|
-fn require_single_main_package(mod : @discover.MoonMod) -> @discover.MoonPkg {
-  let mains = cmd_packages(mod)
-  match mains.length() {
-    0 => abort("Main package not found for module \{mod.name}")
-    1 => mains[0]
-    _ => {
-      let names = []
-      for pkg in mains {
-        names.push(source_path_to_string(pkg.root))
-      }
-      let joined_names = names.join(", ")
-      abort(
-        "Multiple main packages found for module \{mod.name}: \{joined_names}",
-      )
-    }
-  }
-}
-
-///|
-fn find_release_js(pkg : @discover.MoonPkg) -> SourcePath {
-  guard pkg.artifacts.get((Js, Release, Build)) is Some(artifacts) else {
-    abort("Release JS build artifacts not found for package \{pkg.name}")
-  }
-  guard artifacts.iter().find_first(entry => entry.0.has_suffix(".js"))
-    is Some((_, path)) else {
-    abort("Release JS artifact not found for package \{pkg.name}")
-  }
-  path
-}
-
-///|
 async fn ensure_clean_dir(path : SourcePath) -> Unit {
   let path_str = source_path_to_string(path)
   if @fs.exists(path_str) {
@@ -183,19 +90,26 @@ async fn copy_dir_contents(src : SourcePath, dst : SourcePath) -> Unit {
 }
 
 ///|
-async fn run_release_build(mod_root : SourcePath) -> Unit {
-  let args = ["build", "--target", "js", "--release"]
+async fn run_release_build(
+  main_pkg_dir : SourcePath,
+  target_dir : SourcePath,
+) -> Unit {
+  let args = [
+    "build",
+    source_path_to_string(main_pkg_dir),
+    "--target",
+    "js",
+    "--release",
+    "--target-dir",
+    source_path_to_string(target_dir),
+  ]
   let command = args.join(" ")
-  log("build", "Running `moon \{command}` on \{mod_root}")
-  let exit_code = try
-    @process.run("moon", args, cwd=source_path_to_string(mod_root))
-  catch {
+  log("build", "Running `moon \{command}`")
+  let exit_code = @process.run("moon", args) catch {
     err => abort("Failed to run `moon build`: \{err}")
-  } noraise {
-    code => code
   }
   guard exit_code == 0 else {
-    abort("`moon build --target js --release` exited with code \{exit_code}")
+    abort("`moon \{command}` exited with code \{exit_code}")
   }
 }
 
@@ -243,8 +157,8 @@ async fn write_index_html(dist_dir : SourcePath) -> Unit {
     @fs.write_file(
       index_str,
       inject_build_entry_script(html),
-      create=0o644,
-      truncate=true,
+      create_mode=CreateOrTruncate,
+      permission=0o644,
     )
   } else {
     let has_stylesheet = @fs.exists(
@@ -253,8 +167,8 @@ async fn write_index_html(dist_dir : SourcePath) -> Unit {
     @fs.write_file(
       index_str,
       default_build_html(has_stylesheet),
-      create=0o644,
-      truncate=true,
+      create_mode=CreateOrTruncate,
+      permission=0o644,
     )
   }
 }
@@ -299,18 +213,34 @@ async fn minify_or_copy_js(
 }
 
 ///|
-pub async fn build_project(cwd : SourcePath) -> Unit {
-  let mod = resolve_module(cwd)
-  ignore(require_single_main_package(mod))
-
-  let mod_root = mod.root
-  let dist_dir = mod_root.join("dist")
+pub async fn build_project(
+  main_pkg_dir : SourcePath,
+  dist_dir? : SourcePath,
+) -> Unit {
+  let main_pkg_dir_str = source_path_to_string(main_pkg_dir)
+  let mod_root = if Path::basename(main_pkg_dir_str) == "main" {
+    SourcePath::new(Path::dirname(main_pkg_dir_str).to_string())
+  } else {
+    main_pkg_dir
+  }
+  let target_dir = SourcePath::new(@fs.tmpdir(prefix="warren"))
+  let dist_dir = dist_dir.unwrap_or(mod_root.join("dist"))
   let public_dir = mod_root.join("public")
 
-  run_release_build(mod_root)
-
-  let built_mod = resolve_module(mod_root)
-  let release_js = find_release_js(require_single_main_package(built_mod))
+  run_release_build(main_pkg_dir, target_dir)
+  let build_dir = Path::join(
+    source_path_to_string(target_dir),
+    "js/release/build",
+  ).to_string()
+  let js_paths = find_js_in(build_dir)
+  let release_js = match js_paths {
+    [js_path] => SourcePath::new(js_path)
+    [] => abort("Release JS artifact not found under \{build_dir}")
+    _ =>
+      abort(
+        "Found multiple release JS artifacts: \{to_repr(js_paths)}. Use `warren build path/to/main/package/dir` to choose one entry.",
+      )
+  }
 
   ensure_clean_dir(dist_dir)
   if @fs.exists(source_path_to_string(public_dir)) {

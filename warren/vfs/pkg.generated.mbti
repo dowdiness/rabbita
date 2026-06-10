@@ -3,6 +3,7 @@ package "moonbit-community/warren/vfs"
 
 import {
   "moonbit-community/warren/path",
+  "moonbitlang/core/debug",
 }
 
 // Values
@@ -10,7 +11,7 @@ import {
 // Errors
 
 // Types and methods
-type VirtualFileSystem
+type VirtualFileSystem derive(@debug.Debug)
 pub fn VirtualFileSystem::clear(Self) -> Unit
 pub fn VirtualFileSystem::mount(Self, String, VirtualFs) -> Unit
 #as_free_fn
@@ -23,7 +24,7 @@ pub(all) enum VirtualFs {
   FileMapping(@path.SourcePath)
   DirectoryContent(Map[String, VirtualFs])
   FileContent(String)
-}
+} derive(@debug.Debug)
 
 // Type aliases
 

@@ -1,18 +1,12 @@
 import {
-  "moonbitlang/async/fs",
+  "moonbitlang/async/socket",
+  "moonbitlang/async/http",
+  "moonbitlang/async/websocket",
   "moonbitlang/async/process",
   "moonbitlang/async",
-  "moonbitlang/core/argparse",
-  "moonbitlang/core/env",
-  "moonbitlang/core/string",
   "moonbit-community/warren/log",
   "moonbit-community/warren/path",
   "moonbit-community/warren/vfs",
-  "moonbit-community/warren/devhub",
 }
 
 supported_targets = "native"
-
-options(
-  "is-main": true,
-)

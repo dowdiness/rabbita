@@ -1,5 +1,11 @@
 ///|
-using @path {type SourcePath}
+using @path {type SourcePath, type Path}
+
+///|
+using @devhub {type BroadcastMsg, type Devhub}
+
+///|
+using @string {parse_int}
 
 ///|
 let html_template =
@@ -24,27 +30,111 @@ let html_patch =
 
 ///|
 let dev_script =
-  #|const es = new EventSource("/__warren/events");
-  #|es.addEventListener("reload", () => location.reload());
+  #|let warrenSocket;
+  #|function connectWarrenDevSocket() {
+  #|  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  #|  warrenSocket = new WebSocket(`${protocol}//${location.host}/__warren/events`);
+  #|  warrenSocket.addEventListener("message", event => {
+  #|    if (event.data === "reload") location.reload();
+  #|  });
+  #|  warrenSocket.addEventListener("close", () => {
+  #|    setTimeout(connectWarrenDevSocket, 1000);
+  #|  });
+  #|}
+  #|connectWarrenDevSocket();
 
 ///|
 async fn main {
-  let cmd = @argparse.Command("warren", subcommands=[
-    @argparse.Command("dev"),
-    @argparse.Command("build"),
-  ])
-  let cli = cmd.parse()
+  let cli = @argparse.Command(
+    "warren",
+    subcommands=[
+      Command(
+        "dev",
+        positionals=[
+          PositionArg(
+            "main-package-dir",
+            about="Main package directory. Defaults to ./main when present, otherwise the current directory.",
+          ),
+        ],
+        options=[
+          OptionArg(
+            "public-dir",
+            about="Static files directory. Defaults to ./public when present.",
+          ),
+          OptionArg("port", about="Local preview server port. Default: 4300."),
+        ],
+        about="Start a local preview server with live reload.",
+      ),
+      Command(
+        "build",
+        positionals=[
+          PositionArg(
+            "main-package-dir",
+            about="Main package directory to build. Defaults to ./main when present, otherwise the current directory.",
+          ),
+        ],
+        options=[
+          OptionArg("dist", about="Build output directory. Default: ./dist."),
+        ],
+        about="Build a release static site into ./dist by default.",
+      ),
+    ],
+    about="Preview and build MoonBit web applications.",
+  ).parse()
   let cwd = @env.current_dir().unwrap()
-  guard cli.subcommand is Some((subcmd, _)) else { return }
+  guard cli.subcommand is Some((subcmd, submatches)) else { return }
   match subcmd {
     "dev" => {
-      guard @discover.discover(cwd) is Some(_) else {
-        abort("Moonbit project not found in: \{cwd}")
+      let cwd_main = Path::join(cwd, "main").to_string()
+      let main_pkg_dir = match submatches.values.get("main-package-dir") {
+        Some([path]) => Path::resolve(path).to_string()
+        _ if @fs.exists(cwd_main) => cwd_main
+        _ => cwd
       }
+      let cwd_public = Path::join(cwd, "public").to_string()
+      let public_dir = match submatches.values.get("public-dir") {
+        Some([path]) => Some(Path::resolve(path).to_string())
+        _ if @fs.exists(cwd_public) => Some(cwd_public)
+        _ => None
+      }
+      let port = match submatches.values.get("port") {
+        Some([raw]) => {
+          let port = parse_int(raw) catch {
+            _ =>
+              abort(
+                "Invalid --port value `\{raw}`. Expected a number from 1 to 65535.",
+              )
+          }
 
-      dev_server(SourcePath::new(cwd))
+          guard port > 0 && port <= 65535 else {
+            abort(
+              "Invalid --port value `\{raw}`. Expected a number from 1 to 65535.",
+            )
+          }
+
+          port.reinterpret_as_uint()
+        }
+        _ => 4300U
+      }
+      let target_dir = @fs.tmpdir(prefix="warren")
+      dev_server(main_pkg_dir~, target_dir~, public_dir~, port~)
     }
-    "build" => build_project(SourcePath::new(cwd))
+    "build" => {
+      let cwd_main = Path::join(cwd, "main").to_string()
+      let main_pkg_dir = match submatches.values.get("main-package-dir") {
+        Some([path]) => Path::resolve(path).to_string()
+        _ if @fs.exists(cwd_main) => cwd_main
+        _ => cwd
+      }
+      let dist_dir = match submatches.values.get("dist") {
+        Some([path]) => Path::resolve(path).to_string()
+        _ => Path::join(cwd, "dist").to_string()
+      }
+      build_project(
+        SourcePath::new(main_pkg_dir),
+        dist_dir=SourcePath::new(dist_dir),
+      )
+    }
     _ => ()
   }
 }
@@ -64,206 +154,114 @@ async fn inject_html(path : SourcePath, vfs : @vfs.VirtualFileSystem) -> Unit {
 }
 
 ///|
-type Mtime = (Int64, Int)
+async fn dev_server(
+  main_pkg_dir~ : String,
+  target_dir~ : String,
+  public_dir~ : String?,
+  port~ : UInt,
+) -> Unit {
+  let watcher = @fs.Watcher(main_pkg_dir, ignored_paths=path => {
+    path.contains(".mooncakes") ||
+    path.contains("node_modules") ||
+    path.contains("_build")
+  })
 
-///|
-struct Model {
-  event_queue : @async.Queue[DevEvent]
-  cwd : SourcePath
-  vfs : @vfs.VirtualFileSystem?
-  dist : Dist?
-}
-
-///|
-struct Dist {
-  js : (SourcePath, Mtime)
-  js_map : (SourcePath, Mtime)?
-  public_dir : (SourcePath, Mtime, Array[String])?
-} derive(Eq)
-
-///|
-enum Msg {
-  DetectChanges
-  FreshBuild
-}
-
-///|
-async fn update(model : Model, msg : Msg) -> Model {
-  async fn get_layout(cwd : SourcePath) -> Dist? {
-    guard @discover.discover(cwd.to_string()) is Some(discover) else {
-      log("fatal", "No projects found in \{cwd}, it could be moved.")
-      None
-    }
-    match discover.kind {
-      MoonWork(work) => {
-        guard work.members.iter().find_first(x => x.root == cwd) is Some(mod) else {
-          log("fatal", "Module not found in workspace")
-          None
-        }
-
-        // find main package
-        guard mod.packages.iter().find_first(x => x.kind is Cmd) is Some(main) else {
-          log("fatal", "Main package not found for module \{mod.name}")
-          None
-        }
-
-        // find dist
-        let artifacts = main.artifacts
-          .get((Js, Debug, Build))
-          .map(dist => {
-            (
-              dist.iter().find_first(p => p.0.has_suffix(".js")),
-              dist.iter().find_first(p => p.0.has_suffix(".js.map")),
-            )
-          })
-
-        guard artifacts is Some((Some((_, js_path)), Some((_, js_map_path)))) else {
-          log("warn", "Build artifacts *.js and *.js.map not found")
-          None
-        }
-
-        let js = (js_path, (0L, 0))
-        let js_map = Some((js_map_path, (0L, 0)))
-        let assume_public_dir = mod.root.join("public")
-        let public_dir = if @fs.exists(assume_public_dir.to_string()) {
-          Some((assume_public_dir, (0L, 0), []))
-        } else {
-          None
-        }
-        Some({ js, js_map, public_dir })
-      }
-      MoonMod(mod) => {
-        // find main package
-        guard mod.packages.iter().find_first(x => x.kind is Cmd) is Some(main) else {
-          log("fatal", "Main package not found for module \{mod.name}")
-          None
-        }
-
-        // find dist
-        let artifacts = main.artifacts
-          .get((Js, Debug, Build))
-          .map(dist => {
-            (
-              dist.iter().find_first(p => p.0.has_suffix(".js")),
-              dist.iter().find_first(p => p.0.has_suffix(".js.map")),
-            )
-          })
-
-        guard artifacts is Some((Some((_, js_path)), Some((_, js_map_path)))) else {
-          log("warn", "Build artifacts *.js and *.js.map not found")
-          None
-        }
-
-        let js = (js_path, (0L, 0))
-        let js_map = Some((js_map_path, (0L, 0)))
-        let assume_public_dir = mod.root.join("public")
-        let public_dir = if @fs.exists(assume_public_dir.to_string()) {
-          Some((assume_public_dir, (0L, 0), []))
-        } else {
-          None
-        }
-        Some({ js, js_map, public_dir })
-      }
-      _ => abort("unsupported project")
-    }
-  }
-
-  async fn validate_dist(dist : Dist) -> Bool {
-    let { js, public_dir, .. } = dist
-    if !@fs.exists(js.0.to_string()) ||
-      (public_dir is Some((dir, _, _)) && !@fs.exists(dir.to_string())) {
-      false
-    } else {
-      true
-    }
-  }
-
-  async fn check_dist(dist : Dist) -> Dist {
-    let { js, public_dir, .. } = dist
-    // detect changes and update
-    let next_js = (js.0, @fs.mtime(js.0.to_string()))
-    let next_public_dir = if public_dir is Some((path, _, _)) {
-      Some((path, @fs.mtime(path.to_string()), @fs.readdir(path.to_string())))
-    } else {
-      None
-    }
-
-    // reload page if *.js or public/ changed
-    if next_js != js || next_public_dir != public_dir {
-      log("dev", "Changes detected. Reloading page...")
-      model.event_queue.put(Reload)
-    }
-    { ..dist, js: next_js, public_dir: next_public_dir }
-  }
-
-  async fn generate_vfs(dist : Dist) -> @vfs.VirtualFileSystem {
-    let vfs = @vfs.new({})
-    vfs.mount("/warren_dev.js", FileContent(dev_script))
-    vfs.mount("/index.js", FileMapping(dist.js.0))
-    if dist.js_map is Some((p, _)) {
-      vfs.mount("/index.js.map", FileMapping(p))
-    }
-    if dist.public_dir is Some((dir, _, files)) {
-      for file in files {
-        vfs.mount("/\{file}", FileMapping(dir.join(file)))
-      }
-      if files.contains("index.html") {
-        inject_html(dir.join("index.html"), vfs)
-      } else {
-        vfs.mount("/index.html", FileContent(html_template))
-      }
+  let vfs = @vfs.new({})
+  if public_dir is Some(dir) {
+    vfs.mount("/", DirectoryMapping(SourcePath::new(dir)))
+    let files = @fs.readdir(dir)
+    if files.contains("index.html") {
+      inject_html(
+        SourcePath::new(Path::join(dir, "index.html").to_string()),
+        vfs,
+      )
     } else {
       vfs.mount("/index.html", FileContent(html_template))
     }
-    vfs
   }
+  vfs.mount("/warren_dev.js", FileContent(dev_script))
 
-  match msg {
-    FreshBuild => {
-      let dist = match get_layout(model.cwd) {
-        None => None
-        Some(x) => Some(check_dist(x))
-      }
-      { ..model, dist, }
-    }
-    DetectChanges => {
-      let dist = if model.dist is Some(dist) && validate_dist(dist) {
-        Some(check_dist(dist))
-      } else {
-        match get_layout(model.cwd) {
-          None => None
-          Some(x) => Some(check_dist(x))
+  @async.with_task_group <| group => {
+    let hub = Devhub(port, vfs)
+    group.spawn_bg(no_wait=true, allow_failure=true, () => hub.run_forever())
+    log("info", "Running server on http://127.0.0.1:\{hub.port()}")
+
+    while true {
+      let (reader, out) = @process.read_from_process()
+      let (stdin, close_stdin) = @process.write_to_process()
+      close_stdin.close()
+      @fs.rmdir(target_dir, recursive=true)
+      let code = @process.run(
+        "moon",
+        ["build", main_pkg_dir, "--target", "js", "--target-dir", target_dir],
+        stdin~,
+        stdout=out,
+        stderr=out,
+      )
+
+      defer reader.close()
+      while reader.read_until("\n") is Some(line) {
+        if line != "" {
+          log("moon", line)
         }
       }
-      let vfs = match dist {
-        None => None
-        Some(x) => Some(generate_vfs(x))
+
+      if code == 0 {
+        log("warren", "moon build succeed at \{main_pkg_dir}.")
+        let js_paths = find_js_in(
+          Path::join(target_dir, "js/debug/build").to_string(),
+        )
+        guard js_paths is [js_path] else {
+          log("error", "found multiple entries: \{to_repr(js_paths)}")
+          log(
+            "info", "Use `warren dev path/to/main/package/dir` to choose one entry.",
+          )
+        }
+
+        let basename = Path::basename(js_path)
+        let js_map_path = Path::dirname(js_path)
+          .join("\{basename}.map")
+          .to_string()
+
+        if @fs.exists(js_map_path) {
+          vfs.mount("index.js.map", FileMapping(SourcePath::new(js_map_path)))
+        } else {
+          vfs.unmount("index.js.map")
+        }
+
+        vfs.mount("index.js", FileMapping(SourcePath::new(js_path)))
+        // debug(vfs)
+        hub.broadcast(BroadcastMsg::Reload)
+        log("warren", "Changes detected. Reloading...")
+      } else {
+        log("error", "moon exited with code \{code}.")
       }
-      { ..model, dist, vfs }
+
+      watcher.wait_any()
     }
   }
 }
 
 ///|
-async fn dev_server(dir : SourcePath) -> Unit {
-  guard @fs.exists(dir.to_string()) else { abort("Dir \{dir} is no exists.") }
-
-  let mut model = {
-    event_queue: @async.Queue::new(kind=Unbounded),
-    cwd: dir,
-    vfs: None,
-    dist: None,
+async fn find_js_in(dir : String) -> Array[String] {
+  async fn collect_js_in(dir : String, js_paths : Array[String]) -> Unit {
+    guard @fs.kind(dir) is Directory else { return }
+    let handle = @fs.opendir(dir)
+    defer handle.close()
+    while handle.next() is Some(entry) {
+      let path = Path::join(dir, entry.name).to_string()
+      if entry.is_dir {
+        collect_js_in(path, js_paths)
+      } else if entry.name.has_suffix(".js") {
+        js_paths.push(path)
+      }
+    }
   }
-  model = update(model, FreshBuild)
-  @async.with_task_group(group => {
-    run_moon_build_watch(group, dir, target=Js, build=Debug)
 
-    group.spawn_loop(() => {
-      model = update(model, DetectChanges)
-      @async.sleep(10)
-    })
-    serve(() => model.event_queue, () => model.vfs.unwrap_or(@vfs.new({})))
-  })
+  let js_paths = []
+  guard @fs.exists(dir) else { js_paths }
+  collect_js_in(dir, js_paths)
+  js_paths
 }
 
 ///|

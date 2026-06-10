@@ -1,8 +1,0 @@
-import {
-  "moonbitlang/async",
-  "moonbitlang/core/debug",
-  "moonbitlang/core/json",
-  "moonbitlang/parser/pkg_parser",
-}
-
-supported_targets = "native"

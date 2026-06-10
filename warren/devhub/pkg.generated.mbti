@@ -1,0 +1,34 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/warren/devhub"
+
+import {
+  "moonbit-community/warren/vfs",
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) enum BroadcastMsg {
+  Reload
+} derive(@debug.Debug)
+
+pub(all) enum ClientMsg {
+  Text(String)
+} derive(@debug.Debug)
+
+pub struct Devhub {
+  // private fields
+}
+pub async fn Devhub::Devhub(UInt, @vfs.VirtualFileSystem) -> Self
+pub fn Devhub::broadcast(Self, BroadcastMsg) -> Unit
+pub fn Devhub::port(Self) -> Int
+pub async fn Devhub::run_forever(Self) -> Unit
+pub async fn Devhub::wait_client(Self) -> ClientMsg
+
+// Type aliases
+
+// Traits
+
