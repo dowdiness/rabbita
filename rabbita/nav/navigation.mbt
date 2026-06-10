@@ -52,7 +52,6 @@ pub fn push_url(url : String) -> Cmd {
 pub fn replace_url(url : String) -> Cmd {
   @cmd.custom_cmd(kind=Immediately, scheduler => {
     @dom.window().replace_url(url)
-    // guard (try? @url.parse(@dom.window().current_url())) is Ok(url)
     if scheduler.hooks().url_changed is Some(hook) {
       let normalized_url = @dom.window().current_url()
       hook(scheduler, normalized_url)
