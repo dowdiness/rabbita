@@ -15,16 +15,16 @@ supported_targets = "native"
 
 warnings = "-text_segment_excceed"
 
-rule(
-  name: "embed-templates",
-  command: "moon runwasm moonbit-community/embed templates -o templates_bundle.mbt --prune _build --prune .mooncakes --prune default/_build --prune default/.mooncakes --prune default/main/_build --prune default/main/.mooncakes --prune minimized/_build --prune minimized/.mooncakes",
-)
-
-dev_build(
-  input: "templates",
-  output: "templates_bundle.mbt",
-  rule: "embed-templates",
-)
+// rule(
+//   name: "embed-templates",
+//   command: "moon runwasm moonbit-community/embed $input -o output --prune _build --prune .mooncakes --prune default/_build --prune default/.mooncakes --prune default/main/_build --prune default/main/.mooncakes --prune minimized/_build --prune minimized/.mooncakes",
+// )
+// 
+// dev_build(
+//   input: "templates",
+//   output: "templates_bundle.mbt",
+//   rule: "embed-templates",
+// )
 
 options(
   "is-main": true,
