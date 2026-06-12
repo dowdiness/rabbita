@@ -2,28 +2,50 @@
 
 ///|
 let _embed_main_mbt : String =
-  #|using @rabbita { new, simple_cell }
-  #|using @html { button, div, h1 }
+  #|///|
+  #|using @html {a, button, div, h1, h2, li, text, ul}
   #|
+  #|///|
+  #|using @rabbita {new, simple_cell}
+  #|
+  #|///|
   #|enum Msg {
-  #|  Inc
-  #|  Dec
+  #|  Clicked
   #|}
   #|
+  #|///|
   #|fn main {
   #|  let app = simple_cell(
   #|    model=0,
-  #|    update=(msg, model) => match msg {
-  #|      Inc => model + 1
-  #|      Dec => model - 1
+  #|    update=(msg, count) => {
+  #|      match msg {
+  #|        Clicked => count + 1
+  #|      }
   #|    },
-  #|    view=(emit, model) => div(class="app") <| [
-  #|      h1("\{model}"),
-  #|      div(class="actions") <| [
-  #|        button(on_click=emit(Dec), "-"),
-  #|        button(on_click=emit(Inc), "+"),
-  #|      ],
-  #|    ],
+  #|    view=(emit, count) => {
+  #|      div(class="app") <| [
+  #|        h1(class="title", "Hello Rabbita"),
+  #|        div(class="lead", "You built it successfully!"),
+  #|        button(class="click-btn", on_click=emit(Clicked), "You clicked \{count} times"),
+  #|        div(class="next") <| [
+  #|          h2(class="next-title", "What's next"),
+  #|          ul(class="next-list") <| [
+  #|            li(
+  #|              "Edit a MoonBit file while the dev server runs for instant refresh.",
+  #|            ),
+  #|            li <| [
+  #|              text("Explore "),
+  #|              a(
+  #|                class="inline-link",
+  #|                target=Blank,
+  #|                href="https://github.com/moonbit-community/rabbita",
+  #|                "tutorials and examples",
+  #|              ),
+  #|            ],
+  #|          ],
+  #|        ],
+  #|      ]
+  #|    },
   #|  )
   #|  new(app).mount("app")
   #|}
@@ -61,28 +83,95 @@ let _embed_index_html : String =
 
 ///|
 let _embed_styles_css : String =
+  #|@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap");
+  #|
+  #|* {
+  #|  box-sizing: border-box;
+  #|}
+  #|
   #|body {
   #|  margin: 0;
-  #|  font-family: system-ui, sans-serif;
+  #|  min-height: 100vh;
+  #|  color: #171717;
+  #|  font-family: "Manrope", "Avenir Next", "Trebuchet MS", sans-serif;
+  #|  background:
+  #|    radial-gradient(980px 460px at 8% -10%, rgba(255, 143, 184, 0.22), transparent 72%),
+  #|    radial-gradient(1060px 560px at 100% -14%, rgba(255, 184, 219, 0.18), transparent 70%),
+  #|    #f7f9ff;
+  #|}
+  #|
+  #|#app {
+  #|  padding: 112px 20px 68px;
   #|}
   #|
   #|.app {
-  #|  display: grid;
-  #|  min-height: 100vh;
-  #|  place-content: center;
-  #|  gap: 16px;
+  #|  max-width: 700px;
+  #|  margin: 0 auto;
   #|  text-align: center;
   #|}
   #|
-  #|.actions {
-  #|  display: flex;
-  #|  justify-content: center;
-  #|  gap: 8px;
+  #|.title {
+  #|  margin: 0;
+  #|  font-size: clamp(2.15rem, 6vw, 3.2rem);
+  #|  line-height: 1.03;
   #|}
   #|
-  #|button {
-  #|  min-width: 44px;
-  #|  height: 36px;
+  #|.lead {
+  #|  margin: 12px 0 0;
+  #|  color: #6b7280;
+  #|  font-size: 1.02rem;
+  #|}
+  #|
+  #|.click-btn {
+  #|  display: block;
+  #|  width: fit-content;
+  #|  margin: 24px auto 0;
+  #|  padding: 12px 18px;
+  #|  border: 1px solid #0f0f0f;
+  #|  border-radius: 999px;
+  #|  color: #fff;
+  #|  background: #111;
+  #|  font: inherit;
+  #|  font-weight: 700;
+  #|  cursor: pointer;
+  #|  transition: transform 120ms ease, opacity 120ms ease;
+  #|}
+  #|
+  #|.click-btn:hover {
+  #|  transform: translateY(-1px);
+  #|  opacity: 0.95;
+  #|}
+  #|
+  #|.next {
+  #|  max-width: 560px;
+  #|  margin: 140px auto 0;
+  #|  color: #6b7280;
+  #|  font-size: 0.95rem;
+  #|}
+  #|
+  #|.next-title {
+  #|  margin: 0;
+  #|  font-size: 1.25rem;
+  #|}
+  #|
+  #|.next-list {
+  #|  display: inline-block;
+  #|  margin: 12px auto 0;
+  #|  padding-left: 20px;
+  #|  line-height: 1.65;
+  #|  text-align: left;
+  #|}
+  #|
+  #|.inline-link {
+  #|  color: inherit;
+  #|  text-decoration-color: #9ca3af;
+  #|  text-underline-offset: 3px;
+  #|}
+  #|
+  #|@media (max-width: 640px) {
+  #|  #app {
+  #|    padding-top: 28px;
+  #|  }
   #|}
   #|
 
