@@ -12,9 +12,40 @@ pub async fn copy(src~ : @path.SourcePath, dst~ : @path.SourcePath) -> Unit
 
 pub fn debug_log(String, String) -> Unit
 
+pub let templates : TemplatesFixture
+
 // Errors
 
 // Types and methods
+pub struct DefaultFixture {
+  main : MainFixture
+  public : PublicFixture
+  moon_mod : String
+  readme_md : String
+}
+
+pub struct MainFixture {
+  main_mbt : String
+  moon_pkg : String
+}
+
+pub struct MinimizedFixture {
+  main_mbt : String
+  moon_mod : String
+  moon_pkg : String
+}
+
+pub struct PublicFixture {
+  index_html : String
+  styles_css : String
+}
+
+type TemplateEntry
+
+pub struct TemplatesFixture {
+  default : DefaultFixture
+  minimized : MinimizedFixture
+}
 
 // Type aliases
 

@@ -1,0 +1,16 @@
+import {
+  "moonbit-community/rabbita",
+  "moonbit-community/rabbita/common",
+  "moonbit-community/rabbita/dom",
+  "moonbit-community/rabbita/html",
+  "moonbit-community/rabbita/svg",
+  "moonbit-community/rabbita/sub",
+  "moonbit-community/rabbita/url",
+  "moonbit-community/rabbita/websocket",
+}
+
+supported_targets = "js"
+
+options(
+  "is-main": true,
+)

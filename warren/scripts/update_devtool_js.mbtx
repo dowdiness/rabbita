@@ -1,0 +1,136 @@
+///|
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/fs",
+  "moonbitlang/async/process",
+  "moonbitlang/core/env",
+}
+
+///|
+fn env_or(name : String, fallback : String) -> String {
+  match @env.get_env_var(name) {
+    Some(value) => value
+    None => fallback
+  }
+}
+
+///|
+fn dirname(path : String) -> String {
+  match path.rev_find("/") {
+    Some(index) => if index == 0 { "/" } else { path[:index].to_owned() }
+    None => "."
+  }
+}
+
+///|
+fn join_path(left : String, right : String) -> String {
+  if left == "" {
+    right
+  } else if left.has_suffix("/") {
+    left + right
+  } else {
+    left + "/" + right
+  }
+}
+
+///|
+async fn is_warren_root(path : String) -> Bool {
+  @fs.exists(join_path(path, "moon.mod")) &&
+  @fs.exists(join_path(path, "moon.pkg")) &&
+  @fs.exists(join_path(path, "devtool/moon.mod"))
+}
+
+///|
+async fn find_warren_root() -> String {
+  let cwd = @env.current_dir().unwrap()
+  if is_warren_root(cwd) {
+    cwd
+  } else {
+    let parent = dirname(cwd)
+    if is_warren_root(parent) {
+      parent
+    } else {
+      abort(
+        "Run this script from the warren module root or its scripts directory.",
+      )
+    }
+  }
+}
+
+///|
+async fn run_warren_build(root : String) -> Unit {
+  let moon_bin = env_or("MOON_BIN", "moon")
+  let devtool_dir = join_path(root, "devtool")
+  let code = @process.run(
+    moon_bin,
+    ["run", "--target", "native", root, "--", "build", ".", "--dist", "./dist"],
+    cwd=devtool_dir,
+    inherit_env=true,
+  )
+  guard code == 0 else {
+    abort("`warren build ./devtool` failed with exit code \{code}")
+  }
+}
+
+async fn clean_dist(root : String) -> Unit {
+  let dist_dir = join_path(root, "devtool/dist")
+  if @fs.exists(dist_dir) {
+    @fs.rmdir(dist_dir, recursive=true) catch {
+      _ => @fs.remove(dist_dir)
+    }
+  }
+}
+
+///|
+fn render_multiline_string(value : String) -> String {
+  let builder = StringBuilder::new()
+  let lines = value.split("\n").collect()
+  for index in 0..<lines.length() {
+    if index > 0 {
+      builder.write_string("\n")
+    }
+    builder.write_string("  #|")
+    builder.write_string(lines[index].to_owned())
+  }
+  builder.to_string()
+}
+
+///|
+fn render_binding(name : String, value : String) -> String {
+  "///|\n#warnings(\"-unused_value\")\nlet \{name} : String =\n" +
+  render_multiline_string(value) +
+  "\n"
+}
+
+///|
+fn render_embedded_mbt(js : String, css : String) -> String {
+  render_binding("embbed_devtool_js", js) +
+  "\n" +
+  render_binding("embbed_devtool_css", css)
+}
+
+///|
+async fn main {
+  let root = find_warren_root()
+  let js_path = join_path(root, "devtool/dist/index.js")
+  let css_path = join_path(root, "devtool/dist/styles.css")
+  let target_path = join_path(root, "embbed_devtool.mbt")
+  clean_dist(root)
+  run_warren_build(root)
+  guard @fs.exists(js_path) else {
+    abort("Expected build output was not found: \{js_path}")
+  }
+  guard @fs.exists(css_path) else {
+    abort("Expected build output was not found: \{css_path}")
+  }
+  let js = @fs.read_file(js_path).text()
+  let css = @fs.read_file(css_path).text()
+  @fs.write_file(
+    target_path,
+    render_embedded_mbt(js, css),
+    create_mode=CreateOrTruncate,
+    permission=0o644,
+  )
+  println("Embedded \{js_path} into \{target_path}")
+  println("Embedded \{css_path} into \{target_path}")
+}

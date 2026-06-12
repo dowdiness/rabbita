@@ -14,6 +14,22 @@ moon install moonbit-community/warren
 
 This gives you the `warren` command.
 
+## New Project
+
+Create a Rabbita app:
+
+```sh
+warren new my-app
+cd my-app
+warren dev
+```
+
+Choose the smaller bundled template when needed:
+
+```sh
+warren new my-app --template minimized
+```
+
 ## Development Preview
 
 Run inside your app directory:
@@ -89,6 +105,7 @@ When `public/index.html` is present, `warren` keeps your page and adds the app e
 
 ```sh
 warren --help
+warren new --help
 warren dev --help
 warren build --help
 ```

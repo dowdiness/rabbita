@@ -1,3 +1,6 @@
+[files]
+extend-exclude = ["warren/embbed_devtool.mbt"]
+
 [default.extend-words]
 childs = "childs"
 seeked = "seeked"

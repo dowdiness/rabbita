@@ -1,6 +1,8 @@
 ///|
 pub(all) enum BroadcastMsg {
+  Building
   Reload
+  BuildFailed(String)
 } derive(Debug)
 
 ///|
@@ -203,6 +205,10 @@ async fn Devhub::handle_request(
     return
   }
   let path = if request.path == "/" { "/index.html" } else { request.path }
+  let path = match path.split("?").collect() {
+    [path, ..] => path.to_owned()
+    [] => path
+  }
   match path {
     "/__warren/events" => self.handle_ws(request, conn)
     path =>
@@ -255,7 +261,10 @@ async fn Devhub::handle_ws(
     group.spawn_bg(allow_failure=true, () => {
       while queue.get() is msg {
         match msg {
+          Building => ws.send_text("building")
           Reload => ws.send_text("reload")
+          BuildFailed(diagnostics) =>
+            ws.send_text("build_failed\n\{diagnostics}")
         }
       }
     })

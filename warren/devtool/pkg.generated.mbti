@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "local/devtool"
+
+// Values
+
+// Errors
+
+// Types and methods
+type DevStatus
+
+type DragState
+
+type Model
+
+type Msg
+
+// Type aliases
+
+// Traits
+
