@@ -28,4 +28,5 @@ warnings = "-text_segment_excceed"
 
 options(
   "is-main": true,
+  formatter: { "ignore": [ "templates_bundle.mbt" ] },
 )
