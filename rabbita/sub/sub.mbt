@@ -342,7 +342,7 @@ fn keyboard_from_dom(event : @dom.KeyboardEvent) -> Keyboard {
 
 ///|
 #cfg(target="js")
-fn[E : @dom.IsMouseEvent] mouse_from_dom(event : E) -> Mouse {
+fn mouse_from_dom(event : @dom.MouseEvent) -> Mouse {
   Mouse::new(
     screen={ x: event.get_screen_x(), y: event.get_screen_y() },
     offset={ x: event.get_offset_x(), y: event.get_offset_y() },
@@ -354,7 +354,11 @@ fn[E : @dom.IsMouseEvent] mouse_from_dom(event : E) -> Mouse {
 #cfg(target="js")
 fn pointer_from_dom(event : @dom.PointerEvent) -> Pointer {
   Pointer::Pointer(
-    mouse=mouse_from_dom(event),
+    mouse=Mouse::new(
+      screen={ x: event.get_screen_x(), y: event.get_screen_y() },
+      offset={ x: event.get_offset_x(), y: event.get_offset_y() },
+      client={ x: event.get_client_x(), y: event.get_client_y() },
+    ),
     pointer_id=event.get_pointer_id(),
     width=event.get_width(),
     height=event.get_height(),
