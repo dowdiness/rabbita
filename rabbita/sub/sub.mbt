@@ -353,7 +353,7 @@ fn[E : @dom.IsMouseEvent] mouse_from_dom(event : E) -> Mouse {
 ///|
 #cfg(target="js")
 fn pointer_from_dom(event : @dom.PointerEvent) -> Pointer {
-  Pointer::new(
+  Pointer::Pointer(
     mouse=mouse_from_dom(event),
     pointer_id=event.get_pointer_id(),
     width=event.get_width(),

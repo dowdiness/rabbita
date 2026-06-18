@@ -39,7 +39,7 @@ struct Pointer {
 } derive(Debug)
 
 ///|
-pub fn Pointer::new(
+pub fn Pointer::Pointer(
   mouse~ : Mouse,
   pointer_id~ : Int,
   width~ : Double,

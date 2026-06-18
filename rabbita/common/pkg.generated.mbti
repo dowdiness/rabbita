@@ -33,12 +33,14 @@ pub fn Mouse::new(screen~ : Pos, offset~ : Pos, client~ : Pos) -> Self
 pub fn Mouse::offset_pos(Self) -> Pos
 pub fn Mouse::screen_pos(Self) -> Pos
 
-type Pointer derive(@debug.Debug)
+pub struct Pointer {
+  // private fields
+} derive(@debug.Debug)
+pub fn Pointer::Pointer(mouse~ : Mouse, pointer_id~ : Int, width~ : Double, height~ : Double, pressure~ : Double, tilt_x~ : Int, tilt_y~ : Int, pointer_type~ : String, is_primary~ : Bool) -> Self
 pub fn Pointer::client_pos(Self) -> Pos
 pub fn Pointer::height(Self) -> Double
 pub fn Pointer::is_primary(Self) -> Bool
 pub fn Pointer::mouse(Self) -> Mouse
-pub fn Pointer::new(mouse~ : Mouse, pointer_id~ : Int, width~ : Double, height~ : Double, pressure~ : Double, tilt_x~ : Int, tilt_y~ : Int, pointer_type~ : String, is_primary~ : Bool) -> Self
 pub fn Pointer::offset_pos(Self) -> Pos
 pub fn Pointer::pointer_id(Self) -> Int
 pub fn Pointer::pointer_type(Self) -> String
