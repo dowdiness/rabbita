@@ -52,6 +52,7 @@ HTML event handlers.
 enum Msg {
   Resized(ViewPort)
   MouseMoved(Mouse)
+  PointerMoved(Pointer)
 }
 
 ///|
@@ -59,6 +60,7 @@ fn subscriptions(emit : Emit[Msg], _model : Model) -> @sub.Sub {
   @sub.batch([
     @sub.on_resize(v => emit(Resized(v))),
     @sub.on_mouse_move(m => emit(MouseMoved(m))),
+    @sub.on_pointer_move(p => emit(PointerMoved(p))),
   ])
 }
 ```

@@ -28,11 +28,27 @@ fn push_click(value : Cmd?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(target="js")
-fn mouse_from_dom(event : @dom.MouseEvent) -> Mouse {
+fn[E : @dom.IsMouseEvent] mouse_from_dom(event : E) -> Mouse {
   Mouse::new(
     screen={ x: event.get_screen_x(), y: event.get_screen_y() },
     offset={ x: event.get_offset_x(), y: event.get_offset_y() },
     client={ x: event.get_client_x(), y: event.get_client_y() },
+  )
+}
+
+///|
+#cfg(target="js")
+fn pointer_from_dom(event : @dom.PointerEvent) -> Pointer {
+  Pointer::new(
+    mouse=mouse_from_dom(event),
+    pointer_id=event.get_pointer_id(),
+    width=event.get_width(),
+    height=event.get_height(),
+    pressure=event.get_pressure(),
+    tilt_x=event.get_tilt_x(),
+    tilt_y=event.get_tilt_y(),
+    pointer_type=event.get_pointer_type(),
+    is_primary=event.get_is_primary(),
   )
 }
 
@@ -90,6 +106,48 @@ fn push_mouseup(value : @cmd.Emit[Mouse]?, attrs : Attrs) -> Unit {
 ///|
 #cfg(not(target="js"))
 fn push_mouseup(value : @cmd.Emit[Mouse]?, attrs : Attrs) -> Unit {
+  ignore((value, attrs))
+}
+
+///|
+#cfg(target="js")
+fn push_pointerdown(value : @cmd.Emit[Pointer]?, attrs : Attrs) -> Unit {
+  if value is Some(v) {
+    ignore(attrs.on_pointerdown(event => v(pointer_from_dom(event))))
+  }
+}
+
+///|
+#cfg(not(target="js"))
+fn push_pointerdown(value : @cmd.Emit[Pointer]?, attrs : Attrs) -> Unit {
+  ignore((value, attrs))
+}
+
+///|
+#cfg(target="js")
+fn push_pointerup(value : @cmd.Emit[Pointer]?, attrs : Attrs) -> Unit {
+  if value is Some(v) {
+    ignore(attrs.on_pointerup(event => v(pointer_from_dom(event))))
+  }
+}
+
+///|
+#cfg(not(target="js"))
+fn push_pointerup(value : @cmd.Emit[Pointer]?, attrs : Attrs) -> Unit {
+  ignore((value, attrs))
+}
+
+///|
+#cfg(target="js")
+fn push_pointermove(value : @cmd.Emit[Pointer]?, attrs : Attrs) -> Unit {
+  if value is Some(v) {
+    ignore(attrs.on_pointermove(event => v(pointer_from_dom(event))))
+  }
+}
+
+///|
+#cfg(not(target="js"))
+fn push_pointermove(value : @cmd.Emit[Pointer]?, attrs : Attrs) -> Unit {
   ignore((value, attrs))
 }
 

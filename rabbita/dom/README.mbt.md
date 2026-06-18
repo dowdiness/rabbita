@@ -82,6 +82,7 @@ Event <- AnimationEvent
       <- CompositionEvent
       <- CustomEvent
       <- UIEvent <- MouseEvent <- DragEvent
+                 <- PointerEvent
                  <- FocusEvent
                  <- InputEvent
                  <- KeyboardEvent

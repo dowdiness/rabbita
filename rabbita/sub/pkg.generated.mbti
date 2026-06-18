@@ -24,6 +24,8 @@ pub fn on_key_up(@cmd.Emit[@common.Keyboard]) -> Sub
 
 pub fn on_mouse_move(@cmd.Emit[@common.Mouse]) -> Sub
 
+pub fn on_pointer_move(@cmd.Emit[@common.Pointer]) -> Sub
+
 pub fn on_resize(@cmd.Emit[@common.Viewport]) -> Sub
 
 pub fn on_scroll(@cmd.Emit[@common.Scroll]) -> Sub

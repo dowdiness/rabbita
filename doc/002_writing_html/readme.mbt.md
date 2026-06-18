@@ -128,6 +128,11 @@ fn canvas_view(emit : Emit[DrawMsg]) -> Html {
 }
 ```
 
+Use pointer events for unified mouse, touch, and stylus input. `div` and
+`canvas` expose `on_pointerdown`, `on_pointerup`, and `on_pointermove`; the
+payload is `@html.Pointer`, whose `offset_pos()`, `client_pos()`, and
+`screen_pos()` follow the same coordinate-space conventions as `Mouse`.
+
 ## Attribute Builder
 
 If a wrapper function does not expose a required attribute or event, use `Attrs::build()` as a fallback.

@@ -88,6 +88,7 @@ The builtins you will use most often are:
 | `@sub.on_key_down(...)` | Key down events |
 | `@sub.on_key_up(...)` | Key up events |
 | `@sub.on_mouse_move(...)` | Mouse movement |
+| `@sub.on_pointer_move(...)` | Pointer movement across mouse, touch, and stylus input |
 | `@sub.on_visibility_change(...)` | Page visibility changes |
 | `@sub.on_animation_frame(...)` | Animation frame updates |
 

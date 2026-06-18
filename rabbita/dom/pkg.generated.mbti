@@ -461,6 +461,20 @@ type Path2D
 pub fn Path2D::add_path(Self, Self, transform? : @js.Optional[DOMMatrix2DInit]) -> Unit
 pub fn Path2D::new(path? : @js.Optional[@js.Union2[Self, String]]) -> Self
 
+type PointerEvent
+pub fn PointerEvent::get_height(Self) -> Double
+pub fn PointerEvent::get_is_primary(Self) -> Bool
+pub fn PointerEvent::get_pointer_id(Self) -> Int
+pub fn PointerEvent::get_pointer_type(Self) -> String
+pub fn PointerEvent::get_pressure(Self) -> Double
+pub fn PointerEvent::get_tilt_x(Self) -> Int
+pub fn PointerEvent::get_tilt_y(Self) -> Int
+pub fn PointerEvent::get_width(Self) -> Double
+pub impl IsEvent for PointerEvent
+pub impl IsMouseEvent for PointerEvent
+pub impl IsUIEvent for PointerEvent
+pub impl @js.Cast for PointerEvent
+
 type RemotePlayback
 
 type SVGAnimatedTransformList
@@ -609,6 +623,7 @@ pub trait IsEvent : @js.Cast {
   fn to_ui_event(Self) -> UIEvent?
   fn to_clipboard_event(Self) -> ClipboardEvent?
   fn to_mouse_event(Self) -> MouseEvent?
+  fn to_pointer_event(Self) -> PointerEvent?
   fn to_input_event(Self) -> InputEvent?
   fn to_focus_event(Self) -> FocusEvent?
   fn to_keyboard_event(Self) -> KeyboardEvent?

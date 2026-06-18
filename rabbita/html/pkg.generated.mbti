@@ -40,7 +40,7 @@ pub fn br(style? : Array[String], id? : String, class? : String, title? : String
 
 pub fn[C : IsChildren] button(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, type_? : String, disabled? : Bool, name? : String, value? : String, autofocus? : Bool, on_click? : @cmd.Cmd, attrs? : Attrs, C) -> Html
 
-pub fn[C : IsChildren] canvas(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, on_mousedown? : @cmd.Emit[@common.Mouse], on_mouseup? : @cmd.Emit[@common.Mouse], on_scroll? : @cmd.Emit[@common.Scroll], on_keydown? : @cmd.Emit[@common.Keyboard], on_keyup? : @cmd.Emit[@common.Keyboard], attrs? : Attrs, C) -> Html
+pub fn[C : IsChildren] canvas(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, on_mousedown? : @cmd.Emit[@common.Mouse], on_mouseup? : @cmd.Emit[@common.Mouse], on_pointerdown? : @cmd.Emit[@common.Pointer], on_pointerup? : @cmd.Emit[@common.Pointer], on_pointermove? : @cmd.Emit[@common.Pointer], on_scroll? : @cmd.Emit[@common.Scroll], on_keydown? : @cmd.Emit[@common.Keyboard], on_keyup? : @cmd.Emit[@common.Keyboard], attrs? : Attrs, C) -> Html
 
 pub fn[C : IsChildren] caption(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
@@ -66,7 +66,7 @@ pub fn[C : IsChildren] dfn(style? : Array[String], id? : String, class? : String
 
 pub fn[C : IsChildren] dialog(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, open? : Bool, closedby? : String, on_close? : @cmd.Emit[String], on_cancel? : @cmd.Cmd, attrs? : Attrs, C) -> Html
 
-pub fn[C : IsChildren] div(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, on_click? : @cmd.Cmd, on_mousedown? : @cmd.Emit[@common.Mouse], on_mouseup? : @cmd.Emit[@common.Mouse], on_scroll? : @cmd.Emit[@common.Scroll], on_keydown? : @cmd.Emit[@common.Keyboard], on_keyup? : @cmd.Emit[@common.Keyboard], attrs? : Attrs, C) -> Html
+pub fn[C : IsChildren] div(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, on_click? : @cmd.Cmd, on_mousedown? : @cmd.Emit[@common.Mouse], on_mouseup? : @cmd.Emit[@common.Mouse], on_pointerdown? : @cmd.Emit[@common.Pointer], on_pointerup? : @cmd.Emit[@common.Pointer], on_pointermove? : @cmd.Emit[@common.Pointer], on_scroll? : @cmd.Emit[@common.Scroll], on_keydown? : @cmd.Emit[@common.Keyboard], on_keyup? : @cmd.Emit[@common.Keyboard], attrs? : Attrs, C) -> Html
 
 pub fn[C : IsChildren] dl(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
@@ -426,9 +426,11 @@ pub fn Attrs::on_dragover(Self, (@dom.DragEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_dragstart(Self, (@dom.DragEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_drop(Self, (@dom.DragEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_focus(Self, (@dom.FocusEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_gotpointercapture(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_input(Self, (@dom.InputEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_keydown(Self, (@dom.KeyboardEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_keyup(Self, (@dom.KeyboardEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_lostpointercapture(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mousedown(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mouseenter(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mouseleave(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
@@ -437,6 +439,14 @@ pub fn Attrs::on_mouseout(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mouseover(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mouseup(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_paste(Self, (@dom.ClipboardEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointercancel(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointerdown(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointerenter(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointerleave(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointermove(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointerout(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointerover(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointerup(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_reset(Self, (@dom.Event) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_scroll(Self, (@dom.UIEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_submit(Self, (@dom.Event) -> @cmd.Cmd) -> Self
@@ -541,6 +551,8 @@ pub(all) enum Target {
 pub using @common {type Keyboard}
 
 pub using @common {type Mouse}
+
+pub using @common {type Pointer}
 
 pub using @common {type Scroll}
 

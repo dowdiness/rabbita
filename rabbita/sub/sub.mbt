@@ -1,6 +1,12 @@
 ///|
 #cfg(target="js")
-using @common {type Keyboard, type Mouse, type Scroll, type Viewport}
+using @common {
+  type Keyboard,
+  type Mouse,
+  type Pointer,
+  type Scroll,
+  type Viewport,
+}
 
 ///|
 using @cmd {trait Scheduler}
@@ -48,6 +54,7 @@ priv suberror BuiltinSub {
   Keydown(Emit[Keyboard])
   Keyup(Emit[Keyboard])
   MouseMove(Emit[Mouse])
+  PointerMove(Emit[Pointer])
   Resize(Emit[Viewport])
   UrlChanged(Emit[@url.Url])
   UrlRequest(Emit[@url.UrlRequest])
@@ -153,6 +160,27 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
       @dom.document()
       .as_event_target()
       .add_event_listener("mousemove", listener)
+      Some({ unload, update_tagger })
+    }
+    PointerMove(cmd) => {
+      let tagger = @ref.Ref(cmd)
+      let listener : @dom.Listener = event => {
+        scheduler.add(
+          (tagger.val)(pointer_from_dom(event.to_pointer_event().unwrap())),
+        )
+      }
+      let unload = _ => {
+        @dom.document()
+        .as_event_target()
+        .remove_event_listener("pointermove", listener)
+      }
+      let update_tagger = self => {
+        guard self is BuiltinSub::PointerMove(new_cmd) else { return }
+        tagger.val = new_cmd
+      }
+      @dom.document()
+      .as_event_target()
+      .add_event_listener("pointermove", listener)
       Some({ unload, update_tagger })
     }
     Resize(cmd) => {
@@ -314,11 +342,27 @@ fn keyboard_from_dom(event : @dom.KeyboardEvent) -> Keyboard {
 
 ///|
 #cfg(target="js")
-fn mouse_from_dom(event : @dom.MouseEvent) -> Mouse {
+fn[E : @dom.IsMouseEvent] mouse_from_dom(event : E) -> Mouse {
   Mouse::new(
     screen={ x: event.get_screen_x(), y: event.get_screen_y() },
     offset={ x: event.get_offset_x(), y: event.get_offset_y() },
     client={ x: event.get_client_x(), y: event.get_client_y() },
+  )
+}
+
+///|
+#cfg(target="js")
+fn pointer_from_dom(event : @dom.PointerEvent) -> Pointer {
+  Pointer::new(
+    mouse=mouse_from_dom(event),
+    pointer_id=event.get_pointer_id(),
+    width=event.get_width(),
+    height=event.get_height(),
+    pressure=event.get_pressure(),
+    tilt_x=event.get_tilt_x(),
+    tilt_y=event.get_tilt_y(),
+    pointer_type=event.get_pointer_type(),
+    is_primary=event.get_is_primary(),
   )
 }
 
@@ -404,6 +448,15 @@ pub fn on_visibility_change(msg : @cmd.Emit[Bool]) -> Sub {
 #cfg(target="js")
 pub fn on_mouse_move(msg : @cmd.Emit[Mouse]) -> Sub {
   custom_sub("on_mouse_move", Local, MouseMove(msg), builtin_sub_loader)
+}
+
+///|
+/// Subscribe to document `pointermove` events.
+///
+/// The handler receives a normalized `Pointer` value from `@common`.
+#cfg(target="js")
+pub fn on_pointer_move(msg : @cmd.Emit[Pointer]) -> Sub {
+  custom_sub("on_pointer_move", Local, PointerMove(msg), builtin_sub_loader)
 }
 
 ///|

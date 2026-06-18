@@ -97,9 +97,10 @@ let html : Html = ul({
 Rabbita separates event callbacks from UI views to manage side effects and avoid stale state, keeping UI predictable as code grows.
 
 HTML wrappers provide common events as optional arguments like `on_click`,
-`on_mouseup`, `on_scroll`, and `on_submit`. Each requires a `Cmd` binding to a
-`Msg` you define. When an event fires, the `Msg` (and any extra payload) is
-forwarded to the centralized state update function.
+`on_mouseup`, `on_pointerdown`, `on_pointermove`, `on_scroll`, and `on_submit`.
+Each requires a `Cmd` binding to a `Msg` you define. When an event fires, the
+`Msg` (and any extra payload) is forwarded to the centralized state update
+function.
 
 Example:
 
@@ -122,6 +123,11 @@ fn view2(emit : Emit[Msg2], _ : Model2) -> Html {
   )
 }
 ```
+
+Pointer shortcuts such as `on_pointerdown`, `on_pointerup`, and
+`on_pointermove` receive `@html.Pointer`, which exposes the same coordinate
+spaces as `Mouse` plus pointer id/type, pressure, size, tilt, and primary-pointer
+metadata.
 
 ## Advanced Usage
 

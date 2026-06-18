@@ -208,6 +208,9 @@ pub fn[C : IsChildren] div(
   on_click? : Cmd,
   on_mousedown? : Emit[Mouse],
   on_mouseup? : Emit[Mouse],
+  on_pointerdown? : Emit[Pointer],
+  on_pointerup? : Emit[Pointer],
+  on_pointermove? : Emit[Pointer],
   on_scroll? : Emit[Scroll],
   on_keydown? : Emit[Keyboard],
   on_keyup? : Emit[Keyboard],
@@ -220,6 +223,9 @@ pub fn[C : IsChildren] div(
   push_click(on_click, attrs)
   push_mousedown(on_mousedown, attrs)
   push_mouseup(on_mouseup, attrs)
+  push_pointerdown(on_pointerdown, attrs)
+  push_pointerup(on_pointerup, attrs)
+  push_pointermove(on_pointermove, attrs)
   push_scroll(on_scroll, attrs)
   push_keydown(on_keydown, attrs)
   push_keyup(on_keyup, attrs)
@@ -2554,6 +2560,9 @@ pub fn[C : IsChildren] canvas(
   hidden? : Bool,
   on_mousedown? : Emit[Mouse],
   on_mouseup? : Emit[Mouse],
+  on_pointerdown? : Emit[Pointer],
+  on_pointerup? : Emit[Pointer],
+  on_pointermove? : Emit[Pointer],
   on_scroll? : Emit[Scroll],
   on_keydown? : Emit[Keyboard],
   on_keyup? : Emit[Keyboard],
@@ -2565,6 +2574,9 @@ pub fn[C : IsChildren] canvas(
   push_hidden(hidden, attrs)
   push_mousedown(on_mousedown, attrs)
   push_mouseup(on_mouseup, attrs)
+  push_pointerdown(on_pointerdown, attrs)
+  push_pointerup(on_pointerup, attrs)
+  push_pointermove(on_pointermove, attrs)
   push_scroll(on_scroll, attrs)
   push_keydown(on_keydown, attrs)
   push_keyup(on_keyup, attrs)

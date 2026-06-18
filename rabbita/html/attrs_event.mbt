@@ -4,6 +4,10 @@ type MouseEvent = @dom.MouseEvent
 
 ///|
 #cfg(target="js")
+type PointerEvent = @dom.PointerEvent
+
+///|
+#cfg(target="js")
 type KeyboardEvent = @dom.KeyboardEvent
 
 ///|
@@ -41,6 +45,10 @@ type DomEvent = @dom.Event
 ///|
 #cfg(not(target="js"))
 type MouseEvent = Unit
+
+///|
+#cfg(not(target="js"))
+type PointerEvent = Unit
 
 ///|
 #cfg(not(target="js"))
@@ -96,6 +104,29 @@ fn Attrs::on_mouse_event(
   self : Attrs,
   event : String,
   msg : (MouseEvent) -> Cmd,
+) -> Attrs {
+  ignore((event, msg))
+  self
+}
+
+///|
+#cfg(target="js")
+fn Attrs::on_pointer_event(
+  self : Attrs,
+  event : String,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.handler(event, (event, scheduler) => {
+    scheduler.add(msg(event.to_pointer_event().unwrap()))
+  })
+}
+
+///|
+#cfg(not(target="js"))
+fn Attrs::on_pointer_event(
+  self : Attrs,
+  event : String,
+  msg : (PointerEvent) -> Cmd,
 ) -> Attrs {
   ignore((event, msg))
   self
@@ -262,6 +293,80 @@ pub fn Attrs::on_mousedown(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
 ///|
 pub fn Attrs::on_mouseup(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
   self.on_mouse_event("mouseup", msg)
+}
+
+///|
+pub fn Attrs::on_pointerdown(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("pointerdown", msg)
+}
+
+///|
+pub fn Attrs::on_pointerup(self : Attrs, msg : (PointerEvent) -> Cmd) -> Attrs {
+  self.on_pointer_event("pointerup", msg)
+}
+
+///|
+pub fn Attrs::on_pointermove(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("pointermove", msg)
+}
+
+///|
+pub fn Attrs::on_pointerenter(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("pointerenter", msg)
+}
+
+///|
+pub fn Attrs::on_pointerleave(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("pointerleave", msg)
+}
+
+///|
+pub fn Attrs::on_pointerover(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("pointerover", msg)
+}
+
+///|
+pub fn Attrs::on_pointerout(self : Attrs, msg : (PointerEvent) -> Cmd) -> Attrs {
+  self.on_pointer_event("pointerout", msg)
+}
+
+///|
+pub fn Attrs::on_pointercancel(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("pointercancel", msg)
+}
+
+///|
+pub fn Attrs::on_gotpointercapture(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("gotpointercapture", msg)
+}
+
+///|
+pub fn Attrs::on_lostpointercapture(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("lostpointercapture", msg)
 }
 
 ///|

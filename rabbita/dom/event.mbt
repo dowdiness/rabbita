@@ -20,6 +20,7 @@ pub trait IsEvent: @js.Cast {
   fn to_ui_event(Self) -> UIEvent? = _
   fn to_clipboard_event(Self) -> ClipboardEvent? = _
   fn to_mouse_event(Self) -> MouseEvent? = _
+  fn to_pointer_event(Self) -> PointerEvent? = _
   fn to_input_event(Self) -> InputEvent? = _
   fn to_focus_event(Self) -> FocusEvent? = _
   fn to_keyboard_event(Self) -> KeyboardEvent? = _
@@ -96,6 +97,12 @@ impl IsEvent with fn to_clipboard_event(s) {
 #cfg(target="js")
 impl IsEvent with fn to_mouse_event(s) {
   s |> js_identity |> ffi_to_mouse_event |> y => { y.to_option() }
+}
+
+///|
+#cfg(target="js")
+impl IsEvent with fn to_pointer_event(s) {
+  s |> js_identity |> ffi_to_pointer_event |> y => { y.to_option() }
 }
 
 ///|
@@ -204,6 +211,27 @@ extern "js" fn ffi_event_stop_propagation(x : Event) = "(self) => self.stopPropa
 #cfg(target="js")
 extern "js" fn ffi_to_mouse_event(x : @js.Value) -> @js.Nullable[MouseEvent] =
   #| (e) => e instanceof MouseEvent ? e : null
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_to_pointer_event(
+  x : @js.Value,
+) -> @js.Nullable[PointerEvent] =
+  #| (e) => {
+  #|   if (typeof PointerEvent !== "undefined") {
+  #|     return e instanceof PointerEvent ? e : null;
+  #|   }
+  #|   // Some JS test hosts and polyfills omit the global PointerEvent
+  #|   // constructor. Accept only events with the core pointer/mouse shape so
+  #|   // plain objects with an unrelated pointerId do not cross the FFI boundary.
+  #|   const finite = name => typeof e?.[name] === "number" && Number.isFinite(e[name]);
+  #|   return e != null && typeof e === "object" &&
+  #|     finite("pointerId") && typeof e.pointerType === "string" &&
+  #|     finite("clientX") && finite("clientY") &&
+  #|     finite("offsetX") && finite("offsetY")
+  #|     ? e
+  #|     : null;
+  #| }
 
 ///|
 #cfg(target="js")
