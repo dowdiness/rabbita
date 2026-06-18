@@ -217,7 +217,7 @@ extern "js" fn ffi_to_mouse_event(x : @js.Value) -> @js.Nullable[MouseEvent] =
 extern "js" fn ffi_to_pointer_event(
   x : @js.Value,
 ) -> @js.Nullable[PointerEvent] =
-  #| (e) => typeof PointerEvent !== "undefined" && e instanceof PointerEvent ? e : null
+  #| (e) => e instanceof PointerEvent ? e : null
 
 ///|
 #cfg(target="js")
