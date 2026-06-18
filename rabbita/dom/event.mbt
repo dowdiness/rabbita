@@ -217,21 +217,7 @@ extern "js" fn ffi_to_mouse_event(x : @js.Value) -> @js.Nullable[MouseEvent] =
 extern "js" fn ffi_to_pointer_event(
   x : @js.Value,
 ) -> @js.Nullable[PointerEvent] =
-  #| (e) => {
-  #|   if (typeof PointerEvent !== "undefined") {
-  #|     return e instanceof PointerEvent ? e : null;
-  #|   }
-  #|   // Some JS test hosts and polyfills omit the global PointerEvent
-  #|   // constructor. Accept only events with the core pointer/mouse shape so
-  #|   // plain objects with an unrelated pointerId do not cross the FFI boundary.
-  #|   const finite = name => typeof e?.[name] === "number" && Number.isFinite(e[name]);
-  #|   return e != null && typeof e === "object" &&
-  #|     finite("pointerId") && typeof e.pointerType === "string" &&
-  #|     finite("clientX") && finite("clientY") &&
-  #|     finite("offsetX") && finite("offsetY")
-  #|     ? e
-  #|     : null;
-  #| }
+  #| (e) => typeof PointerEvent !== "undefined" && e instanceof PointerEvent ? e : null
 
 ///|
 #cfg(target="js")
