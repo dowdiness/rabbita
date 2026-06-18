@@ -124,11 +124,6 @@ fn view2(emit : Emit[Msg2], _ : Model2) -> Html {
 }
 ```
 
-Pointer shortcuts such as `on_pointerdown`, `on_pointerup`, and
-`on_pointermove` receive `@html.Pointer`, which exposes the same coordinate
-spaces as `Mouse` plus pointer id/type, pressure, size, tilt, and primary-pointer
-metadata.
-
 ## Advanced Usage
 
 ### Attribute Builder
