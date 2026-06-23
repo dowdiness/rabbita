@@ -1,82 +1,194 @@
 ///|
 test "basic_url" {
   let a = "http://localhost:5173/abcd"
-  inspect(
-    try? @url.parse(a),
+  @debug.debug_inspect(
+    Ok(@url.parse(a)) catch {
+      e => Err(e)
+    },
     content=(
-      #|Ok({protocol: Http, host: "localhost", port: Some(5173), path: "abcd", query: None, fragment: None})
+      #|Ok(
+      #|  {
+      #|    protocol: Http,
+      #|    host: "localhost",
+      #|    port: Some(5173),
+      #|    path: "abcd",
+      #|    query: None,
+      #|    fragment: None,
+      #|  },
+      #|)
     ),
   )
-  inspect(
-    try? @url.parse("https://example.com"),
+  @debug.debug_inspect(
+    Ok(@url.parse("https://example.com")) catch {
+      e => Err(e)
+    },
     content=(
-      #|Ok({protocol: Https, host: "example.com", port: None, path: "", query: None, fragment: None})
+      #|Ok(
+      #|  {
+      #|    protocol: Https,
+      #|    host: "example.com",
+      #|    port: None,
+      #|    path: "",
+      #|    query: None,
+      #|    fragment: None,
+      #|  },
+      #|)
     ),
   )
-  inspect(
-    try? @url.parse("https://example.com/"),
+  @debug.debug_inspect(
+    Ok(@url.parse("https://example.com/")) catch {
+      e => Err(e)
+    },
     content=(
-      #|Ok({protocol: Https, host: "example.com", port: None, path: "", query: None, fragment: None})
+      #|Ok(
+      #|  {
+      #|    protocol: Https,
+      #|    host: "example.com",
+      #|    port: None,
+      #|    path: "",
+      #|    query: None,
+      #|    fragment: None,
+      #|  },
+      #|)
     ),
   )
-  inspect(
-    try? @url.parse("https://example.com/path1/path2"),
+  @debug.debug_inspect(
+    Ok(@url.parse("https://example.com/path1/path2")) catch {
+      e => Err(e)
+    },
     content=(
-      #|Ok({protocol: Https, host: "example.com", port: None, path: "path1/path2", query: None, fragment: None})
+      #|Ok(
+      #|  {
+      #|    protocol: Https,
+      #|    host: "example.com",
+      #|    port: None,
+      #|    path: "path1/path2",
+      #|    query: None,
+      #|    fragment: None,
+      #|  },
+      #|)
     ),
   )
-  inspect(
-    try? @url.parse("https://example.com:8080/path/to/somewhere?query#fragment"),
+  @debug.debug_inspect(
+    Ok(@url.parse(
+      "https://example.com:8080/path/to/somewhere?query#fragment",
+    )) catch {
+      e => Err(e)
+    },
     content=(
-      #|Ok({protocol: Https, host: "example.com", port: Some(8080), path: "path/to/somewhere", query: Some("query"), fragment: Some("fragment")})
+      #|Ok(
+      #|  {
+      #|    protocol: Https,
+      #|    host: "example.com",
+      #|    port: Some(8080),
+      #|    path: "path/to/somewhere",
+      #|    query: Some("query"),
+      #|    fragment: Some("fragment"),
+      #|  },
+      #|)
     ),
   )
-  inspect(
-    try? @url.parse(
+  @debug.debug_inspect(
+    Ok(@url.parse(
       "https://example.com:8080/path/to/somewhere?key=value&key2=value2#fragment",
-    ),
+    )) catch {
+      e => Err(e)
+    },
     content=(
-      #|Ok({protocol: Https, host: "example.com", port: Some(8080), path: "path/to/somewhere", query: Some("key=value&key2=value2"), fragment: Some("fragment")})
+      #|Ok(
+      #|  {
+      #|    protocol: Https,
+      #|    host: "example.com",
+      #|    port: Some(8080),
+      #|    path: "path/to/somewhere",
+      #|    query: Some("key=value&key2=value2"),
+      #|    fragment: Some("fragment"),
+      #|  },
+      #|)
     ),
   )
 }
 
 ///|
 test "special url" {
-  inspect(
-    try? @url.parse("localhost:8080/abcd"),
+  @debug.debug_inspect(
+    Ok(@url.parse("localhost:8080/abcd")) catch {
+      e => Err(e)
+    },
     content=(
-      #|Ok({protocol: Other(""), host: "localhost", port: Some(8080), path: "abcd", query: None, fragment: None})
+      #|Ok(
+      #|  {
+      #|    protocol: Other(""),
+      #|    host: "localhost",
+      #|    port: Some(8080),
+      #|    path: "abcd",
+      #|    query: None,
+      #|    fragment: None,
+      #|  },
+      #|)
     ),
   )
 }
 
 ///|
 test "no_port" {
-  inspect(
-    try? @url.parse("https://example.com/path/to/somewhere?query#fragment"),
+  @debug.debug_inspect(
+    Ok(@url.parse("https://example.com/path/to/somewhere?query#fragment")) catch {
+      e => Err(e)
+    },
     content=(
-      #|Ok({protocol: Https, host: "example.com", port: None, path: "path/to/somewhere", query: Some("query"), fragment: Some("fragment")})
+      #|Ok(
+      #|  {
+      #|    protocol: Https,
+      #|    host: "example.com",
+      #|    port: None,
+      #|    path: "path/to/somewhere",
+      #|    query: Some("query"),
+      #|    fragment: Some("fragment"),
+      #|  },
+      #|)
     ),
   )
 }
 
 ///|
 test "no_query" {
-  inspect(
-    try? @url.parse("https://example.com:8080/path/to/somewhere#fragment"),
+  @debug.debug_inspect(
+    Ok(@url.parse("https://example.com:8080/path/to/somewhere#fragment")) catch {
+      e => Err(e)
+    },
     content=(
-      #|Ok({protocol: Https, host: "example.com", port: Some(8080), path: "path/to/somewhere", query: None, fragment: Some("fragment")})
+      #|Ok(
+      #|  {
+      #|    protocol: Https,
+      #|    host: "example.com",
+      #|    port: Some(8080),
+      #|    path: "path/to/somewhere",
+      #|    query: None,
+      #|    fragment: Some("fragment"),
+      #|  },
+      #|)
     ),
   )
 }
 
 ///|
 test "no_fragment" {
-  inspect(
-    try? @url.parse("https://example.com:8080/path/to/somewhere?query"),
+  @debug.debug_inspect(
+    Ok(@url.parse("https://example.com:8080/path/to/somewhere?query")) catch {
+      e => Err(e)
+    },
     content=(
-      #|Ok({protocol: Https, host: "example.com", port: Some(8080), path: "path/to/somewhere", query: Some("query"), fragment: None})
+      #|Ok(
+      #|  {
+      #|    protocol: Https,
+      #|    host: "example.com",
+      #|    port: Some(8080),
+      #|    path: "path/to/somewhere",
+      #|    query: Some("query"),
+      #|    fragment: None,
+      #|  },
+      #|)
     ),
   )
 }

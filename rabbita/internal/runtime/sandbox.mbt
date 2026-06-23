@@ -55,14 +55,14 @@ pub fn Sandbox::new(root : &IsCell) -> Sandbox {
   sandbox = Some({
     root,
     live_map,
-    msg_queue: Queue::new(),
-    dirty_set: Set::new(),
+    msg_queue: Queue([]),
+    dirty_set: Set([], capacity=0),
     hooks: { url_request: None, url_changed: None },
     paint_scheduled: false,
     drain_scheduled: false,
     mount: "",
     captured_link_listener,
-    after_render_queue: Queue::new(),
+    after_render_queue: Queue([]),
   })
   sandbox.unwrap()
 }
@@ -149,7 +149,7 @@ pub fn Sandbox::flush(self : Self) -> Unit {
             }
           }
           inst.old_childs = inst.new_childs
-          inst.new_childs = Map::new()
+          inst.new_childs = Map([], capacity=0)
         }
         flags.dirty = false
       }
