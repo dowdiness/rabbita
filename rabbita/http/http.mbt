@@ -298,7 +298,9 @@ pub fn[T : FromJson] Request::expect_json(
   self.send_response(
     response_kind="text",
     on_text=body => {
-      let result : Result[T, Error] = try? @json.from_json(@json.parse(body))
+      let result : Result[T, Error] = Ok(@json.from_json(@json.parse(body))) catch {
+        e => Err(e)
+      }
       msg(result)
     },
     on_blob=_ => @cmd.none,

@@ -74,12 +74,12 @@ fn command_socket_id() -> String {
 
 ///|
 fn normalized_url(url : String) -> String {
-  url.trim().to_string()
+  url.trim().to_owned()
 }
 
 ///|
 fn normalized_nickname(name : String) -> String {
-  let nickname = name.trim().to_string()
+  let nickname = name.trim().to_owned()
   if nickname == "" {
     "guest"
   } else {
@@ -89,14 +89,14 @@ fn normalized_nickname(name : String) -> String {
 
 ///|
 fn trimmed_draft(draft : String) -> String {
-  draft.trim().to_string()
+  draft.trim().to_owned()
 }
 
 ///|
 fn parse_protocols(input : String) -> Array[String] {
   let protocols = []
   for part in input.split(",") {
-    let protocol = part.trim().to_string()
+    let protocol = part.trim().to_owned()
     if protocol != "" {
       protocols.push(protocol)
     }
@@ -267,7 +267,9 @@ fn send_raw_cmd(emit : Emit[Msg], model : Model) -> Cmd {
 
 ///|
 fn decode_chat_message(raw : String) -> (String, String)? {
-  let parsed : Result[Json, @json.ParseError] = try? @json.parse(raw)
+  let parsed : Result[Json, @json.ParseError] = Ok(@json.parse(raw)) catch {
+    e => Err(e)
+  }
   match parsed {
     Ok(Object(fields)) =>
       match fields.get("kind") {

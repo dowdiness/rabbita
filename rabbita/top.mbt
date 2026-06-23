@@ -24,7 +24,7 @@ pub type Html = @html.Html
 /// 
 /// ```moonbit check
 /// test "minimal static page" {
-///   let app = @rabbita.static_cell(div("hello world"))
+///   let app = @rabbita.static_cell(@html.div("hello world"))
 ///   ignore(app)
 ///   // use `@rabbita.new(app).mount("id")` in client
 /// }
@@ -118,14 +118,10 @@ struct App {
 /// ```mbt check
 /// #warnings("-alert_unstable")
 /// test "render html to string" {
-///   enum Msg {}
-///   struct Model {
-///     todos : Array[String]
-///   }
 ///   let page = @rabbita.simple_cell(
-///     model={ todos: ["todo1", "todo2"] },
-///     update=(_ : Msg, model) => model,
-///     view=(_, model) => @html.ul(model.todos.map(x => @html.li(x))),
+///     model=["todo1", "todo2"],
+///     update=(_ : Unit, model) => model,
+///     view=(emit, model) => { ignore(emit(())); @html.ul(model.map(x => @html.li(x))) },
 ///   )
 ///   inspect(
 ///     @rabbita.render_to_string(page),

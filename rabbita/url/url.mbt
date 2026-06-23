@@ -76,7 +76,7 @@ pub fn parse(url : String) -> Url raise Error {
   let (protocol, remain) = match url.split("://").collect() {
     ["http", remain] => (Http, remain)
     ["https", remain] => (Https, remain)
-    [x, remain] => (Other(x.to_string()), remain)
+    [x, remain] => (Other(x.to_owned()), remain)
     [remain] => (Other(""), remain)
     _ => fail("Invalid protocol")
   }
@@ -92,36 +92,36 @@ pub fn parse(url : String) -> Url raise Error {
   }
   let (mid, path) = match mid_part.split("/").collect() {
     [mid] => (mid, "")
-    [mid, .. paths] => (mid, paths.iter().map(StringView::to_string).join("/"))
+    [mid, .. paths] => (mid, paths.iter().map(fn(v) { v.to_owned() }).join("/"))
     _ => fail("Invalid host")
   }
   let (host, port) = match mid.split(":").collect() {
     [host, port] => {
-      let port = try @string.parse_int(port.to_string()) catch {
+      let port = try @string.parse_int(port.to_owned()) catch {
         _ => Option::None
       } noraise {
         number => Some(number)
       }
-      (host.to_string(), port)
+      (host.to_owned(), port)
     }
-    [host] => (host.to_string(), None)
+    [host] => (host.to_owned(), None)
     _ => fail("Invalid host")
   }
   let (query, fragment2) = match query_and_fragment.split("#").collect() {
-    [query, fragment] => (Some(query.to_string()), Some(fragment))
+    [query, fragment] => (Some(query.to_owned()), Some(fragment))
     [query] =>
       if query.is_empty() {
         (None, None)
       } else {
-        (Some(query.to_string()), None)
+        (Some(query.to_owned()), None)
       }
     [] => (None, None)
     _ => fail("Invalid query")
   }
   let fragment = match (fragment1, fragment2) {
     (Some(f1), Some(f2)) => Some("\{f1}#\{f2}")
-    (Some(f), None) => Some(f.to_string())
-    (None, Some(f)) => Some(f.to_string())
+    (Some(f), None) => Some(f.to_owned())
+    (None, Some(f)) => Some(f.to_owned())
     (None, None) => None
   }
   { protocol, host, port, path, query, fragment }

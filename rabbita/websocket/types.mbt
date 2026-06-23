@@ -49,7 +49,7 @@ pub impl Show for Payload with output(self, buf) {
     }
     Json(value) => {
       buf.write_string("Json(")
-      value.output(buf)
+      buf.write_string(@debug.to_string(value))
       buf.write_string(")")
     }
   }
