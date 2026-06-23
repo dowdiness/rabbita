@@ -1,7 +1,7 @@
 ///|
 test "basic_url" {
   let a = "http://localhost:5173/abcd"
-  @debug.debug_inspect(
+  inspect(
     try {
       let v = @url.parse(a)
       Ok(v)
@@ -12,7 +12,7 @@ test "basic_url" {
       #|Ok({protocol: Http, host: "localhost", port: Some(5173), path: "abcd", query: None, fragment: None})
     ),
   )
-  @debug.debug_inspect(
+  inspect(
     try {
       let v = @url.parse("https://example.com")
       Ok(v)
@@ -23,7 +23,7 @@ test "basic_url" {
       #|Ok({protocol: Https, host: "example.com", port: None, path: "", query: None, fragment: None})
     ),
   )
-  @debug.debug_inspect(
+  inspect(
     try {
       let v = @url.parse("https://example.com/")
       Ok(v)
@@ -34,7 +34,7 @@ test "basic_url" {
       #|Ok({protocol: Https, host: "example.com", port: None, path: "", query: None, fragment: None})
     ),
   )
-  @debug.debug_inspect(
+  inspect(
     try {
       let v = @url.parse("https://example.com/path1/path2")
       Ok(v)
@@ -45,7 +45,7 @@ test "basic_url" {
       #|Ok({protocol: Https, host: "example.com", port: None, path: "path1/path2", query: None, fragment: None})
     ),
   )
-  @debug.debug_inspect(
+  inspect(
     try {
       let v = @url.parse(
         "https://example.com:8080/path/to/somewhere?query#fragment",
@@ -58,7 +58,7 @@ test "basic_url" {
       #|Ok({protocol: Https, host: "example.com", port: Some(8080), path: "path/to/somewhere", query: Some("query"), fragment: Some("fragment")})
     ),
   )
-  @debug.debug_inspect(
+  inspect(
     try {
       let v = @url.parse(
         "https://example.com:8080/path/to/somewhere?key=value&key2=value2#fragment",
@@ -75,7 +75,7 @@ test "basic_url" {
 
 ///|
 test "special url" {
-  @debug.debug_inspect(
+  inspect(
     try {
       let v = @url.parse("localhost:8080/abcd")
       Ok(v)
@@ -90,7 +90,7 @@ test "special url" {
 
 ///|
 test "no_port" {
-  @debug.debug_inspect(
+  inspect(
     try {
       let v = @url.parse("https://example.com/path/to/somewhere?query#fragment")
       Ok(v)
@@ -105,7 +105,7 @@ test "no_port" {
 
 ///|
 test "no_query" {
-  @debug.debug_inspect(
+  inspect(
     try {
       let v = @url.parse("https://example.com:8080/path/to/somewhere#fragment")
       Ok(v)
@@ -120,7 +120,7 @@ test "no_query" {
 
 ///|
 test "no_fragment" {
-  @debug.debug_inspect(
+  inspect(
     try {
       let v = @url.parse("https://example.com:8080/path/to/somewhere?query")
       Ok(v)

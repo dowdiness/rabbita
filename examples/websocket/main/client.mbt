@@ -267,7 +267,12 @@ fn send_raw_cmd(emit : Emit[Msg], model : Model) -> Cmd {
 
 ///|
 fn decode_chat_message(raw : String) -> (String, String)? {
-  let parsed : Result[Json, @json.ParseError] = try? @json.parse(raw)
+  let parsed : Result[Json, @json.ParseError] = try {
+    let v = @json.parse(raw)
+    Ok(v)
+  } catch {
+    e => Err(e)
+  }
   match parsed {
     Ok(Object(fields)) =>
       match fields.get("kind") {
