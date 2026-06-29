@@ -1,8 +1,8 @@
 ///|
 import {
-  "moonbitlang/async@0.18.1",
-  "moonbitlang/async@0.18.1/fs",
-  "moonbitlang/async@0.18.1/process",
+  "moonbitlang/async",
+  "moonbitlang/async/fs",
+  "moonbitlang/async/process",
   "moonbitlang/core/env",
   "moonbitlang/core/json",
 }
@@ -34,7 +34,32 @@ struct CoreInterface {
 }
 
 ///|
+struct ExampleManifest {
+  examples : Array[ExampleConfig]
+} derive(FromJson)
+
+///|
+struct ExampleConfig {
+  sources : Array[String]
+  css : String
+  moon_pkg : String
+} derive(FromJson)
+
+///|
+struct NpmPackageMetadata {
+  dist : NpmPackageDist
+} derive(FromJson)
+
+///|
+struct NpmPackageDist {
+  tarball : String
+} derive(FromJson)
+
+///|
 let default_moon_bin = "moon"
+
+///|
+let moonc_worker_metadata_url = "https://registry.npmjs.org/@moonbit%2fmoonc-worker/latest"
 
 ///|
 fn env_or(name : String, fallback : String) -> String {
@@ -80,10 +105,10 @@ fn relative(root : String, path : String) -> String {
 
 ///|
 fn public_url(path : String) -> String {
-  if path.has_prefix("dist/moonbit-assets/") {
-    path["dist/moonbit-assets/".length():].to_owned()
-  } else if path.has_prefix("dist/") {
-    path["dist/".length():].to_owned()
+  if path.has_prefix("public/moonbit-assets/") {
+    path["public/moonbit-assets/".length():].to_owned()
+  } else if path.has_prefix("public/") {
+    path["public/".length():].to_owned()
   } else {
     path
   }
@@ -143,9 +168,23 @@ async fn first_existing(candidates : Array[String]) -> String? {
 }
 
 ///|
-async fn ensure_package_graph() -> Unit raise {
-  if @fs.exists("_build/packages.json") {
-    return
+async fn package_graph_path() -> String? {
+  first_existing(["_build/packages.json", "../../_build/packages.json"])
+}
+
+///|
+async fn run_command(command : String, args : Array[String], label : String) -> Unit raise {
+  let code = @process.run(command, args, inherit_env=true)
+  if code != 0 {
+    abort("\{label} failed with exit code \{code}")
+  }
+}
+
+///|
+async fn ensure_package_graph() -> String raise {
+  match package_graph_path() {
+    Some(path) => return path
+    None => ()
   }
   let code = @process.run(
     env_or("MOON_BIN", default_moon_bin),
@@ -155,6 +194,45 @@ async fn ensure_package_graph() -> Unit raise {
   if code != 0 {
     abort("moon build failed with exit code \{code}")
   }
+  match package_graph_path() {
+    Some(path) => path
+    None => abort("Moon package graph not found after release build.")
+  }
+}
+
+///|
+async fn download_moonc_worker() -> Unit raise {
+  let worker_dir = @fs.tmpdir(prefix="moonc-worker")
+  let metadata_path = join_path(worker_dir, "metadata.json")
+  let tarball_path = join_path(worker_dir, "moonc-worker.tgz")
+
+  run_command(
+    "curl",
+    ["-fsSL", moonc_worker_metadata_url, "-o", metadata_path],
+    "download moonc-worker metadata",
+  )
+
+  let metadata : NpmPackageMetadata = @json.from_json(
+    @json.parse(@fs.read_file(metadata_path).text()),
+  )
+  if metadata.dist.tarball == "" {
+    abort("moonbit moonc-worker package metadata did not include dist.tarball")
+  }
+
+  run_command(
+    "curl",
+    ["-fsSL", metadata.dist.tarball, "-o", tarball_path],
+    "download moonc-worker tarball",
+  )
+  run_command(
+    "tar",
+    ["-xzf", tarball_path, "-C", worker_dir],
+    "extract moonc-worker tarball",
+  )
+  copy_file(
+    join_path(worker_dir, "package/moonc-web.cjs"),
+    "public/vendor/moonc-worker.js",
+  )
 }
 
 ///|
@@ -340,7 +418,7 @@ async fn collect_core_interfaces(core_bundle_root : String) -> Array[CoreInterfa
   for mi_file in mi_files {
     let rel = relative(core_bundle_root, mi_file)
     let pkg_rel = core_package_rel(core_bundle_root, mi_file)
-    let target = join_path("dist/moonbit-assets/core", rel)
+    let target = join_path("public/moonbit-assets/core", rel)
     copy_file(mi_file, target)
     interfaces.push({
       spec: "/lib/core/\{pkg_rel}:\{pkg_rel}",
@@ -352,8 +430,8 @@ async fn collect_core_interfaces(core_bundle_root : String) -> Array[CoreInterfa
 }
 
 ///|
-async fn collect_rabbita_packages() -> Array[PackageAsset] raise {
-  let parsed = @json.parse(@fs.read_file("_build/packages.json").text())
+async fn collect_rabbita_packages(package_graph : String) -> Array[PackageAsset] raise {
+  let parsed = @json.parse(@fs.read_file(package_graph).text())
   let root = json_object(parsed)
   let package_values = json_array(field(root, "packages"))
   let packages : Array[PackageAsset] = []
@@ -375,7 +453,7 @@ async fn collect_rabbita_packages() -> Array[PackageAsset] raise {
       let sources : Array[SourceAsset] = []
       for file in source_paths {
         let rel = relative(root_path, file)
-        let target = join_path(join_path("dist/moonbit-assets/sources", id), rel)
+        let target = join_path(join_path("public/moonbit-assets/sources", id), rel)
         copy_file(file, target)
         sources.push({ name: rel, url: public_url(target) })
       }
@@ -398,28 +476,48 @@ async fn collect_rabbita_packages() -> Array[PackageAsset] raise {
 }
 
 ///|
-async fn main raise {
-  ensure_package_graph()
+async fn copy_repo_example_asset(path : String) -> Unit raise {
+  copy_file(
+    join_path("../..", path),
+    join_path("public/repo-examples", path),
+  )
+}
 
-  if !@fs.exists("dist") {
-    @fs.mkdir("dist", permission=0o755, recursive=true)
+///|
+async fn copy_repo_examples() -> Unit raise {
+  if @fs.exists("public/repo-examples") {
+    @fs.rmdir("public/repo-examples", recursive=true)
   }
-  if @fs.exists("dist/moonbit-assets") {
-    @fs.rmdir("dist/moonbit-assets", recursive=true)
+  let manifest : ExampleManifest = @json.from_json(
+    @json.parse(@fs.read_file("public/examples.json").text()),
+  )
+  for example in manifest.examples {
+    for source in example.sources {
+      copy_repo_example_asset(source)
+    }
+    copy_repo_example_asset(example.css)
+    copy_repo_example_asset(example.moon_pkg)
   }
-  @fs.mkdir("dist/moonbit-assets", permission=0o755, recursive=true)
-  if !@fs.exists("dist/vendor") {
-    @fs.mkdir("dist/vendor", permission=0o755, recursive=true)
+}
+
+///|
+async fn main raise {
+  let package_graph = ensure_package_graph()
+
+  if !@fs.exists("public") {
+    @fs.mkdir("public", permission=0o755, recursive=true)
+  }
+  if @fs.exists("public/moonbit-assets") {
+    @fs.rmdir("public/moonbit-assets", recursive=true)
+  }
+  @fs.mkdir("public/moonbit-assets", permission=0o755, recursive=true)
+  if !@fs.exists("public/vendor") {
+    @fs.mkdir("public/vendor", permission=0o755, recursive=true)
   }
 
   let core_candidates : Array[String] = []
   match @env.get_env_var("MOONBIT_PLAYGROUND_CORE_BUNDLE") {
     Some(path) => core_candidates.push(path)
-    None => ()
-  }
-  let worker_candidates : Array[String] = []
-  match @env.get_env_var("MOONBIT_PLAYGROUND_WORKER") {
-    Some(path) => worker_candidates.push(path)
     None => ()
   }
 
@@ -430,41 +528,37 @@ async fn main raise {
         "Set MOONBIT_PLAYGROUND_CORE_BUNDLE to a local MoonBit core bundle directory.",
       )
   }
-  let worker_source = match first_existing(worker_candidates) {
-    Some(path) => path
-    None =>
-      abort("Set MOONBIT_PLAYGROUND_WORKER to a local moonc-worker.js file.")
-  }
 
-  copy_file(worker_source, "dist/vendor/moonc-worker.js")
+  download_moonc_worker()
 
   let core_core = first_existing([
     join_path(core_bundle_root, "core.core"),
     join_path(core_bundle_root, "core.core.gz"),
   ]).unwrap()
-  copy_core_file(core_core, "dist/moonbit-assets/core/core.core")
+  copy_core_file(core_core, "public/moonbit-assets/core/core.core")
 
   let abort_source = first_existing([
     join_path(core_bundle_root, "abort/abort.core"),
   ])
   let abort_url = match abort_source {
     Some(path) => {
-      copy_file(path, "dist/moonbit-assets/core/abort/abort.core")
-      Some(public_url("dist/moonbit-assets/core/abort/abort.core"))
+      copy_file(path, "public/moonbit-assets/core/abort/abort.core")
+      Some(public_url("public/moonbit-assets/core/abort/abort.core"))
     }
     None => None
   }
 
   let core_interfaces = collect_core_interfaces(core_bundle_root)
-  let packages = collect_rabbita_packages()
+  let packages = collect_rabbita_packages(package_graph)
+  copy_repo_examples()
   let manifest = render_manifest(
-    public_url("dist/moonbit-assets/core/core.core"),
+    public_url("public/moonbit-assets/core/core.core"),
     abort_url,
     core_interfaces,
     packages,
   )
   @fs.write_file(
-    "dist/moonbit-assets/manifest.json",
+    "public/moonbit-assets/manifest.json",
     manifest,
     create_mode=CreateOrTruncate,
     permission=0o644,
@@ -472,4 +566,5 @@ async fn main raise {
 
   println("Generated \{packages.length()} Rabbita package source assets.")
   println("Generated \{core_interfaces.length()} core interface assets.")
+  println("Generated repo example assets.")
 }

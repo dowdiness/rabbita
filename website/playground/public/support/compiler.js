@@ -1,6 +1,6 @@
 import { createMooncWorker } from "./rpc.js";
 
-const manifestUrl = new URL("../moonbit-assets/manifest.json", import.meta.url).href;
+const manifestUrl = new URL("../moonbit-assets/manifest.json?v=assets-2", import.meta.url).href;
 const textDecoder = new TextDecoder("utf-8");
 let manifestPromise;
 let stdMiFilesPromise;
@@ -11,7 +11,7 @@ let manifestBaseUrl = "";
 
 export async function loadManifest() {
   if (!manifestPromise) {
-    manifestPromise = fetch(manifestUrl).then(async (response) => {
+    manifestPromise = fetch(manifestUrl, { cache: "no-store" }).then(async (response) => {
       if (!response.ok) {
         throw new Error(
           "Missing compiler assets. Run `moon run --target native scripts/assets.mbtx` first.",

@@ -12,5 +12,6 @@ members = [
   "./warren",
   "./rabbita",
   "./utils/shiki",
+  "./website/homepage",
+  "./website/playground",
 ]
-preferred_target = "js"

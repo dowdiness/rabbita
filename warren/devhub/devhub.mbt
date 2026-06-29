@@ -229,6 +229,7 @@ async fn Devhub::handle_request(
           conn
           ..send_response(200, "OK", extra_headers={
             "Content-Type": content_type,
+            "Cache-Control": "no-store",
           })
           ..write(content)
           .end_response()
@@ -237,6 +238,7 @@ async fn Devhub::handle_request(
           conn
           ..send_response(404, "Not Found", extra_headers={
             "Content-Type": "text/plain",
+            "Cache-Control": "no-store",
           })
           ..write("\{path} Not Found")
           .end_response()

@@ -201,7 +201,7 @@ fn load_assets_cmd(emit : Emit[Msg]) -> Cmd {
 
 ///|
 fn example_asset_url(path : String) -> String {
-  "repo-examples/" + path
+  "repo-examples/" + path + "?v=examples-2"
 }
 
 ///|
@@ -361,7 +361,7 @@ fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
     TogglePackageMenu =>
       (@rabbita.none, { ..model, package_menu_open: !model.package_menu_open })
     ClosePackageMenu => (@rabbita.none, { ..model, package_menu_open: false })
-    ExampleChanged(id) => {
+    ExampleChanged(id) =>
       match example_by_id(model.examples, id) {
         Some(example) => {
           let token = model.run_id + 1
@@ -377,9 +377,8 @@ fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
             example_load: Some(new_example_load(token, example)),
           }
           (
-            @rabbita.batch([
-              @rabbita.effect(fn() noraise { set_example_url(example.id) }),
-            ] +
+            @rabbita.batch(
+              [@rabbita.effect(fn() noraise { set_example_url(example.id) })] +
               example.sources.mapi((index, path) => {
                 @http.get(example_asset_url(path)).expect_text(result => {
                   emit(ExampleFileLoaded(token, RepoSource(index), result))
@@ -392,7 +391,8 @@ fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
                 @http.get(example_asset_url(example.moon_pkg)).expect_text(result => {
                   emit(ExampleFileLoaded(token, RepoMoonPkg, result))
                 }),
-              ]),
+              ],
+            ),
             next,
           )
         }
@@ -409,7 +409,6 @@ fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
             },
           )
       }
-    }
     ExampleFileLoaded(token, asset, result) =>
       if token != model.run_id {
         (@rabbita.none, model)
@@ -492,7 +491,9 @@ fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
                   @rabbita.batch(
                     example.sources.mapi((index, path) => {
                       @http.get(example_asset_url(path)).expect_text(result => {
-                        emit(ExampleFileLoaded(token, RepoSource(index), result))
+                        emit(
+                          ExampleFileLoaded(token, RepoSource(index), result),
+                        )
                       })
                     }) +
                     [
@@ -500,8 +501,9 @@ fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
                         emit(ExampleFileLoaded(token, RepoCss, result))
                       }),
                       @http.get(example_asset_url(example.moon_pkg)).expect_text(result => {
-                        emit(ExampleFileLoaded(token, RepoMoonPkg, result))
-                      }),
+                          emit(ExampleFileLoaded(token, RepoMoonPkg, result))
+                        },
+                      ),
                     ],
                   ),
                   next,
@@ -870,11 +872,7 @@ fn rebuild_button_text(model : Model) -> String {
 }
 
 ///|
-fn tab_button(
-  emit : Emit[Msg],
-  active : SourceTab,
-  tab : SourceTab,
-) -> Html {
+fn tab_button(emit : Emit[Msg], active : SourceTab, tab : SourceTab) -> Html {
   let selected = active == tab
   let class_name = if selected { "tab-button selected" } else { "tab-button" }
   button(class=class_name, on_click=emit(SelectTab(tab)), tab_title(tab))
@@ -892,16 +890,20 @@ fn example_select(emit : Emit[Msg], model : Model) -> Html {
         option(
           value="",
           selected=true,
-          if model.examples_ready { "No examples" } else { "Loading examples" },
+          if model.examples_ready {
+            "No examples"
+          } else {
+            "Loading examples"
+          },
         ),
       ]
     } else {
       model.examples.map(example => {
-      option(
-        value=example.id,
-        selected=model.example_id == example.id,
-        example.label,
-      )
+        option(
+          value=example.id,
+          selected=model.example_id == example.id,
+          example.label,
+        )
       })
     },
   )
@@ -1077,7 +1079,9 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
 fn initial_cmd(emit : Emit[Msg], model : Model) -> Cmd {
   let cmds = [
     load_assets_cmd(emit),
-    @http.get("examples.json").expect_json(result => emit(ExamplesReady(result))),
+    @http.get("examples.json?v=examples-2").expect_json(result => {
+      emit(ExamplesReady(result))
+    }),
     editor_sync_cmd(emit, model),
   ]
   @rabbita.batch(cmds)

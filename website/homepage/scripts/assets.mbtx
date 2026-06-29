@@ -1,0 +1,80 @@
+///|
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/fs",
+}
+
+///|
+fn dirname(path : String) -> String {
+  match path.rev_find("/") {
+    Some(index) => if index == 0 { "/" } else { path[:index].to_owned() }
+    None => "."
+  }
+}
+
+///|
+fn join_path(left : String, right : String) -> String {
+  if left == "" {
+    right
+  } else if left.has_suffix("/") {
+    left + right
+  } else {
+    left + "/" + right
+  }
+}
+
+///|
+async fn ensure_parent(path : String) -> Unit raise {
+  let dir = dirname(path)
+  if dir != "." && dir != "" && !@fs.exists(dir) {
+    @fs.mkdir(dir, permission=0o755, recursive=true)
+  }
+}
+
+///|
+async fn copy_file(source : String, target : String) -> Unit raise {
+  ensure_parent(target)
+  let reader = @fs.open(source, mode=ReadOnly)
+  defer reader.close()
+  let writer = @fs.open(
+    target,
+    mode=WriteOnly,
+    create_mode=CreateOrTruncate,
+    permission=0o644,
+  )
+  defer writer.close()
+  writer.write_reader(reader)
+}
+
+///|
+fn skip_build_cache(path : String) -> Bool {
+  !path.contains("/_build/") &&
+  !path.contains("/.mooncakes/") &&
+  !path.has_suffix("/_build") &&
+  !path.has_suffix("/.mooncakes")
+}
+
+///|
+async fn copy_dir(source : String, target : String) -> Unit raise {
+  guard skip_build_cache(source) else { return }
+  match @fs.kind(source) {
+    Directory => {
+      if !@fs.exists(target) {
+        @fs.mkdir(target, permission=0o755, recursive=true)
+      }
+      for entry in @fs.readdir(source, sort=true) {
+        copy_dir(join_path(source, entry), join_path(target, entry))
+      }
+    }
+    _ => copy_file(source, target)
+  }
+}
+
+///|
+async fn main raise {
+  if @fs.exists("public/doc") {
+    @fs.rmdir("public/doc", recursive=true)
+  }
+  copy_dir("../../doc", "public/doc")
+  println("Generated homepage doc assets.")
+}

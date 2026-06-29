@@ -38,7 +38,7 @@ let tour_chapters : Array[TourChapter] = [
 extern "js" fn site_base_url() -> String =
   #| () => {
   #|   const moduleUrl = import.meta.url
-  #|   return new URL("../", moduleUrl).pathname
+  #|   return new URL("./", moduleUrl).pathname
   #| }
 
 // Returns the base URL for tour pages, e.g. "/tour/" or "/rabbita/tour/"
@@ -47,7 +47,7 @@ extern "js" fn site_base_url() -> String =
 extern "js" fn tour_base_url() -> String =
   #| () => {
   #|   const moduleUrl = import.meta.url
-  #|   return new URL("tour/", new URL("../", moduleUrl)).pathname
+  #|   return new URL("tour/", new URL("./", moduleUrl)).pathname
   #| }
 
 ///|
@@ -448,13 +448,15 @@ fn view_tour_sidebar(
 }
 
 ///|
-fn view_tour_toc(toc : Array[TocEntry]) -> Html {
+fn view_tour_toc(toc : Array[TocEntry], base_url : String) -> Html {
   if toc.is_empty() {
     div(class="tour-sidebar-right", nothing)
   } else {
     let items = toc.map(fn(entry) {
       let cls = "tour-toc-item tour-toc-item--h\{entry.level}"
-      li(class=cls, [a(class="tour-toc-link", href="#\{entry.id}", entry.text)])
+      li(class=cls, [
+        a(class="tour-toc-link", href=base_url + "#\{entry.id}", entry.text),
+      ])
     })
     div(class="tour-sidebar-right", [
       p(class="tour-toc-heading", "On this page"),
@@ -476,6 +478,11 @@ fn view_tour(emit : Emit[Msg], model : Model, tm : TourModel) -> Html {
   } else {
     chapter_base_url(chapters[chapter_idx])
   }
+  let tour_url = if chapters.is_empty() {
+    tour_base_url()
+  } else {
+    tour_base_url() + chapters[chapter_idx].path
+  }
   let toc = if tm.content.is_empty() { [] } else { extract_toc(tm.content) }
   div(class="tour-main", [
     div(class="tour-layout", [
@@ -494,7 +501,7 @@ fn view_tour(emit : Emit[Msg], model : Model, tm : TourModel) -> Html {
           },
         ]),
       ]),
-      view_tour_toc(toc),
+      view_tour_toc(toc, tour_url),
     ]),
   ])
 }

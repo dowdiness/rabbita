@@ -3,6 +3,7 @@ package "moonbit-community/warren/vfs"
 
 import {
   "moonbit-community/warren/path",
+  "moonbitlang/async/io",
   "moonbitlang/core/debug",
 }
 
@@ -16,7 +17,7 @@ pub fn VirtualFileSystem::clear(Self) -> Unit
 pub fn VirtualFileSystem::mount(Self, String, VirtualFs) -> Unit
 #as_free_fn
 pub fn VirtualFileSystem::new(Map[String, VirtualFs]) -> Self
-pub async fn VirtualFileSystem::read(Self, String) -> String?
+pub async fn VirtualFileSystem::read(Self, String) -> &@io.Data?
 pub fn VirtualFileSystem::unmount(Self, String) -> Unit
 
 pub(all) enum VirtualFs {
