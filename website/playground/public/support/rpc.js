@@ -22,7 +22,7 @@ function deserialize(message) {
 }
 
 export function createMooncWorker() {
-  const worker = new Worker(new URL("../vendor/moonc-worker.js", import.meta.url), {
+  const worker = new Worker(new URL("./moonc-worker-bridge.js", import.meta.url), {
     name: "moonc-worker",
   });
   const pending = new Map();

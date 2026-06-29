@@ -1,0 +1,38 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "user/pure-playground/main"
+
+import {
+  "moonbit-community/rabbita/cmd",
+  "moonbitlang/core/json",
+}
+
+// Values
+pub fn focus_code_editor_range(String, String, String, String, (String) -> @cmd.Cmd, Int, Int, Int, Int) -> @cmd.Cmd
+
+pub fn sync_code_editor(String, String, String, String, (String) -> @cmd.Cmd) -> @cmd.Cmd
+
+// Errors
+
+// Types and methods
+type Diagnostic
+
+type Example derive(@json.FromJson)
+
+type ExampleAsset
+
+type ExampleLoad
+
+type ExampleManifest derive(@json.FromJson)
+
+type LoadedExample
+
+type Model
+
+type Msg
+
+type SourceTab derive(Eq)
+
+// Type aliases
+
+// Traits
+

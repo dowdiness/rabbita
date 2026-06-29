@@ -1,11 +1,10 @@
 target/
 target
 _build/
+**/_build/
 dist/
+public/doc/
 .mooncakes/
-node_modules/
-package-lock.json
-src/main.js
-src/main.js.map
-src/dist
+**/.mooncakes/
+.moon-home/
 main/doc_*.mbt

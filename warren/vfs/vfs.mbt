@@ -106,7 +106,7 @@ pub fn VirtualFileSystem::clear(self : Self) -> Unit {
 }
 
 ///|
-pub async fn VirtualFileSystem::read(self : Self, path : String) -> String? {
+pub async fn VirtualFileSystem::read(self : Self, path : String) -> &@io.Data? {
   let parts = path
     .split("/")
     .map(part => part.to_owned())
@@ -159,7 +159,7 @@ pub async fn VirtualFileSystem::read(self : Self, path : String) -> String? {
         @fs.kind(path.to_string()) is Regular else {
         return None
       }
-      Some(@fs.read_file(path.to_string()).text())
+      Some(@fs.read_file(path.to_string()))
     }
     _ => None
   }
