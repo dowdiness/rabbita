@@ -1,10 +1,6 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "moonbit-community/rabbita/cmd"
 
-import {
-  "moonbit-community/rabbita/common",
-}
-
 // Values
 pub let after_render : EffectKind
 
@@ -47,12 +43,10 @@ pub(all) struct Hooks {
 // Type aliases
 pub type Hook[Arg] = (&Scheduler, Arg) -> Unit
 
-pub type MessageSender = () -> Unit
-
 // Traits
 pub(open) trait Scheduler {
   fn run_effect(Self, EffectKind, (&Scheduler) -> Unit) -> Unit
-  fn queue_message(Self, @common.Id, () -> Unit) -> Unit
+  fn queue_message(Self, (&Scheduler) -> Unit) -> Unit
   fn drain_message(Self) -> Unit
   fn add(Self, Cmd) -> Unit = _
   fn hooks(Self) -> Hooks

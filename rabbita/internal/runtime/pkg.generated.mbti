@@ -3,13 +3,17 @@ package "moonbit-community/rabbita/internal/runtime"
 
 import {
   "moonbit-community/rabbita/cmd",
-  "moonbit-community/rabbita/common",
   "moonbit-community/rabbita/dom",
+  "moonbit-community/rabbita/incremental",
   "moonbit-community/rabbita/variant",
 }
 
 // Values
-pub fn server_side_render(&IsCell) -> String
+pub fn[Model : Eq, Msg] create_state(Model, (Msg, Model, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd)) -> (@incremental.Dyn[Model], @cmd.Emit[Msg])
+
+pub fn[Model : Eq, Msg, Input] create_state_with_input(Model, @incremental.Dyn[Input], (Msg, Model, Input, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd)) -> (@incremental.Dyn[Model], @cmd.Emit[Msg])
+
+pub fn server_side_render(() -> VNode) -> String
 
 // Errors
 
@@ -18,16 +22,6 @@ pub(all) enum Children[T] {
   Array(Array[T])
   Map(Map[String, T])
 }
-
-pub(all) struct Flags {
-  id : @common.Id
-  mut is_root : Bool
-  mut dirty : Bool
-  mut attach_count : Int
-}
-pub fn Flags::id(Self) -> @common.Id
-pub fn Flags::mark_dirty(Self) -> Unit
-pub fn Flags::new() -> Self
 
 pub struct Props {
   handlers : Map[String, (@dom.Event, &@cmd.Scheduler) -> Unit]
@@ -46,28 +40,22 @@ pub(all) struct Sandbox {
 }
 pub fn Sandbox::flush(Self) -> Unit
 pub fn Sandbox::initialize(Self) -> Unit
-pub fn Sandbox::new(&IsCell) -> Self
+pub fn Sandbox::new(@incremental.Dyn[VNode]) -> Self
 pub impl @cmd.Scheduler for Sandbox
 
-pub enum VNode {
+pub(all) enum VNode {
   Elem(String, Props, Children[VNode], namespace_uri~ : String?)
   Text(String)
   Frag(Array[VNode])
-  Slot(&IsCell)
+  Thunk(Int, () -> VNode)
 }
 pub fn VNode::elem(String, Props, Children[Self], namespace_uri? : String) -> Self
 pub fn VNode::fragment(Array[Self]) -> Self
 pub fn VNode::link(Props, Children[Self], escape? : Bool) -> Self
-pub fn VNode::slot(&IsCell) -> Self
 pub fn VNode::text(String) -> Self
+pub impl Eq for VNode
 
 // Type aliases
 
 // Traits
-pub(open) trait IsCell {
-  fn init(Self, &@cmd.Scheduler) -> Unit
-  fn step(Self, &@cmd.Scheduler) -> Unit
-  fn view(Self) -> VNode
-  fn flags(Self) -> Flags
-}
 

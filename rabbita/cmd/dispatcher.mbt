@@ -12,21 +12,8 @@ pub fn[A, B] Emit::map(self : Self[A], f : (B) -> A) -> Self[B] {
 #doc(hidden)
 pub fn[Msg] make_emitter(
   _ : @key.Key,
-  id : @common.Id,
-  inbox : @queue.Queue[Msg],
+  drain : (Msg, &Scheduler) -> Unit,
 ) -> Emit[Msg] {
   // carry the drain (which own model and update) in message will cause memory leak in RC
-  msg => Message(id, () => inbox.push(msg))
-}
-
-///|
-/// internal use only
-#doc(hidden)
-#deprecated("Use make_emitter instead.")
-pub fn[Msg] make_dispatcher(
-  key : @key.Key,
-  id : @common.Id,
-  inbox : @queue.Queue[Msg],
-) -> Emit[Msg] {
-  make_emitter(key, id, inbox)
+  msg => Message(s => drain(msg, s))
 }

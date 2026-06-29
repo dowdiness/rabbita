@@ -1,14 +1,12 @@
 ///|
 priv struct TypedCell[Model, Msg] {
-  mut has_init : Bool
-  model : Ref[Model]
+  hasher : ((Model) -> Int)?
   emit : @cmd.Emit[Msg]
-  inbox : @queue.Queue[Msg]
-  update : (Emit[Msg], Msg, Model) -> (Cmd, Model)
+  model : Ref[Model]
   view : (Emit[Msg], Model) -> @html.Html
   subscriptions : ((Emit[Msg], Model) -> @sub.Sub)?
-  mut sub_map : Map[String, @sub.RunningSub]
-  flags : @runtime.Flags
+  sub_map : Ref[Map[String, @sub.RunningSub]]
+  vnode : @incremental.Input[@runtime.VNode]
 }
 
 ///|
@@ -22,24 +20,35 @@ pub type Emit[Msg] = @cmd.Emit[Msg]
 #deprecated("Use Emit[Msg] instead.")
 pub type Dispatch[Msg] = Emit[Msg]
 
+// ///|
+// impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with fn init(
+//   self,
+//   scheduler,
+// ) {
+//   guard !self.has_init else { return }
+//   self.has_init = true
+//   if self.subscriptions is Some(subscriptions) {
+//     let subs = subscriptions(self.emit, self.model.val).to_map(
+//       @key.key,
+//       filter_global=!self.flags().is_root,
+//     )
+//     for key, sub in subs {
+//       let (payload, loader) = sub
+//       if loader(payload, scheduler) is Some(running) {
+//         self.sub_map[key] = running
+//       }
+//     }
+//   }
+// }
+
 ///|
-impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with fn init(
-  self,
-  scheduler,
-) {
-  guard !self.has_init else { return }
-  self.has_init = true
+impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with fn init(self, scheduler) {
   if self.subscriptions is Some(subscriptions) {
-    let subs = subscriptions(self.emit, self.model.val).to_map(
+    let new_subs = subscriptions(self.emit, self.model.val).to_map(
       @key.key,
-      filter_global=!self.flags().is_root,
+      filter_global=false,
     )
-    for key, sub in subs {
-      let (payload, loader) = sub
-      if loader(payload, scheduler) is Some(running) {
-        self.sub_map[key] = running
-      }
-    }
+    self.sub_map.val = diff_subs(self.sub_map.val, new_subs, scheduler)
   }
 }
 
@@ -66,37 +75,52 @@ fn diff_subs(
   sub_map
 }
 
+// ///|
+// impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with fn step(
+//   self,
+//   scheduler,
+// ) {
+//   if self.inbox.pop() is Some(msg) {
+//     let (cmd, model) = (self.update)(self.emit, msg, self.model.val)
+//     if self.subscriptions is Some(subscriptions) {
+//       let new_subs = subscriptions(self.emit, model).to_map(
+//         @key.key,
+//         filter_global=!self.flags().is_root,
+//       )
+//       let old_subs = self.sub_map
+//       self.sub_map = diff_subs(old_subs, new_subs, scheduler)
+//     }
+//     self.model.val = model
+//     scheduler.add(cmd)
+//     self.flags.mark_dirty()
+//   } else {
+//     // violate the invariant
+//   }
+// }
+
 ///|
-impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with fn step(
-  self,
-  scheduler,
-) {
-  if self.inbox.pop() is Some(msg) {
-    let (cmd, model) = (self.update)(self.emit, msg, self.model.val)
-    if self.subscriptions is Some(subscriptions) {
-      let new_subs = subscriptions(self.emit, model).to_map(
-        @key.key,
-        filter_global=!self.flags().is_root,
-      )
-      let old_subs = self.sub_map
-      self.sub_map = diff_subs(old_subs, new_subs, scheduler)
-    }
-    self.model.val = model
-    scheduler.add(cmd)
-    self.flags.mark_dirty()
+fn[Model, Msg] render_typed_cell(
+  emit : @cmd.Emit[Msg],
+  model : Ref[Model],
+  view : (Emit[Msg], Model) -> @html.Html,
+  hasher : ((Model) -> Int)?,
+) -> @runtime.VNode {
+  if hasher is Some(hasher) {
+    let hash = hasher(model.val)
+    @runtime.VNode::Thunk(hash, () => view(emit, model.val).0)
   } else {
-    // violate the invariant
+    view(emit, model.val).0
   }
 }
 
 ///|
 impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with fn view(self) {
-  (self.view)(self.emit, self.model.val).0
+  render_typed_cell(self.emit, self.model, self.view, self.hasher)
 }
 
 ///|
-impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with fn flags(self) {
-  self.flags
+impl[Model, Msg] @runtime.IsCell for TypedCell[Model, Msg] with fn to_dyn(self) {
+  self.vnode.to_dyn()
 }
 
 ///|
@@ -106,7 +130,7 @@ struct Cell(&@runtime.IsCell)
 ///|
 /// Render this cell as `Html`.
 pub fn Cell::view(self : Self) -> Html {
-  Html::from_vnode(@runtime.VNode::slot(self.0))
+  self.0.view()
 }
 
 ///|
@@ -170,21 +194,8 @@ pub fn[Model, Msg] cell(
   view~ : (Emit[Msg], Model) -> Html,
   subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
 ) -> Cell {
-  let flags = @runtime.Flags::new()
-  let inbox = @queue.Queue([])
-  let emit = @cmd.make_emitter(@key.key, flags.id, inbox)
-  let model = @ref.new(model)
-  Cell({
-    has_init: false,
-    inbox,
-    view,
-    update,
-    emit,
-    model,
-    flags,
-    subscriptions,
-    sub_map: {},
-  })
+  let (_, cell) = cell_with_emit(model~, update~, view~, subscriptions?)
+  cell
 }
 
 ///|
@@ -250,24 +261,46 @@ pub fn[Model, Msg] cell_with_emit(
   view~ : (Emit[Msg], Model) -> Html,
   subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
 ) -> (Emit[Msg], Cell) {
-  let flags = @runtime.Flags::new()
-  let inbox = @queue.Queue([])
-  let emit = @cmd.make_emitter(@key.key, flags.id, inbox)
+  cell_aux(model~, update~, view~, subscriptions?)
+}
+
+///|
+fn[Model, Msg] cell_aux(
+  model~ : Model,
+  update~ : (Emit[Msg], Msg, Model) -> (Cmd, Model),
+  view~ : (Emit[Msg], Model) -> Html,
+  subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
+  hasher? : (Model) -> Int,
+) -> (Emit[Msg], Cell) {
+  let mut emit = @cmd.make_emitter(@key.key, (_, _) => ())
   let model = @ref.new(model)
-  (
-    emit,
-    Cell({
-      has_init: false,
-      inbox,
-      view,
-      update,
-      emit,
-      model,
-      flags,
-      subscriptions,
-      sub_map: {},
-    }),
-  )
+  let sub_map = Ref({})
+  let vnode = @incremental.input(@runtime.VNode::fragment([]))
+  fn render() {
+    render_typed_cell(emit, model, view, hasher)
+  }
+  fn handle_subs(scheduler) {
+    if subscriptions is Some(subscriptions) {
+      let new_subs = subscriptions(emit, model.val).to_map(
+        @key.key,
+        filter_global=false,
+      )
+      sub_map.val = diff_subs(sub_map.val, new_subs, scheduler)
+    }
+  }
+
+  fn trigger(msg, scheduler : &@cmd.Scheduler) {
+    let (cmd, new_model) = update(emit, msg, model.val)
+    model.val = new_model
+    handle_subs(scheduler)
+    vnode.set(render())
+    scheduler.add(cmd)
+  }
+
+  emit = @cmd.make_emitter(@key.key, trigger)
+  vnode.set(render())
+  let cell = Cell({ view, emit, model, subscriptions, sub_map, hasher, vnode })
+  (emit, cell)
 }
 
 ///|
@@ -278,24 +311,7 @@ pub fn[Model, Msg] cell_with_dispatch(
   view~ : (Emit[Msg], Model) -> Html,
   subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
 ) -> (Emit[Msg], Cell) {
-  let flags = @runtime.Flags::new()
-  let inbox = @queue.Queue([])
-  let emit = @cmd.make_emitter(@key.key, flags.id, inbox)
-  let model = @ref.new(model)
-  (
-    emit,
-    Cell({
-      has_init: false,
-      inbox,
-      view,
-      update,
-      emit,
-      model,
-      flags,
-      subscriptions,
-      sub_map: {},
-    }),
-  )
+  cell_with_emit(model~, update~, view~, subscriptions?)
 }
 
 ///|
@@ -375,23 +391,11 @@ pub fn[Model, Msg] simple_cell_with_emit(
   view~ : (Emit[Msg], Model) -> Html,
   subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
 ) -> (Emit[Msg], Cell) {
-  let flags = @runtime.Flags::new()
-  let inbox = @queue.Queue([])
-  let emit = @cmd.make_emitter(@key.key, flags.id, inbox)
-  let model = @ref.new(model)
-  (
-    emit,
-    Cell({
-      has_init: false,
-      inbox,
-      view,
-      update: (_, msg, model) => (none, update(msg, model)),
-      emit,
-      model,
-      flags,
-      subscriptions,
-      sub_map: {},
-    }),
+  cell_with_emit(
+    model~,
+    view~,
+    update=(_, msg, model) => (none, update(msg, model)),
+    subscriptions?,
   )
 }
 
@@ -403,24 +407,7 @@ pub fn[Model, Msg] simple_cell_with_dispatch(
   view~ : (Emit[Msg], Model) -> Html,
   subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
 ) -> (Emit[Msg], Cell) {
-  let flags = @runtime.Flags::new()
-  let inbox = @queue.Queue([])
-  let emit = @cmd.make_emitter(@key.key, flags.id, inbox)
-  let model = @ref.new(model)
-  (
-    emit,
-    Cell({
-      has_init: false,
-      inbox,
-      view,
-      update: (_, msg, model) => (none, update(msg, model)),
-      emit,
-      model,
-      flags,
-      subscriptions,
-      sub_map: {},
-    }),
-  )
+  simple_cell_with_emit(model~, update~, view~, subscriptions?)
 }
 
 ///|

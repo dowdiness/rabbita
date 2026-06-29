@@ -9,6 +9,7 @@ import {
   "moonbitlang/core/queue",
   "moonbitlang/core/ref",
   "moonbit-community/rabbita/js",
+  "moonbit-community/rabbita/incremental",
 }
 
 import {

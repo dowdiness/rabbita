@@ -31,9 +31,15 @@ pub type Html = @html.Html
 /// ```
 #cfg(target="js")
 pub fn new(root : Cell) -> App {
-  let sandbox = @runtime.Sandbox::new(root.0)
-  root.0.flags().is_root = true
-  App::{ sandbox, init_cmd: None }
+  let sandbox = @runtime.Sandbox::new(root.0.to_dyn())
+  App::{ sandbox, init_cmd: None, init: Some(s => root.0.init(s)) }
+}
+
+///|
+#cfg(target="js")
+pub fn from_incremental(root : @incremental.Dyn[Html]) -> App {
+  let sandbox = @runtime.Sandbox::new(root.map(html => html.0))
+  App::{ sandbox, init_cmd: None, init: None }
 }
 
 ///|
@@ -91,6 +97,10 @@ pub fn App::mount(self : Self, element_id : String) -> Unit {
     self.sandbox.add(cmd)
     self.init_cmd = None
   }
+  if self.init is Some(init) {
+    init(self.sandbox)
+    self.init = None
+  }
   self.sandbox.initialize()
   self.sandbox.flush()
 }
@@ -101,6 +111,7 @@ pub fn App::mount(self : Self, element_id : String) -> Unit {
 struct App {
   sandbox : @runtime.Sandbox
   mut init_cmd : Cmd?
+  mut init : ((&@cmd.Scheduler) -> Unit)?
 }
 
 ///|
@@ -130,5 +141,38 @@ struct App {
 /// ```
 #internal(unstable, "Experimental API")
 pub fn render_to_string(root : Cell) -> String {
-  @runtime.server_side_render(root.0)
+  @runtime.server_side_render(() => root.view().0)
+}
+
+///|
+pub using @incremental {
+  type Dyn,
+  zip2,
+  zip3,
+  zip4,
+  zip5,
+  zip6,
+  zip7,
+  zip8,
+  zip9,
+  zip10,
+  zip11,
+  zip12,
+}
+
+///|
+pub fn[Model : Eq, Msg] create_state(
+  init : Model,
+  update : (Msg, Model, Emit[Msg]) -> (Model, Cmd),
+) -> (Dyn[Model], Emit[Msg]) {
+  @runtime.create_state(init, update)
+}
+
+///|
+pub fn[Model : Eq, Msg, Input] create_state_with_input(
+  init : Model,
+  input~ : @incremental.Dyn[Input],
+  update : (Msg, Model, Input, Emit[Msg]) -> (Model, Cmd),
+) -> (Dyn[Model], Emit[Msg]) {
+  @runtime.create_state_with_input(init, input, update)
 }

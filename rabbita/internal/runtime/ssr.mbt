@@ -120,6 +120,7 @@ fn is_html_void_element(tag : String) -> Bool {
 ///|
 fn vnode_to_string(buf : StringBuilder, vnode : VNode) -> Unit {
   match vnode {
+    Thunk(_, render) => vnode_to_string(buf, render())
     Elem(tag, props, children, namespace_uri=ns) => {
       let tag = if tag == CAPTURED_LINK_TAG { "a" } else { tag }
       let { attrs, props, styles, .. } = props
@@ -157,7 +158,6 @@ fn vnode_to_string(buf : StringBuilder, vnode : VNode) -> Unit {
     }
     Text(s) => write_escaped_text(buf, s)
     Frag(c) => children_to_string(buf, Array(c))
-    Slot(cell) => vnode_to_string(buf, cell.view())
   }
 }
 
@@ -176,8 +176,8 @@ fn children_to_string(buf : StringBuilder, children : Children[VNode]) -> Unit {
 }
 
 ///|
-pub fn server_side_render(root : &IsCell) -> String {
-  let vnode = root.view()
+pub fn server_side_render(render : () -> VNode) -> String {
+  let vnode = render()
   let buf = StringBuilder::new()
   vnode_to_string(buf, vnode)
   buf.to_string()
