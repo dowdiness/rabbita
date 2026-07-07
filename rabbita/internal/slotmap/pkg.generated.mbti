@@ -1,22 +1,19 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "moonbit-community/rabbita/internal/slotmap"
 
-import {
-  "moonbitlang/core/debug",
-}
-
 // Values
 
 // Errors
 
 // Types and methods
-type Id derive(Compare, Eq, Hash, @debug.Debug)
+type Id derive(Compare, Eq, Hash)
 
 type SlotMap[T]
 pub fn[T] SlotMap::SlotMap() -> Self[T]
 pub fn[T] SlotMap::allocate(Self[T]) -> Id
 pub fn[T] SlotMap::allocate_with(Self[T], (Id) -> T) -> Id
 pub fn[T] SlotMap::free(Self[T], Id) -> Unit
+pub fn[T] SlotMap::get(Self[T], Id) -> T?
 #alias("_[_]")
 pub fn[T] SlotMap::read(Self[T], Id) -> T
 #alias("_[_]=_")

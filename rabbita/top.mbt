@@ -30,8 +30,9 @@ pub type Html = @html.Html
 /// }
 /// ```
 #cfg(target="js")
-pub fn new(builder : (Graph) -> Val[Html]) -> App {
+pub fn new(builder : () -> Val[Html]) -> App {
   let sandbox = @runtime.Sandbox::new()
+  ambient_graph.val = Some(Graph(sandbox))
   App::{ sandbox, init_cmd: None, builder }
 }
 
@@ -43,11 +44,12 @@ pub fn[Model : Eq, Msg] elmish(
   update~ : (Emit[Msg], Msg, Model) -> (Model, Cmd),
   subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
 ) -> App {
-  fn builder(graph : Graph) {
-    let (model, emit) = graph.create_state(model, update~, subscriptions?)
+  fn builder() {
+    let (model, emit) = create_state(model, update~, subscriptions?)
     model.map(model => view(emit, model))
   }
   let sandbox = @runtime.Sandbox::new()
+  ambient_graph.val = Some(Graph(sandbox))
   App::{ sandbox, init_cmd: None, builder }
 }
 
@@ -107,8 +109,7 @@ pub fn App::mount(self : Self, element_id : String) -> Unit {
     self.init_cmd = None
   }
 
-  let graph = Graph(self.sandbox)
-  let vnode = (self.builder)(graph)
+  let vnode = (self.builder)()
 
   self.sandbox.initialize(vnode.0.map(html => html.0))
   self.sandbox.flush()
@@ -119,7 +120,7 @@ pub fn App::mount(self : Self, element_id : String) -> Unit {
 #cfg(target="js")
 struct App {
   sandbox : @runtime.Sandbox
-  builder : (Graph) -> Val[Html]
+  builder : () -> Val[Html]
   mut init_cmd : Cmd?
 }
 

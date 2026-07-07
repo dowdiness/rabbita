@@ -1,8 +1,14 @@
 ///|
+pub using @duplix {trait Enumerate}
+
+///|
+let ambient_graph : Ref[Graph?] = Ref(None)
+
+///|
 struct Val[A](@duplix.Node[A])
 
 ///|
-struct Graph {
+priv struct Graph {
   sandbox : @runtime.Sandbox
 }
 
@@ -36,12 +42,12 @@ pub fn[A : Eq, B : Eq, C : Eq, D] Val::zip3_with(
 }
 
 ///|
-pub fn[Model : Eq, Msg] Graph::create_simple_state(
-  self : Self,
+pub fn[Model : Eq, Msg] create_simple_state(
   model : Model,
   update~ : (Msg, Model) -> Model,
 ) -> (Val[Model], Emit[Msg]) {
-  let (node, emit) = self.sandbox.create_state_machine(_ => (model, none), (
+  let graph = ambient_graph.val.unwrap()
+  let (node, emit) = graph.sandbox.create_state_machine(_ => (model, none), (
     _,
     msg,
     model,
@@ -50,12 +56,12 @@ pub fn[Model : Eq, Msg] Graph::create_simple_state(
 }
 
 ///|
-pub fn[Model : Eq, Msg] Graph::create_state(
-  graph : Graph,
+pub fn[Model : Eq, Msg] create_state(
   model : Model,
   update~ : (Emit[Msg], Msg, Model) -> (Model, Cmd),
   subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
 ) -> (Val[Model], Emit[Msg]) {
+  let graph = ambient_graph.val.unwrap()
   let (node, emit) = graph.sandbox.create_state_machine(
     _ => (model, none),
     update,
@@ -65,39 +71,36 @@ pub fn[Model : Eq, Msg] Graph::create_state(
 }
 
 ///|
-pub fn[K : Hash + Eq, V : Eq, C : Eq] Graph::create_assoc(
-  graph : Self,
-  map : Val[Map[K, V]],
-  f : (Graph, K, Val[V]) -> Val[C],
+pub fn[K : Hash + Eq, V : Eq, C : Eq] Val::assoc(
+  a : Val[Map[K, V]],
+  f : (K, Val[V]) -> Val[C],
 ) -> Val[Array[C]] {
-  map.0.assoc((k, v) => f(graph, k, v).0)
+  a.0.assoc((k, v) => f(k, v).0)
 }
 
 ///|
-pub fn[E : @duplix.Enumerate + Eq, C : Eq] Graph::create_enum(
-  _self : Self,
-  map : Val[E],
+pub fn[E : @duplix.Enumerate + Eq, C : Eq] Val::enumerate(
+  a : Val[E],
   f : (E) -> Val[C],
 ) -> Val[C] {
-  map.0.enumerate(e => f(e).0)
+  a.0.enumerate(e => f(e).0)
 }
 
 ///|
-pub fn[E : @duplix.Enumerate + Eq, C : Eq] Graph::create_switch(
-  _graph : Self,
-  map : Val[E],
+pub fn[E : @duplix.Enumerate + Eq, C : Eq] Val::switch(
+  a : Val[E],
   f : (E) -> Val[C],
 ) -> Val[C] {
-  map.0.switch(e => f(e).0)
+  a.0.switch(e => f(e).0)
 }
 
 ///|
-pub fn[Model : Eq, Msg] Graph::create_state_with_init(
-  graph : Graph,
+pub fn[Model : Eq, Msg] create_state_with_init(
   init~ : (Emit[Msg]) -> (Model, Cmd),
   update~ : (Emit[Msg], Msg, Model) -> (Model, Cmd),
   subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
 ) -> (Val[Model], Emit[Msg]) {
+  let graph = ambient_graph.val.unwrap()
   let (node, emit) = graph.sandbox.create_state_machine(
     init,
     update,
@@ -107,13 +110,13 @@ pub fn[Model : Eq, Msg] Graph::create_state_with_init(
 }
 
 ///|
-pub fn[Model : Eq, Msg, Input : Eq] Graph::create_state_with_input(
-  graph : Graph,
+pub fn[Model : Eq, Msg, Input : Eq] create_state_with_input(
   init~ : (Emit[Msg], Input) -> (Model, Cmd),
   update~ : (Emit[Msg], Input, Msg, Model) -> (Model, Cmd),
   subscriptions? : (Emit[Msg], Input, Model) -> @sub.Sub,
   input~ : Val[Input],
 ) -> (Val[Model], Emit[Msg]) {
+  let graph = ambient_graph.val.unwrap()
   let (node, emit) = graph.sandbox.create_state_machine_with_input(
     init,
     update,
@@ -124,12 +127,11 @@ pub fn[Model : Eq, Msg, Input : Eq] Graph::create_state_with_input(
 }
 
 ///|
-pub fn[Model : Eq] Graph::create_single_state(
-  self : Self,
+pub fn[Model : Eq] create_single_state(
   init : Model,
 ) -> (Val[Model], Emit[(Model) -> Model]) {
   fn update(f, model) {
     f(model)
   }
-  self.create_simple_state(init, update~)
+  create_simple_state(init, update~)
 }
