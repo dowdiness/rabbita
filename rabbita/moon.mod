@@ -1,5 +1,9 @@
 name = "moonbit-community/rabbita"
 
+import {
+  "Yoorkin/duplix@0.2.7",
+}
+
 version = "0.12.4"
 
 readme = "README.md"

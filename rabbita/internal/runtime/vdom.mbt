@@ -2,7 +2,8 @@
 using @cmd {trait Scheduler}
 
 ///|
-pub(all) enum VNode {
+#warnings("-unused_constructor")
+pub enum VNode {
   Elem(String, Props, Children[VNode], namespace_uri~ : String?)
   Text(String)
   Frag(Array[VNode])

@@ -2,17 +2,16 @@
 package "moonbit-community/rabbita/internal/runtime"
 
 import {
+  "Yoorkin/duplix",
   "moonbit-community/rabbita/cmd",
   "moonbit-community/rabbita/dom",
-  "moonbit-community/rabbita/incremental",
+  "moonbit-community/rabbita/internal/any",
+  "moonbit-community/rabbita/internal/slotmap",
+  "moonbit-community/rabbita/sub",
   "moonbit-community/rabbita/variant",
 }
 
 // Values
-pub fn[Model : Eq, Msg] create_state(Model, (Msg, Model, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd)) -> (@incremental.Dyn[Model], @cmd.Emit[Msg])
-
-pub fn[Model : Eq, Msg, Input] create_state_with_input(Model, @incremental.Dyn[Input], (Msg, Model, Input, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd)) -> (@incremental.Dyn[Model], @cmd.Emit[Msg])
-
 pub fn server_side_render(() -> VNode) -> String
 
 // Errors
@@ -38,12 +37,19 @@ pub(all) struct Sandbox {
   hooks : @cmd.Hooks
   // private fields
 }
+pub fn[Model : Eq, Msg] Sandbox::create_state_machine(Self, (@cmd.Emit[Msg]) -> (Model, @cmd.Cmd), (@cmd.Emit[Msg], Msg, Model) -> (Model, @cmd.Cmd), subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (@duplix.Node[Model], @cmd.Emit[Msg])
+pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(Self, (@cmd.Emit[Msg], Input) -> (Model, @cmd.Cmd), (@cmd.Emit[Msg], Input, Msg, Model) -> (Model, @cmd.Cmd), subscriptions? : (@cmd.Emit[Msg], Input, Model) -> @sub.Sub, @duplix.Node[Input]) -> (@duplix.Node[Model], @cmd.Emit[Msg])
 pub fn Sandbox::flush(Self) -> Unit
-pub fn Sandbox::initialize(Self) -> Unit
-pub fn Sandbox::new(@incremental.Dyn[VNode]) -> Self
+pub fn Sandbox::initialize(Self, @duplix.Node[VNode]) -> Unit
+pub fn Sandbox::new() -> Self
 pub impl @cmd.Scheduler for Sandbox
 
-pub(all) enum VNode {
+pub(all) struct Store {
+  id : @slotmap.Id
+  on_update : (&@cmd.Scheduler, @any.Any) -> Unit
+}
+
+pub enum VNode {
   Elem(String, Props, Children[VNode], namespace_uri~ : String?)
   Text(String)
   Frag(Array[VNode])

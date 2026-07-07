@@ -10,10 +10,14 @@ pub fn[A, B] Emit::map(self : Self[A], f : (B) -> A) -> Self[B] {
 ///|
 /// internal use only
 #doc(hidden)
-pub fn[Msg] make_emitter(
-  _ : @key.Key,
-  drain : (Msg, &Scheduler) -> Unit,
-) -> Emit[Msg] {
+pub fn[Msg] make_emitter(id : @slotmap.Id) -> Emit[Msg] {
   // carry the drain (which own model and update) in message will cause memory leak in RC
-  msg => Message(s => drain(msg, s))
+  msg => Message(id, @any.erase(msg))
+}
+
+///|
+/// internal use only
+#doc(hidden)
+pub fn[Msg] make_legacy_emitter(f : (&Scheduler, Msg) -> Unit) -> Emit[Msg] {
+  msg => LegacyMessage(x => f(x, msg))
 }

@@ -2,9 +2,9 @@
 package "moonbit-community/rabbita"
 
 import {
+  "Yoorkin/duplix",
   "moonbit-community/rabbita/cmd",
   "moonbit-community/rabbita/html",
-  "moonbit-community/rabbita/incremental",
   "moonbit-community/rabbita/sub",
   "moonbit-community/rabbita/url",
 }
@@ -14,61 +14,17 @@ pub fn[A, E : Error] attempt((Result[A, E]) -> @cmd.Cmd, async () -> A raise E) 
 
 pub fn batch(Array[@cmd.Cmd]) -> @cmd.Cmd
 
-pub fn[Model, Msg] cell(model~ : Model, update~ : (@cmd.Emit[Msg], Msg, Model) -> (@cmd.Cmd, Model), view~ : (@cmd.Emit[Msg], Model) -> @html.Html, subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> Cell
-
-#deprecated
-pub fn[Model, Msg] cell_with_dispatch(model~ : Model, update~ : (@cmd.Emit[Msg], Msg, Model) -> (@cmd.Cmd, Model), view~ : (@cmd.Emit[Msg], Model) -> @html.Html, subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (@cmd.Emit[Msg], Cell)
-
-pub fn[Model, Msg] cell_with_emit(model~ : Model, update~ : (@cmd.Emit[Msg], Msg, Model) -> (@cmd.Cmd, Model), view~ : (@cmd.Emit[Msg], Model) -> @html.Html, subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (@cmd.Emit[Msg], Cell)
-
-pub fn[Model : Eq, Msg] create_state(Model, (Msg, Model, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd)) -> (@incremental.Dyn[Model], @cmd.Emit[Msg])
-
-pub fn[Model : Eq, Msg, Input] create_state_with_input(Model, input~ : @incremental.Dyn[Input], (Msg, Model, Input, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd)) -> (@incremental.Dyn[Model], @cmd.Emit[Msg])
-
 pub fn delay(@cmd.Cmd, Int) -> @cmd.Cmd
 
 pub fn effect(async () -> Unit noraise) -> @cmd.Cmd
 
-pub fn from_incremental(@incremental.Dyn[@html.Html]) -> App
+pub fn[Model : Eq, Msg] elmish(model~ : Model, view~ : (@cmd.Emit[Msg], Model) -> @html.Html, update~ : (@cmd.Emit[Msg], Msg, Model) -> (Model, @cmd.Cmd), subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> App
 
-pub fn new(Cell) -> App
+pub fn new((Graph) -> Val[@html.Html]) -> App
 
 pub let none : @cmd.Cmd
 
 pub fn[A] perform((A) -> @cmd.Cmd, async () -> A noraise) -> @cmd.Cmd
-
-pub fn render_to_string(Cell) -> String
-
-pub fn[Model, Msg] simple_cell(model~ : Model, update~ : (Msg, Model) -> Model, view~ : (@cmd.Emit[Msg], Model) -> @html.Html) -> Cell
-
-#deprecated
-pub fn[Model, Msg] simple_cell_with_dispatch(model~ : Model, update~ : (Msg, Model) -> Model, view~ : (@cmd.Emit[Msg], Model) -> @html.Html, subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (@cmd.Emit[Msg], Cell)
-
-pub fn[Model, Msg] simple_cell_with_emit(model~ : Model, update~ : (Msg, Model) -> Model, view~ : (@cmd.Emit[Msg], Model) -> @html.Html, subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (@cmd.Emit[Msg], Cell)
-
-pub fn static_cell(@html.Html) -> Cell
-
-pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq, J : Eq] zip10(@incremental.Dyn[A], @incremental.Dyn[B], @incremental.Dyn[C], @incremental.Dyn[D], @incremental.Dyn[E], @incremental.Dyn[F], @incremental.Dyn[G], @incremental.Dyn[H], @incremental.Dyn[I], @incremental.Dyn[J]) -> @incremental.Dyn[(A, B, C, D, E, F, G, H, I, J)]
-
-pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq, J : Eq, K : Eq] zip11(@incremental.Dyn[A], @incremental.Dyn[B], @incremental.Dyn[C], @incremental.Dyn[D], @incremental.Dyn[E], @incremental.Dyn[F], @incremental.Dyn[G], @incremental.Dyn[H], @incremental.Dyn[I], @incremental.Dyn[J], @incremental.Dyn[K]) -> @incremental.Dyn[(A, B, C, D, E, F, G, H, I, J, K)]
-
-pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq, J : Eq, K : Eq, L : Eq] zip12(@incremental.Dyn[A], @incremental.Dyn[B], @incremental.Dyn[C], @incremental.Dyn[D], @incremental.Dyn[E], @incremental.Dyn[F], @incremental.Dyn[G], @incremental.Dyn[H], @incremental.Dyn[I], @incremental.Dyn[J], @incremental.Dyn[K], @incremental.Dyn[L]) -> @incremental.Dyn[(A, B, C, D, E, F, G, H, I, J, K, L)]
-
-pub fn[A : Eq, B : Eq] zip2(@incremental.Dyn[A], @incremental.Dyn[B]) -> @incremental.Dyn[(A, B)]
-
-pub fn[A : Eq, B : Eq, C : Eq] zip3(@incremental.Dyn[A], @incremental.Dyn[B], @incremental.Dyn[C]) -> @incremental.Dyn[(A, B, C)]
-
-pub fn[A : Eq, B : Eq, C : Eq, D : Eq] zip4(@incremental.Dyn[A], @incremental.Dyn[B], @incremental.Dyn[C], @incremental.Dyn[D]) -> @incremental.Dyn[(A, B, C, D)]
-
-pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq] zip5(@incremental.Dyn[A], @incremental.Dyn[B], @incremental.Dyn[C], @incremental.Dyn[D], @incremental.Dyn[E]) -> @incremental.Dyn[(A, B, C, D, E)]
-
-pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq] zip6(@incremental.Dyn[A], @incremental.Dyn[B], @incremental.Dyn[C], @incremental.Dyn[D], @incremental.Dyn[E], @incremental.Dyn[F]) -> @incremental.Dyn[(A, B, C, D, E, F)]
-
-pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq] zip7(@incremental.Dyn[A], @incremental.Dyn[B], @incremental.Dyn[C], @incremental.Dyn[D], @incremental.Dyn[E], @incremental.Dyn[F], @incremental.Dyn[G]) -> @incremental.Dyn[(A, B, C, D, E, F, G)]
-
-pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq] zip8(@incremental.Dyn[A], @incremental.Dyn[B], @incremental.Dyn[C], @incremental.Dyn[D], @incremental.Dyn[E], @incremental.Dyn[F], @incremental.Dyn[G], @incremental.Dyn[H]) -> @incremental.Dyn[(A, B, C, D, E, F, G, H)]
-
-pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq] zip9(@incremental.Dyn[A], @incremental.Dyn[B], @incremental.Dyn[C], @incremental.Dyn[D], @incremental.Dyn[E], @incremental.Dyn[F], @incremental.Dyn[G], @incremental.Dyn[H], @incremental.Dyn[I]) -> @incremental.Dyn[(A, B, C, D, E, F, G, H, I)]
 
 // Errors
 
@@ -79,16 +35,23 @@ pub fn App::with_init(Self, @cmd.Cmd) -> Unit
 #deprecated
 pub fn App::with_route(Self, url_changed? : @cmd.Emit[@url.Url], url_request? : @cmd.Emit[@url.UrlRequest]) -> Unit
 
-type Cell
-pub fn Cell::view(Self) -> @html.Html
+type Graph
+pub fn[K : Hash + Eq, V : Eq, C : Eq] Graph::create_assoc(Self, Val[Map[K, V]], (Self, K, Val[V]) -> Val[C]) -> Val[Array[C]]
+pub fn[E : @duplix.Enumerate + Eq, C : Eq] Graph::create_enum(Self, Val[E], (E) -> Val[C]) -> Val[C]
+pub fn[Model : Eq, Msg] Graph::create_simple_state(Self, Model, update~ : (Msg, Model) -> Model) -> (Val[Model], @cmd.Emit[Msg])
+pub fn[Model : Eq] Graph::create_single_state(Self, Model) -> (Val[Model], @cmd.Emit[(Model) -> Model])
+pub fn[Model : Eq, Msg] Graph::create_state(Self, Model, update~ : (@cmd.Emit[Msg], Msg, Model) -> (Model, @cmd.Cmd), subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (Val[Model], @cmd.Emit[Msg])
+pub fn[Model : Eq, Msg] Graph::create_state_with_init(Self, init~ : (@cmd.Emit[Msg]) -> (Model, @cmd.Cmd), update~ : (@cmd.Emit[Msg], Msg, Model) -> (Model, @cmd.Cmd), subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (Val[Model], @cmd.Emit[Msg])
+pub fn[Model : Eq, Msg, Input : Eq] Graph::create_state_with_input(Self, init~ : (@cmd.Emit[Msg], Input) -> (Model, @cmd.Cmd), update~ : (@cmd.Emit[Msg], Input, Msg, Model) -> (Model, @cmd.Cmd), subscriptions? : (@cmd.Emit[Msg], Input, Model) -> @sub.Sub, input~ : Val[Input]) -> (Val[Model], @cmd.Emit[Msg])
+pub fn[E : @duplix.Enumerate + Eq, C : Eq] Graph::create_switch(Self, Val[E], (E) -> Val[C]) -> Val[C]
+
+type Val[A]
+pub fn[A : Eq, B] Val::map(Self[A], (A) -> B) -> Self[B]
+pub fn[A : Eq, B : Eq, C : Eq, D] Val::zip3_with(Self[A], Self[B], Self[C], (A, B, C) -> D) -> Self[D]
+pub fn[A : Eq, B : Eq, C] Val::zip_with(Self[A], Self[B], (A, B) -> C) -> Self[C]
 
 // Type aliases
 pub using @cmd {type Cmd}
-
-#deprecated
-pub using @cmd {type Emit as Dispatch}
-
-pub using @incremental {type Dyn}
 
 pub using @cmd {type Emit}
 

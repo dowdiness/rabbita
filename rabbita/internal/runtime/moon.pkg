@@ -8,8 +8,10 @@ import {
   "moonbitlang/core/random",
   "moonbitlang/core/ref",
   "moonbit-community/rabbita/js",
-  "moonbit-community/rabbita/incremental",
   "moonbit-community/rabbita/internal/key",
+  "moonbit-community/rabbita/internal/any",
+  "moonbit-community/rabbita/internal/slotmap",
+  "Yoorkin/duplix",
 }
 
 warnings = "-unused_package"

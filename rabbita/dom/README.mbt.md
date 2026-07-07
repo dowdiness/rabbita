@@ -12,9 +12,8 @@ Using it may reduce cross-platform compatibility.
 
 ### Query and set attributes
 
-```mbt check
+```mbt nocheck
 ///|
-#cfg(target="js")
 test {
   let doc = @dom.document()
   if doc.get_element_by_id("hero").to_option() is Some(el) {
@@ -25,7 +24,7 @@ test {
 
 ### Add an event listener
 
-```mbt check
+```mbt nocheck
 ///|
 #cfg(target="js")
 test {

@@ -1,6 +1,11 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "moonbit-community/rabbita/cmd"
 
+import {
+  "moonbit-community/rabbita/internal/any",
+  "moonbit-community/rabbita/internal/slotmap",
+}
+
 // Values
 pub let after_render : EffectKind
 
@@ -40,13 +45,19 @@ pub(all) struct Hooks {
   mut url_changed : ((&Scheduler, String) -> Unit)?
 }
 
+pub(all) enum Path {
+  Index(Int, Path)
+  Keyed(String, Path)
+  Root
+} derive(Compare, Eq, Hash)
+
 // Type aliases
 pub type Hook[Arg] = (&Scheduler, Arg) -> Unit
 
 // Traits
 pub(open) trait Scheduler {
   fn run_effect(Self, EffectKind, (&Scheduler) -> Unit) -> Unit
-  fn queue_message(Self, (&Scheduler) -> Unit) -> Unit
+  fn queue_message(Self, @slotmap.Id, @any.Any) -> Unit
   fn drain_message(Self) -> Unit
   fn add(Self, Cmd) -> Unit = _
   fn hooks(Self) -> Hooks

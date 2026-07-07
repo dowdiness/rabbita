@@ -13,7 +13,8 @@ pub(all) enum EffectKind {
 enum Cmd {
   Batch(Array[Cmd])
   Effect(EffectKind, OnExecute)
-  Message(OnExecute)
+  Message(@slotmap.Id, @any.Any)
+  LegacyMessage(OnExecute)
 }
 
 ///|
