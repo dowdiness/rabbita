@@ -14,6 +14,8 @@ pub fn[A, E : Error] attempt((Result[A, E]) -> @cmd.Cmd, async () -> A raise E) 
 
 pub fn batch(Array[@cmd.Cmd]) -> @cmd.Cmd
 
+pub fn[T : Eq] create_resource((@cmd.Emit[Result[T, Error]]) -> @cmd.Cmd) -> Val[Status[T]]
+
 pub fn[Model : Eq, Msg] create_simple_state(Model, update~ : (Msg, Model) -> Model) -> (Val[Model], @cmd.Emit[Msg])
 
 pub fn[Model : Eq] create_single_state(Model) -> (Val[Model], @cmd.Emit[(Model) -> Model])
@@ -45,6 +47,13 @@ pub fn App::with_init(Self, @cmd.Cmd) -> Unit
 #deprecated
 pub fn App::with_route(Self, url_changed? : @cmd.Emit[@url.Url], url_request? : @cmd.Emit[@url.UrlRequest]) -> Unit
 
+pub enum Status[T] {
+  Pending
+  Loaded(T)
+  Failed(Error)
+}
+pub impl[T : Eq] Eq for Status[T]
+
 type Val[A]
 pub fn[K : Hash + Eq, V : Eq, C : Eq] Val::assoc(Self[Map[K, V]], (K, Self[V]) -> Self[C]) -> Self[Array[C]]
 pub fn[E : @duplix.Enumerate + Eq, C : Eq] Val::enumerate(Self[E], (E) -> Self[C]) -> Self[C]
@@ -59,6 +68,8 @@ pub using @cmd {type Cmd}
 pub using @cmd {type Emit}
 
 pub using @html {type Html}
+
+pub type Resource[T] = Val[Status[T]]
 
 pub using @duplix {trait Enumerate}
 

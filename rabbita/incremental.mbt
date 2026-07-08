@@ -135,3 +135,38 @@ pub fn[Model : Eq] create_single_state(
   }
   create_simple_state(init, update~)
 }
+
+///|
+pub enum Status[T] {
+  Pending
+  Loaded(T)
+  Failed(Error)
+}
+
+///|
+pub impl[T : Eq] Eq for Status[T] with fn equal(a, b) {
+  match (a, b) {
+    (Pending, Pending) | (Failed(_), Failed(_)) => true
+    (Loaded(a), Loaded(b)) => a == b
+    _ => false
+  }
+}
+
+///|
+pub type Resource[T] = Val[Status[T]]
+
+///|
+pub fn[T : Eq] create_resource(
+  f : (Emit[Result[T, Error]]) -> Cmd,
+) -> Resource[T] {
+  let (status, _) : (Resource[T], _) = create_state_with_init(
+    init=fn(inject) { (Pending, f(inject)) },
+    update=fn(_, msg, _) {
+      match msg {
+        Ok(r) => (Loaded(r), none)
+        Err(e) => (Failed(e), none)
+      }
+    },
+  )
+  status
+}
