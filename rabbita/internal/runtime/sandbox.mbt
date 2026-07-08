@@ -124,7 +124,7 @@ pub impl Scheduler for Sandbox with fn drain_message(self) {
   if !self.drain_scheduled {
     self.drain_scheduled = true
     while self.msg_queue.pop() is Some((id, erased_msg)) {
-      let store = global_stores.read(id)
+      guard global_stores.get(id) is Some(store) else { continue }
       (store.on_update)(self, erased_msg)
     }
     self.drain_scheduled = false
