@@ -23,7 +23,12 @@ pub fn[A : Eq, B] Val::map(a : Val[A], f : (A) -> B) -> Val[B] {
 }
 
 ///|
-pub fn[A : Eq, B : Eq, C] Val::zip_with(
+pub fn[A] Val::constant(a : A) -> Val[A] {
+  @duplix.constant(a)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C] Val::map2(
   a : Val[A],
   b : Val[B],
   f : (A, B) -> C,
@@ -32,13 +37,105 @@ pub fn[A : Eq, B : Eq, C] Val::zip_with(
 }
 
 ///|
-pub fn[A : Eq, B : Eq, C : Eq, D] Val::zip3_with(
+pub fn[A : Eq, B : Eq, C : Eq, D] Val::map3(
   a : Val[A],
   b : Val[B],
   c : Val[C],
   f : (A, B, C) -> D,
 ) -> Val[D] {
   a.0.map3(b.0, c.0, f)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E] Val::map4(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  f : (A, B, C, D) -> E,
+) -> Val[E] {
+  a.0.map4(b.0, c.0, d.0, f)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F] Val::map5(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  e : Val[E],
+  f : (A, B, C, D, E) -> F,
+) -> Val[F] {
+  a.0.map5(b.0, c.0, d.0, e.0, f)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G] Val::map6(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  e : Val[E],
+  f : Val[F],
+  g : (A, B, C, D, E, F) -> G,
+) -> Val[G] {
+  a.0.map6(b.0, c.0, d.0, e.0, f.0, g)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H] Val::map7(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  e : Val[E],
+  f : Val[F],
+  g : Val[G],
+  h : (A, B, C, D, E, F, G) -> H,
+) -> Val[H] {
+  a.0.map7(b.0, c.0, d.0, e.0, f.0, g.0, h)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I] Val::map8(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  e : Val[E],
+  f : Val[F],
+  g : Val[G],
+  h : Val[H],
+  i : (A, B, C, D, E, F, G, H) -> I,
+) -> Val[I] {
+  a.0.map8(b.0, c.0, d.0, e.0, f.0, g.0, h.0, i)
+}
+
+///|
+pub fn[
+  A : Eq,
+  B : Eq,
+  C : Eq,
+  D : Eq,
+  E : Eq,
+  F : Eq,
+  G : Eq,
+  H : Eq,
+  I : Eq,
+  J,
+] Val::map9(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  e : Val[E],
+  f : Val[F],
+  g : Val[G],
+  h : Val[H],
+  i : Val[I],
+  j : (A, B, C, D, E, F, G, H, I) -> J,
+) -> Val[J] {
+  a.0.map9(b.0, c.0, d.0, e.0, f.0, g.0, h.0, i.0, j)
 }
 
 ///|
