@@ -2,10 +2,10 @@
 package "moonbit-community/rabbita/internal/runtime"
 
 import {
-  "Yoorkin/duplix",
   "moonbit-community/rabbita/cmd",
   "moonbit-community/rabbita/dom",
   "moonbit-community/rabbita/internal/any",
+  "moonbit-community/rabbita/internal/duplix",
   "moonbit-community/rabbita/internal/slotmap",
   "moonbit-community/rabbita/sub",
   "moonbit-community/rabbita/variant",

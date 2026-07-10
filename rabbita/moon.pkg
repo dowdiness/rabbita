@@ -9,7 +9,8 @@ import {
   "moonbitlang/core/queue",
   "moonbitlang/core/ref",
   "moonbit-community/rabbita/js",
-  "Yoorkin/duplix",
+  "moonbit-community/rabbita/common",
+  "moonbit-community/rabbita/internal/duplix",
   "moonbit-community/rabbita/internal/slotmap",
 }
 

@@ -1,0 +1,5 @@
+import {
+  "moonbitlang/core/queue",
+  "moonbit-community/rabbita/common",
+  "moonbit-community/rabbita/internal/slotmap",
+}

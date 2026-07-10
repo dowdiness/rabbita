@@ -1,5 +1,5 @@
 ///|
-pub using @duplix {trait Enumerate}
+pub using @common {trait Enumerate}
 
 ///|
 let ambient_graph : Ref[Graph?] = Ref(None)
@@ -176,7 +176,7 @@ pub fn[K : Hash + Eq, V : Eq, C : Eq] Val::assoc(
 }
 
 ///|
-pub fn[E : @duplix.Enumerate + Eq, C : Eq] Val::enumerate(
+pub fn[E : Enumerate + Eq, C : Eq] Val::enumerate(
   a : Val[E],
   f : (E) -> Val[C],
 ) -> Val[C] {
@@ -184,7 +184,7 @@ pub fn[E : @duplix.Enumerate + Eq, C : Eq] Val::enumerate(
 }
 
 ///|
-pub fn[E : @duplix.Enumerate + Eq, C : Eq] Val::switch(
+pub fn[E : Enumerate + Eq, C : Eq] Val::switch(
   a : Val[E],
   f : (E) -> Val[C],
 ) -> Val[C] {

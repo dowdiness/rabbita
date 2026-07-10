@@ -11,7 +11,7 @@ import {
   "moonbit-community/rabbita/internal/key",
   "moonbit-community/rabbita/internal/any",
   "moonbit-community/rabbita/internal/slotmap",
-  "Yoorkin/duplix",
+  "moonbit-community/rabbita/internal/duplix",
 }
 
 warnings = "-unused_package"
