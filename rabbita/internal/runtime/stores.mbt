@@ -44,6 +44,19 @@ fn diff_subs(
 
 ///|
 #cfg(target="js")
+fn cleanup_store(
+  id : @slotmap.Id,
+  sub_map : Map[String, @sub.RunningSub],
+  scheduler : &@cmd.Scheduler,
+) -> Unit {
+  global_stores.free(id)
+  for _, sub in sub_map {
+    (sub.unload)(scheduler)
+  }
+}
+
+///|
+#cfg(target="js")
 pub fn[Model : Eq, Msg] Sandbox::create_state_machine(
   scheduler : Sandbox,
   initialize : (Emit[Msg]) -> (Model, Cmd),
@@ -81,7 +94,7 @@ pub fn[Model : Eq, Msg] Sandbox::create_state_machine(
   }
 
   global_stores[id] = { id, on_update }
-  @duplix.on_cleanup(() => global_stores.free(id))
+  @duplix.on_cleanup(() => cleanup_store(id, sub_map, scheduler))
 
   (model.map(x => x.unwrap()), emit)
 }
@@ -128,7 +141,7 @@ pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(
   }
 
   global_stores[id] = { id, on_update }
-  @duplix.on_cleanup(() => global_stores.free(id))
+  @duplix.on_cleanup(() => cleanup_store(id, sub_map, scheduler))
 
   (model.map(x => x.unwrap()), emit)
 }
