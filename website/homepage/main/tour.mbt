@@ -3,12 +3,10 @@
 ///|
 pub(all) struct TourModel {
   chapter_idx : Int
-  content : String
-  failed : Bool
-}
+} derive(Eq)
 
 ///|
-pub let init_tour : TourModel = { chapter_idx: 0, content: "", failed: false }
+pub let init_tour : TourModel = { chapter_idx: 0 }
 
 ///|
 struct TocEntry {
@@ -18,11 +16,27 @@ struct TocEntry {
 }
 
 ///|
+enum ChapterLoad {
+  ChapterPending
+  ChapterLoaded(String)
+  ChapterFailed
+} derive(Eq)
+
+///|
+impl @rabbita.Enumerate for ChapterLoad with fn tag(self) {
+  match self {
+    ChapterPending => "pending"
+    ChapterLoaded(_) => "loaded"
+    ChapterFailed => "failed"
+  }
+}
+
+///|
 pub(all) struct TourChapter {
   title : String
   path : String // e.g. "001_intro" — used as URL slug and to locate doc files
   section : String // section name for sidebar grouping
-} derive(FromJson)
+} derive(Eq, FromJson)
 
 // ─── Tour Chapters (default fallback) ────────────────────────────────────
 
@@ -257,7 +271,55 @@ fn render_inline(
 }
 
 ///|
-fn render_code_block(hl : @shiki.Highlighter?, cb : @cmark.CodeBlock) -> Html {
+fn push_html(items : Array[Html], item : Html) -> Array[Html] {
+  let next : Array[Html] = []
+  for existing in items {
+    next.push(existing)
+  }
+  next.push(item)
+  next
+}
+
+///|
+fn collect_html(children : Array[Val[Html]]) -> Val[Array[Html]] {
+  let empty : Array[Html] = []
+  let mut acc = Val::constant(empty)
+  for child in children {
+    acc = acc.map2(child, (items, child) => push_html(items, child))
+  }
+  acc
+}
+
+///|
+fn code_block_source(cb : @cmark.CodeBlock) -> String {
+  let lines : Array[String] = []
+  for n in cb.code.iter() {
+    lines.push(n.v)
+  }
+  while lines.length() > 0 && lines[lines.length() - 1] == "" {
+    ignore(lines.pop())
+  }
+  let buf = StringBuilder::new()
+  for i = 0; i < lines.length(); i = i + 1 {
+    if i > 0 {
+      buf.write_char('\n')
+    }
+    buf.write_string(lines[i])
+  }
+  buf.to_string()
+}
+
+///|
+fn shiki_lang(lang : String) -> String {
+  if lang == "mbt" {
+    "moonbit"
+  } else {
+    lang
+  }
+}
+
+///|
+fn render_code_block(cb : @cmark.CodeBlock) -> Val[Html] {
   let lang = match cb.info_string {
     Some({ v, .. }) =>
       match @cmark.CodeBlock::language_of_info_string(v) {
@@ -266,34 +328,29 @@ fn render_code_block(hl : @shiki.Highlighter?, cb : @cmark.CodeBlock) -> Html {
       }
     None => ""
   }
-  let code_src = {
-    let lines : Array[String] = []
-    for n in cb.code.iter() {
-      lines.push(n.v)
-    }
-    while lines.length() > 0 && lines[lines.length() - 1] == "" {
-      ignore(lines.pop())
-    }
-    let buf = StringBuilder::new()
-    for i = 0; i < lines.length(); i = i + 1 {
-      if i > 0 {
-        buf.write_char('\n')
-      }
-      buf.write_string(lines[i])
-    }
-    buf.to_string()
-  }
-  match hl {
-    Some(h) =>
+  let code_src = code_block_source(cb)
+  let lang = shiki_lang(lang)
+  if lang.is_empty() || lang == "text" {
+    Val::constant(pre(class="md-pre", [code(code_src)]))
+  } else {
+    let code_src = Val::constant(code_src)
+    let lang = Val::constant(lang)
+    let light_code = @shiki.shiki_code(
+      code_src,
+      lang~,
+      theme=Val::constant("github-light"),
+    )
+    let dark_code = @shiki.shiki_code(
+      code_src,
+      lang~,
+      theme=Val::constant("github-dark-default"),
+    )
+    light_code.map2(dark_code, (light, dark) => {
       div(class="code-dual", [
-        div(class="code-light", [
-          h.code_to_html(code_src, lang~, theme="github-light"),
-        ]),
-        div(class="code-dark", [
-          h.code_to_html(code_src, lang~, theme="github-dark-default"),
-        ]),
+        div(class="code-light", [light]),
+        div(class="code-dark", [dark]),
       ])
-    None => pre(class="md-pre", [code(code_src)])
+    })
   }
 }
 
@@ -335,11 +392,10 @@ fn render_table(
 
 ///|
 fn render_block(
-  hl : @shiki.Highlighter?,
   defs : Map[String, @cmark.LabelDef],
   block : @cmark.Block,
   base_url : String,
-) -> Html {
+) -> Val[Html] {
   match block {
     Heading({ v: { level, inline, id, .. }, .. }) => {
       let id_str = match id {
@@ -353,65 +409,65 @@ fn render_block(
         @html.Attrs::build().id(id_str)
       }
       let content = [render_inline(defs, inline, base_url)]
-      match level {
-        1 => h1(class="md-h1", attrs~, content)
-        2 => h2(class="md-h2", attrs~, content)
-        3 => h3(class="md-h3", attrs~, content)
-        4 => h4(class="md-h4", attrs~, content)
-        5 => h5(class="md-h5", attrs~, content)
-        _ => h6(class="md-h6", attrs~, content)
-      }
+      Val::constant(
+        match level {
+          1 => h1(class="md-h1", attrs~, content)
+          2 => h2(class="md-h2", attrs~, content)
+          3 => h3(class="md-h3", attrs~, content)
+          4 => h4(class="md-h4", attrs~, content)
+          5 => h5(class="md-h5", attrs~, content)
+          _ => h6(class="md-h6", attrs~, content)
+        },
+      )
     }
     Paragraph({ v: { inline, .. }, .. }) =>
-      p(class="md-p", [render_inline(defs, inline, base_url)])
-    CodeBlock({ v: cb, .. }) => render_code_block(hl, cb)
-    ExtMathBlock({ v: cb, .. }) => render_code_block(hl, cb)
+      Val::constant(p(class="md-p", [render_inline(defs, inline, base_url)]))
+    CodeBlock({ v: cb, .. }) => render_code_block(cb)
+    ExtMathBlock({ v: cb, .. }) => render_code_block(cb)
     BlockQuote({ v: { block: inner, .. }, .. }) =>
-      blockquote(class="md-blockquote", [
-        render_block(hl, defs, inner, base_url),
-      ])
+      render_block(defs, inner, base_url).map(inner => {
+        blockquote(class="md-blockquote", [inner])
+      })
     List({ v: { ty, items, .. }, .. }) => {
-      let list_items : Array[Html] = []
+      let list_items : Array[Val[Html]] = []
       for item in items.iter() {
-        let li_inner = render_block(hl, defs, item.v.block, base_url)
-        list_items.push(li(class="md-li", [li_inner]))
+        let li_inner = render_block(defs, item.v.block, base_url)
+        list_items.push(li_inner.map(li_inner => li(class="md-li", [li_inner])))
       }
-      match ty {
-        Unordered(_) => ul(class="md-ul", list_items)
-        Ordered(start, _) => ol(class="md-ol", start~, list_items)
-      }
+      collect_html(list_items).map(list_items => {
+        match ty {
+          Unordered(_) => ul(class="md-ul", list_items)
+          Ordered(start, _) => ol(class="md-ol", start~, list_items)
+        }
+      })
     }
     Blocks({ v: bs, .. }) => {
-      let children : Array[Html] = []
+      let children : Array[Val[Html]] = []
       for b in bs.iter() {
-        children.push(render_block(hl, defs, b, base_url))
+        children.push(render_block(defs, b, base_url))
       }
-      fragment(children)
+      collect_html(children).map(children => fragment(children))
     }
-    ThematicBreak(_) => hr(class="md-hr")
-    ExtTable({ v: tbl, .. }) => render_table(defs, tbl, base_url)
+    ThematicBreak(_) => Val::constant(hr(class="md-hr"))
+    ExtTable({ v: tbl, .. }) => Val::constant(render_table(defs, tbl, base_url))
     BlankLine(_)
     | HtmlBlock(_)
     | LinkRefDefinition(_)
-    | ExtFootnoteDefinition(_) => nothing
+    | ExtFootnoteDefinition(_) => Val::constant(nothing)
   }
 }
 
 ///|
-fn render_markdown(
-  hl : @shiki.Highlighter?,
-  src : String,
-  base_url : String,
-) -> Html {
+fn render_markdown(src : String, base_url : String) -> Val[Html] {
   let doc = @cmark.Doc::from_string(heading_auto_ids=true, strict=false, src)
-  render_block(hl, doc.defs, doc.block, base_url)
+  render_block(doc.defs, doc.block, base_url)
 }
 
-// ─── Tour View ────────────────────────────────────────────────────────────
+// ─── Tour ─────────────────────────────────────────────────────────────────
 
 ///|
-fn view_tour_sidebar(
-  emit : Emit[Msg],
+fn tour_sidebar(
+  on_select_chapter : (Int) -> Cmd,
   tm : TourModel,
   chapters : Array[TourChapter],
 ) -> Html {
@@ -437,7 +493,7 @@ fn view_tour_sidebar(
     }
     current_items.push(
       li(class="tour-chapter-li", [
-        button(class=cls, on_click=emit(SelectChapter(i)), ch.title),
+        button(class=cls, on_click=on_select_chapter(i), ch.title),
       ]),
     )
   }
@@ -448,7 +504,7 @@ fn view_tour_sidebar(
 }
 
 ///|
-fn view_tour_toc(toc : Array[TocEntry], base_url : String) -> Html {
+fn tour_toc(toc : Array[TocEntry], base_url : String) -> Html {
   if toc.is_empty() {
     div(class="tour-sidebar-right", nothing)
   } else {
@@ -466,8 +522,35 @@ fn view_tour_toc(toc : Array[TocEntry], base_url : String) -> Html {
 }
 
 ///|
-fn view_tour(emit : Emit[Msg], model : Model, tm : TourModel) -> Html {
+struct TourBodyModel {
+  chapters : Array[TourChapter]
+  tour : TourModel
+} derive(Eq)
+
+///|
+impl @rabbita.Enumerate for TourBodyModel with fn tag(self) {
+  let chapter_idx = if self.tour.chapter_idx < self.chapters.length() {
+    self.tour.chapter_idx
+  } else {
+    0
+  }
+  let path = if self.chapters.is_empty() {
+    ""
+  } else {
+    self.chapters[chapter_idx].path
+  }
+  "\{chapter_idx}:\{path}"
+}
+
+///|
+fn tour(model : Val[TourBodyModel]) -> Val[Html] {
+  model.switch(model => tour_content(model))
+}
+
+///|
+fn tour_content(model : TourBodyModel) -> Val[Html] {
   let chapters = model.chapters
+  let tm = model.tour
   let chapter_idx = if tm.chapter_idx < chapters.length() {
     tm.chapter_idx
   } else {
@@ -483,25 +566,53 @@ fn view_tour(emit : Emit[Msg], model : Model, tm : TourModel) -> Html {
   } else {
     tour_base_url() + chapters[chapter_idx].path
   }
-  let toc = if tm.content.is_empty() { [] } else { extract_toc(tm.content) }
-  div(class="tour-main", [
-    div(class="tour-layout", [
-      view_tour_sidebar(emit, tm, chapters),
-      div(class="tour-content", [
-        div(class="md-body", [
-          if tm.failed {
-            div(class="tour-not-found", [
-              p(class="tour-not-found-code", "404"),
-              p(class="md-p", "Page not found."),
-            ])
-          } else if tm.content.is_empty() {
-            p(class="md-p", "Loading…")
-          } else {
-            render_markdown(model.highlighter, tm.content, base_url)
+  let chapter = @rabbita.create_resource(inject => {
+    @http.get(base_url + "readme.mbt.md").expect_text(inject)
+  })
+  let chapter_load = chapter.map(chapter => {
+    match chapter {
+      Pending => ChapterPending
+      Loaded(content) => ChapterLoaded(content)
+      Failed(_) => ChapterFailed
+    }
+  })
+  let content = chapter_load.switch(chapter => {
+    match chapter {
+      ChapterPending => Val::constant(p(class="md-p", "Loading…"))
+      ChapterFailed =>
+        Val::constant(
+          div(class="tour-not-found", [
+            p(class="tour-not-found-code", "404"),
+            p(class="md-p", "Page not found."),
+          ]),
+        )
+      ChapterLoaded(content) => render_markdown(content, base_url)
+    }
+  })
+  chapter_load.map2(content, (chapter, content) => {
+    let toc = match chapter {
+      ChapterLoaded(content) => extract_toc(content)
+      ChapterPending | ChapterFailed => []
+    }
+    div(class="tour-main", [
+      div(class="tour-layout", [
+        tour_sidebar(
+          i => {
+            let path = if i < chapters.length() {
+              chapters[i].path
+            } else if !chapters.is_empty() {
+              chapters[0].path
+            } else {
+              ""
+            }
+            @nav.push_url(tour_base_url() + path)
           },
-        ]),
+          tm,
+          chapters,
+        ),
+        div(class="tour-content", [div(class="md-body", [content])]),
+        tour_toc(toc, tour_url),
       ]),
-      view_tour_toc(toc, tour_url),
-    ]),
-  ])
+    ])
+  })
 }

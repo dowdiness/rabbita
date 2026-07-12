@@ -26,7 +26,8 @@ warnings = "-text_segment_excceed"
 //   rule: "embed-templates",
 // )
 
+formatter(ignore: [ "templates_bundle.mbt" ])
+
 options(
   "is-main": true,
-  formatter: { "ignore": [ "templates_bundle.mbt" ] },
 )

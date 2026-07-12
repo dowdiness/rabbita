@@ -5,7 +5,8 @@ import {
 
 supported_targets = "js"
 
+formatter(ignore: [ "main.mbt" ])
+
 options(
   "is-main": true,
-  formatter: { "ignore": [ "main.mbt" ] },
 )

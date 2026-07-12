@@ -9,6 +9,9 @@ import {
   "moonbitlang/core/queue",
   "moonbitlang/core/ref",
   "moonbit-community/rabbita/js",
+  "moonbit-community/rabbita/common",
+  "moonbit-community/rabbita/internal/duplix",
+  "moonbit-community/rabbita/internal/slotmap",
 }
 
 import {
@@ -19,6 +22,4 @@ warnings = "-unused_package-alert_unstable"
 
 supported_targets = "js+native"
 
-options(
-  formatter: { "ignore": [ "README.mbt.md" ] },
-)
+formatter(ignore: [ "README.mbt.md" ])

@@ -11,15 +11,15 @@ A command executes only after it is handed to the runtime, for example:
 - passed into app APIs like `with_init`
 
 
-## `simple_cell` vs `cell`
+## State without commands vs state with commands
 
-In earlier tours we used `@rabbita.simple_cell`:
+In earlier tours we used `@rabbita.create_pure_state`:
 
 ```text
 update : (Msg, Model) -> Model
 ```
 
-When you need follow-up effects, use `@rabbita.cell`:
+When you need follow-up effects, use `@rabbita.create_state`:
 
 ```text
 update : (Emit[Msg], Msg, Model) -> (Cmd, Model)
@@ -192,7 +192,7 @@ fn attempt_update(
 
 ## What comes next
 
-This chapter only covers the core command model and `@rabbita.cell`.
+This chapter only covers the core command model and `@rabbita.create_state`.
 
 In follow-up chapters, we can cover practical command packages separately:
 

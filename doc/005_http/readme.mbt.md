@@ -41,8 +41,8 @@ enum Msg {
 
 ### Return the request command from `update`
 
-Use `@rabbita.cell` when `update` needs to return both a command and a new
-model.
+Use `@rabbita.create_state` when `update` needs to return both a command and a
+new model.
 
 ```moonbit check
 ///|
@@ -96,12 +96,20 @@ click button
   -> update stores Ready(...) or Failed(...)
 ```
 
-### Build the GET cell
+### Build the GET app
 
-```moonbit check
+```moonbit nocheck
 ///|
-fn build_app() -> Cell {
-  @rabbita.cell(model=initial_model, update~, view~)
+fn build_app() -> Val[Html] {
+  let (model, emit) = @rabbita.create_state(initial_model, update=fn(
+    emit,
+    msg,
+    model,
+  ) {
+    let (cmd, model) = update(emit, msg, model)
+    (model, cmd)
+  })
+  model.map(model => view(emit, model))
 }
 ```
 
@@ -110,7 +118,7 @@ Mount it the same way as earlier chapters:
 ```moonbit nocheck
 ///|
 fn main {
-  @rabbita.new(build_app()).mount("main")
+  @rabbita.new(build_app).mount("main")
 }
 ```
 
@@ -183,10 +191,20 @@ fn save_view(emit : Emit[SaveMsg], model : SaveModel) -> Html {
     },
   ])
 }
+```
 
+```moonbit nocheck
 ///|
-fn build_save_app() -> Cell {
-  @rabbita.cell(model=save_initial_model, update=save_update, view=save_view)
+fn build_save_app() -> Val[Html] {
+  let (model, emit) = @rabbita.create_state(save_initial_model, update=fn(
+    emit,
+    msg,
+    model,
+  ) {
+    let (cmd, model) = save_update(emit, msg, model)
+    (model, cmd)
+  })
+  model.map(model => save_view(emit, model))
 }
 ```
 

@@ -2,23 +2,7 @@
 using @html {div, h1, option, p, select, textarea, nothing}
 
 ///|
-using @rabbita {type Emit, type Html}
-
-///|
-enum Msg {
-  LoadResult(Result[@shiki.Highlighter, Error])
-  Input(String)
-  LangChanged(String)
-  ThemeChanged(String)
-}
-
-///|
-struct Model {
-  code : String
-  lang : String
-  theme : String
-  highlighter : @shiki.Highlighter?
-}
+using @rabbita {type Emit, type Html, type Val}
 
 ///|
 let language_items : Array[(String, String)] = [
@@ -93,6 +77,14 @@ let dark_theme_items : Array[(String, String)] = [
 ]
 
 ///|
+fn all_theme_ids() -> Array[String] {
+  [
+    ..light_theme_items.map(item => item.0),
+    ..dark_theme_items.map(item => item.0),
+  ]
+}
+
+///|
 fn ensure_overlay_sync(input_id : String, preview_id : String) -> Unit {
   let input = @dom.document().get_element_by_id(input_id).to_option()
   let preview = @dom.document().get_element_by_id(preview_id).to_option()
@@ -106,17 +98,8 @@ fn ensure_overlay_sync(input_id : String, preview_id : String) -> Unit {
 }
 
 ///|
-fn update(msg : Msg, model : Model) -> Model {
-  match msg {
-    Input(code) => { ..model, code, }
-    LangChanged(lang) => { ..model, lang, }
-    ThemeChanged(theme) => { ..model, theme, }
-    LoadResult(Ok(s)) => { ..model, highlighter: Some(s) }
-    LoadResult(Err(e)) => {
-      println(e)
-      model
-    }
-  }
+fn replace_string(value : String) -> (String) -> String {
+  _ => value
 }
 
 ///|
@@ -142,22 +125,30 @@ fn stack_class(theme : String) -> String {
 }
 
 ///|
-fn view(emit : Emit[Msg], model : Model) -> Html {
-  let { lang, theme, code, highlighter } = model
+struct ControlsState {
+  lang : String
+  theme : String
+} derive(Eq)
 
-  div(class="shiki-playground", [
-    div(class="editor-header", [
-      h1(class="title", "Shiki Editor in Rabbita"),
-      p(class="subtitle", "Type directly in the highlighted area."),
-    ]),
+///|
+fn controls_view(
+  lang : Val[String],
+  set_lang : Emit[(String) -> String],
+  theme : Val[String],
+  set_theme : Emit[(String) -> String],
+) -> Val[Html] {
+  lang.map2(theme, (lang, theme) => {
+    let model : ControlsState = { lang, theme }
     div(class="controls", [
       div(class="control", [
         p(class="control-label", "Language"),
         select(
           id="lang-select",
           class="control-select",
-          on_change=emit.map(lang => LangChanged(lang)),
-          language_items.map(p => option(value=p.0, selected=lang == p.0, p.1)),
+          on_change=set_lang.map(replace_string),
+          language_items.map(p => {
+            option(value=p.0, selected=model.lang == p.0, p.1)
+          }),
         ),
       ]),
       div(class="control", [
@@ -165,83 +156,103 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
         select(
           id="theme-select",
           class="control-select",
-          on_change=emit.map(theme => ThemeChanged(theme)),
+          on_change=set_theme.map(replace_string),
           [
             ..light_theme_items.map(p => {
-              option(value=p.0, selected=theme == p.0, p.1)
+              option(value=p.0, selected=model.theme == p.0, p.1)
             }),
             option(disabled=true, "----------"),
             ..dark_theme_items.map(p => {
-              option(value=p.0, selected=theme == p.0, p.1)
+              option(value=p.0, selected=model.theme == p.0, p.1)
             }),
           ],
         ),
       ]),
-    ]),
+    ])
+  })
+}
+
+///|
+fn highlighted_view(
+  code : Val[String],
+  lang : Val[String],
+  theme : Val[String],
+) -> Val[Html] {
+  @shiki.shiki_code(code, lang~, theme~)
+}
+
+///|
+fn editor_view(
+  code : Val[String],
+  set_code : Emit[(String) -> String],
+  lang : Val[String],
+  theme : Val[String],
+) -> Val[Html] {
+  let highlighted = highlighted_view(code, lang, theme)
+  code.map3(theme, highlighted, (code, theme, highlighted) => {
     div(class="editor-card", [
       div(class=stack_class(theme), [
-        div(id="code-preview", class="preview-layer", [
-          match highlighter {
-            Some(hl) => hl.code_to_html(code, lang~, theme~)
-            None => nothing
-          },
-        ]),
+        div(id="code-preview", class="preview-layer", [highlighted]),
         textarea(
           id="code-input",
           class="input-layer",
           value=code,
-          on_input=emit.map(code => Input(code)),
+          on_input=set_code.map(replace_string),
           nothing,
         ),
       ]),
-    ]),
-    p(class="footer-note", "Powered by MoonBit"),
-  ])
+    ])
+  })
 }
 
 ///|
-let initial_model : Model = {
-  code: (
-    #|fn main {
-    #|  println("for-in loop:")
-    #|  let array = [1, 2, 3]
-    #|  for element in array {
-    #|    println("element: \{element}")
-    #|  }
-    #|
-    #|  println("for-in loop with index:")
-    #|  for i, element in array {
-    #|    println("index: \{i}, element: \{element}")
-    #|  }
-    #|  
-    #|  println("for-in loop for map:")
-    #|  let map = { "key1": 1, "key2": 2, "key3": 3 }
-    #|  for k, v in map {
-    #|    println("key: \{k}, value: \{v}")
-    #|  }
-    #|}
-  ),
-  lang: "moonbit",
-  theme: "github-light",
-  highlighter: None,
+fn shiki_editor() -> Val[Html] {
+  let (code, set_code) = @rabbita.create_variable(initial_code)
+  let (lang, set_lang) = @rabbita.create_variable("moonbit")
+  let (theme, set_theme) = @rabbita.create_variable("github-light")
+  let controls = controls_view(lang, set_lang, theme, set_theme)
+  let editor = editor_view(code, set_code, lang, theme)
+  controls.map2(editor, (controls, editor) => {
+    div(class="shiki-playground", [
+      div(class="editor-header", [
+        h1(class="title", "Shiki Editor in Rabbita"),
+        p(class="subtitle", "Type directly in the highlighted area."),
+      ]),
+      controls,
+      editor,
+      p(class="footer-note", "Powered by MoonBit"),
+    ])
+  })
 }
+
+///|
+let initial_code =
+  #|fn main {
+  #|  println("for-in loop:")
+  #|  let array = [1, 2, 3]
+  #|  for element in array {
+  #|    println("element: \{element}")
+  #|  }
+  #|
+  #|  println("for-in loop with index:")
+  #|  for i, element in array {
+  #|    println("index: \{i}, element: \{element}")
+  #|  }
+  #|  
+  #|  println("for-in loop for map:")
+  #|  let map = { "key1": 1, "key2": 2, "key3": 3 }
+  #|  for k, v in map {
+  #|    println("key: \{k}, value: \{v}")
+  #|  }
+  #|}
 
 ///|
 #warnings("-alert_unstable")
 fn main {
-  let (emit, app) = @rabbita.simple_cell_with_emit(
-    model=initial_model,
-    update~,
-    view~,
+  @shiki.initialize(
+    langs=language_items.map(item => item.0),
+    themes=all_theme_ids(),
   )
-  @rabbita.new(app)
-  ..with_init(
-    @shiki.load(
-      language_items.map(p => p.0),
-      [..light_theme_items, ..dark_theme_items].map(p => p.0),
-      x => emit(LoadResult(x)),
-    ),
-  )
-  .mount("app")
+  @rabbita.new(shiki_editor).mount("app")
   ensure_overlay_sync("code-input", "code-preview")
 }

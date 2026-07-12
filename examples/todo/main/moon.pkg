@@ -1,12 +1,16 @@
 import {
   "moonbit-community/rabbita",
+  "moonbit-community/rabbita/sub",
   "moonbit-community/rabbita/html",
   "moonbitlang/core/immut/sorted_map",
 }
 
 supported_targets = "js"
 
+warnings = "-a"
+
+formatter(ignore: [ "main.mbt" ])
+
 options(
   "is-main": true,
-  formatter: { "ignore": [ "main.mbt" ] },
 )

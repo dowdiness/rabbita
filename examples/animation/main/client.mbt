@@ -2,7 +2,7 @@
 using @html {div, h1}
 
 ///|
-using @rabbita {type Cmd, type Emit, type Html}
+using @rabbita {type Cmd, type Emit, type Html, type Val}
 
 ///|
 enum Msg {
@@ -16,14 +16,14 @@ struct Model {
   last_frame_ms : Double
   logo : LogoModel
   logo_pattern_index : Int
-}
+} derive(Eq)
 
 ///|
-fn update(_ : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
+fn update(_ : Emit[Msg], msg : Msg, model : Model) -> (Model, Cmd) {
   match msg {
-    SelectPattern(index) => (@rabbita.none, set_animation_pattern(index, model))
+    SelectPattern(index) => (set_animation_pattern(index, model), @rabbita.none)
     AnimationFrameTick(timestamp) =>
-      (@rabbita.none, step_animation_frame(timestamp, model))
+      (step_animation_frame(timestamp, model), @rabbita.none)
   }
 }
 
@@ -33,14 +33,20 @@ fn subscriptions(emit : Emit[Msg], _ : Model) -> @sub.Sub {
 }
 
 ///|
-fn view(emit : Emit[Msg], model : Model) -> Html {
-  div(class="page") <| [
-    h1(class="title", "Rabbita Animation"),
-    div(class="stage") <| [
-      logo_view(model.logo),
-    ],
-    div(class="actions") <| animation_actions(emit, model),
-  ]
+fn view(emit : Emit[Msg], model : Val[Model]) -> Val[Html] {
+  let logo = model.map(model => logo_view(model.logo))
+  let actions = model.map(model => {
+    animation_actions(emit, model.logo_pattern_index)
+  })
+  logo.map2(actions, (logo, actions) => {
+    div(class="page") <| [
+      h1(class="title", "Rabbita Animation"),
+      div(class="stage") <| [
+        logo,
+      ],
+      div(class="actions") <| actions,
+    ]
+  })
 }
 
 ///|
@@ -52,6 +58,13 @@ fn main {
     logo: logo_start(),
     logo_pattern_index: 0,
   })
-  let app = @rabbita.cell(model=initial_model, update~, view~, subscriptions~)
+  fn app() {
+    let (model, emit) = @rabbita.create_state(
+      initial_model,
+      update~,
+      subscriptions~,
+    )
+    view(emit, model)
+  }
   @rabbita.new(app).mount("app")
 }

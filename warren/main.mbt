@@ -15,11 +15,11 @@ let shell_html_template =
   $|    <meta charset="UTF-8">
   $|    <meta name="viewport" content="width=device-width, initial-scale=1.0">
   $|    <title>warren dev</title>
-  #|    <script src="/warren_devtool.js" type="module"></script>
-  #|    <link rel="stylesheet" type="text/css" href="/warren_devtool.css"></link>
+  $|    <script src="/warren_devtool.js" type="module"></script>
+  $|    <link rel="stylesheet" type="text/css" href="/warren_devtool.css"></link>
   $|</head>
   $|<body>
-  #|    <div id="warren-devtool"></div>
+  $|    <div id="warren-devtool"></div>
   $|</body>
   $|</html>
 
@@ -244,7 +244,7 @@ test "inject_preview_assets puts base before relative assets" {
     content=(
       $|<html>
       $|<head>
-      #|<base href="/">
+      $|<base href="/">
       $|    <link rel="stylesheet" type="text/css" href="./styles.css"></link>
       $|    <script src="./index.js" type="module"></script>
       $|</head>

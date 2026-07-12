@@ -6,11 +6,11 @@ package "example/subscriptions/main"
 // Errors
 
 // Types and methods
-type Model
+type Model derive(Eq)
 
 type Msg
 
-type Tab
+type Tab derive(Eq)
 
 // Type aliases
 

@@ -2,12 +2,16 @@ import {
   "moonbit-community/rabbita/dom",
   "moonbit-community/rabbita/common",
   "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita/sub",
   "moonbit-community/rabbita/variant",
   "moonbitlang/core/queue",
   "moonbitlang/core/random",
   "moonbitlang/core/ref",
   "moonbit-community/rabbita/js",
   "moonbit-community/rabbita/internal/key",
+  "moonbit-community/rabbita/internal/any",
+  "moonbit-community/rabbita/internal/slotmap",
+  "moonbit-community/rabbita/internal/duplix",
 }
 
 warnings = "-unused_package"

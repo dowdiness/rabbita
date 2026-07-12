@@ -6,11 +6,19 @@ package "example/todo/main"
 // Errors
 
 // Types and methods
-type Model
+type Model derive(Eq)
 
 type Msg
 
+type Msg2
+
 type Todo derive(Eq)
+
+type TodoModel derive(Eq)
+
+type TodoMsg
+
+type TodoTab derive(Eq)
 
 // Type aliases
 

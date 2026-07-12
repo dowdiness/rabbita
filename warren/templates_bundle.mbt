@@ -6,7 +6,7 @@ let _embed_main_mbt : String =
   #|using @html {a, button, div, h1, h2, li, text, ul}
   #|
   #|///|
-  #|using @rabbita {new, simple_cell}
+  #|using @rabbita {new, create_pure_state}
   #|
   #|///|
   #|enum Msg {
@@ -15,14 +15,16 @@ let _embed_main_mbt : String =
   #|
   #|///|
   #|fn main {
-  #|  let app = simple_cell(
-  #|    model=0,
-  #|    update=(msg, count) => {
-  #|      match msg {
-  #|        Clicked => count + 1
-  #|      }
-  #|    },
-  #|    view=(emit, count) => {
+  #|  fn app() {
+  #|    let (count, emit) = create_pure_state(
+  #|      0,
+  #|      update=(msg, count) => {
+  #|        match msg {
+  #|          Clicked => count + 1
+  #|        }
+  #|      },
+  #|    )
+  #|    count.map(count => {
   #|      div(class="app") <| [
   #|        h1(class="title", "Hello Rabbita"),
   #|        div(class="lead", "You built it successfully!"),
@@ -45,8 +47,8 @@ let _embed_main_mbt : String =
   #|          ],
   #|        ],
   #|      ]
-  #|    },
-  #|  )
+  #|    })
+  #|  }
   #|  new(app).mount("app")
   #|}
   #|
@@ -215,7 +217,7 @@ let _embed_readme_md : String =
 
 ///|
 let _embed_main_mbt_2 : String =
-  #|using @rabbita { new, simple_cell }
+  #|using @rabbita { new, create_pure_state }
   #|using @html { button, div, h1 }
   #|
   #|enum Msg {
@@ -224,20 +226,23 @@ let _embed_main_mbt_2 : String =
   #|}
   #|
   #|fn main {
-  #|  let app = simple_cell(
-  #|    model=0,
-  #|    update=(msg, model) => match msg {
-  #|      Inc => model + 1
-  #|      Dec => model - 1
-  #|    },
-  #|    view=(emit, model) => div(class="app") <| [
+  #|  fn app() {
+  #|    let (model, emit) = create_pure_state(
+  #|      0,
+  #|      update=(msg, model) =>
+  #|        match msg {
+  #|          Inc => model + 1
+  #|          Dec => model - 1
+  #|        },
+  #|    )
+  #|    model.map(model => div(class="app") <| [
   #|      h1("\{model}"),
   #|      div(class="actions") <| [
   #|        button(on_click=emit(Dec), "-"),
   #|        button(on_click=emit(Inc), "+"),
   #|      ],
-  #|    ],
-  #|  )
+  #|    ])
+  #|  }
   #|  new(app).mount("app")
   #|}
   #|

@@ -24,16 +24,33 @@ pub type Html = @html.Html
 /// 
 /// ```moonbit check
 /// test "minimal static page" {
-///   let app = @rabbita.static_cell(@html.div("hello world"))
-///   ignore(app)
+///   // let app = @rabbita.static_cell(@html.div("hello world"))
+///   // ignore(app)
 ///   // use `@rabbita.new(app).mount("id")` in client
 /// }
 /// ```
 #cfg(target="js")
-pub fn new(root : Cell) -> App {
-  let sandbox = @runtime.Sandbox::new(root.0)
-  root.0.flags().is_root = true
-  App::{ sandbox, init_cmd: None }
+pub fn new(builder : () -> Val[Html]) -> App {
+  let sandbox = @runtime.Sandbox::new()
+  ambient_graph.val = Some(Graph(sandbox))
+  App::{ sandbox, init_cmd: None, builder }
+}
+
+///|
+#cfg(target="js")
+pub fn[Model : Eq, Msg] elmish(
+  model~ : Model,
+  view~ : (Emit[Msg], Model) -> Html,
+  update~ : (Emit[Msg], Msg, Model) -> (Model, Cmd),
+  subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
+) -> App {
+  fn builder() {
+    let (model, emit) = create_state(model, update~, subscriptions?)
+    model.map(model => view(emit, model))
+  }
+  let sandbox = @runtime.Sandbox::new()
+  ambient_graph.val = Some(Graph(sandbox))
+  App::{ sandbox, init_cmd: None, builder }
 }
 
 ///|
@@ -91,7 +108,10 @@ pub fn App::mount(self : Self, element_id : String) -> Unit {
     self.sandbox.add(cmd)
     self.init_cmd = None
   }
-  self.sandbox.initialize()
+
+  let vnode = (self.builder)()
+
+  self.sandbox.initialize(vnode.0.map(html => html.0))
   self.sandbox.flush()
 }
 
@@ -100,14 +120,16 @@ pub fn App::mount(self : Self, element_id : String) -> Unit {
 #cfg(target="js")
 struct App {
   sandbox : @runtime.Sandbox
+  builder : () -> Val[Html]
   mut init_cmd : Cmd?
 }
 
 ///|
-/// Render a `Cell` tree into an HTML string.
+/// Render a component into an HTML string.
 ///
 /// This is the server-side rendering entrypoint for Rabbita. It evaluates
-/// view and serializes the resulting virtual DOM into static HTML.
+/// the component once and serializes the resulting virtual DOM into static
+/// HTML.
 ///
 /// Hydration is currently not supported. If you later call `mount` on the
 /// client, Rabbita will do a fresh client-side render instead of attaching to
@@ -117,11 +139,10 @@ struct App {
 ///
 /// ```mbt check
 /// test "render html to string" {
-///   let page = @rabbita.static_cell(
-///     @html.ul(["todo1", "todo2"].map(x => @html.li(x))),
-///   )
 ///   inspect(
-///     @rabbita.render_to_string(page),
+///     @rabbita.render_to_string(() => {
+///       @rabbita.Val::constant(@html.ul(["todo1", "todo2"].map(x => @html.li(x))))
+///     }),
 ///     content=(
 ///       #|<ul><li>todo1</li><li>todo2</li></ul>
 ///     ),
@@ -129,6 +150,6 @@ struct App {
 /// }
 /// ```
 #internal(unstable, "Experimental API")
-pub fn render_to_string(root : Cell) -> String {
-  @runtime.server_side_render(root.0)
+pub fn render_to_string(builder : () -> Val[Html]) -> String {
+  @runtime.server_side_render(() => builder().0.read().0)
 }

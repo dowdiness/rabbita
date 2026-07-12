@@ -10,7 +10,7 @@ Rabbita adopts an Elm-style router. There is no hidden `router` object, and you 
 
 ## Register the route messages
 
-Use the root cell's `subscriptions` callback together with
+Use the root app's `subscriptions` callback together with
 `@sub.on_url_changed(...)` and `@sub.on_url_request(...)` to declare which
 messages should be triggered for routing events.
 
@@ -28,9 +28,9 @@ enum Msg {
 }
 ```
 
-To register the `UrlChanged` and `UrlRequest` messages, use
-`cell_with_emit(...)` to obtain the main cell and the corresponding
-`emit` function, then wire the route subscriptions on the root cell:
+To register the `UrlChanged` and `UrlRequest` messages, create the root state
+with `create_state(...)`, obtain the corresponding `emit` function, then wire
+the route subscriptions on the root app:
 
 ```moonbit check
 ///|
@@ -42,12 +42,17 @@ test {
     ])
   }
 
-  let (_emit, root) = @rabbita.cell_with_emit(
-    model=home,
-    subscriptions~,
-    update~,
-    view~,
-  )
+  fn root() -> Val[Html] {
+    let (model, emit) = @rabbita.create_state(home, subscriptions~, update=fn(
+      emit,
+      msg,
+      model,
+    ) {
+      let (cmd, model) = update(emit, msg, model)
+      (model, cmd)
+    })
+    model.map(model => view(emit, model))
+  }
   ignore(root)
 }
 ```
@@ -73,7 +78,7 @@ enum Model {
   Home(Map[Id, String])
   Article(String, String)
   NotFound
-}
+} derive(Eq)
 ```
 
 We skipped the networking part in this tutorial, so let's hardcode the data as globals:

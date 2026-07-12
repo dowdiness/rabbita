@@ -67,9 +67,9 @@ fn animation_pattern_button(
 ///|
 fn animation_actions(
   emit : @rabbita.Emit[Msg],
-  model : Model,
+  active_index : Int,
 ) -> Array[@rabbita.Html] {
   animation_pattern_indices().map(index => {
-    animation_pattern_button(emit, model.logo_pattern_index, index)
+    animation_pattern_button(emit, active_index, index)
   })
 }

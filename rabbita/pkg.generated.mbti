@@ -3,6 +3,7 @@ package "moonbit-community/rabbita"
 
 import {
   "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita/common",
   "moonbit-community/rabbita/html",
   "moonbit-community/rabbita/sub",
   "moonbit-community/rabbita/url",
@@ -13,33 +14,31 @@ pub fn[A, E : Error] attempt((Result[A, E]) -> @cmd.Cmd, async () -> A raise E) 
 
 pub fn batch(Array[@cmd.Cmd]) -> @cmd.Cmd
 
-pub fn[Model, Msg] cell(model~ : Model, update~ : (@cmd.Emit[Msg], Msg, Model) -> (@cmd.Cmd, Model), view~ : (@cmd.Emit[Msg], Model) -> @html.Html, subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> Cell
+pub fn[Model : Eq, Msg] create_pure_state(Model, update~ : (Msg, Model) -> Model) -> (Val[Model], @cmd.Emit[Msg])
 
-#deprecated
-pub fn[Model, Msg] cell_with_dispatch(model~ : Model, update~ : (@cmd.Emit[Msg], Msg, Model) -> (@cmd.Cmd, Model), view~ : (@cmd.Emit[Msg], Model) -> @html.Html, subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (@cmd.Emit[Msg], Cell)
+pub fn[T : Eq] create_resource((@cmd.Emit[Result[T, Error]]) -> @cmd.Cmd) -> Val[Status[T]]
 
-pub fn[Model, Msg] cell_with_emit(model~ : Model, update~ : (@cmd.Emit[Msg], Msg, Model) -> (@cmd.Cmd, Model), view~ : (@cmd.Emit[Msg], Model) -> @html.Html, subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (@cmd.Emit[Msg], Cell)
+pub fn[Model : Eq, Msg] create_state(Model, update~ : (@cmd.Emit[Msg], Msg, Model) -> (Model, @cmd.Cmd), subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (Val[Model], @cmd.Emit[Msg])
+
+pub fn[Model : Eq, Msg] create_state_with_init(init~ : (@cmd.Emit[Msg]) -> (Model, @cmd.Cmd), update~ : (@cmd.Emit[Msg], Msg, Model) -> (Model, @cmd.Cmd), subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (Val[Model], @cmd.Emit[Msg])
+
+pub fn[Model : Eq, Msg, Input : Eq] create_state_with_input(init~ : (@cmd.Emit[Msg], Input) -> (Model, @cmd.Cmd), update~ : (@cmd.Emit[Msg], Input, Msg, Model) -> (Model, @cmd.Cmd), subscriptions? : (@cmd.Emit[Msg], Input, Model) -> @sub.Sub, input~ : Val[Input]) -> (Val[Model], @cmd.Emit[Msg])
+
+pub fn[Model : Eq] create_variable(Model) -> (Val[Model], @cmd.Emit[(Model) -> Model])
 
 pub fn delay(@cmd.Cmd, Int) -> @cmd.Cmd
 
 pub fn effect(async () -> Unit noraise) -> @cmd.Cmd
 
-pub fn new(Cell) -> App
+pub fn[Model : Eq, Msg] elmish(model~ : Model, view~ : (@cmd.Emit[Msg], Model) -> @html.Html, update~ : (@cmd.Emit[Msg], Msg, Model) -> (Model, @cmd.Cmd), subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> App
+
+pub fn new(() -> Val[@html.Html]) -> App
 
 pub let none : @cmd.Cmd
 
 pub fn[A] perform((A) -> @cmd.Cmd, async () -> A noraise) -> @cmd.Cmd
 
-pub fn render_to_string(Cell) -> String
-
-pub fn[Model, Msg] simple_cell(model~ : Model, update~ : (Msg, Model) -> Model, view~ : (@cmd.Emit[Msg], Model) -> @html.Html) -> Cell
-
-#deprecated
-pub fn[Model, Msg] simple_cell_with_dispatch(model~ : Model, update~ : (Msg, Model) -> Model, view~ : (@cmd.Emit[Msg], Model) -> @html.Html, subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (@cmd.Emit[Msg], Cell)
-
-pub fn[Model, Msg] simple_cell_with_emit(model~ : Model, update~ : (Msg, Model) -> Model, view~ : (@cmd.Emit[Msg], Model) -> @html.Html, subscriptions? : (@cmd.Emit[Msg], Model) -> @sub.Sub) -> (@cmd.Emit[Msg], Cell)
-
-pub fn static_cell(@html.Html) -> Cell
+pub fn render_to_string(() -> Val[@html.Html]) -> String
 
 // Errors
 
@@ -50,18 +49,38 @@ pub fn App::with_init(Self, @cmd.Cmd) -> Unit
 #deprecated
 pub fn App::with_route(Self, url_changed? : @cmd.Emit[@url.Url], url_request? : @cmd.Emit[@url.UrlRequest]) -> Unit
 
-type Cell
-pub fn Cell::view(Self) -> @html.Html
+pub enum Status[T] {
+  Pending
+  Loaded(T)
+  Failed(Error)
+}
+pub impl[T : Eq] Eq for Status[T]
+
+type Val[A]
+pub fn[K : Hash + Eq, V : Eq, C : Eq] Val::assoc(Self[Map[K, V]], (K, Self[V]) -> Self[C]) -> Self[Array[C]]
+pub fn[A] Val::constant(A) -> Self[A]
+pub fn[E : @common.Enumerate + Eq, C : Eq] Val::enumerate(Self[E], (E) -> Self[C]) -> Self[C]
+pub fn[A : Eq, B] Val::map(Self[A], (A) -> B) -> Self[B]
+pub fn[A : Eq, B : Eq, C] Val::map2(Self[A], Self[B], (A, B) -> C) -> Self[C]
+pub fn[A : Eq, B : Eq, C : Eq, D] Val::map3(Self[A], Self[B], Self[C], (A, B, C) -> D) -> Self[D]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E] Val::map4(Self[A], Self[B], Self[C], Self[D], (A, B, C, D) -> E) -> Self[E]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F] Val::map5(Self[A], Self[B], Self[C], Self[D], Self[E], (A, B, C, D, E) -> F) -> Self[F]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G] Val::map6(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], (A, B, C, D, E, F) -> G) -> Self[G]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H] Val::map7(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], (A, B, C, D, E, F, G) -> H) -> Self[H]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I] Val::map8(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], (A, B, C, D, E, F, G, H) -> I) -> Self[I]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq, J] Val::map9(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], Self[I], (A, B, C, D, E, F, G, H, I) -> J) -> Self[J]
+pub fn[E : @common.Enumerate + Eq, C : Eq] Val::switch(Self[E], (E) -> Self[C]) -> Self[C]
 
 // Type aliases
 pub using @cmd {type Cmd}
 
-#deprecated
-pub using @cmd {type Emit as Dispatch}
-
 pub using @cmd {type Emit}
 
 pub using @html {type Html}
+
+pub type Resource[T] = Val[Status[T]]
+
+pub using @common {trait Enumerate}
 
 // Traits
 

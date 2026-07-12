@@ -60,9 +60,6 @@ extern "js" fn code_to_html(
 using @rabbita {type Cmd}
 
 ///|
-struct Highlighter(@js.Value)
-
-///|
 extern "js" fn is_highlighter(x : @js.Value) -> Bool =
   #| (x) => !!x
   #|   && typeof x.codeToHtml === 'function'
@@ -70,49 +67,142 @@ extern "js" fn is_highlighter(x : @js.Value) -> Bool =
   #|   && typeof x.loadTheme === 'function'
 
 ///|
-pub fn load(
-  langs : Array[String],
-  themes : Array[String],
-  msg : (Result[Highlighter, Error]) -> Cmd,
-) -> Cmd {
-  @rabbita.attempt(msg, async fn() {
-    let highlighter = load_shiki().wait()
-    guard is_highlighter(highlighter) else {
-      fail("shiki highlighter init failed: invalid object")
-    }
-    if !(langs is []) {
-      try load_langs(highlighter, langs).wait() |> ignore catch {
+priv struct Singleton {
+  highlighter : @js.Value
+  loaded_langs : Set[String]
+  loaded_themes : Set[String]
+  config : Config?
+}
+
+///|
+impl Eq for Singleton with fn equal(a, b) {
+  a.loaded_langs == b.loaded_langs &&
+  a.loaded_themes == b.loaded_themes &&
+  a.config == b.config
+}
+
+///|
+let global_shiki_hl : Ref[Singleton?] = Ref(None)
+
+///|
+#cfg(target="js")
+fn async_run(f : async () -> Unit noraise) -> Unit = "%async.run"
+
+///|
+pub fn initialize(langs~ : Array[String], themes~ : Array[String]) -> Unit {
+  async_run(() => {
+    try {
+      let singleton = match global_shiki_hl.val {
+        Some(s) => s
+        None => {
+          let highlighter = load_shiki().wait()
+          guard is_highlighter(highlighter) else {
+            fail("shiki highlighter init failed: invalid object")
+          }
+          let singleton = {
+            highlighter,
+            loaded_langs: Set([]),
+            loaded_themes: Set([]),
+            config: None,
+          }
+          global_shiki_hl.val = Some(singleton)
+          singleton
+        }
+      }
+      try load_langs(singleton.highlighter, langs).wait() |> ignore catch {
         e => fail("shiki load langs failed: \{e}")
       }
-    }
-    if !(themes is []) {
-      try load_themes(highlighter, themes).wait() |> ignore catch {
+      for lang in langs {
+        singleton.loaded_langs.add(lang)
+      }
+
+      try load_themes(singleton.highlighter, themes).wait() |> ignore catch {
         e => fail("shiki load themes failed: \{e}")
       }
+      for theme in themes {
+        singleton.loaded_themes.add(theme)
+      }
+    } catch {
+      e => println(e)
     }
-    Highlighter(highlighter)
   })
 }
 
 ///|
-pub async fn Highlighter::add_theme(self : Self, theme : String) -> Unit {
-  load_themes(self.0, [theme]).wait() |> ignore
+fn load_shiki_highlight(
+  lang : String,
+  theme : String,
+  inject : @rabbita.Emit[Result[Singleton, Error]],
+) -> Cmd {
+  @rabbita.attempt(inject.0, async fn() {
+    let singleton = match global_shiki_hl.val {
+      Some(s) => s
+      None => {
+        let highlighter = load_shiki().wait()
+        guard is_highlighter(highlighter) else {
+          fail("shiki highlighter init failed: invalid object")
+        }
+        let singleton = {
+          highlighter,
+          loaded_langs: Set([]),
+          loaded_themes: Set([]),
+          config: Some({ lang, theme }),
+        }
+        global_shiki_hl.val = Some(singleton)
+        singleton
+      }
+    }
+    if !singleton.loaded_langs.contains(lang) {
+      try load_langs(singleton.highlighter, [lang]).wait() |> ignore catch {
+        e => fail("shiki load langs failed: \{e}")
+      }
+    }
+    if !singleton.loaded_themes.contains(theme) {
+      try load_themes(singleton.highlighter, [theme]).wait() |> ignore catch {
+        e => fail("shiki load themes failed: \{e}")
+      }
+    }
+    singleton
+    // code_to_html(singleton.highlighter, code, lang, theme)
+  })
 }
 
 ///|
-pub async fn Highlighter::add_lang(self : Self, lang : String) -> Unit {
-  load_langs(self.0, [lang]).wait() |> ignore
+struct Config {
+  lang : String
+  theme : String
+} derive(Eq)
+
+///|
+impl @rabbita.Enumerate for Config with fn tag(self : Config) {
+  "\{self.lang}, \{self.theme}"
 }
 
 ///|
-/// Render a code to html, with language and theme options.
 #warnings("-alert_xss_vulnerable")
-pub fn Highlighter::code_to_html(
-  self : Self,
-  code : String,
-  lang~ : String,
-  theme~ : String,
-) -> @rabbita.Html {
-  let str = code_to_html(self.0, code, lang, theme)
-  @html.code(attrs=@html.Attrs::build().inner_html(str), @html.nothing)
+pub fn shiki_code(
+  code : Val[String],
+  lang~ : Val[String],
+  theme~ : Val[String],
+) -> Val[Html] {
+  let config = lang.map2(theme, (lang, theme) => { lang, theme })
+  let hl = config.switch(config => {
+    @rabbita.create_resource(inject => {
+      load_shiki_highlight(config.lang, config.theme, inject)
+    })
+  })
+
+  code.map3(config, hl, (code, config, x) => {
+    match x {
+      Loaded(hl) => {
+        let str = code_to_html(hl.highlighter, code, config.lang, config.theme)
+        @html.code(attrs=@html.Attrs::build().inner_html(str), @html.nothing)
+      }
+      Pending => @html.div(@html.pre(code))
+      Failed(_) => @html.div(@html.pre(code))
+    }
+  })
 }
+
+///|
+using @rabbita {type Html, type Val}

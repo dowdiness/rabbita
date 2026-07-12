@@ -5,7 +5,7 @@ using @common {type Keyboard}
 using @html {div, input, label, main_, nothing, section, span}
 
 ///|
-using @rabbita {type Emit, type Html, new, simple_cell_with_emit}
+using @rabbita {type Emit, type Html, type Val, new, create_state, none}
 
 ///|
 using @string {parse_int}
@@ -33,7 +33,7 @@ struct Pos {
 struct World {
   player : Pos
   crates : Vector[Pos]
-}
+} derive(Eq)
 
 ///|
 enum Msg {
@@ -116,7 +116,7 @@ fn delta_from_key(event : Keyboard) -> Pos? {
 struct Model {
   history : Vector[World]
   cursor : Int
-}
+} derive(Eq)
 
 ///|
 fn update(msg : Msg, model : Model) -> Model {
@@ -222,17 +222,22 @@ fn timeline_view(emit : Emit[Msg], model : Model) -> Html {
 }
 
 ///|
-fn view(emit : Emit[Msg], model : Model) -> Html {
-  main_(class="page") <| [
-    section(class="hero") <| [
-      div(class="stage-wrap") <| [
-        board_view(model.history[model.cursor]),
+fn view(emit : Emit[Msg], model : Val[Model]) -> Val[Html] {
+  let world = model.map(model => model.history[model.cursor])
+  let board = world.map(world => board_view(world))
+  let timeline = model.map(model => timeline_view(emit, model))
+  board.map2(timeline, (board, timeline) => {
+    main_(class="page") <| [
+      section(class="hero") <| [
+        div(class="stage-wrap") <| [
+          board,
+        ],
+        div(class="bottom-deck") <| [
+          timeline,
+        ],
       ],
-      div(class="bottom-deck") <| [
-        timeline_view(emit, model),
-      ],
-    ],
-  ]
+    ]
+  })
 }
 
 ///|
@@ -242,11 +247,13 @@ fn main {
     player: { x: 2, y: 5 },
     crates: from_array([{ x: 3, y: 2 }, { x: 3, y: 3 }, { x: 3, y: 4 }]),
   }
-  let (_, app) = simple_cell_with_emit(
-    model={ history: singleton(initial_world), cursor: 0 },
-    update~,
-    view~,
-    subscriptions~,
-  )
+  fn app() {
+    let (model, emit) = create_state(
+      { history: singleton(initial_world), cursor: 0 },
+      update=fn(_, msg, model) { (update(msg, model), none) },
+      subscriptions~,
+    )
+    view(emit, model)
+  }
   new(app).mount("app")
 }

@@ -2,9 +2,10 @@
 using @html {a, div, h1, h2, li, text, ul}
 
 ///|
-using @rabbita {type Cmd, type Emit, type Html}
+using @rabbita {type Cmd, type Html}
 
 ///|
+#cfg(target="js")
 enum Msg {
   Clicked
 }
@@ -13,6 +14,7 @@ enum Msg {
 type Model = Int
 
 ///|
+#cfg(target="js")
 fn update(msg : Msg, count : Model) -> Model {
   match msg {
     Clicked => count + 1
@@ -25,13 +27,11 @@ fn button(text : String, on_click~ : Cmd) -> Html {
 }
 
 ///|
-fn view(emit : Emit[Msg], count : Model) -> Html {
+fn view(on_click : Cmd, count : Model) -> Html {
   div(class="app", [
     h1(class="title", "Hello Rabbita"),
     div(class="lead", "You built it successfully!"),
-    div(class="actions", [
-      button("You clicked \{count} times", on_click=emit(Clicked)),
-    ]),
+    div(class="actions", [button("You clicked \{count} times", on_click~)]),
     div(class="next", [
       h2(class="next-title", "What's next"),
       ul(class="next-list", [

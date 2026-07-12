@@ -6,7 +6,7 @@ using @cmd {type Cmd, type Emit}
 
 ///|
 #alias(T)
-pub(all) struct Html(@runtime.VNode)
+pub(all) struct Html(@runtime.VNode) derive(Eq)
 
 ///|
 pub fn Html::to_virtual_dom(self : Html) -> @runtime.VNode {
