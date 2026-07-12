@@ -139,7 +139,7 @@ pub fn[
 }
 
 ///|
-pub fn[Model : Eq, Msg] create_simple_state(
+pub fn[Model : Eq, Msg] create_pure_state(
   model : Model,
   update~ : (Msg, Model) -> Model,
 ) -> (Val[Model], Emit[Msg]) {
@@ -224,13 +224,13 @@ pub fn[Model : Eq, Msg, Input : Eq] create_state_with_input(
 }
 
 ///|
-pub fn[Model : Eq] create_single_state(
+pub fn[Model : Eq] create_variable(
   init : Model,
 ) -> (Val[Model], Emit[(Model) -> Model]) {
   fn update(f, model) {
     f(model)
   }
-  create_simple_state(init, update~)
+  create_pure_state(init, update~)
 }
 
 ///|
