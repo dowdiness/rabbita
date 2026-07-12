@@ -67,7 +67,7 @@ extern "js" fn is_highlighter(x : @js.Value) -> Bool =
   #|   && typeof x.loadTheme === 'function'
 
 ///|
-priv struct Singlton {
+priv struct Singleton {
   highlighter : @js.Value
   loaded_langs : Set[String]
   loaded_themes : Set[String]
@@ -75,14 +75,14 @@ priv struct Singlton {
 }
 
 ///|
-impl Eq for Singlton with fn equal(a, b) {
+impl Eq for Singleton with fn equal(a, b) {
   a.loaded_langs == b.loaded_langs &&
   a.loaded_themes == b.loaded_themes &&
   a.config == b.config
 }
 
 ///|
-let global_shiki_hl : Ref[Singlton?] = Ref(None)
+let global_shiki_hl : Ref[Singleton?] = Ref(None)
 
 ///|
 #cfg(target="js")
@@ -132,7 +132,7 @@ pub fn initialize(langs~ : Array[String], themes~ : Array[String]) -> Unit {
 fn load_shiki_highlight(
   lang : String,
   theme : String,
-  inject : @rabbita.Emit[Result[Singlton, Error]],
+  inject : @rabbita.Emit[Result[Singleton, Error]],
 ) -> Cmd {
   @rabbita.attempt(inject.0, async fn() {
     let singleton = match global_shiki_hl.val {

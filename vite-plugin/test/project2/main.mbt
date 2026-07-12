@@ -17,7 +17,7 @@ pub(all) enum Message {
 ///|
 struct Model {
   count : Int
-}
+} derive(Eq)
 
 ///|
 fn update(msg : Message, model : Model) -> Model {
@@ -52,8 +52,11 @@ fn view(emit : @rabbita.Emit[Message], model : Model) -> @rabbita.Html {
 /// NOTE: This program is only available in the js backend, 
 /// see README.md to getting started.
 fn main {
-  let app = @rabbita.simple_cell(model={ count: 0 }, update~, view~)
-  @rabbita.new(app).mount("app")
+  let app = @rabbita.new(() => {
+    let (model, emit) = @rabbita.create_pure_state({ count: 0 }, update~)
+    model.map(model => view(emit, model))
+  })
+  app.mount("app")
 }
 
 ///|

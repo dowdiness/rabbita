@@ -3,10 +3,15 @@ using @html {div, text}
 
 ///|
 fn main {
-  let app = @rabbita.simple_cell(
-    model="moonModDir",
-    update=fn(_ : Unit, model) { model },
-    view=fn(_ : @rabbita.Emit[Unit], model) { div([text(model)]) },
-  )
-  @rabbita.new(app).mount("app")
+  let app = @rabbita.new(() => {
+    let (model, emit) = @rabbita.create_pure_state(
+      "moonModDir",
+      update=fn(_ : Unit, model) { model },
+    )
+    model.map(model => {
+      ignore(emit)
+      div([text(model)])
+    })
+  })
+  app.mount("app")
 }
