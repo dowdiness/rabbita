@@ -79,10 +79,8 @@ pub fn[Model : Eq, Msg] Sandbox::create_state_machine(
 
   let (model, set_model) : (@duplix.Node[Model?], _) = @duplix.input(None)
 
-  let (model_value, cmd) = initialize(emit)
-  handle_subs(scheduler, model_value)
+  let (model_value, init_cmd) = initialize(emit)
   set_model(Some(model_value))
-  scheduler.add(cmd)
 
   fn on_update(scheduler : &Scheduler, msg : @any.Any) {
     let msg : Msg = msg.into()
@@ -96,6 +94,8 @@ pub fn[Model : Eq, Msg] Sandbox::create_state_machine(
   global_stores[id] = { id, on_update }
   @duplix.on_cleanup(() => cleanup_store(id, sub_map, scheduler))
 
+  scheduler.add(init_cmd)
+  handle_subs(scheduler, model.read().unwrap())
   (model.map(x => x.unwrap()), emit)
 }
 
@@ -125,10 +125,8 @@ pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(
 
   let (model, set_model) : (@duplix.Node[Model?], _) = @duplix.input(None)
 
-  let (model_value, cmd) = initialize(emit, input.read())
-  handle_subs(scheduler, model_value)
+  let (model_value, init_cmd) = initialize(emit, input.read())
   set_model(Some(model_value))
-  scheduler.add(cmd)
 
   fn on_update(scheduler : &Scheduler, msg : @any.Any) {
     let msg : Msg = msg.into()
@@ -143,5 +141,7 @@ pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(
   global_stores[id] = { id, on_update }
   @duplix.on_cleanup(() => cleanup_store(id, sub_map, scheduler))
 
+  scheduler.add(init_cmd)
+  handle_subs(scheduler, model.read().unwrap())
   (model.map(x => x.unwrap()), emit)
 }
