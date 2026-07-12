@@ -1,4 +1,4 @@
-using @rabbita { new, static_cell }
+using @rabbita { new, create_variable }
 using @html {div, h1, li, ul}
 
 fn main {
@@ -12,6 +12,9 @@ fn main {
     ul(class="items", [for item in items => li(item)]),
   ]
 
-  let app = static_cell(html)
+  fn app() {
+    let (page, _) = create_variable(html)
+    page
+  }
   new(app).mount("app")
 }

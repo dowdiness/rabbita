@@ -73,7 +73,9 @@ let path : String = match @env.args() {
 ///|
 #cfg(target="native")
 async fn main {
-  let app = @rabbita.simple_cell(model=0, update~, view~)
+  let rendered = @rabbita.render_to_string(() => {
+    @rabbita.Val::constant(view(@rabbita.none, 0))
+  })
   let html =
     $| <!DOCTYPE html>
     $| <html lang="en">
@@ -86,7 +88,7 @@ async fn main {
     $| </head>
     $| <body>
     $|     <div id="app">
-    $|       \{@rabbita.render_to_string(app)}
+    $|       \{rendered}
     $|     </div>
     $| </body>
     $| </html>

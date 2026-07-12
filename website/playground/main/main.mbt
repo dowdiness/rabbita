@@ -2,7 +2,7 @@
 using @html {a, button, div, iframe, li, nothing, option, pre, select, span, ul}
 
 ///|
-using @rabbita {type Cmd, type Emit, type Html}
+using @rabbita {type Cmd, type Emit, type Html, type Val}
 
 ///|
 struct Diagnostic {
@@ -13,7 +13,7 @@ struct Diagnostic {
   end_line : Int
   end_column : Int
   message : String
-}
+} derive(Eq)
 
 ///|
 enum Msg {
@@ -49,7 +49,7 @@ enum ExampleAsset {
   RepoSource(Int)
   RepoCss
   RepoMoonPkg
-}
+} derive(Eq)
 
 ///|
 struct Model {
@@ -72,7 +72,7 @@ struct Model {
   run_id : Int
   example_id : String
   example_load : ExampleLoad?
-}
+} derive(Eq)
 
 ///|
 struct Example {
@@ -81,7 +81,7 @@ struct Example {
   sources : Array[String]
   css : String
   moon_pkg : String
-} derive(FromJson)
+} derive(Eq, FromJson)
 
 ///|
 struct ExampleManifest {
@@ -94,7 +94,7 @@ struct LoadedExample {
   html : String
   css : String
   moon_pkg : String
-}
+} derive(Eq)
 
 ///|
 struct ExampleLoad {
@@ -103,7 +103,7 @@ struct ExampleLoad {
   sources : Array[String?]
   css : String?
   moon_pkg : String?
-}
+} derive(Eq)
 
 ///|
 fn initial_model() -> Model {
@@ -808,7 +808,13 @@ fn tab_input(emit : Emit[Msg], tab : SourceTab) -> (String) -> Cmd {
 }
 
 ///|
-fn rebuild_button_state(model : Model) -> String {
+struct BuildStateModel {
+  status : String
+  compiling : Bool
+} derive(Eq)
+
+///|
+fn rebuild_button_state(model : BuildStateModel) -> String {
   if model.compiling || model.status == "Compiling" {
     "building"
   } else if model.status == "Pending" {
@@ -819,7 +825,7 @@ fn rebuild_button_state(model : Model) -> String {
 }
 
 ///|
-fn rebuild_button_class(model : Model) -> String {
+fn rebuild_button_class(model : BuildStateModel) -> String {
   let state = rebuild_button_state(model)
   if state == "" {
     "plain-button primary rebuild-button"
@@ -829,7 +835,7 @@ fn rebuild_button_class(model : Model) -> String {
 }
 
 ///|
-fn rebuild_button_icon(model : Model) -> Html {
+fn rebuild_button_icon(model : BuildStateModel) -> Html {
   if rebuild_button_state(model) == "" {
     let line_attrs = @svg.Attrs::build()
       .stroke_linecap("round")
@@ -863,7 +869,7 @@ fn rebuild_button_icon(model : Model) -> Html {
 }
 
 ///|
-fn rebuild_button_text(model : Model) -> String {
+fn rebuild_button_text(model : BuildStateModel) -> String {
   match rebuild_button_state(model) {
     "building" => "Building"
     "pending" => "Pending"
@@ -879,7 +885,14 @@ fn tab_button(emit : Emit[Msg], active : SourceTab, tab : SourceTab) -> Html {
 }
 
 ///|
-fn example_select(emit : Emit[Msg], model : Model) -> Html {
+struct ExampleSelectModel {
+  examples_ready : Bool
+  examples : Array[Example]
+  example_id : String
+} derive(Eq)
+
+///|
+fn example_select(emit : Emit[Msg], model : ExampleSelectModel) -> Html {
   select(
     id="example-select",
     class="example-select",
@@ -915,7 +928,14 @@ fn package_docs_url(pkg : String) -> String {
 }
 
 ///|
-fn package_menu(emit : Emit[Msg], model : Model) -> Html {
+struct PackageMenuModel {
+  asset_packages : Array[String]
+  asset_status : String
+  package_menu_open : Bool
+} derive(Eq)
+
+///|
+fn package_menu(emit : Emit[Msg], model : PackageMenuModel) -> Html {
   if model.asset_packages.is_empty() {
     span(class="asset-status", model.asset_status)
   } else {
@@ -964,14 +984,21 @@ fn package_menu(emit : Emit[Msg], model : Model) -> Html {
 }
 
 ///|
-fn code_panel(_emit : Emit[Msg], _model : Model) -> Html {
+fn code_panel() -> Html {
   div(class="code-panel", [
     div(id="code-editor-host", class="code-editor-host", nothing),
   ])
 }
 
 ///|
-fn show_diagnostics(model : Model) -> Bool {
+struct ResultBodyModel {
+  status : String
+  log : String
+  diagnostics : Array[Diagnostic]
+} derive(Eq)
+
+///|
+fn show_diagnostics(model : ResultBodyModel) -> Bool {
   (
     model.status == "Compile failed" ||
     model.status == "Assets missing" ||
@@ -1002,7 +1029,7 @@ fn diagnostic_row(emit : Emit[Msg], diagnostic : Diagnostic) -> Html {
 }
 
 ///|
-fn diagnostics_output(emit : Emit[Msg], model : Model) -> Html {
+fn diagnostics_output(emit : Emit[Msg], model : ResultBodyModel) -> Html {
   div(
     id="diagnostics-output",
     class="diagnostics-output",
@@ -1015,7 +1042,7 @@ fn diagnostics_output(emit : Emit[Msg], model : Model) -> Html {
 }
 
 ///|
-fn result_body(emit : Emit[Msg], model : Model) -> Html {
+fn result_body(emit : Emit[Msg], model : ResultBodyModel) -> Html {
   if show_diagnostics(model) {
     diagnostics_output(emit, model)
   } else {
@@ -1028,7 +1055,7 @@ fn result_body(emit : Emit[Msg], model : Model) -> Html {
 }
 
 ///|
-fn result_overlay(model : Model) -> Html {
+fn result_overlay(model : BuildStateModel) -> Html {
   let state = rebuild_button_state(model)
   let class_name = if state == "" {
     "result-overlay"
@@ -1039,40 +1066,110 @@ fn result_overlay(model : Model) -> Html {
 }
 
 ///|
-fn view(emit : Emit[Msg], model : Model) -> Html {
-  div(class="shell", [
-    div(class="workbench", [
-      div(class="top-bar editor-status", [
-        div(class="bar-group", [
-          example_select(emit, model),
-          package_menu(emit, model),
-        ]),
-        div(class="bar-group", [
-          button(
-            class="plain-button",
-            id="share-button",
-            on_click=emit(ShareRequested),
-            "Share",
-          ),
-          button(
-            id="rebuild-button",
-            class=rebuild_button_class(model),
-            disabled=model.compiling,
-            on_click=emit(RunRequested),
-            [rebuild_button_icon(model), span(rebuild_button_text(model))],
-          ),
-        ]),
-      ]),
-      div(class="tab-strip", [
-        tab_button(emit, model.active_tab, Mbt),
-        tab_button(emit, model.active_tab, Html),
-        tab_button(emit, model.active_tab, Css),
-        tab_button(emit, model.active_tab, MoonPkg),
-      ]),
-      code_panel(emit, model),
-    ]),
-    div(class="result", [result_body(emit, model), result_overlay(model)]),
-  ])
+fn example_select_view(
+  emit : Emit[Msg],
+  model : Val[ExampleSelectModel],
+) -> Val[Html] {
+  model.map(model => example_select(emit, model))
+}
+
+///|
+fn package_menu_view(
+  emit : Emit[Msg],
+  model : Val[PackageMenuModel],
+) -> Val[Html] {
+  model.map(model => package_menu(emit, model))
+}
+
+///|
+fn build_button_view(
+  emit : Emit[Msg],
+  model : Val[BuildStateModel],
+) -> Val[Html] {
+  model.map(model => {
+    button(
+      id="rebuild-button",
+      class=rebuild_button_class(model),
+      disabled=model.compiling,
+      on_click=emit(RunRequested),
+      [rebuild_button_icon(model), span(rebuild_button_text(model))],
+    )
+  })
+}
+
+///|
+fn tab_strip_view(emit : Emit[Msg], active_tab : Val[SourceTab]) -> Val[Html] {
+  active_tab.map(active_tab => {
+    div(class="tab-strip", [
+      tab_button(emit, active_tab, Mbt),
+      tab_button(emit, active_tab, Html),
+      tab_button(emit, active_tab, Css),
+      tab_button(emit, active_tab, MoonPkg),
+    ])
+  })
+}
+
+///|
+fn result_view(
+  emit : Emit[Msg],
+  body : Val[ResultBodyModel],
+  build : Val[BuildStateModel],
+) -> Val[Html] {
+  body
+  .map(model => result_body(emit, model))
+  .map2(build.map(model => result_overlay(model)), (body, overlay) => {
+    div(class="result", [body, overlay])
+  })
+}
+
+///|
+fn view(emit : Emit[Msg], model : Val[Model]) -> Val[Html] {
+  let example = model.map(model => {
+    examples_ready: model.examples_ready,
+    examples: model.examples,
+    example_id: model.example_id,
+  })
+  let packages = model.map(model => {
+    asset_packages: model.asset_packages,
+    asset_status: model.asset_status,
+    package_menu_open: model.package_menu_open,
+  })
+  let build = model.map(model => {
+    status: model.status,
+    compiling: model.compiling,
+  })
+  let result_body = model.map(model => {
+    status: model.status,
+    log: model.log,
+    diagnostics: model.diagnostics,
+  })
+  let top_left = example_select_view(emit, example).map2(
+    package_menu_view(emit, packages),
+    (example, packages) => div(class="bar-group", [example, packages]),
+  )
+  let top_right = build_button_view(emit, build).map(rebuild_button => {
+    div(class="bar-group", [
+      button(
+        class="plain-button",
+        id="share-button",
+        on_click=emit(ShareRequested),
+        "Share",
+      ),
+      rebuild_button,
+    ])
+  })
+  let top_bar = top_left.map2(top_right, (left, right) => {
+    div(class="top-bar editor-status", [left, right])
+  })
+  let workbench = top_bar.map2(
+    tab_strip_view(emit, model.map(model => model.active_tab)),
+    (top_bar, tab_strip) => {
+      div(class="workbench", [top_bar, tab_strip, code_panel()])
+    },
+  )
+  workbench.map2(result_view(emit, result_body, build), (workbench, result) => {
+    div(class="shell", [workbench, result])
+  })
 }
 
 ///|
@@ -1090,7 +1187,18 @@ fn initial_cmd(emit : Emit[Msg], model : Model) -> Cmd {
 ///|
 #warnings("-alert_unstable")
 fn main {
-  let model = initial_model()
-  let (emit, app) = @rabbita.cell_with_emit(model~, update~, view~)
-  @rabbita.new(app)..with_init(initial_cmd(emit, model)).mount("app")
+  fn app() {
+    let (model, emit) = @rabbita.create_state_with_init(
+      init=fn(emit) {
+        let model = initial_model()
+        (model, initial_cmd(emit, model))
+      },
+      update=fn(emit, msg, model) {
+        let (cmd, model) = update(emit, msg, model)
+        (model, cmd)
+      },
+    )
+    view(emit, model)
+  }
+  @rabbita.new(app).mount("app")
 }

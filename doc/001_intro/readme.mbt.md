@@ -29,7 +29,7 @@ Development is driven by defining the `Model` and `Msg` types:
 ///|
 struct Model {
   count : Int
-}
+} derive(Eq)
 
 ///|
 enum Msg {
@@ -51,29 +51,31 @@ Composed together:
 
 ```moonbit check
 ///|
-let app : Cell = @rabbita.simple_cell(
-  model={ count: 0 },
-  update=(msg, model) => {
+fn app() -> Val[Html] {
+  let (model, emit) = @rabbita.create_pure_state({ count: 0 }, update=(
+    msg,
+    model,
+  ) => {
     match msg {
       Inc => { count: model.count + 1 }
       Dec => { count: model.count - 1 }
     }
-  },
-  view=(emit, model) => {
+  })
+  model.map(model => {
     div([
       h1("\{model.count}"),
       button(on_click=emit(Inc), "+"),
       button(on_click=emit(Dec), "-"),
     ])
-  },
-)
+  })
+}
 ```
 
-You may notice that the types `Model` and `Msg` do not explicitly appear in the 
-`simple_cell` call. This is not dynamic typing and does not rely on `Any`. MoonBit 
-infers the types automatically, and everything remains statically typed. Any 
-inconsistency, such as forgetting to handle `Dec` or providing an invalid initial 
-model, will be caught at compile time.
+You may notice that the types `Model` and `Msg` do not explicitly appear in the
+`create_pure_state` call. This is not dynamic typing and does not rely on `Any`.
+MoonBit infers the types automatically, and everything remains statically typed.
+Any inconsistency, such as forgetting to handle `Dec` or providing an invalid
+initial model, will be caught at compile time.
 
 ```moonbit nocheck
 ///|
@@ -82,7 +84,7 @@ fn main {
 }
 ```
 
-Now mount the `app` to a element with id `main`, that is all the MoonBit code 
+Now mount the `app` builder to a element with id `main`, that is all the MoonBit code
 needed to complete this example.
 
 The state changes in a single, unidirectional flow:

@@ -3,3 +3,5 @@ import {
   "moonbit-community/rabbita/common",
   "moonbit-community/rabbita/internal/slotmap",
 }
+
+supported_targets = "js+native"

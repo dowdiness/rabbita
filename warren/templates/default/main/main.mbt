@@ -2,7 +2,7 @@
 using @html {a, button, div, h1, h2, li, text, ul}
 
 ///|
-using @rabbita {new, simple_cell}
+using @rabbita {new, create_pure_state}
 
 ///|
 enum Msg {
@@ -11,14 +11,16 @@ enum Msg {
 
 ///|
 fn main {
-  let app = simple_cell(
-    model=0,
-    update=(msg, count) => {
-      match msg {
-        Clicked => count + 1
-      }
-    },
-    view=(emit, count) => {
+  fn app() {
+    let (count, emit) = create_pure_state(
+      0,
+      update=(msg, count) => {
+        match msg {
+          Clicked => count + 1
+        }
+      },
+    )
+    count.map(count => {
       div(class="app") <| [
         h1(class="title", "Hello Rabbita"),
         div(class="lead", "You built it successfully!"),
@@ -41,7 +43,7 @@ fn main {
           ],
         ],
       ]
-    },
-  )
+    })
+  }
   new(app).mount("app")
 }

@@ -39,232 +39,39 @@ using @html {
 }
 
 ///|
-using @rabbita {type Emit, type Html, type Cmd, batch}
+using @rabbita {type Html, type Val, type Cmd, batch, none}
 
 ///|
 enum Theme {
   System
   Light
   Dark
-}
-
-///|
-struct HomeModel {
-  hero_tab : Int
-  cmp_idx : Int
-  cmp_anim : Bool
-  copied_step : Int?
-}
-
-///|
-let init_home : HomeModel = {
-  hero_tab: 0,
-  cmp_idx: 0,
-  cmp_anim: false,
-  copied_step: None,
-}
+} derive(Eq)
 
 ///|
 enum Page {
-  Home(HomeModel)
+  Home
   Tour(TourModel)
+} derive(Eq)
+
+///|
+impl @rabbita.Enumerate for Page with fn tag(self) {
+  match self {
+    Home => "home"
+    Tour(_) => "tour"
+  }
 }
 
 ///|
 enum Msg {
-  ToggleMenu
-  CycleTheme
-  SelectTab(Int)
-  SelectCmpIdx(Int)
-  NextCmpIdx
-  CopiedStep(Int)
-  ClearCopied
-  SelectChapter(Int)
-  ChapterFetched(Result[String, Error])
-  MenuFetched(Result[Array[TourChapter], Error])
-  LoadResult(Result[@shiki.Highlighter, Error])
   UrlChanged(@url.Url)
   UrlRequest(@url.UrlRequest)
 }
 
 ///|
 struct Model {
-  menu_open : Bool
-  theme : Theme
   page : Page
-  highlighter : @shiki.Highlighter?
-  chapters : Array[TourChapter]
-}
-
-///|
-fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
-  match msg {
-    ToggleMenu => (@rabbita.none, { ..model, menu_open: !model.menu_open })
-    CycleTheme =>
-      (
-        @rabbita.none,
-        {
-          ..model,
-          theme: match model.theme {
-            System => Dark
-            Dark => Light
-            Light => System
-          },
-        },
-      )
-    SelectTab(t) =>
-      match model.page {
-        Home(hm) =>
-          (@rabbita.none, { ..model, page: Home({ ..hm, hero_tab: t }) })
-        _ => (@rabbita.none, model)
-      }
-    SelectCmpIdx(i) =>
-      match model.page {
-        Home(hm) =>
-          (
-            @rabbita.none,
-            {
-              ..model,
-              page: Home({ ..hm, cmp_idx: i, cmp_anim: !hm.cmp_anim }),
-            },
-          )
-        _ => (@rabbita.none, model)
-      }
-    NextCmpIdx =>
-      match model.page {
-        Home(hm) =>
-          (
-            @rabbita.delay(emit(NextCmpIdx), 12000),
-            {
-              ..model,
-              page: Home({
-                ..hm,
-                cmp_anim: !hm.cmp_anim,
-                cmp_idx: (hm.cmp_idx + 1) % cmp_entries.length(),
-              }),
-            },
-          )
-        _ => (@rabbita.none, model)
-      }
-    CopiedStep(i) =>
-      match model.page {
-        Home(hm) =>
-          (
-            @rabbita.delay(emit(ClearCopied), 1500),
-            { ..model, page: Home({ ..hm, copied_step: Some(i) }) },
-          )
-        _ => (@rabbita.none, model)
-      }
-    ClearCopied =>
-      match model.page {
-        Home(hm) =>
-          (@rabbita.none, { ..model, page: Home({ ..hm, copied_step: None }) })
-        _ => (@rabbita.none, model)
-      }
-    SelectChapter(i) =>
-      match model.page {
-        Tour(_) => {
-          let chs = model.chapters
-          let path = if i < chs.length() {
-            chs[i].path
-          } else if !chs.is_empty() {
-            chs[0].path
-          } else {
-            ""
-          }
-          (
-            @nav.push_url(tour_base_url() + path),
-            {
-              ..model,
-              page: Tour({ chapter_idx: i, content: "", failed: false }),
-            },
-          )
-        }
-        _ => (@rabbita.none, model)
-      }
-    ChapterFetched(result) =>
-      match model.page {
-        Tour(tm) =>
-          match result {
-            Ok(text) =>
-              (
-                @rabbita.none,
-                { ..model, page: Tour({ ..tm, content: text, failed: false }) },
-              )
-            Err(_) =>
-              (
-                @rabbita.none,
-                { ..model, page: Tour({ ..tm, content: "", failed: true }) },
-              )
-          }
-        _ => (@rabbita.none, model)
-      }
-    MenuFetched(result) =>
-      match result {
-        Ok(chs) => (@rabbita.none, { ..model, chapters: chs })
-        Err(_) => (@rabbita.none, model)
-      }
-    LoadResult(Ok(hl)) => (@rabbita.none, { ..model, highlighter: Some(hl) })
-    LoadResult(Err(_)) => (@rabbita.none, model)
-    UrlRequest(req) =>
-      match req {
-        Internal(url) => (@nav.push_url(url.to_string()), model)
-        External(url) => (@nav.load(url), model)
-      }
-    UrlChanged(url) =>
-      if is_tour_url(model.chapters, url.path) {
-        let idx = chapter_idx_from_path(model.chapters, url.path)
-        let scroll_cmd = match url.fragment {
-          Some(frag) => scroll_to_heading(frag)
-          None => @nav.scroll_to_top()
-        }
-        // Only fetch when switching chapters or content not yet loaded
-        let already_loaded = match model.page {
-          Tour(tm) => tm.chapter_idx == idx && !tm.content.is_empty()
-          _ => false
-        }
-        if already_loaded {
-          (scroll_cmd, model)
-        } else {
-          let safe_idx = if idx >= 0 && idx < model.chapters.length() {
-            idx
-          } else {
-            0
-          }
-          (
-            batch([
-              @http.get(
-                chapter_base_url(model.chapters[safe_idx]) + "readme.mbt.md",
-              ).expect_text(x => emit(ChapterFetched(x))),
-              scroll_cmd,
-            ]),
-            {
-              ..model,
-              page: Tour({ chapter_idx: idx, content: "", failed: false }),
-            },
-          )
-        }
-      } else {
-        let page = match model.page {
-          Home(_) as p => p
-          _ => Home(init_home)
-        }
-        let cmd = match url.fragment {
-          Some(frag) => scroll_to_heading(frag)
-          None => @nav.scroll_to_top()
-        }
-        (cmd, { ..model, page, })
-      }
-  }
-}
-
-///|
-fn subscriptions(emit : Emit[Msg], _ : Model) -> @sub.Sub {
-  @sub.batch([
-    @sub.on_url_changed(url => emit(UrlChanged(url))),
-    @sub.on_url_request(req => emit(UrlRequest(req))),
-  ])
-}
+} derive(Eq)
 
 ///|
 let github_url : String = "https://github.com/moonbit-community/rabbita"
@@ -281,17 +88,19 @@ let code_counter : String =
   #|  enum Msg {
   #|    Click
   #|  }
-  #|  let app = @rabbita.simple_cell(
-  #|    model={ count: 0 },
-  #|    update=(msg, count) => {
-  #|      match msg {
-  #|        Click => count + 1
-  #|      }
-  #|    },
-  #|    view=(emit, count) => {
-  #|      button(on_click=emit(Click), "You clicked \{count} times")
-  #|    },
-  #|  )
+  #|  fn app() {
+  #|    let (count, inject) = @rabbita.create_pure_state(
+  #|      0,
+  #|      update=(msg, count) => {
+  #|        match msg {
+  #|          Click => count + 1
+  #|        }
+  #|      },
+  #|    )
+  #|    count.map(count => {
+  #|      button(on_click=inject(Click), "You clicked \{count} times")
+  #|    })
+  #|  }
   #|  new(app).mount("app")
   #|}
 
@@ -567,78 +376,93 @@ fn hamburger(is_open : Bool) -> Html {
 }
 
 ///|
-fn view_nav(emit : Emit[Msg], model : Model) -> Html {
-  let is_home = match model.page {
-    Home(_) => true
-    _ => false
-  }
-  let is_tour = match model.page {
-    Tour(_) => true
-    _ => false
-  }
-  let home_cls = if is_home { "nav-link nav-link--active" } else { "nav-link" }
-  let tour_cls = if is_tour { "nav-link nav-link--active" } else { "nav-link" }
-  let home_m = if is_home {
-    "mobile-link mobile-link--active"
-  } else {
-    "mobile-link"
-  }
-  let tour_m = if is_tour {
-    "mobile-link mobile-link--active"
-  } else {
-    "mobile-link"
-  }
-  header(class="site-header", [
-    nav(class="navbar", [
-      a(class="nav-logo", href=github_url, "Rabbita"),
-      div(class="nav-links", [
-        a(href=site_base_url(), class=home_cls, "Home"),
-        a(href=tour_base_url(), class=tour_cls, "Tour"),
-        a(href=playground_url(), class="nav-link nav-link--ext", escape=true, [
-          text("Playground"),
-          icon_ext_link(),
-        ]),
-        a(href=docs_url, target=Blank, class="nav-link nav-link--ext", [
-          text("Docs"),
-          icon_ext_link(),
-        ]),
-        a(href=github_url, target=Blank, class="nav-link nav-link--ext", [
-          text("GitHub"),
-          icon_ext_link(),
-        ]),
-      ]),
-      div(class="nav-actions", [
-        button(class="theme-toggle", on_click=emit(CycleTheme), [
-          theme_icon(model.theme),
-        ]),
-        button(class="nav-toggle", on_click=emit(ToggleMenu), [
-          hamburger(model.menu_open),
-        ]),
-      ]),
-    ]),
-    if model.menu_open {
-      div(class="mobile-menu", [
-        a(href=site_base_url(), class=home_m, "Home"),
-        a(href=tour_base_url(), class=tour_m, "Tour"),
-        a(
-          href=playground_url(),
-          class="mobile-link mobile-link--ext",
-          escape=true,
-          [text("Playground"), icon_ext_link()],
-        ),
-        a(href=docs_url, target=Blank, class="mobile-link mobile-link--ext", [
-          text("Docs"),
-          icon_ext_link(),
-        ]),
-        a(href=github_url, target=Blank, class="mobile-link mobile-link--ext", [
-          text("GitHub"),
-          icon_ext_link(),
-        ]),
-      ])
+struct NavModel {
+  theme : Theme
+  is_home : Bool
+} derive(Eq)
+
+///|
+fn site_nav(model : Val[NavModel], on_cycle_theme : Cmd) -> Val[Html] {
+  let (menu_open, set_menu_open) = @rabbita.create_variable(false)
+  model.map2(menu_open, (model, menu_open) => {
+    let is_home = model.is_home
+    let is_tour = !model.is_home
+    let home_cls = if is_home {
+      "nav-link nav-link--active"
     } else {
-      nothing
-    },
-  ])
+      "nav-link"
+    }
+    let tour_cls = if is_tour {
+      "nav-link nav-link--active"
+    } else {
+      "nav-link"
+    }
+    let home_m = if is_home {
+      "mobile-link mobile-link--active"
+    } else {
+      "mobile-link"
+    }
+    let tour_m = if is_tour {
+      "mobile-link mobile-link--active"
+    } else {
+      "mobile-link"
+    }
+    header(class="site-header", [
+      nav(class="navbar", [
+        a(class="nav-logo", href=github_url, "Rabbita"),
+        div(class="nav-links", [
+          a(href=site_base_url(), class=home_cls, "Home"),
+          a(href=tour_base_url(), class=tour_cls, "Tour"),
+          a(
+            href=playground_url(),
+            class="nav-link nav-link--ext",
+            escape=true,
+            [text("Playground"), icon_ext_link()],
+          ),
+          a(href=docs_url, target=Blank, class="nav-link nav-link--ext", [
+            text("Docs"),
+            icon_ext_link(),
+          ]),
+          a(href=github_url, target=Blank, class="nav-link nav-link--ext", [
+            text("GitHub"),
+            icon_ext_link(),
+          ]),
+        ]),
+        div(class="nav-actions", [
+          button(class="theme-toggle", on_click=on_cycle_theme, [
+            theme_icon(model.theme),
+          ]),
+          button(class="nav-toggle", on_click=set_menu_open(open => !open), [
+            hamburger(menu_open),
+          ]),
+        ]),
+      ]),
+      if menu_open {
+        div(class="mobile-menu", [
+          a(href=site_base_url(), class=home_m, "Home"),
+          a(href=tour_base_url(), class=tour_m, "Tour"),
+          a(
+            href=playground_url(),
+            class="mobile-link mobile-link--ext",
+            escape=true,
+            [text("Playground"), icon_ext_link()],
+          ),
+          a(href=docs_url, target=Blank, class="mobile-link mobile-link--ext", [
+            text("Docs"),
+            icon_ext_link(),
+          ]),
+          a(
+            href=github_url,
+            target=Blank,
+            class="mobile-link mobile-link--ext",
+            [text("GitHub"), icon_ext_link()],
+          ),
+        ])
+      } else {
+        nothing
+      },
+    ])
+  })
 }
 
 // ─── Hero ─────────────────────────────────────────────────────────────────
@@ -656,52 +480,88 @@ let hero_tabs : Array[HeroTabEntry] = [
 ]
 
 ///|
-fn view_hero(emit : Emit[Msg], model : Model, hm : HomeModel) -> Html {
-  let src = hero_tabs[hm.hero_tab].src
-  let code_block = match model.highlighter {
-    Some(hl) =>
-      div(class="code-dual", [
-        div(class="code-light", [
-          hl.code_to_html(src, lang="moonbit", theme="github-light"),
-        ]),
-        div(class="code-dark", [
-          hl.code_to_html(src, lang="moonbit", theme="github-dark-default"),
+struct HeroViewModel {
+  hero_tab : Int
+} derive(Eq)
+
+///|
+impl @rabbita.Enumerate for HeroViewModel with fn tag(self) {
+  self.hero_tab.to_string()
+}
+
+///|
+fn dual_block(src : String, lang : String) -> Val[Html] {
+  let src = Val::constant(src)
+  let lang = Val::constant(lang)
+  let light_code = @shiki.shiki_code(
+    src,
+    lang~,
+    theme=Val::constant("github-light"),
+  )
+  let dark_code = @shiki.shiki_code(
+    src,
+    lang~,
+    theme=Val::constant("github-dark-default"),
+  )
+  light_code.map2(dark_code, (light, dark) => {
+    div(class="code-dual", [
+      div(class="code-light", [light]),
+      div(class="code-dark", [dark]),
+    ])
+  })
+}
+
+///|
+fn hero() -> Val[Html] {
+  let (model, set_model) = @rabbita.create_variable({ hero_tab: 0 })
+  model.switch(model => {
+    let src = hero_tabs[model.hero_tab].src
+    let code_block = dual_block(src, "moonbit")
+
+    code_block.map(code_block => {
+      section(class="hero", [
+        div(class="hero-grid", [
+          div(class="hero-left", [
+            h1(class="hero-title", [
+              span(class="hero-accent", "Confidence"),
+              text(" at every scale."),
+            ]),
+            p(
+              class="hero-desc",
+              "A web UI framework for MoonBit. Declarative, typed, and functional.",
+            ),
+            div(class="hero-actions", [
+              a(
+                class="btn-primary",
+                href=template_url,
+                target=Blank,
+                "Get Started",
+              ),
+              a(class="btn-secondary", href=github_url, target=Blank, "GitHub"),
+            ]),
+          ]),
+          div(class="hero-right", [
+            div(
+              class="hero-tabs",
+              hero_tabs.mapi(fn(i, t) {
+                let cls = if i == model.hero_tab {
+                  "hero-tab hero-tab--active"
+                } else {
+                  "hero-tab"
+                }
+                button(
+                  class=cls,
+                  on_click=set_model(_ => { hero_tab: i }),
+                  t.label,
+                )
+              }),
+            ),
+            div(class="hero-code", code_block),
+          ]),
         ]),
       ])
-    None => pre(class="code-block", [code(src)])
-  }
-  section(class="hero", [
-    div(class="hero-grid", [
-      div(class="hero-left", [
-        h1(class="hero-title", [
-          span(class="hero-accent", "Confidence"),
-          text(" at every scale."),
-        ]),
-        p(
-          class="hero-desc",
-          "A web UI framework for MoonBit. Declarative, typed, and functional.",
-        ),
-        div(class="hero-actions", [
-          a(class="btn-primary", href=template_url, target=Blank, "Get Started"),
-          a(class="btn-secondary", href=github_url, target=Blank, "GitHub"),
-        ]),
-      ]),
-      div(class="hero-right", [
-        div(
-          class="hero-tabs",
-          hero_tabs.mapi(fn(i, t) {
-            let cls = if i == hm.hero_tab {
-              "hero-tab hero-tab--active"
-            } else {
-              "hero-tab"
-            }
-            button(class=cls, on_click=emit(SelectTab(i)), t.label)
-          }),
-        ),
-        div(class="hero-code", [code_block]),
-      ]),
-    ]),
-  ])
+    })
+  })
 }
 
 // ─── Features ─────────────────────────────────────────────────────────────
@@ -716,7 +576,7 @@ fn feature_card(icon : Html, title : String, desc : String) -> Html {
 }
 
 ///|
-fn view_features() -> Html {
+fn features() -> Html {
   section(class="features", [
     div(class="features-inner", [
       h2(class="section-title", "Why Rabbita?"),
@@ -749,65 +609,96 @@ fn view_features() -> Html {
 // ─── Comparison ───────────────────────────────────────────────────────────
 
 ///|
-fn dual_block(hl : @shiki.Highlighter, src : String, lang : String) -> Html {
-  div(class="code-dual", [
-    div(class="code-light", [hl.code_to_html(src, lang~, theme="github-light")]),
-    div(class="code-dark", [
-      hl.code_to_html(src, lang~, theme="github-dark-default"),
-    ]),
-  ])
-}
-
-///|
-fn cmp_card(hl : @shiki.Highlighter?, js_src : String, mb_src : String) -> Html {
-  let js_block = match hl {
-    Some(h) => dual_block(h, js_src, "javascript")
-    None => pre(class="code-block", [code(js_src)])
-  }
-  let mb_block = match hl {
-    Some(h) => dual_block(h, mb_src, "moonbit")
-    None => pre(class="code-block", [code(mb_src)])
-  }
-  div(class="cmp-card", [
-    div(class="cmp-cols", [
-      div(class="cmp-col", [div(class="cmp-lang-label", "JavaScript"), js_block]),
-      div(class="cmp-col", [div(class="cmp-lang-label", "MoonBit"), mb_block]),
-    ]),
-    div(class="cmp-progress-track", [div(class="cmp-progress-fill", nothing)]),
-  ])
-}
-
-///|
-fn view_comparison(emit : Emit[Msg], model : Model, hm : HomeModel) -> Html {
-  let entry = cmp_entries[hm.cmp_idx]
-  let card = cmp_card(model.highlighter, entry.js_src, entry.mb_src)
-  section(class="comparison", [
-    div(class="comparison-inner", [
-      h2(class="section-title", "MoonBit feels right"),
-      div(class="cmp-widget", [
-        div(
-          class="cmp-tabs",
-          cmp_entries.mapi(fn(i, e) {
-            let cls = if i == hm.cmp_idx {
-              "cmp-tab cmp-tab--active"
-            } else {
-              "cmp-tab"
-            }
-            button(class=cls, on_click=emit(SelectCmpIdx(i)), e.label)
-          }),
-        ),
-        div(
-          class=if hm.cmp_anim {
-            "cmp-anim-wrap anim-a"
-          } else {
-            "cmp-anim-wrap anim-b"
-          },
-          [card],
-        ),
-        p(class="cmp-nav-desc", entry.desc),
+fn cmp_card(js_src : String, mb_src : String) -> Val[Html] {
+  let js_block = dual_block(js_src, "javascript")
+  let mb_block = dual_block(mb_src, "moonbit")
+  js_block.map2(mb_block, (js_block, mb_block) => {
+    div(class="cmp-card", [
+      div(class="cmp-cols", [
+        div(class="cmp-col", [
+          div(class="cmp-lang-label", "JavaScript"),
+          js_block,
+        ]),
+        div(class="cmp-col", [div(class="cmp-lang-label", "MoonBit"), mb_block]),
       ]),
-    ]),
-  ])
+      div(class="cmp-progress-track", [div(class="cmp-progress-fill", nothing)]),
+    ])
+  })
+}
+
+///|
+struct ComparisonViewModel {
+  cmp_idx : Int
+  cmp_anim : Bool
+} derive(Eq)
+
+///|
+enum ComparisonMsg {
+  SelectComparison(Int)
+  NextComparison
+}
+
+///|
+impl @rabbita.Enumerate for ComparisonViewModel with fn tag(self) {
+  "\{self.cmp_idx}:\{self.cmp_anim}"
+}
+
+///|
+fn comparison() -> Val[Html] {
+  let (model, inject) = @rabbita.create_state_with_init(
+    init=fn(inject) {
+      (
+        { cmp_idx: 0, cmp_anim: false },
+        @rabbita.delay(inject(NextComparison), 12000),
+      )
+    },
+    update=fn(inject, msg, model) {
+      match msg {
+        SelectComparison(i) => ({ cmp_idx: i, cmp_anim: !model.cmp_anim }, none)
+        NextComparison =>
+          (
+            {
+              cmp_anim: !model.cmp_anim,
+              cmp_idx: (model.cmp_idx + 1) % cmp_entries.length(),
+            },
+            @rabbita.delay(inject(NextComparison), 12000),
+          )
+      }
+    },
+  )
+  model.switch(model => {
+    let entry = cmp_entries[model.cmp_idx]
+    let card = cmp_card(entry.js_src, entry.mb_src)
+    card.map(card => {
+      section(class="comparison", [
+        div(class="comparison-inner", [
+          h2(class="section-title", "MoonBit feels right"),
+          div(class="cmp-widget", [
+            div(
+              class="cmp-tabs",
+              cmp_entries.mapi(fn(i, e) {
+                let cls = if i == model.cmp_idx {
+                  "cmp-tab cmp-tab--active"
+                } else {
+                  "cmp-tab"
+                }
+                button(class=cls, on_click=inject(SelectComparison(i)), e.label)
+              }),
+            ),
+            div(
+              class=if model.cmp_anim {
+                "cmp-anim-wrap anim-a"
+              } else {
+                "cmp-anim-wrap anim-b"
+              },
+              [card],
+            ),
+            p(class="cmp-nav-desc", entry.desc),
+          ]),
+        ]),
+      ])
+    })
+  })
 }
 
 // ─── Showcase ─────────────────────────────────────────────────────────────
@@ -831,7 +722,7 @@ fn showcase_card(
 }
 
 ///|
-fn view_showcase() -> Html {
+fn showcase() -> Html {
   section(class="showcase", [
     div(class="showcase-inner", [
       h2(class="section-title", "Built with Rabbita"),
@@ -910,87 +801,65 @@ fn icon_check() -> Html {
 }
 
 ///|
-fn qs_step(
-  emit : Emit[Msg],
-  idx : Int,
-  num : String,
-  title : String,
-  cmd : String,
-  is_copied : Bool,
-) -> Html {
-  div(class="qs-step", [
-    div(class="qs-step-head", [
-      span(class="qs-step-num", num),
-      span(class="qs-step-title", title),
-    ]),
-    div(class="qs-step-code-wrap", [
-      pre(class="install-block qs-step-code", [code(cmd)]),
-      button(
-        class=if is_copied {
-          "qs-copy-btn qs-copy-btn--done"
-        } else {
-          "qs-copy-btn"
-        },
-        on_click=batch([
-          @clipboard.copy(@clipboard.Text(cmd)),
-          emit(CopiedStep(idx)),
-        ]),
-        [if is_copied { icon_check() } else { icon_copy() }],
-      ),
-    ]),
-  ])
+fn qs_step(num : String, title : String, cmd : String) -> Val[Html] {
+  let (copied, set_copied) = @rabbita.create_variable(false)
+  copied.map(copied => {
+    div(class="qs-step", [
+      div(class="qs-step-head", [
+        span(class="qs-step-num", num),
+        span(class="qs-step-title", title),
+      ]),
+      div(class="qs-step-code-wrap", [
+        pre(class="install-block qs-step-code", [code(cmd)]),
+        button(
+          class=if copied {
+            "qs-copy-btn qs-copy-btn--done"
+          } else {
+            "qs-copy-btn"
+          },
+          on_click=batch([
+            @clipboard.copy(@clipboard.Text(cmd)),
+            set_copied(_ => true),
+            @rabbita.delay(set_copied(_ => false), 1500),
+          ]),
+          [if copied { icon_check() } else { icon_copy() }],
+        ),
+      ]),
+    ])
+  })
 }
 
 ///|
-fn view_quickstart(emit : Emit[Msg], hm : HomeModel) -> Html {
-  let copied = hm.copied_step
-  section(class="quickstart", [
-    div(class="quickstart-inner", [
-      h2(class="section-title", "Quick Start"),
-      p(class="section-desc", "From zero to a running app in three steps."),
-      div(class="qs-steps", [
-        qs_step(
-          emit,
-          0,
-          "1",
-          "Install Warren",
-          "moon install moonbit-community/warren",
-          copied == Some(0),
-        ),
-        qs_step(
-          emit,
-          1,
-          "2",
-          "Create the app",
-          "warren new my-app\ncd my-app",
-          copied == Some(1),
-        ),
-        qs_step(
-          emit,
-          2,
-          "3",
-          "Start the dev server",
-          "warren dev",
-          copied == Some(2),
-        ),
+fn quickstart() -> Val[Html] {
+  let install = qs_step(
+    "1", "Install Warren", "moon install moonbit-community/warren",
+  )
+  let create = qs_step("2", "Create the app", "warren new my-app\ncd my-app")
+  let run = qs_step("3", "Start the dev server", "warren dev")
+  install.map3(create, run, (install, create, run) => {
+    section(class="quickstart", [
+      div(class="quickstart-inner", [
+        h2(class="section-title", "Quick Start"),
+        p(class="section-desc", "From zero to a running app in three steps."),
+        div(class="qs-steps", [install, create, run]),
+        div(class="quickstart-cta", [
+          a(class="btn-primary", href=docs_url, target=Blank, "Read the Docs"),
+          a(
+            class="btn-secondary",
+            href=template_url,
+            target=Blank,
+            "Get Template",
+          ),
+        ]),
       ]),
-      div(class="quickstart-cta", [
-        a(class="btn-primary", href=docs_url, target=Blank, "Read the Docs"),
-        a(
-          class="btn-secondary",
-          href=template_url,
-          target=Blank,
-          "Get Template",
-        ),
-      ]),
-    ]),
-  ])
+    ])
+  })
 }
 
 // ─── Footer ───────────────────────────────────────────────────────────────
 
 ///|
-fn view_footer() -> Html {
+fn site_footer() -> Html {
   footer(class="site-footer", [
     div(class="footer-inner", [
       span(class="footer-copy", "© 2026 moonbit-community · Apache 2.0"),
@@ -1008,27 +877,123 @@ fn view_footer() -> Html {
   ])
 }
 
-// ─── Root View ────────────────────────────────────────────────────────────
+// ─── Home ─────────────────────────────────────────────────────────────────
 
 ///|
-fn view(emit : Emit[Msg], model : Model) -> Html {
-  let site_class = match model.theme {
-    System => "site"
-    Light => "site light"
-    Dark => "site dark"
-  }
-  let body = match model.page {
-    Home(hm) =>
-      main_(class="site-main", [
-        view_hero(emit, model, hm),
-        view_features(),
-        view_comparison(emit, model, hm),
-        view_showcase(),
-        view_quickstart(emit, hm),
+fn home() -> Val[Html] {
+  let hero_section = hero()
+  let comparison_section = comparison()
+  let quickstart_section = quickstart()
+  hero_section.map3(comparison_section, quickstart_section, (
+    hero_section,
+    comparison_section,
+    quickstart_section,
+  ) => {
+    main_(class="site-main", [
+      hero_section,
+      features(),
+      comparison_section,
+      showcase(),
+      quickstart_section,
+    ])
+  })
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────
+
+///|
+fn app() -> Val[Html] {
+  let menu = @rabbita.create_resource(inject => {
+    @http.get(site_base_url() + "doc/menu.json").expect_json(inject)
+  })
+  let chapters = menu.map(menu => {
+    match menu {
+      Loaded(chapters) => chapters
+      Pending | Failed(_) => tour_chapters
+    }
+  })
+  let (model, _) = @rabbita.create_state_with_input(
+    input=chapters,
+    init=fn(_, _) { ({ page: Home }, none) },
+    update=fn(_, chapters, msg, model) {
+      let (cmd, model) = match msg {
+        UrlRequest(req) =>
+          match req {
+            Internal(url) => (@nav.push_url(url.to_string()), model)
+            External(url) => (@nav.load(url), model)
+          }
+        UrlChanged(url) =>
+          if is_tour_url(chapters, url.path) {
+            let idx = chapter_idx_from_path(chapters, url.path)
+            let scroll_cmd = match url.fragment {
+              Some(frag) => scroll_to_heading(frag)
+              None => @nav.scroll_to_top()
+            }
+            (scroll_cmd, { page: Tour({ chapter_idx: idx }) })
+          } else {
+            let cmd = match url.fragment {
+              Some(frag) => scroll_to_heading(frag)
+              None => @nav.scroll_to_top()
+            }
+            (cmd, { page: Home })
+          }
+      }
+      (model, cmd)
+    },
+    subscriptions=fn(inject, _, _) {
+      @sub.batch([
+        @sub.on_url_changed(url => inject(UrlChanged(url))),
+        @sub.on_url_request(req => inject(UrlRequest(req))),
       ])
-    Tour(tm) => view_tour(emit, model, tm)
-  }
-  div(class=site_class, [view_nav(emit, model), body, view_footer()])
+    },
+  )
+
+  let (theme, set_theme) = @rabbita.create_variable(System)
+  let page = model.map(model => model.page)
+  let nav_model = theme.map2(page, (theme, page) => {
+    let is_home = match page {
+      Home => true
+      Tour(_) => false
+    }
+    { theme, is_home }
+  })
+  let site_class_name = theme.map(theme => {
+    match theme {
+      System => "site"
+      Light => "site light"
+      Dark => "site dark"
+    }
+  })
+  let header_html = site_nav(
+    nav_model,
+    set_theme(theme => {
+      match theme {
+        System => Dark
+        Dark => Light
+        Light => System
+      }
+    }),
+  )
+  let page_html = page.switch(current => {
+    match current {
+      Home => home()
+      Tour(_) =>
+        tour(
+          page.map2(chapters, (page, chapters) => {
+            let tour = match page {
+              Tour(model) => model
+              Home => init_tour
+            }
+            { chapters, tour }
+          }),
+        )
+    }
+  })
+  site_class_name.map3(header_html, page_html, (
+    site_class_name,
+    header_html,
+    page_html,
+  ) => div(class=site_class_name, [header_html, page_html, site_footer()]))
 }
 
 ///|
@@ -1036,31 +1001,8 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
 /// see README.md to get started.
 #warnings("-alert_unstable")
 fn main {
-  let (emit, app) = @rabbita.cell_with_emit(
-    model={
-      menu_open: false,
-      theme: System,
-      page: Home(init_home),
-      highlighter: None,
-      chapters: tour_chapters,
-    },
-    subscriptions~,
-    update~,
-    view~,
-  )
-  @rabbita.new(app)
-  ..with_init(
-    batch([
-      @http.get(site_base_url() + "doc/menu.json").expect_json(x => {
-        emit(MenuFetched(x))
-      }),
-      @shiki.load(
-        ["moonbit", "javascript"],
-        ["github-light", "github-dark-default"],
-        x => emit(LoadResult(x)),
-      ),
-      @rabbita.delay(emit(NextCmpIdx), 12000),
-    ]),
-  )
-  .mount("app")
+  @shiki.initialize(langs=["moonbit", "text"], themes=[
+    "github-light", "github-dark-default",
+  ])
+  @rabbita.new(app).mount("app")
 }

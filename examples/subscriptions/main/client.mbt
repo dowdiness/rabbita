@@ -1,11 +1,11 @@
 ///|
-using @html {button, code, div, h1, nothing, p}
+using @html {button, code, div, fragment, h1, nothing, p}
 
 ///|
 using @common {type Keyboard, type Mouse, type Scroll, type Viewport}
 
 ///|
-using @rabbita {type Cmd, type Emit, type Html}
+using @rabbita {type Cmd, type Emit, type Html, type Val}
 
 ///|
 enum Tab {
@@ -16,6 +16,11 @@ enum Tab {
   KeyUp
   VisibilityChange
   MouseMove
+} derive(Eq)
+
+///|
+impl @rabbita.Enumerate for Tab with fn tag(self) {
+  tab_id(self).to_string()
 }
 
 ///|
@@ -56,7 +61,7 @@ struct Model {
   mouse_moves : Int
   mouse_x : Int
   mouse_y : Int
-}
+} derive(Eq)
 
 ///|
 fn tab_id(tab : Tab) -> Int {
@@ -289,70 +294,127 @@ fn subscriptions(emit : Emit[Msg], model : Model) -> @sub.Sub {
 }
 
 ///|
-fn view(emit : Emit[Msg], model : Model) -> Html {
-  let page_class = if tab_id(model.active_tab) == tab_id(Scroll) {
-    "page scroll-mode"
-  } else {
-    "page"
-  }
-  div(class=page_class) <| [
-    div(class="panel") <| [
-      h1(class="title", "subscriptions"),
-      div(class="tabs") <| tabs().map(tab => {
-        tab_button(emit, model.active_tab, tab)
-      }),
-      div(class="section") <| [
-        p(class="section-title", "subscription"),
-        code(class="snippet", tab_signature(model.active_tab)),
-      ],
-      div(class="actions") <| active_actions(emit, model),
+fn page_class_view(tab : Val[Tab]) -> Val[String] {
+  tab.map(tab => {
+    if tab_id(tab) == tab_id(Scroll) {
+      "page scroll-mode"
+    } else {
+      "page"
+    }
+  })
+}
+
+///|
+fn tabs_view(emit : Emit[Msg], tab : Val[Tab]) -> Val[Html] {
+  tab.map(active_tab => {
+    div(class="tabs") <| tabs().map(tab => tab_button(emit, active_tab, tab))
+  })
+}
+
+///|
+fn subscription_view(tab : Val[Tab]) -> Val[Html] {
+  tab.map(tab => {
+    div(class="section") <| [
+      p(class="section-title", "subscription"),
+      code(class="snippet", tab_signature(tab)),
+    ]
+  })
+}
+
+///|
+fn actions_view(emit : Emit[Msg], model : Val[Model]) -> Val[Html] {
+  model.map(model => div(class="actions") <| active_actions(emit, model))
+}
+
+///|
+fn output_view(tab : Val[Tab], model : Val[Model]) -> Val[Html] {
+  tab.switch(tab => {
+    model.map(model => {
       div(class="section") <| [
         p(class="section-title", "output"),
-        div(class="output") <| output_lines(model),
-      ],
-    ],
-    if tab_id(model.active_tab) == tab_id(Scroll) {
+        div(class="output") <| output_lines({ ..model, active_tab: tab }),
+      ]
+    })
+  })
+}
+
+///|
+fn scroll_spacer_view(tab : Val[Tab]) -> Val[Html] {
+  tab.map(tab => {
+    if tab_id(tab) == tab_id(Scroll) {
       div(class="scroll-spacer") <| [
         p(class="scroll-hint", "scroll the page to trigger on_scroll"),
       ]
     } else {
       nothing
-    },
-  ]
+    }
+  })
+}
+
+///|
+fn view(emit : Emit[Msg], model : Val[Model]) -> Val[Html] {
+  let tab = model.map(model => model.active_tab)
+  let page_class = page_class_view(tab)
+  let tabs = tabs_view(emit, tab)
+  let subscription = subscription_view(tab)
+  let actions = actions_view(emit, model)
+  let output = output_view(tab, model)
+  let scroll_spacer = scroll_spacer_view(tab)
+  let detail = actions.map2(output, (actions, output) => {
+    fragment([actions, output])
+  })
+  let panel = tabs.map3(subscription, detail, (tabs, subscription, detail) => {
+    div(class="panel") <| [
+      h1(class="title", "subscriptions"),
+      tabs,
+      subscription,
+      detail,
+    ]
+  })
+  page_class.map3(panel, scroll_spacer, (page_class, panel, scroll_spacer) => {
+    div(class=page_class) <| [
+      panel, scroll_spacer,
+    ]
+  })
 }
 
 ///|
 #cfg(target="js")
 fn main {
-  let app = @rabbita.cell(
-    model={
-      active_tab: Every,
-      tick_count: 0,
-      ticking: true,
-      resize_count: 0,
-      viewport_width: @dom.window().inner_width(),
-      viewport_height: @dom.window().inner_height(),
-      scroll_count: 0,
-      scroll_x: @dom.window().scroll_x(),
-      scroll_y: @dom.window().scroll_y(),
-      scroll_width: 0,
-      scroll_height: 0,
-      keydown_count: 0,
-      last_key_down: "-",
-      last_key_down_code: "-",
-      last_key_down_repeat: false,
-      keyup_count: 0,
-      last_key_up: "-",
-      last_key_up_code: "-",
-      visibility_hidden: @dom.document().hidden(),
-      visibility_count: 0,
-      mouse_moves: 0,
-      mouse_x: 0,
-      mouse_y: 0,
-    },
-    update~,
-    view~,
-    subscriptions~,
-  )
+  fn app() {
+    let (model, emit) = @rabbita.create_state(
+      {
+        active_tab: Every,
+        tick_count: 0,
+        ticking: true,
+        resize_count: 0,
+        viewport_width: @dom.window().inner_width(),
+        viewport_height: @dom.window().inner_height(),
+        scroll_count: 0,
+        scroll_x: @dom.window().scroll_x(),
+        scroll_y: @dom.window().scroll_y(),
+        scroll_width: 0,
+        scroll_height: 0,
+        keydown_count: 0,
+        last_key_down: "-",
+        last_key_down_code: "-",
+        last_key_down_repeat: false,
+        keyup_count: 0,
+        last_key_up: "-",
+        last_key_up_code: "-",
+        visibility_hidden: @dom.document().hidden(),
+        visibility_count: 0,
+        mouse_moves: 0,
+        mouse_x: 0,
+        mouse_y: 0,
+      },
+      update=fn(emit, msg, model) {
+        let (cmd, model) = update(emit, msg, model)
+        (model, cmd)
+      },
+      subscriptions~,
+    )
+    view(emit, model)
+  }
   @rabbita.new(app).mount("app")
 }

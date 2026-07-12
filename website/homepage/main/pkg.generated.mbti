@@ -11,33 +11,41 @@ pub let init_tour : TourModel
 // Errors
 
 // Types and methods
+type ChapterLoad derive(Eq)
+
 type CmpEntry
+
+type ComparisonMsg
+
+type ComparisonViewModel derive(Eq)
 
 type HeroTabEntry
 
-type HomeModel
+type HeroViewModel derive(Eq)
 
-type Model
+type Model derive(Eq)
 
 type Msg
 
-type Page
+type NavModel derive(Eq)
 
-type Theme
+type Page derive(Eq)
+
+type Theme derive(Eq)
 
 type TocEntry
+
+type TourBodyModel derive(Eq)
 
 pub(all) struct TourChapter {
   title : String
   path : String
   section : String
-} derive(@json.FromJson)
+} derive(Eq, @json.FromJson)
 
 pub(all) struct TourModel {
   chapter_idx : Int
-  content : String
-  failed : Bool
-}
+} derive(Eq)
 
 // Type aliases
 

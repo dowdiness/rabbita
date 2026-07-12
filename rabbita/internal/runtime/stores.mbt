@@ -1,13 +1,17 @@
 ///|
+#cfg(target="js")
 using @cmd {type Cmd, type Emit}
 
 ///|
+#cfg(target="js")
 using @sub {type Sub}
 
 ///|
+#cfg(target="js")
 let global_stores : @slotmap.SlotMap[Store] = SlotMap()
 
 ///|
+#cfg(target="js")
 pub(all) struct Store {
   id : @slotmap.Id
   /// (Msg) -> Cmd
@@ -15,6 +19,7 @@ pub(all) struct Store {
 }
 
 ///|
+#cfg(target="js")
 fn diff_subs(
   old_subs : Map[String, @sub.RunningSub],
   new_subs : Map[String, (Error, @sub.SubLoader)],
@@ -38,6 +43,7 @@ fn diff_subs(
 }
 
 ///|
+#cfg(target="js")
 pub fn[Model : Eq, Msg] Sandbox::create_state_machine(
   scheduler : Sandbox,
   initialize : (Emit[Msg]) -> (Model, Cmd),
@@ -81,6 +87,7 @@ pub fn[Model : Eq, Msg] Sandbox::create_state_machine(
 }
 
 ///|
+#cfg(target="js")
 pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(
   scheduler : Sandbox,
   initialize : (Emit[Msg], Input) -> (Model, Cmd),

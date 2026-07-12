@@ -24,7 +24,7 @@ enum Msg {
 struct Model {
   width : Int
   height : Int
-}
+} derive(Eq)
 
 ///|
 fn subscriptions(emit : Emit[Msg], model : Model) -> @sub.Sub {
@@ -33,24 +33,25 @@ fn subscriptions(emit : Emit[Msg], model : Model) -> @sub.Sub {
 }
 
 ///|
-fn app() -> Cell {
-  @rabbita.cell(
+fn app() -> Val[Html] {
+  let (model, _) = @rabbita.create_state(
+    { width: 0, height: 0 },
     subscriptions~,
-    model={ width: 0, height: 0 },
-    update=(_, msg, _) => {
-      match msg {
+    update=fn(_, msg, _) {
+      let model = match msg {
         ViewportChanged(viewport) =>
-          (none, { width: viewport.width, height: viewport.height })
+          { width: viewport.width, height: viewport.height }
       }
-    },
-    view=(_, model) => {
-      div([
-        h1("viewport"),
-        p("width = \{model.width}"),
-        p("height = \{model.height}"),
-      ])
+      (model, none)
     },
   )
+  model.map(model => {
+    div([
+      h1("viewport"),
+      p("width = \{model.width}"),
+      p("height = \{model.height}"),
+    ])
+  })
 }
 ```
 
@@ -92,5 +93,3 @@ The builtins you will use most often are:
 | `@sub.on_animation_frame(...)` | Animation frame updates |
 
 Route related subscriptions are covered in the Router chapter. Check the [API docs](https://mooncakes.io/docs/moonbit-community/rabbita/sub#Sub) for more builtins.
-
-

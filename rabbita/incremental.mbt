@@ -2,17 +2,20 @@
 pub using @common {trait Enumerate}
 
 ///|
+#cfg(target="js")
 let ambient_graph : Ref[Graph?] = Ref(None)
 
 ///|
 struct Val[A](@duplix.Node[A])
 
 ///|
+#cfg(target="js")
 priv struct Graph {
   sandbox : @runtime.Sandbox
 }
 
 ///|
+#cfg(target="js")
 fn Graph::Graph(sandbox : @runtime.Sandbox) -> Self {
   { sandbox, }
 }
@@ -139,6 +142,7 @@ pub fn[
 }
 
 ///|
+#cfg(target="js")
 pub fn[Model : Eq, Msg] create_pure_state(
   model : Model,
   update~ : (Msg, Model) -> Model,
@@ -153,6 +157,7 @@ pub fn[Model : Eq, Msg] create_pure_state(
 }
 
 ///|
+#cfg(target="js")
 pub fn[Model : Eq, Msg] create_state(
   model : Model,
   update~ : (Emit[Msg], Msg, Model) -> (Model, Cmd),
@@ -192,6 +197,7 @@ pub fn[E : Enumerate + Eq, C : Eq] Val::switch(
 }
 
 ///|
+#cfg(target="js")
 pub fn[Model : Eq, Msg] create_state_with_init(
   init~ : (Emit[Msg]) -> (Model, Cmd),
   update~ : (Emit[Msg], Msg, Model) -> (Model, Cmd),
@@ -207,6 +213,7 @@ pub fn[Model : Eq, Msg] create_state_with_init(
 }
 
 ///|
+#cfg(target="js")
 pub fn[Model : Eq, Msg, Input : Eq] create_state_with_input(
   init~ : (Emit[Msg], Input) -> (Model, Cmd),
   update~ : (Emit[Msg], Input, Msg, Model) -> (Model, Cmd),
@@ -224,6 +231,7 @@ pub fn[Model : Eq, Msg, Input : Eq] create_state_with_input(
 }
 
 ///|
+#cfg(target="js")
 pub fn[Model : Eq] create_variable(
   init : Model,
 ) -> (Val[Model], Emit[(Model) -> Model]) {
@@ -234,6 +242,7 @@ pub fn[Model : Eq] create_variable(
 }
 
 ///|
+#cfg(target="js")
 pub enum Status[T] {
   Pending
   Loaded(T)
@@ -241,6 +250,7 @@ pub enum Status[T] {
 }
 
 ///|
+#cfg(target="js")
 pub impl[T : Eq] Eq for Status[T] with fn equal(a, b) {
   match (a, b) {
     (Pending, Pending) | (Failed(_), Failed(_)) => true
@@ -250,9 +260,11 @@ pub impl[T : Eq] Eq for Status[T] with fn equal(a, b) {
 }
 
 ///|
+#cfg(target="js")
 pub type Resource[T] = Val[Status[T]]
 
 ///|
+#cfg(target="js")
 pub fn[T : Eq] create_resource(
   f : (Emit[Result[T, Error]]) -> Cmd,
 ) -> Resource[T] {

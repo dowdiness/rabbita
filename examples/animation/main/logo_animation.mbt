@@ -13,7 +13,7 @@
 enum LogoShape {
   Static(Double, Double, Double)
   Moving(Double, Double, Double, Double, Double, Double, Double, Double, Double)
-}
+} derive(Eq)
 
 ///|
 struct LogoModel {
@@ -24,7 +24,7 @@ struct LogoModel {
   par : LogoShape
   ts1 : LogoShape
   ts2 : LogoShape
-}
+} derive(Eq)
 
 ///|
 struct Target {

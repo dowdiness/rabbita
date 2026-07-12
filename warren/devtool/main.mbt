@@ -1,11 +1,11 @@
 ///|
-using @rabbita {type Cmd, type Emit, type Html, delay, new, none}
+using @rabbita {type Cmd, type Emit, type Html, type Val, delay, new, none}
 
 ///|
 using @common {type Mouse, type Viewport}
 
 ///|
-using @html {button, div, iframe, pre, span}
+using @html {button, div, fragment, iframe, pre, span}
 
 ///|
 let min_tab_left = 12
@@ -27,7 +27,7 @@ struct DragState {
   start_x : Int
   start_left : Int
   moved : Bool
-}
+} derive(Eq)
 
 ///|
 enum DevStatus {
@@ -35,7 +35,7 @@ enum DevStatus {
   Building
   Reloading
   BuildFailed
-}
+} derive(Eq)
 
 ///|
 struct Model {
@@ -50,7 +50,7 @@ struct Model {
   reconnecting : Bool
   status : DevStatus
   build_diagnostics : String
-}
+} derive(Eq)
 
 ///|
 enum Msg {
@@ -304,8 +304,8 @@ fn subscriptions(emit : Emit[Msg], model : Model) -> @sub.Sub {
 }
 
 ///|
-fn drag_layer(emit : Emit[Msg], model : Model) -> Html {
-  match model.drag {
+fn drag_layer(emit : Emit[Msg], drag : Val[DragState?]) -> Val[Html] {
+  drag.map(drag => match drag {
     Some(_) =>
       div(
         class="warren-devtool-drag-layer",
@@ -313,7 +313,7 @@ fn drag_layer(emit : Emit[Msg], model : Model) -> Html {
         "",
       )
     None => @html.nothing
-  }
+  })
 }
 
 ///|
@@ -332,33 +332,33 @@ fn pin_icon() -> Html {
 }
 
 ///|
-fn diagnostics_panel(model : Model) -> Html {
-  match model.status {
+fn diagnostics_panel(status : DevStatus, build_diagnostics : String) -> Html {
+  match status {
     BuildFailed =>
-      pre(class="warren-devtool-diagnostics", model.build_diagnostics)
+      pre(class="warren-devtool-diagnostics", build_diagnostics)
     _ => @html.nothing
   }
 }
 
 ///|
-fn view(emit : Emit[Msg], model : Model) -> Html {
-  let expansion_class = if panel_expanded(model) {
-    "is-expanded"
-  } else {
-    "is-collapsed"
-  }
-  let pin_class = if model.pinned { "is-pinned" } else { "is-unpinned" }
-  let loading_class = if dev_status_is_loading(model.status) {
-    "is-loading"
-  } else {
-    "is-idle"
-  }
-  let root_class = "warren-devtool \{expansion_class} \{pin_class} \{dev_status_class(model.status)} \{loading_class}"
+fn preview_frame(model : Val[Model]) -> Val[Html] {
+  model.map(model => {
   let preview_class = if dev_status_is_loading(model.status) {
     "warren-preview-frame is-loading"
   } else {
     "warren-preview-frame"
   }
+    iframe(
+      class=preview_class,
+      title="Warren preview",
+      src="/__warren/preview/index.html?warren_reload=\{model.reload_nonce}",
+    )
+  })
+}
+
+///|
+fn hover_zone(emit : Emit[Msg], model : Val[Model]) -> Val[Html] {
+  model.map(model => {
   let status_class = "warren-devtool-status \{dev_status_class(model.status)}"
   let tab_title = if model.pinned {
     "Drag Warren devtool"
@@ -385,18 +385,6 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
   let hover_attrs = @html.Attrs::build()
     .on_mouseenter(_ => emit(HoverStarted))
     .on_mouseleave(_ => emit(HoverEnded))
-  div(
-    class=root_class,
-    style=[
-      "--warren-devtool-tab-left: \{clamp_tab_left(model.tab_left, model.viewport_width)}px",
-      "--warren-devtool-tab-width: \{tab_width(model.viewport_width)}px",
-    ],
-  ) <| [
-    iframe(
-      class=preview_class,
-      title="Warren preview",
-      src="/__warren/preview/index.html?warren_reload=\{model.reload_nonce}",
-    ),
     div(class="warren-devtool-hover-zone", attrs=hover_attrs) <| [
       div(
         class="warren-devtool-tab",
@@ -419,16 +407,60 @@ fn view(emit : Emit[Msg], model : Model) -> Html {
           div(class=status_class) <| [
             span(dev_status_label(model.status)),
           ],
-          diagnostics_panel(model),
+          diagnostics_panel(model.status, model.build_diagnostics),
         ],
       ],
-    ],
-    drag_layer(emit, model),
-  ]
+    ]
+  })
+}
+
+///|
+fn view(emit : Emit[Msg], model : Val[Model]) -> Val[Html] {
+  let root_class = model.map(model => {
+    let expansion_class = if panel_expanded(model) {
+      "is-expanded"
+    } else {
+      "is-collapsed"
+    }
+    let pin_class = if model.pinned { "is-pinned" } else { "is-unpinned" }
+    let loading_class = if dev_status_is_loading(model.status) {
+      "is-loading"
+    } else {
+      "is-idle"
+    }
+    "warren-devtool \{expansion_class} \{pin_class} \{dev_status_class(model.status)} \{loading_class}"
+  })
+  let root_style = model.map(model => {
+    [
+      "--warren-devtool-tab-left: \{clamp_tab_left(model.tab_left, model.viewport_width)}px",
+      "--warren-devtool-tab-width: \{tab_width(model.viewport_width)}px",
+    ]
+  })
+  let preview = preview_frame(model)
+  let hover = hover_zone(emit, model)
+  let drag = drag_layer(emit, model.map(model => model.drag))
+  let children = preview.map3(hover, drag, (preview, hover, drag) => {
+    fragment([preview, hover, drag])
+  })
+  root_class.map3(root_style, children, (root_class, root_style, children) => {
+    div(class=root_class, style=root_style) <| [
+      children,
+    ]
+  })
 }
 
 ///|
 fn main {
-  let app = @rabbita.cell(model=initial_model(), update~, view~, subscriptions~)
+  fn app() {
+    let (model, emit) = @rabbita.create_state(
+      initial_model(),
+      update=fn(emit, msg, model) {
+        let (cmd, model) = update(emit, msg, model)
+        (model, cmd)
+      },
+      subscriptions~,
+    )
+    view(emit, model)
+  }
   new(app).mount("warren-devtool")
 }

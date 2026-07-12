@@ -38,6 +38,8 @@ pub let none : @cmd.Cmd
 
 pub fn[A] perform((A) -> @cmd.Cmd, async () -> A noraise) -> @cmd.Cmd
 
+pub fn render_to_string(() -> Val[@html.Html]) -> String
+
 // Errors
 
 // Types and methods

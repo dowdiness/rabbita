@@ -2,20 +2,19 @@
 package "Yoorkin/shiki"
 
 import {
-  "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita",
   "moonbit-community/rabbita/html",
 }
 
 // Values
-pub fn load(Array[String], Array[String], (Result[Highlighter, Error]) -> @cmd.Cmd) -> @cmd.Cmd
+pub fn initialize(langs~ : Array[String], themes~ : Array[String]) -> Unit
+
+pub fn shiki_code(@rabbita.Val[String], lang~ : @rabbita.Val[String], theme~ : @rabbita.Val[String]) -> @rabbita.Val[@html.Html]
 
 // Errors
 
 // Types and methods
-type Highlighter
-pub async fn Highlighter::add_lang(Self, String) -> Unit
-pub async fn Highlighter::add_theme(Self, String) -> Unit
-pub fn Highlighter::code_to_html(Self, String, lang~ : String, theme~ : String) -> @html.Html
+type Config derive(Eq)
 
 // Type aliases
 

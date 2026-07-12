@@ -1,5 +1,5 @@
 ///|
-using @rabbita {type Cell, type Emit, type Cmd, type Html, none}
+using @rabbita {type Emit, type Cmd, type Html, none}
 
 ///|
 using @html {div, p, button}
@@ -20,8 +20,6 @@ test {
 
   ignore(update)
   ignore(view)
-  ignore(build_app)
   ignore(save_update)
   ignore(save_view)
-  ignore(build_save_app)
 }
