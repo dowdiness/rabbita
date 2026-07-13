@@ -112,6 +112,7 @@ pub async fn VirtualFileSystem::read(self : Self, path : String) -> &@io.Data? {
     .map(part => part.to_owned())
     .filter(part => part != "")
     .collect()
+  guard parts.iter().all(fn(p) { p != ".." }) else { return None }
   let (current, i) = match parts {
     [] =>
       match self.roots.get("") {
