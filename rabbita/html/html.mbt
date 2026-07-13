@@ -1980,9 +1980,11 @@ pub fn[C : IsChildren] tfoot(
 /// 
 /// - `open`: indicates whether the dialog is open or closed by default.
 /// 
-/// - `closedby`: emits the limited-support browser `closedby` attribute.
-///   Rabbita does not polyfill dismissal behavior.
-///
+/// - `closedby`: sets the browser `closedby` attribute. Browser support is
+///   limited; unsupported browsers ignore it. Values include `"none"`,
+///   `"closerequest"`, and `"any"`; `"any"` enables light-dismiss (backdrop
+///   click) in supporting browsers.
+/// 
 /// # Messages
 /// 
 /// - `close`: triggered when the dialog is closed. 

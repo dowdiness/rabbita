@@ -41,4 +41,33 @@ test {
 }
 
 ///|
+test "dialog closedby argument emits attribute" {
+  let html = @html.dialog(closedby="any", @html.nothing)
+  match html.to_virtual_dom() {
+    @runtime.VNode::Elem("dialog", props, _, namespace_uri=None) =>
+      match props.attrs.get("closedby") {
+        Some("any") => ()
+        _ => fail("expected closedby=any")
+      }
+    _ => fail("expected dialog element")
+  }
+}
+
+///|
+test "dialog accepts closedby through attrs builder" {
+  let html = @html.dialog(
+    attrs=@html.Attrs::build().closedby("closerequest"),
+    @html.nothing,
+  )
+  match html.to_virtual_dom() {
+    @runtime.VNode::Elem("dialog", props, _, namespace_uri=None) =>
+      match props.attrs.get("closedby") {
+        Some("closerequest") => ()
+        _ => fail("expected closedby=closerequest")
+      }
+    _ => fail("expected dialog element")
+  }
+}
+
+///|
 type Model2 = Unit
