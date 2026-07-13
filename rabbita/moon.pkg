@@ -22,4 +22,4 @@ warnings = "-unused_package-alert_unstable"
 
 supported_targets = "js+native"
 
-formatter(ignore: ["README.mbt.md"])
+formatter(ignore: [ "README.mbt.md" ])

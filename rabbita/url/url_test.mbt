@@ -12,7 +12,6 @@ test "basic_url" {
       #|  query: None,
       #|  fragment: None,
       #|}
-
     ),
   )
   @debug.debug_inspect(
@@ -26,7 +25,6 @@ test "basic_url" {
       #|  query: None,
       #|  fragment: None,
       #|}
-
     ),
   )
   @debug.debug_inspect(
@@ -40,7 +38,6 @@ test "basic_url" {
       #|  query: None,
       #|  fragment: None,
       #|}
-
     ),
   )
   @debug.debug_inspect(
@@ -54,7 +51,6 @@ test "basic_url" {
       #|  query: None,
       #|  fragment: None,
       #|}
-
     ),
   )
   @debug.debug_inspect(
@@ -68,7 +64,6 @@ test "basic_url" {
       #|  query: Some("query"),
       #|  fragment: Some("fragment"),
       #|}
-
     ),
   )
   @debug.debug_inspect(
@@ -84,7 +79,6 @@ test "basic_url" {
       #|  query: Some("key=value&key2=value2"),
       #|  fragment: Some("fragment"),
       #|}
-
     ),
   )
 }
@@ -102,7 +96,6 @@ test "special url" {
       #|  query: None,
       #|  fragment: None,
       #|}
-
     ),
   )
 }
@@ -120,7 +113,6 @@ test "no_port" {
       #|  query: Some("query"),
       #|  fragment: Some("fragment"),
       #|}
-
     ),
   )
 }
@@ -138,7 +130,6 @@ test "no_query" {
       #|  query: None,
       #|  fragment: Some("fragment"),
       #|}
-
     ),
   )
 }
@@ -156,7 +147,6 @@ test "no_fragment" {
       #|  query: Some("query"),
       #|  fragment: None,
       #|}
-
     ),
   )
 }
