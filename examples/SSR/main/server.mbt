@@ -54,7 +54,7 @@ pub async fn server_main(
       return
     } else {
       let file_path = "\{path}/dist\{req_path}"
-      guard req_path.contains("..") || @fs.exists(file_path) else {
+      guard !req_path.contains("..") && @fs.exists(file_path) else {
         serve_404(conn)
         return
       }
