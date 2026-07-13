@@ -15,4 +15,5 @@ members = [
   "./website/homepage",
   "./website/playground",
   "./rui",
+  "./benchmarks/js-framework-benchmark",
 ]
