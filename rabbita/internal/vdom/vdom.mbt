@@ -91,6 +91,12 @@ pub fn VNode::fragment(childs : Array[VNode]) -> VNode {
 }
 
 ///|
+/// Construct a lazily rendered virtual DOM subtree.
+pub fn VNode::thunk(hash : Int, render : () -> VNode) -> VNode {
+  Thunk(hash, render)
+}
+
+///|
 pub fn VNode::document(props : Props, head : VNode, body : VNode) -> VNode {
   Elem("html", props, Array([head, body]), namespace_uri=None)
 }

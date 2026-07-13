@@ -118,6 +118,58 @@ test "diffing unchanged keyed children does not reinsert DOM nodes" {
 
 ///|
 #cfg(target="js")
+test "lazy subtree skips equal hashes and renders changed hashes" {
+  let document = relocation_test_document()
+  let parent = document.create_element("div")
+  let text = document.create_text_node("first")
+  let mounted_vnode = VNode::Thunk(1, () => VNode::text("first"))
+  let mounted = INode::Thunk(
+    mounted_vnode,
+    1,
+    INode::Text("first", text),
+  )
+  guard mounted.to_vnode() is VNode::Thunk(hash, _) else {
+    abort("mounted lazy subtree lost its VNode wrapper")
+  }
+  assert_eq(hash, 1)
+  let scheduler = RelocationTestScheduler::{  }
+  let captured_link_listener : @dom.Listener = _ => ()
+  let render_count = Ref::{ val: 0 }
+
+  let unchanged = diff_node(
+    mounted,
+    VNode::Thunk(1, () => {
+      render_count.val += 100
+      VNode::text("unused")
+    }),
+    scheduler,
+    captured_link_listener,
+    parent.as_node(),
+    null(),
+  )
+  assert_eq(render_count.val, 0)
+  assert_true(physical_equal(unchanged, mounted))
+
+  let changed = diff_node(
+    unchanged,
+    VNode::Thunk(2, () => {
+      render_count.val += 1
+      VNode::text("second")
+    }),
+    scheduler,
+    captured_link_listener,
+    parent.as_node(),
+    null(),
+  )
+  assert_eq(render_count.val, 1)
+  guard changed.to_vnode() is VNode::Thunk(hash, _) else {
+    abort("changed lazy subtree lost its VNode wrapper")
+  }
+  assert_eq(hash, 2)
+}
+
+///|
+#cfg(target="js")
 test "relocate inserts a DOM node when its position differs" {
   let document = relocation_test_document()
   let parent = document.create_element("div")

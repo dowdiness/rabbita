@@ -25,7 +25,7 @@ priv enum INode {
   Elem(String, IProps, Children[INode], namespace_uri~ : String?, @dom.Element)
   Text(String, @dom.Element)
   Frag(Array[INode], @dom.Comment, @dom.Comment)
-  Thunk(Int, INode)
+  Thunk(VNode, Int, INode)
 }
 
 ///|
@@ -33,7 +33,7 @@ priv enum INode {
 fn INode::start(self : Self) -> @dom.Node {
   match self {
     Elem(_, _, _, element, ..) | Text(_, element) => element.as_node()
-    Thunk(_, node) => node.start()
+    Thunk(_, _, node) => node.start()
     Frag(_, start, _) => start.as_node()
   }
 }
@@ -43,7 +43,7 @@ fn INode::start(self : Self) -> @dom.Node {
 fn INode::end(self : Self) -> @dom.Node {
   match self {
     Elem(_, _, _, element, ..) | Text(_, element) => element.as_node()
-    Thunk(_, node) => node.end()
+    Thunk(_, _, node) => node.end()
     Frag(_, _, end) => end.as_node()
   }
 }
@@ -67,7 +67,7 @@ fn INode::remove(self : Self, parent : @dom.Node) -> Unit {
   match self {
     Elem(_, _, _, element, ..) | Text(_, element) =>
       parent.remove_child(element.as_node())
-    Thunk(_, node) => node.remove(parent)
+    Thunk(_, _, node) => node.remove(parent)
     Frag(_, start, end) => {
       let start = start.as_node()
       let end = end.as_node()
@@ -92,7 +92,7 @@ fn INode::relocate(
   match self {
     Elem(_, _, _, element, ..) | Text(_, element) =>
       parent.insert_before(element.as_node(), before)
-    Thunk(_, node) => node.relocate(parent, before)
+    Thunk(_, _, node) => node.relocate(parent, before)
     Frag(_, start, end) => {
       {
         guard! start.get_parent_node().to_option() is Some(a)
@@ -204,7 +204,7 @@ fn VNode::insert(
       let node = render().insert(
         scheduler, captured_link_listener, parent, before,
       )
-      Thunk(hash, node)
+      Thunk(self, hash, node)
     }
     Frag(children) => {
       let document = @dom.document()
@@ -260,7 +260,7 @@ fn INode::to_vnode(self : Self) -> VNode {
       )
     Text(text, _) => Text(text)
     Frag(children, _, _) => Frag(children.map(child => child.to_vnode()))
-    Thunk(_, node) => node.to_vnode()
+    Thunk(vnode, _, _) => vnode
   }
 }
 
@@ -562,7 +562,7 @@ fn diff_node(
       guard! children is Array(children)
       Frag(children, start, end)
     }
-    (Thunk(hash1, node) as old, Thunk(hash2, render)) =>
+    (Thunk(_, hash1, node) as old, Thunk(hash2, render)) =>
       if hash1 == hash2 {
         old
       } else {
@@ -570,7 +570,7 @@ fn diff_node(
         let node = diff_node(
           node, vnode, scheduler, captured_link_listener, parent, anchor,
         )
-        Thunk(hash2, node)
+        Thunk(new, hash2, node)
       }
     (_, _) => {
       old.remove(parent)

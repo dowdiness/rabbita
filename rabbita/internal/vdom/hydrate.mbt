@@ -276,7 +276,7 @@ fn hydrate_node(
   allow_skip~ : Bool,
 ) -> (INode, @dom.Node?) {
   match vnode {
-    Thunk(hash, render) => {
+    Thunk(hash, render) as thunk => {
       let (inode, next) = hydrate_node(
         render(),
         scheduler,
@@ -286,7 +286,7 @@ fn hydrate_node(
         boundary~,
         allow_skip~,
       )
-      (Thunk(hash, inode), next)
+      (Thunk(thunk, hash, inode), next)
     }
     Frag(children) =>
       hydrate_fragment(
