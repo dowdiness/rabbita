@@ -1,20 +1,23 @@
 # Components and the Incremental Graph
 
-A Rabbita component is an ordinary MoonBit function that builds part of the
-incremental graph and returns a `Val[Html]`. It may create local state, derive
-values, and call other components.
+A Rabbita component is an ordinary MoonBit function that describes a reusable
+part of the UI. A pure view component takes ordinary values and returns `Html`.
+A graph-building component creates state or derives `Val` values and returns a
+`Val[Html]`.
 
-There is no separate `Component` type. A component function does not correspond
-one-to-one with an `Html` value and an ordinary function call does not create a
-lifecycle boundary by itself. The useful distinction is between building the
-graph and evaluating it:
+There is no separate `Component` type. “Component” describes how code is
+organized, not a distinct runtime value.
 
-- The root body runs at mount, and fixed child bodies run as their parent builds
-- Selector-created components run when their dynamic branch is created
-- `map`, `view`, and `view2` through `view9` callbacks run when needed
-- State updates reevaluate affected callbacks instead of rebuilding the app
+## Understand `Val` and the incremental graph
 
-## Build and compose components
+A `Val[T]` represents a `T` in the incremental graph. `map` derives another
+`Val` from its evaluated value, while `view` derives a `Val[Html]`. The `map2`
+through `map9` and `view2` through `view9` methods do the same for several
+direct inputs without creating intermediate tuples.
+
+`Val::constant(value)` creates a `Val` that always evaluates to `value`. Use it
+when an API expects a `Val[T]`, but that value does not need to change as the
+graph updates.
 
 This component owns a counter state machine. `create_pure_state` returns the
 state as `count : Val[Int]` and an emitter for `CounterMsg` commands.
@@ -46,7 +49,7 @@ fn counter(title : String) -> Val[Html] {
 ```
 
 A parent component can build two independent counters and combine their
-incremental `Html` values:
+`Val[Html]` results:
 
 ```moonbit check
 ///|
@@ -57,17 +60,7 @@ fn app() -> Val[Html] {
 }
 ```
 
-When `app` is mounted, its body calls `counter` twice and constructs this graph:
-
-```text
-left count  -> left view  --+
-                            +-> app view2 -> root Html
-right count -> right view --+
-```
-
-Clicking the left counter changes the left state. The left `view` callback and
-the final `view2` callback reevaluate, while the right `view` callback does not.
-The bodies of `app` and `counter` do not run again for that update.
+Mount the graph-building component as the application root:
 
 ```moonbit nocheck
 ///|
@@ -76,27 +69,26 @@ fn main {
 }
 ```
 
-## Understand `Val` and `Eq`
+At mount, `app` calls `counter` twice and constructs this graph:
 
-A `Val[T]` represents a `T` in the incremental graph. It is not a snapshot of
-the current `T`. Component code connects `Val` values, while callbacks passed
-to `map` and `view` receive the evaluated values.
-
-`Val::constant(value)` creates a `Val` whose value never changes. Use it when a
-component returns fixed `Html` or when a fixed value must be passed to an API
-that expects a `Val`.
+```text
+left count  -> left view  --+
+                            +-> app view2 -> root Val[Html]
+right count -> right view --+
+```
 
 Rabbita evaluates changes on demand. A state update marks dependent nodes as
-dirty, then the root `Val[Html]` is read on the rendering frame. When a node is
-recomputed, its new result is compared with its previous result using `Eq`. An
-equal result does not propagate farther through the graph.
+dirty, then the root `Val[Html]` is evaluated on the rendering frame. A derived
+callback runs when its result is first needed and again when an input changes.
+Its new result is compared with the previous result using `Eq`.
 
-This has two important consequences:
+Clicking the left counter reevaluates the left `view` callback and the final
+`view2` callback. The right `view` callback and the bodies of `app` and `counter`
+do not run again for that update.
 
-- If an update returns a model equal to the old model, dependent callbacks do
-  not run
-- A `map` callback must run before Rabbita can compare its new result, but an
-  equal result prevents callbacks farther downstream from running
+If a state update produces an equal model, dependent callbacks do not run. A
+derived callback must run before Rabbita can compare its new result, but an
+equal result stops propagation beyond that node.
 
 Deriving smaller values lets equality stop work closer to the changed field:
 
@@ -122,14 +114,11 @@ fn dashboard(model : Val[Dashboard]) -> Val[Html] {
 ```
 
 If only `status` changes, the `count` projection is checked and still produces
-the same `Int`. Its `count.view(...)` callback is therefore skipped. A single
-large `model.view(...)` would instead rebuild all of the dashboard `Html` for
-every model change.
+the same `Int`. The `view` callback that renders the count is therefore skipped.
+A single large `model.view(...)` would instead rerun one callback and construct
+all of the dashboard `Html` for every model change.
 
-Use `map` to derive ordinary values and `view` to derive `Html`. The `map2`
-through `map9` and `view2` through `view9` methods create one derived node with
-several direct inputs. They avoid intermediate tuple nodes. When a render unit
-needs more than nine independent inputs, it is usually clearer to split it into
+When a render unit needs more than nine independent inputs, split it into
 smaller components or intermediate derived values.
 
 `Eq` must describe every change that downstream code can observe. Prefer
@@ -140,71 +129,87 @@ compare.
 
 ## Parent and child communication
 
-Shared state belongs in the closest common parent, while state used by only one
-child can stay local to that child. A parent passes fixed configuration as plain
-values, changing data as `Val[T]`, and an `Emit[Msg]` when child events should
-be handled by the parent's state machine. `Emit::map` can adapt a parent emitter
-to a child-specific message type. The child returns `Val[Html]`, which the
-parent combines with other child results.
+Keep shared state in the closest common parent and local state in the child. For
+a graph-building child, pass construction-time configuration as plain values
+and changing inputs as `Val[T]`. Pure view components receive ordinary values
+when the surrounding render callback calls them.
 
-A plain argument is fixed when that component branch is built. For example,
-`counter(title : String)` treats its title as configuration, while
-`dashboard(model : Val[Dashboard])` observes later model changes.
-
-If a child owns local state but its update or subscriptions need the latest
-input from its parent, use `create_state_with_input`. It passes the current input
-to its initializer, update, and subscriptions callbacks. Changing that input
-alone does not send a message, run the update callback, or refresh
-subscriptions.
+A child sends information to its parent through labeled parameters. Use `Cmd`
+for an action without a value and `Emit[T]` for an action carrying a value:
 
 ```moonbit check
 ///|
-enum SteppedCounterMsg {
-  Inc
-  Dec
-}
-
-///|
-fn stepped_counter(step : Val[Int]) -> Val[Html] {
-  let (count, emit) = @rabbita.create_state_with_input(
-    input=step,
-    init=fn(_, _) { (0, none) },
-    update=fn(_, step, msg, count) {
-      match msg {
-        Inc => (count + step, none)
-        Dec => (count - step, none)
-      }
-    },
-  )
-  count.view2(step, (count, step) => {
-    section([
-      h2("Stepped counter"),
-      p("Step: \{step}"),
-      button(on_click=emit(Dec), "-"),
-      span(count.to_string()),
-      button(on_click=emit(Inc), "+"),
+fn child(
+  text : Val[String],
+  on_reset~ : Cmd,
+  on_change~ : Emit[String],
+) -> Val[Html] {
+  let (visible, set_visible) = @rabbita.create_variable(true)
+  text.view2(visible, (text, visible) => {
+    div([
+      if visible {
+        p(text)
+      } else {
+        nothing
+      },
+      button(
+        on_click=set_visible(value => !value),
+        if visible {
+          "Hide"
+        } else {
+          "Show"
+        },
+      ),
+      button(on_click=on_change("Changed by child"), "submit"),
+      button(on_click=on_reset, "reset"),
     ])
   })
 }
+
+///|
+enum ParentMsg {
+  ResetText
+  SetText(String)
+}
+
+///|
+fn parent() -> Val[Html] {
+  let (text, emit) = @rabbita.create_pure_state("Initial value", update=fn(
+    msg,
+    _,
+  ) {
+    match msg {
+      ResetText => "Initial value"
+      SetText(text) => text
+    }
+  })
+  child(
+    text,
+    on_reset=emit(ResetText),
+    on_change=emit.map(text => SetText(text)),
+  )
+}
 ```
 
-The rendered `Html` depends directly on `step` through `view2`, so it updates
-when `step` changes. That change still does not call the state update. The next
-`Inc` or `Dec` message uses the latest step value.
+Here `text` belongs to `parent`, `visible` belongs to `child`, and actions flow
+back through `on_reset` and `on_change`.
 
-Create state and child components while building a component or a dynamic
-branch. Do not call `create_state`, `create_pure_state`, or another component
-from inside a `map` or `view` callback, including `view2` through `view9`.
-Those callbacks may run many times and would create new state machines on every
-evaluation.
+If a child owns local state but its update or subscriptions need the latest
+input from its parent, use `create_state_with_input`. Changing that input alone
+does not send a message, run the update callback, or refresh subscriptions.
 
-## Keyed components with `assoc`
+## Dynamic subgraphs
+
+An ordinary component call does not create an independently owned lifecycle.
+Use the following combinators when a child branch must be preserved or disposed
+independently of the surrounding render callback.
+
+### Keyed collections
 
 Use `assoc` or `assoc_by` when an ordered collection contains stateful child
 components. Always pass a named component function. Each stable key owns one
 branch, while the supplied `Val` carries later value changes into that branch.
-The item's boolean expansion state is a simple local variable, so it uses
-`create_variable`.
+The item's expansion flag is component-local state, so it uses `create_variable`.
 
 ```moonbit check
 ///|
@@ -238,15 +243,12 @@ fn todo_list(todos : Val[Vector[Todo]]) -> Val[Html] {
 ```
 
 Keys must be unique and stable. The result follows the source `Vector` order.
-Updating a value with the same key updates the `Val[Todo]` without rebuilding
-its component, so `expanded` is preserved. Reordering also preserves the
-branch. Removing a key disposes its state and subscriptions. Adding that key
-again creates a fresh branch.
+Updating a value with the same key updates the `Val[Todo]` without rerunning the
+branch component body, so `expanded` is preserved. Reordering also preserves
+the branch. These keys identify incremental branches only. They are not attached
+to the resulting `Html` values.
 
-These keys identify incremental branches only. They are not attached to the
-resulting `Html` values.
-
-## Branch lifetime
+### Tagged branches
 
 `enumerate` and `switch` select a component branch from a stable tag. Implement
 `Enumerate` when an enum naturally defines those tags:
@@ -299,35 +301,34 @@ fn disposable_panel(panel : Val[Panel]) -> Val[Html] {
 
 | API | Branch identity | Lifecycle |
 | --- | --- | --- |
-| `assoc` / `assoc_by` | A unique key | Removing the key disposes it |
-| `enumerate` / `enumerate_by` | Every observed tag | It stays cached and is reused |
-| `switch` / `switch_by` | The active tag | It is disposed and later rebuilt |
+| `assoc` / `assoc_by` | A unique key | Removing the key disposes the branch |
+| `enumerate` / `enumerate_by` | Every observed tag | Observed branches remain cached |
+| `switch` / `switch_by` | The active tag | Changing tags replaces the branch |
 
-Use `enumerate` for a small, bounded set of tabs whose local state and
-subscriptions should survive while inactive. Avoid it for an unbounded set of
-tags. Use `switch` for pages or dialogs whose inactive state should be released.
+Use `enumerate` for a small, bounded set of tabs and `switch` for pages or
+dialogs. Avoid `enumerate` for an unbounded set of tags.
 
 The selector callback runs only when its branch is created. A later value with
 the same tag does not call it again, so that callback argument is not a live
 component input. If a tagged value contains changing data, derive a separate
-`Val` for that data and pass it to the named component.
-
-The callback should immediately match the tag and dispatch each case to a named
-component, as above. Do not put the rendering or state logic directly inside
-the `enumerate` or `switch` callback. A normal `if` or `match` inside `view`
-only chooses `Html`. It does not create or dispose component branches.
+`Val` for that data and pass it to the named component. Immediately match the
+tag and dispatch each case to a named component, as above. Do not put rendering
+or state logic in the selector callback. An `if` or `match` inside `view` simply
+chooses which `Html` to return each time the callback runs. Use `enumerate` or
+`switch` when each case needs its own component state or subscriptions.
 
 ## Compared with fine-grained reactivity and implicit tracking
 
-Rabbita combines an explicit incremental graph with virtual DOM rendering.
-Dependencies are declared at `map` and `view` call sites instead of inferred
-from reads during rendering. Because a `Val` cannot be read as an ordinary
-value, this rules out the implicit-tracking bug where a reactive read happens
-outside a tracking context and the UI silently stops updating. This adds some
-plumbing, but keeps graph edges and branch lifetimes visible.
-
+The incremental graph limits which callbacks produce new `Html`. The virtual
+DOM turns those results into DOM updates while keeping views declarative.
 Virtual DOM diffing is not usually the dominant factor in application
 performance. Network requests, payloads, caching, and backend work often matter
 more. If profiling identifies rendering as significant, split large views into
-smaller components or use `@html.lazy(hash, render)`. The hash must cover every
-input that affects the rendered `Html`.
+smaller components or use `@html.lazy(hash, render)` for an expensive subtree.
+The hash must cover every input that affects the rendered `Html`.
+
+Rabbita declares dependencies at `map` and `view` call sites instead of
+inferring them from reads during rendering. A `Val` cannot be read as an
+ordinary value, so a reactive read cannot accidentally happen outside a
+tracking context and leave the UI stale. Passing dependencies explicitly adds
+some plumbing, but keeps graph edges and branch lifetimes visible.

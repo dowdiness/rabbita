@@ -1,5 +1,5 @@
 ///|
-using @rabbita {type Html, type Val, none}
+using @rabbita {type Cmd, type Emit, type Html, type Val}
 
 ///|
 using @html {button, div, h1, h2, li, main_, nothing, p, section, span, ul}
@@ -11,7 +11,7 @@ using @vector {type Vector}
 test {
   ignore(app)
   ignore(dashboard)
-  ignore(stepped_counter)
+  ignore(parent)
   ignore(todo_list)
   ignore(cached_panel)
   ignore(disposable_panel)
