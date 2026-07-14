@@ -11,8 +11,8 @@ pub enum VNode {
 }
 
 ///|
-pub impl Eq for VNode with fn equal(_, _) {
-  false
+pub impl Eq for VNode with fn equal(a, b) {
+  physical_equal(a, b)
 }
 
 ///|
