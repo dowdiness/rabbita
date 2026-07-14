@@ -284,7 +284,7 @@ pub fn Sub::to_map(
   _ : @key.Key,
   filter_global~ : Bool,
 ) -> Map[String, (Error, SubLoader)] {
-  let map = {}
+  let map = Map([])
   fn go(s) {
     match s {
       Custom(_, Global, _, _) if filter_global => ()

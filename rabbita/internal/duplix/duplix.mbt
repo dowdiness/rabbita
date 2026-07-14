@@ -235,7 +235,7 @@ pub fn[E : @common.Enumerate + Eq, A : Eq] Node::switch(
   a : Node[E],
   f : (E) -> Node[A],
 ) -> Node[A] {
-  a.switch_by(f, by=value => value.tag())
+  a.switch_by(f, by=value => @common.Enumerate::tag(value))
 }
 
 ///|
@@ -274,7 +274,7 @@ pub fn[E : @common.Enumerate + Eq, A : Eq] Node::enumerate(
   map : Node[E],
   f : (E) -> Node[A],
 ) -> Node[A] {
-  map.enumerate_by(f, by=value => value.tag())
+  map.enumerate_by(f, by=value => @common.Enumerate::tag(value))
 }
 
 ///|

@@ -2,7 +2,7 @@
 using @path {type SourcePath, type Path}
 
 ///|
-using @devhub {type BroadcastMsg, type Devhub}
+using @devhub {type Devhub}
 
 ///|
 using @string {parse_int}
@@ -277,7 +277,7 @@ async fn dev_server(
     path.contains("_build")
   })
 
-  let vfs = @vfs.new({})
+  let vfs = @vfs.new(Map([]))
   if public_dir is Some(dir) {
     vfs.mount("/", DirectoryMapping(SourcePath::new(dir)))
     let files = @fs.readdir(dir)
@@ -313,7 +313,7 @@ async fn dev_server(
       let (stdin, close_stdin) = @process.write_to_process()
       close_stdin.close()
       @fs.rmdir(target_dir, recursive=true)
-      hub.broadcast(BroadcastMsg::Building)
+      hub.broadcast(Building)
       log("warren", "Building...")
 
       defer reader.close()
@@ -366,13 +366,11 @@ async fn dev_server(
 
         vfs.mount("index.js", FileMapping(SourcePath::new(js_path)))
         // debug(vfs)
-        hub.broadcast(BroadcastMsg::Reload)
+        hub.broadcast(Reload)
         log("warren", "Changes detected. Reloading...")
       } else {
         hub.broadcast(
-          BroadcastMsg::BuildFailed(
-            build_failure_diagnostics(diagnostics.to_string(), code),
-          ),
+          BuildFailed(build_failure_diagnostics(diagnostics.to_string(), code)),
         )
         log("error", "moon exited with code \{code}.")
       }

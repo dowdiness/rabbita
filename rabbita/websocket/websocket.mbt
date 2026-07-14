@@ -10,7 +10,7 @@ priv struct SocketEntry {
 
 ///|
 #cfg(target="js")
-let connections : Map[String, SocketEntry] = {}
+let connections : Map[String, SocketEntry] = Map([])
 
 ///|
 #cfg(target="js")
@@ -94,7 +94,7 @@ pub fn connect(
   failed? : @cmd.Emit[String],
 ) -> Cmd {
   @cmd.custom_cmd(kind=Immediately, scheduler => {
-    let listeners : Map[String, @dom.Listener] = {}
+    let listeners : Map[String, @dom.Listener] = Map([])
     match @dom.WebSocket::open(url, protocols~) {
       Ok(created) => {
         fn on_open(_) {

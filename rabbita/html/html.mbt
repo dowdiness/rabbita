@@ -1631,7 +1631,7 @@ pub fn[C : IsChildren] option(
   push_label(label, attrs)
   push_disabled(disabled, attrs)
   push_value_attr_string(value, attrs)
-  ignore(attrs.property("selected", @variant.Boolean(selected)))
+  ignore(attrs.property("selected", Boolean(selected)))
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)

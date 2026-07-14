@@ -166,7 +166,7 @@ fn VNode::insert(
         match childs {
           Array(xs) => Array(xs.map(x => x.insert(sandbox, n, null())))
           Map(mp) => {
-            let imp = {}
+            let imp : Map[String, INode] = Map([])
             for k, v in mp {
               imp[k] = v.insert(sandbox, n, null())
             }
@@ -238,8 +238,14 @@ pub struct Props {
 
 ///|
 test {
-  let props = { slots: {}, handlers: {}, attrs: {}, props: {}, styles: {} }
-  props.slots = {}
+  let props = {
+    slots: Map([]),
+    handlers: Map([]),
+    attrs: Map([]),
+    props: Map([]),
+    styles: Map([]),
+  }
+  props.slots = Map([])
 }
 
 ///|
@@ -249,12 +255,12 @@ pub fn Props::new(
   styles : Map[String, String],
   handlers : Map[String, (Event, &Scheduler) -> Unit],
 ) -> Props {
-  { slots: {}, handlers, attrs, styles, props }
+  { slots: Map([]), handlers, attrs, styles, props }
 }
 
 ///|
 fn[K : Eq + Hash, V] copy_map(src : Map[K, V]) -> Map[K, V] {
-  let dst = {}
+  let dst : Map[K, V] = Map([])
   for k, v in src {
     dst[k] = v
   }

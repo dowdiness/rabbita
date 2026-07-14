@@ -149,14 +149,11 @@ pub async fn Devhub::Devhub(port : UInt, vfs : @vfs.VirtualFileSystem) -> Self {
   check_port(port)
 
   {
-    server: @http.Server(
-      @socket.Addr::parse("127.0.0.1:\{port}"),
-      reuse_addr=true,
-    ),
+    server: Server(@socket.Addr::parse("127.0.0.1:\{port}"), reuse_addr=true),
     vfs,
-    client_msgs: @async.Queue(kind=Unbounded),
+    client_msgs: Queue(kind=Unbounded),
     next_id: 0,
-    subscribers: {},
+    subscribers: Map([]),
   }
 }
 
@@ -274,7 +271,7 @@ async fn Devhub::handle_ws(
       for ;; {
         let msg = ws.recv()
         match msg.kind {
-          Text => self.client_msgs.put(ClientMsg::Text(msg.read_all().text()))
+          Text => self.client_msgs.put(Text(msg.read_all().text()))
           Binary => ignore(msg.read_all())
         }
       }

@@ -27,7 +27,7 @@ pub fn node(
   let vnode = @runtime.VNode::elem(
     tag,
     attrs.to_props(),
-    @runtime.Children::Array(children.map(x => x.0)),
+    Array(children.map(x => x.0)),
     namespace_uri=ns,
   )
   Svg(vnode)
@@ -264,7 +264,7 @@ fn push_path_length(value : Int?, attrs : Attrs) -> Unit {
 
 ///|
 fn push_text_content(value : String, attrs : Attrs) -> Unit {
-  ignore(attrs.property("textContent", @variant.String(value)))
+  ignore(attrs.property("textContent", String(value)))
 }
 
 ///|

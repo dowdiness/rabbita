@@ -67,7 +67,7 @@ pub fn batch(cmds : Array[Cmd]) -> Cmd {
 #alias(raw_effect, deprecated)
 pub fn custom_cmd(
   callback : (&Scheduler) -> Unit,
-  kind? : EffectKind = EffectKind::Immediately,
+  kind? : EffectKind = Immediately,
 ) -> Cmd {
   Effect(kind, callback)
 }

@@ -162,7 +162,7 @@ fn push_submit(value : Cmd?, attrs : Attrs) -> Unit {
 ///|
 fn push_open(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("open", @variant.Boolean(v)))
+    ignore(attrs.property("open", Boolean(v)))
   }
 }
 
@@ -211,7 +211,7 @@ fn push_value_attr_string(value : String?, attrs : Attrs) -> Unit {
 ///|
 fn push_value_prop_string(value : String?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("value", @variant.String(v)))
+    ignore(attrs.property("value", String(v)))
   }
 }
 
@@ -274,7 +274,7 @@ fn push_for(value : String?, attrs : Attrs) -> Unit {
 ///|
 fn push_disabled(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("disabled", @variant.Boolean(v)))
+    ignore(attrs.property("disabled", Boolean(v)))
   }
 }
 
@@ -309,21 +309,21 @@ fn push_placeholder(value : String?, attrs : Attrs) -> Unit {
 ///|
 fn push_readonly(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("readonly", @variant.Boolean(v)))
+    ignore(attrs.property("readonly", Boolean(v)))
   }
 }
 
 ///|
 fn push_checked(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("checked", @variant.Boolean(v)))
+    ignore(attrs.property("checked", Boolean(v)))
   }
 }
 
 ///|
 fn push_multiple(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("multiple", @variant.Boolean(v)))
+    ignore(attrs.property("multiple", Boolean(v)))
   }
 }
 
@@ -564,7 +564,7 @@ fn push_dir(value : String?, attrs : Attrs) -> Unit {
 ///|
 fn push_hidden(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("hidden", @variant.Boolean(v)))
+    ignore(attrs.property("hidden", Boolean(v)))
   }
 }
 
@@ -641,28 +641,28 @@ fn push_type(value : String?, attrs : Attrs) -> Unit {
 ///|
 fn push_async(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("async", @variant.Boolean(v)))
+    ignore(attrs.property("async", Boolean(v)))
   }
 }
 
 ///|
 fn push_defer(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("defer", @variant.Boolean(v)))
+    ignore(attrs.property("defer", Boolean(v)))
   }
 }
 
 ///|
 fn push_required(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("required", @variant.Boolean(v)))
+    ignore(attrs.property("required", Boolean(v)))
   }
 }
 
 ///|
 fn push_autofocus(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("autofocus", @variant.Boolean(v)))
+    ignore(attrs.property("autofocus", Boolean(v)))
   }
 }
 
@@ -711,28 +711,28 @@ fn push_decoding(value : String?, attrs : Attrs) -> Unit {
 ///|
 fn push_controls(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("controls", @variant.Boolean(v)))
+    ignore(attrs.property("controls", Boolean(v)))
   }
 }
 
 ///|
 fn push_autoplay(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("autoplay", @variant.Boolean(v)))
+    ignore(attrs.property("autoplay", Boolean(v)))
   }
 }
 
 ///|
 fn push_loop(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("loop", @variant.Boolean(v)))
+    ignore(attrs.property("loop", Boolean(v)))
   }
 }
 
 ///|
 fn push_muted(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("muted", @variant.Boolean(v)))
+    ignore(attrs.property("muted", Boolean(v)))
   }
 }
 
@@ -767,7 +767,7 @@ fn push_sandbox(value : String?, attrs : Attrs) -> Unit {
 ///|
 fn push_allowfullscreen(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("allowfullscreen", @variant.Boolean(v)))
+    ignore(attrs.property("allowfullscreen", Boolean(v)))
   }
 }
 
@@ -809,6 +809,6 @@ fn push_srclang(value : String?, attrs : Attrs) -> Unit {
 ///|
 fn push_default(value : Bool?, attrs : Attrs) -> Unit {
   if value is Some(v) {
-    ignore(attrs.property("default", @variant.Boolean(v)))
+    ignore(attrs.property("default", Boolean(v)))
   }
 }

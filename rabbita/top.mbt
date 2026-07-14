@@ -22,7 +22,7 @@ pub type Html = @html.Html
 pub fn new(builder : () -> Val[Html]) -> App {
   let sandbox = @runtime.Sandbox::new()
   ambient_graph.val = Some(Graph(sandbox))
-  App::{ sandbox, init_cmd: None, builder }
+  { sandbox, init_cmd: None, builder }
 }
 
 ///|
@@ -44,7 +44,7 @@ pub fn[Model : Eq, Msg] elmish(
   }
   let sandbox = @runtime.Sandbox::new()
   ambient_graph.val = Some(Graph(sandbox))
-  App::{ sandbox, init_cmd: None, builder }
+  { sandbox, init_cmd: None, builder }
 }
 
 ///|

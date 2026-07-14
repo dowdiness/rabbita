@@ -25,7 +25,7 @@ fn diff_subs(
   new_subs : Map[String, (Error, @sub.SubLoader)],
   scheduler : &@cmd.Scheduler,
 ) -> Map[String, @sub.RunningSub] {
-  let sub_map = {}
+  let sub_map : Map[String, @sub.RunningSub] = Map([])
   for key, sub in old_subs {
     if !new_subs.contains(key) {
       (sub.unload)(scheduler)

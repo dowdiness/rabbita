@@ -17,7 +17,7 @@ struct Attrs(Props)
 
 ///|
 pub fn Attrs::build() -> Attrs {
-  Attrs(Props::new({}, {}, {}, {}))
+  Attrs(Props::new(Map([]), Map([]), Map([]), Map([])))
 }
 
 ///|
@@ -40,7 +40,7 @@ fn Attrs::copy(self : Attrs) -> Attrs {
 /// content since the browser will parse the string into DOM nodes.
 #internal(xss_vulnerable, "This function may cause xss attack.")
 pub fn Attrs::inner_html(self : Attrs, html : String) -> Attrs {
-  self.0.props["innerHTML"] = @variant.String(html)
+  self.0.props["innerHTML"] = String(html)
   self.0
 }
 
@@ -164,7 +164,7 @@ pub fn Attrs::as_(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/async)
 pub fn Attrs::async_(self : Attrs, value : Bool) -> Attrs {
-  self.property("async", @variant.Boolean(value))
+  self.property("async", Boolean(value))
 }
 
 ///|
@@ -186,7 +186,7 @@ pub fn Attrs::autocomplete(self : Attrs, value : AutoComplete) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/autoplay)
 pub fn Attrs::autoplay(self : Attrs, value : Bool) -> Attrs {
-  self.property("autoplay", @variant.Boolean(value))
+  self.property("autoplay", Boolean(value))
 }
 
 ///|
@@ -222,7 +222,7 @@ pub fn Attrs::charset(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/checked)
 pub fn Attrs::checked(self : Attrs, value : Bool) -> Attrs {
-  self.property("checked", @variant.Boolean(value))
+  self.property("checked", Boolean(value))
 }
 
 ///|
@@ -287,7 +287,7 @@ pub fn Attrs::contenteditable(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/controls)
 pub fn Attrs::controls(self : Attrs, value : Bool) -> Attrs {
-  self.property("controls", @variant.Boolean(value))
+  self.property("controls", Boolean(value))
 }
 
 ///|
@@ -335,13 +335,13 @@ pub fn Attrs::decoding(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/default)
 pub fn Attrs::default(self : Attrs, value : Bool) -> Attrs {
-  self.property("default", @variant.Boolean(value))
+  self.property("default", Boolean(value))
 }
 
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/defer)
 pub fn Attrs::defer_(self : Attrs, value : Bool) -> Attrs {
-  self.property("defer", @variant.Boolean(value))
+  self.property("defer", Boolean(value))
 }
 
 ///|
@@ -436,7 +436,7 @@ pub fn Attrs::formmethod(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/formnovalidate)
 pub fn Attrs::formnovalidate(self : Attrs, value : Bool) -> Attrs {
-  self.property("formnovalidate", @variant.Boolean(value))
+  self.property("formnovalidate", Boolean(value))
 }
 
 ///|
@@ -460,7 +460,7 @@ pub fn Attrs::height(self : Attrs, value : Int) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/hidden)
 pub fn Attrs::hidden(self : Attrs, value : Bool) -> Attrs {
-  self.property("hidden", @variant.Boolean(value))
+  self.property("hidden", Boolean(value))
 }
 
 ///|
@@ -472,7 +472,7 @@ pub fn Attrs::high(self : Attrs, value : Int) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/href)
 pub fn Attrs::href(self : Attrs, value : String) -> Attrs {
-  self.property("href", @variant.String(value))
+  self.property("href", String(value))
 }
 
 ///|
@@ -508,7 +508,7 @@ pub fn Attrs::inputmode(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/ismap)
 pub fn Attrs::ismap(self : Attrs, value : Bool) -> Attrs {
-  self.property("ismap", @variant.Boolean(value))
+  self.property("ismap", Boolean(value))
 }
 
 ///|
@@ -556,7 +556,7 @@ pub fn Attrs::list(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/loop)
 pub fn Attrs::loop_(self : Attrs, value : Bool) -> Attrs {
-  self.property("loop", @variant.Boolean(value))
+  self.property("loop", Boolean(value))
 }
 
 ///|
@@ -604,13 +604,13 @@ pub fn Attrs::minlength(self : Attrs, value : Int) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/multiple)
 pub fn Attrs::multiple(self : Attrs, value : Bool) -> Attrs {
-  self.property("multiple", @variant.Boolean(value))
+  self.property("multiple", Boolean(value))
 }
 
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/muted)
 pub fn Attrs::muted(self : Attrs, value : Bool) -> Attrs {
-  self.property("muted", @variant.Boolean(value))
+  self.property("muted", Boolean(value))
 }
 
 ///|
@@ -622,13 +622,13 @@ pub fn Attrs::name(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/novalidate)
 pub fn Attrs::novalidate(self : Attrs, value : Bool) -> Attrs {
-  self.property("novalidate", @variant.Boolean(value))
+  self.property("novalidate", Boolean(value))
 }
 
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/open)
 pub fn Attrs::open(self : Attrs, value : Bool) -> Attrs {
-  self.property("open", @variant.Boolean(value))
+  self.property("open", Boolean(value))
 }
 
 ///|
@@ -658,7 +658,7 @@ pub fn Attrs::placeholder(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/playsinline)
 pub fn Attrs::playsinline(self : Attrs, value : Bool) -> Attrs {
-  self.property("playsinline", @variant.Boolean(value))
+  self.property("playsinline", Boolean(value))
 }
 
 ///|
@@ -676,7 +676,7 @@ pub fn Attrs::preload(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/readonly)
 pub fn Attrs::readonly_(self : Attrs, value : Bool) -> Attrs {
-  self.property("readonly", @variant.Boolean(value))
+  self.property("readonly", Boolean(value))
 }
 
 ///|
@@ -694,13 +694,13 @@ pub fn Attrs::rel(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/required)
 pub fn Attrs::required(self : Attrs, value : Bool) -> Attrs {
-  self.property("required", @variant.Boolean(value))
+  self.property("required", Boolean(value))
 }
 
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/reversed)
 pub fn Attrs::reversed(self : Attrs, value : Bool) -> Attrs {
-  self.property("reversed", @variant.Boolean(value))
+  self.property("reversed", Boolean(value))
 }
 
 ///|
@@ -742,7 +742,7 @@ pub fn Attrs::scope(self : Attrs, value : Scope) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/selected)
 pub fn Attrs::selected(self : Attrs, value : Bool) -> Attrs {
-  self.property("selected", @variant.Boolean(value))
+  self.property("selected", Boolean(value))
 }
 
 ///|
@@ -778,7 +778,7 @@ pub fn Attrs::span(self : Attrs, value : Int) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/spellcheck)
 pub fn Attrs::spellcheck(self : Attrs, value : Bool) -> Attrs {
-  self.property("spellcheck", @variant.Boolean(value))
+  self.property("spellcheck", Boolean(value))
 }
 
 ///|
@@ -904,7 +904,7 @@ pub fn Attrs::autocorrect(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/autofocus)
 pub fn Attrs::autofocus(self : Attrs, value : Bool) -> Attrs {
-  self.property("autofocus", @variant.Boolean(value))
+  self.property("autofocus", Boolean(value))
 }
 
 ///|
@@ -916,7 +916,7 @@ pub fn Attrs::exportparts(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/inert)
 pub fn Attrs::inert(self : Attrs, value : Bool) -> Attrs {
-  self.property("inert", @variant.Boolean(value))
+  self.property("inert", Boolean(value))
 }
 
 ///|
@@ -940,7 +940,7 @@ pub fn Attrs::itemref(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/itemscope)
 pub fn Attrs::itemscope(self : Attrs, value : Bool) -> Attrs {
-  self.property("itemscope", @variant.Boolean(value))
+  self.property("itemscope", Boolean(value))
 }
 
 ///|
@@ -970,7 +970,7 @@ pub fn Attrs::popover(self : Attrs, value : String) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/allowfullscreen)
 pub fn Attrs::allowfullscreen(self : Attrs, value : Bool) -> Attrs {
-  self.property("allowfullscreen", @variant.Boolean(value))
+  self.property("allowfullscreen", Boolean(value))
 }
 
 ///|
@@ -982,7 +982,7 @@ pub fn Attrs::value_int(self : Attrs, value : Int) -> Attrs {
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/value)
 pub fn Attrs::value_prop(self : Attrs, value : String) -> Attrs {
-  self.property("value", @variant.String(value))
+  self.property("value", String(value))
 }
 
 ///|

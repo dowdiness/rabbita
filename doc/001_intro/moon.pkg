@@ -3,4 +3,4 @@ import {
   "moonbit-community/rabbita/html",
 } for "test"
 
-supported_targets = "js+native"
+supported_targets = "js"

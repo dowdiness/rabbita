@@ -24,7 +24,7 @@ fn[Model, Msg] make_deprecated_cell(
   subscriptions? : (Emit[Msg], Model) -> @sub.Sub,
 ) -> (Emit[Msg], Cell) {
   let actual_emit : Ref[Emit[Msg]?] = Ref(None)
-  let pending : @queue.Queue[Msg] = @queue.Queue([])
+  let pending : @queue.Queue[Msg] = Queue([])
   let emit : Emit[Msg] = @cmd.make_legacy_emitter((scheduler, msg) => {
     match actual_emit.val {
       Some(actual_emit) => scheduler.add(actual_emit(msg))

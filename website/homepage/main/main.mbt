@@ -818,7 +818,7 @@ fn qs_step(num : String, title : String, cmd : String) -> Val[Html] {
             "qs-copy-btn"
           },
           on_click=batch([
-            @clipboard.copy(@clipboard.Text(cmd)),
+            @clipboard.copy(Text(cmd)),
             set_copied(_ => true),
             @rabbita.delay(set_copied(_ => false), 1500),
           ]),

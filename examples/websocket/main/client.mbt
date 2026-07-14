@@ -125,10 +125,10 @@ fn bool_label(value : Bool) -> String {
 ///|
 fn ready_state_label(state : ReadyState) -> String {
   match state {
-    ReadyState::Connecting => "connecting"
-    ReadyState::Open => "open"
-    ReadyState::Closing => "closing"
-    ReadyState::Closed => "closed"
+    Connecting => "connecting"
+    Open => "open"
+    Closing => "closing"
+    Closed => "closed"
   }
 }
 
@@ -239,7 +239,7 @@ fn refresh_state_cmd(emit : Emit[Msg]) -> Cmd {
 fn send_chat_cmd(emit : Emit[Msg], model : Model) -> Cmd {
   @websocket.send(
     command_socket_id(),
-    @websocket.Payload::Json({
+    Json({
       "kind": "chat",
       "user": normalized_nickname(model.nickname_input),
       "text": trimmed_draft(model.draft_input),
@@ -252,7 +252,7 @@ fn send_chat_cmd(emit : Emit[Msg], model : Model) -> Cmd {
 fn send_raw_cmd(emit : Emit[Msg], model : Model) -> Cmd {
   @websocket.send(
     command_socket_id(),
-    @websocket.Payload::Text(trimmed_draft(model.draft_input)),
+    Text(trimmed_draft(model.draft_input)),
     failed=emit.map(message => ClientFailed(message)),
   )
 }
@@ -485,7 +485,7 @@ fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
     ClearTranscript => (@rabbita.none, { ..model, transcript: [] })
     ClientSocketEvent(event) =>
       match event {
-        Event::Opened =>
+        Opened =>
           (
             refresh_state_cmd(emit),
             with_transcript(
@@ -499,7 +499,7 @@ fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
               "open",
             ),
           )
-        Event::Message(text) => {
+        Message(text) => {
           let next = {
             ..model,
             client_status: "open",
@@ -511,7 +511,7 @@ fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
           }
           (refresh_state_cmd(emit), next)
         }
-        Event::Closed(info) => {
+        Closed(info) => {
           let summary = close_summary(info)
           (
             refresh_state_cmd(emit),
@@ -529,7 +529,7 @@ fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
             ),
           )
         }
-        Event::Errored =>
+        Errored =>
           (
             refresh_state_cmd(emit),
             with_transcript(

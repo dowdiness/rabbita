@@ -5,7 +5,7 @@ fn assert_dialog_attr(
   expected : String,
 ) -> Unit raise {
   match html.to_virtual_dom() {
-    @runtime.VNode::Elem("dialog", props, _, namespace_uri=None) =>
+    Elem("dialog", props, _, namespace_uri=None) =>
       match props.attrs.get(name) {
         Some(actual) if actual == expected => ()
         Some(actual) => fail("expected \{name}=\{expected}, got \{actual}")
