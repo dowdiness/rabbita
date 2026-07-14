@@ -12,6 +12,4 @@ warnings = "-a"
 
 formatter(ignore: [ "main.mbt" ])
 
-options(
-  "is-main": true,
-)
+pkgtype(kind: "executable")
