@@ -1,26 +1,42 @@
 # Router
 
-This tour describes when to use a router and how to write an app with a router in Rabbita.
+This tour shows how a Rabbita component can own routing state and dispatch each
+route to a page component.
 
-Rabbita adopts an Elm-style router. There is no hidden `router` object, and you are required to manage routing explicitly:
+Rabbita has no hidden router object. Routing is explicit:
 
-* Treat the current route as part of the Model
-* Use URL parsing (pattern matching or modules like `sw_router`)
-* Use `UrlChanged`/`UrlRequest` to drive the `update` function and update route state.
+- Keep the current route in component-local state
+- Parse URLs with pattern matching or a package such as `sw_router`
+- Handle `UrlRequest` and `UrlChanged` messages in the root component
 
-## Register the route messages
+## Define routes and messages
 
-Use the root app's `subscriptions` callback together with
-`@sub.on_url_changed(...)` and `@sub.on_url_request(...)` to declare which
-messages should be triggered for routing events.
+This example has three kinds of pages:
 
-The `url_request` is a navigation **intention** (captured link click), and
-the `url_changed` is a navigation **fact** (the browser location has already changed).
-We’ll cover the details later.
+- `/home` lists the available articles
+- `/article/:id` displays one article
+- Any other path displays a 404 page
 
-Now we can define the `UrlChanged` and `UrlRequest` messages like this:  
+The route state and navigation messages are ordinary MoonBit types:
 
 ```moonbit check
+///|
+type Id = String
+
+///|
+struct Article {
+  id : Id
+  title : String
+  content : String
+} derive(Eq)
+
+///|
+enum Route {
+  Home
+  Article(Article)
+  NotFound
+} derive(Eq)
+
 ///|
 enum Msg {
   UrlChanged(Url)
@@ -28,161 +44,152 @@ enum Msg {
 }
 ```
 
-To register the `UrlChanged` and `UrlRequest` messages, create the root state
-with `create_state(...)`, obtain the corresponding `emit` function, then wire
-the route subscriptions on the root app:
+`Route` also gives each page component a stable branch identity. An article's
+id is part of that identity, so navigating to another article creates the
+component for that article.
 
 ```moonbit check
 ///|
-test {
-  fn subscriptions(emit : Emit[Msg], _ : Model) -> @sub.Sub {
-    @sub.batch([
-      @sub.on_url_changed(url => emit(UrlChanged(url))),
-      @sub.on_url_request(req => emit(UrlRequest(req))),
-    ])
+impl @rabbita.Enumerate for Route with fn tag(self) {
+  match self {
+    Home => "home"
+    Article(article) => "article/\{article.id}"
+    NotFound => "not-found"
   }
-
-  fn root() -> Val[Html] {
-    let (model, emit) = @rabbita.create_state(home, subscriptions~, update=fn(
-      emit,
-      msg,
-      model,
-    ) {
-      let (cmd, model) = update(emit, msg, model)
-      (model, cmd)
-    })
-    model.map(model => view(emit, model))
-  }
-  ignore(root)
 }
 ```
 
-What about `model`, `update`, and `view`? The following sections show how to define these components for routing.
+## Define the page components
 
-## Sketch the app model
-
-Here we sketch a site with three pages:
-
-* `/home`: the main page that lists the article links
-* `/article/id`: the article page, displaying the title and content
-* Any other path displays the 404 not found page
-
-We can use an `enum` to represent this:
+The tutorial uses local immutable article data instead of a network request.
+Each route is rendered by a named component:
 
 ```moonbit check
 ///|
-type Id = String
+fn home_page(articles : Vector[Article]) -> Val[Html] {
+  Val::constant(
+    ul(
+      articles.map(article => {
+        li(a(href="/article/\{article.id}", article.title))
+      }),
+    ),
+  )
+}
 
 ///|
-enum Model {
-  Home(Map[Id, String])
-  Article(String, String)
-  NotFound
-} derive(Eq)
-```
-
-We skipped the networking part in this tutorial, so let's hardcode the data as globals:
-
-```moonbit check
-///|
-let home : Model = Home({ "1": "Article 1", "2": "Article 2", "3": "Article 3" })
+fn article_page(article : Article) -> Val[Html] {
+  Val::constant(div([h1(article.title), p(article.content)]))
+}
 
 ///|
-let articles : Map[String, (String, String)] = {
-  "1": ("Article 1", "content 1"),
-  "2": ("Article 2", "content 2"),
-  "3": ("Article 3", "content 3"),
+fn not_found_page() -> Val[Html] {
+  Val::constant(div([h1("404"), a(href="/home", "go home")]))
 }
 ```
 
-## Define the update function and routing logic
-
-The `update` function handles routing by responding to `UrlRequest` and `UrlChanged` messages. 
-
-- `UrlRequest`
-
-  Triggered when the user intends to navigate, usually by clicking a captured `@html.a(...)`. This represents a navigation request, and the application can decide how to handle it.
-
-  `UrlRequest` is an enum:
-  - `Internal(Url)`: the target URL is within the same domain (SPA navigation)
-  - `External(String)`: the target URL points to another site (full page load)
-  
-  Since this is only an intention, the app may:
-  - allow the navigation
-  - redirect
-  - block it
-  - handle it in a custom way
-
-- `UrlChanged`
-
-  Triggered when the browser URL has already changed. This can happen because of:
-
-  - the browser forward/back button
-  - commands made by `@nav.push_url(...)` / `@nav.replace_url(...)`
-  - manual address bar changes
-
-  The Url represents the current browser location. At this point, navigation has already occurred, and the app should update its Model (e.g. parse the URL and update the Route).
-
-When a user clicks a link or the URL changes, the function updates the model based on the new route.
-For internal links, it uses `@nav.push_url` to change the URL without reloading the page. For external links, it uses `@nav.load` to navigate away. When the URL changes, the function matches the path and updates the model to display the correct page or a 404 page if the route is not found.
+The URL parser receives the same immutable article collection as the
+components. `Url.path` does not include the leading `/`, so `/home` produces
+`"home"` and `/article/1` produces `"article/1"`.
 
 ```moonbit check
 ///|
-fn update(_ : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
-  match msg {
-    // handle clicks on @html.a(...) link
-    UrlRequest(request) =>
-      match request {
-        // use @nav.push_url(...) to trigger the UrlChanged
-        Internal(url) => (@nav.push_url(url.to_string()), model)
-        // navigate away
-        External(url) => (@nav.load(url), model)
+fn route_from_url(articles : Vector[Article], url : Url) -> Route {
+  match url.path {
+    "" | "home" => Home
+    [.. "article/", .. id] => {
+      let id = id.to_owned()
+      if articles.iter().find_first(article => article.id == id)
+        is Some(article) {
+        Article(article)
+      } else {
+        NotFound
       }
-    // handle route url changes
-    UrlChanged(url) =>
-      match url.path {
-        "/" | "/home" => (none, home)
-        [.. "/article/", .. id] if articles.get(id.to_owned())
-          is Some((title, content)) => (none, Article(title, content))
-        _ => (none, NotFound)
-      }
+    }
+    _ => NotFound
   }
 }
 ```
 
-## Define the view
+## Build the root component
 
-The `view` function renders UI based on the current `Model`.  
-In this example, the `Model` represents the current route, so the view is effectively determined by the active page.
-
-Notice that `view` is a pure function: it does not perform navigation or modify state directly.  
-Instead, navigation is triggered by links (`a(href=...)`), which produce a `url_request` message.
+The root component creates the route state, handles navigation, and owns the
+route subscriptions. There is no separate top-level model, update function, or
+view function.
 
 ```moonbit check
 ///|
-fn view(_ : Emit[Msg], model : Model) -> Html {
-  match model {
-    Home(items) =>
-      ul(items.map((id, title) => li(a(href="/article/\{id}", title))))
-    Article(title, content) => div([h1(title), p(content)])
-    NotFound => div([h1("404"), a(href="/home", "go home")])
-  }
+fn app() -> Val[Html] {
+  let articles = from_array([
+    { id: "1", title: "Article 1", content: "content 1" },
+    { id: "2", title: "Article 2", content: "content 2" },
+    { id: "3", title: "Article 3", content: "content 3" },
+  ])
+  let (route, _) = @rabbita.create_state(
+    Home,
+    subscriptions=fn(emit, _) {
+      @sub.batch([
+        @sub.on_url_changed(url => emit(UrlChanged(url))),
+        @sub.on_url_request(request => emit(UrlRequest(request))),
+      ])
+    },
+    update=fn(_, msg, current_route) {
+      match msg {
+        UrlRequest(request) =>
+          match request {
+            Internal(url) => (current_route, @nav.push_url(url.to_string()))
+            External(url) => (current_route, @nav.load(url))
+          }
+        UrlChanged(url) => (route_from_url(articles, url), none)
+      }
+    },
+  )
+
+  route.switch(current_route => {
+    match current_route {
+      Home => home_page(articles)
+      Article(article) => article_page(article)
+      NotFound => not_found_page()
+    }
+  })
 }
 ```
 
-# When should you use a router?
+The callback passed to `switch` immediately dispatches each route to a page
+component. When the route tag changes, Rabbita disposes the active branch and
+builds the next one.
 
-You don’t need a router at the beginning.
+Route subscriptions belong to the root component. On mount,
+`on_url_changed` emits the current browser URL, which initializes refreshes and
+deep links. It also reports back and forward navigation. Links built with
+`a(href=...)` produce `UrlRequest` messages.
 
-In Rabbita, routing is just state derived from the URL. If your app only switches views locally and does not need deep links, browser refresh recovery, or back/forward support, normal messages and model updates are enough.
+An internal request schedules `push_url`. That command changes browser history
+without reloading the page and then produces `UrlChanged`. An external request
+schedules `load`, which performs a full-page navigation.
 
-Introduce a router only when navigation becomes part of your app’s public state.  Routing should feel like a natural refactor as the app grows, not something you design upfront.
+Mount the root component as usual:
 
-# Core Idea Recap
+```moonbit nocheck
+///|
+fn main {
+  @rabbita.new(app).mount("main")
+}
+```
 
-- The current page lives in the Model
-- Navigation is expressed as messages
-- URL changes update the model
-- The view is a pure projection of model
+## When should you use a router?
 
-There is no hidden router object, routing is just model + messages + update.
+You do not need a router when an app only switches local UI and does not need
+deep links, refresh recovery, or browser back and forward support.
+
+Introduce routing when navigation becomes part of the app's public state. It
+can remain ordinary component state instead of becoming a separate global
+system.
+
+## Core idea recap
+
+- The root component owns the current route
+- Navigation is expressed as messages and commands
+- URL changes update the route state
+- `switch` dispatches routes to page components
+
+Routing is local route state plus navigation messages and page components.
