@@ -142,6 +142,111 @@ pub fn[
 }
 
 ///|
+pub fn[A : Eq] Val::view(a : Val[A], render : (A) -> Html) -> Val[Html] {
+  a.0.map(render)
+}
+
+///|
+pub fn[A : Eq, B : Eq] Val::view2(
+  a : Val[A],
+  b : Val[B],
+  render : (A, B) -> Html,
+) -> Val[Html] {
+  a.0.map2(b.0, render)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq] Val::view3(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  render : (A, B, C) -> Html,
+) -> Val[Html] {
+  a.0.map3(b.0, c.0, render)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq] Val::view4(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  render : (A, B, C, D) -> Html,
+) -> Val[Html] {
+  a.0.map4(b.0, c.0, d.0, render)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq] Val::view5(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  e : Val[E],
+  render : (A, B, C, D, E) -> Html,
+) -> Val[Html] {
+  a.0.map5(b.0, c.0, d.0, e.0, render)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq] Val::view6(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  e : Val[E],
+  f : Val[F],
+  render : (A, B, C, D, E, F) -> Html,
+) -> Val[Html] {
+  a.0.map6(b.0, c.0, d.0, e.0, f.0, render)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq] Val::view7(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  e : Val[E],
+  f : Val[F],
+  g : Val[G],
+  render : (A, B, C, D, E, F, G) -> Html,
+) -> Val[Html] {
+  a.0.map7(b.0, c.0, d.0, e.0, f.0, g.0, render)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq] Val::view8(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  e : Val[E],
+  f : Val[F],
+  g : Val[G],
+  h : Val[H],
+  render : (A, B, C, D, E, F, G, H) -> Html,
+) -> Val[Html] {
+  a.0.map8(b.0, c.0, d.0, e.0, f.0, g.0, h.0, render)
+}
+
+///|
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq] Val::view9(
+  a : Val[A],
+  b : Val[B],
+  c : Val[C],
+  d : Val[D],
+  e : Val[E],
+  f : Val[F],
+  g : Val[G],
+  h : Val[H],
+  i : Val[I],
+  render : (A, B, C, D, E, F, G, H, I) -> Html,
+) -> Val[Html] {
+  a.0.map9(b.0, c.0, d.0, e.0, f.0, g.0, h.0, i.0, render)
+}
+
+///|
 #cfg(target="js")
 pub fn[Model : Eq, Msg] create_pure_state(
   model : Model,

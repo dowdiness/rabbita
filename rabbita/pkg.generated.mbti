@@ -85,6 +85,15 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H] Val::map7(Self
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I] Val::map8(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], (A, B, C, D, E, F, G, H) -> I) -> Self[I]
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq, J] Val::map9(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], Self[I], (A, B, C, D, E, F, G, H, I) -> J) -> Self[J]
 pub fn[E : @common.Enumerate + Eq, C : Eq] Val::switch(Self[E], (E) -> Self[C]) -> Self[C]
+pub fn[A : Eq] Val::view(Self[A], (A) -> @html.Html) -> Self[@html.Html]
+pub fn[A : Eq, B : Eq] Val::view2(Self[A], Self[B], (A, B) -> @html.Html) -> Self[@html.Html]
+pub fn[A : Eq, B : Eq, C : Eq] Val::view3(Self[A], Self[B], Self[C], (A, B, C) -> @html.Html) -> Self[@html.Html]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq] Val::view4(Self[A], Self[B], Self[C], Self[D], (A, B, C, D) -> @html.Html) -> Self[@html.Html]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq] Val::view5(Self[A], Self[B], Self[C], Self[D], Self[E], (A, B, C, D, E) -> @html.Html) -> Self[@html.Html]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq] Val::view6(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], (A, B, C, D, E, F) -> @html.Html) -> Self[@html.Html]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq] Val::view7(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], (A, B, C, D, E, F, G) -> @html.Html) -> Self[@html.Html]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq] Val::view8(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], (A, B, C, D, E, F, G, H) -> @html.Html) -> Self[@html.Html]
+pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq] Val::view9(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], Self[I], (A, B, C, D, E, F, G, H, I) -> @html.Html) -> Self[@html.Html]
 
 // Type aliases
 #deprecated
