@@ -6,6 +6,10 @@ pub using @common {trait Enumerate}
 let ambient_graph : Ref[Graph?] = Ref(None)
 
 ///|
+/// A lazily evaluated value in Rabbita's incremental graph.
+///
+/// Derived values are recomputed on demand after one of their dependencies
+/// changes.
 struct Val[A](@duplix.Node[A])
 
 ///|
@@ -21,16 +25,23 @@ fn Graph::Graph(sandbox : @runtime.Sandbox) -> Self {
 }
 
 ///|
+/// Creates an incremental value by applying `f` to `a`.
+///
+/// The function is reevaluated when the value of `a` changes.
 pub fn[A : Eq, B] Val::map(a : Val[A], f : (A) -> B) -> Val[B] {
   a.0.map1(f)
 }
 
 ///|
+/// Creates an incremental value that always contains `a`.
 pub fn[A] Val::constant(a : A) -> Val[A] {
   @duplix.constant(a)
 }
 
 ///|
+/// Creates an incremental value derived from two inputs.
+///
+/// The function is reevaluated when either input value changes.
 pub fn[A : Eq, B : Eq, C] Val::map2(
   a : Val[A],
   b : Val[B],
@@ -40,6 +51,9 @@ pub fn[A : Eq, B : Eq, C] Val::map2(
 }
 
 ///|
+/// Creates an incremental value derived from three inputs.
+///
+/// The function is reevaluated when any input value changes.
 pub fn[A : Eq, B : Eq, C : Eq, D] Val::map3(
   a : Val[A],
   b : Val[B],
@@ -50,6 +64,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D] Val::map3(
 }
 
 ///|
+/// Creates an incremental value derived from four inputs.
+///
+/// The function is reevaluated when any input value changes.
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E] Val::map4(
   a : Val[A],
   b : Val[B],
@@ -61,6 +78,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E] Val::map4(
 }
 
 ///|
+/// Creates an incremental value derived from five inputs.
+///
+/// The function is reevaluated when any input value changes.
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F] Val::map5(
   a : Val[A],
   b : Val[B],
@@ -73,6 +93,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F] Val::map5(
 }
 
 ///|
+/// Creates an incremental value derived from six inputs.
+///
+/// The function is reevaluated when any input value changes.
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G] Val::map6(
   a : Val[A],
   b : Val[B],
@@ -86,6 +109,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G] Val::map6(
 }
 
 ///|
+/// Creates an incremental value derived from seven inputs.
+///
+/// The function is reevaluated when any input value changes.
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H] Val::map7(
   a : Val[A],
   b : Val[B],
@@ -100,6 +126,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H] Val::map7(
 }
 
 ///|
+/// Creates an incremental value derived from eight inputs.
+///
+/// The function is reevaluated when any input value changes.
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I] Val::map8(
   a : Val[A],
   b : Val[B],
@@ -115,6 +144,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I] Val::m
 }
 
 ///|
+/// Creates an incremental value derived from nine inputs.
+///
+/// The function is reevaluated when any input value changes.
 pub fn[
   A : Eq,
   B : Eq,
@@ -142,11 +174,17 @@ pub fn[
 }
 
 ///|
+/// Creates an HTML view derived from one incremental value.
+///
+/// The render function is reevaluated when `a` changes.
 pub fn[A : Eq] Val::view(a : Val[A], render : (A) -> Html) -> Val[Html] {
   a.0.map(render)
 }
 
 ///|
+/// Creates an HTML view derived from two incremental values.
+///
+/// The render function is reevaluated when either input changes.
 pub fn[A : Eq, B : Eq] Val::view2(
   a : Val[A],
   b : Val[B],
@@ -156,6 +194,9 @@ pub fn[A : Eq, B : Eq] Val::view2(
 }
 
 ///|
+/// Creates an HTML view derived from three incremental values.
+///
+/// The render function is reevaluated when any input changes.
 pub fn[A : Eq, B : Eq, C : Eq] Val::view3(
   a : Val[A],
   b : Val[B],
@@ -166,6 +207,9 @@ pub fn[A : Eq, B : Eq, C : Eq] Val::view3(
 }
 
 ///|
+/// Creates an HTML view derived from four incremental values.
+///
+/// The render function is reevaluated when any input changes.
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq] Val::view4(
   a : Val[A],
   b : Val[B],
@@ -177,6 +221,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq] Val::view4(
 }
 
 ///|
+/// Creates an HTML view derived from five incremental values.
+///
+/// The render function is reevaluated when any input changes.
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq] Val::view5(
   a : Val[A],
   b : Val[B],
@@ -189,6 +236,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq] Val::view5(
 }
 
 ///|
+/// Creates an HTML view derived from six incremental values.
+///
+/// The render function is reevaluated when any input changes.
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq] Val::view6(
   a : Val[A],
   b : Val[B],
@@ -202,6 +252,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq] Val::view6(
 }
 
 ///|
+/// Creates an HTML view derived from seven incremental values.
+///
+/// The render function is reevaluated when any input changes.
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq] Val::view7(
   a : Val[A],
   b : Val[B],
@@ -216,6 +269,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq] Val::view7(
 }
 
 ///|
+/// Creates an HTML view derived from eight incremental values.
+///
+/// The render function is reevaluated when any input changes.
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq] Val::view8(
   a : Val[A],
   b : Val[B],
@@ -231,6 +287,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq] Val::view
 }
 
 ///|
+/// Creates an HTML view derived from nine incremental values.
+///
+/// The render function is reevaluated when any input changes.
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq] Val::view9(
   a : Val[A],
   b : Val[B],
@@ -247,6 +306,36 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq] V
 }
 
 ///|
+/// Creates component-local state with a pure update function.
+///
+/// Call this while building a component. The returned emitter creates commands
+/// that apply messages with `update`, and the returned value tracks the current
+/// model.
+///
+/// # Example
+///
+/// ```mbt nocheck
+/// priv enum Msg {
+///   Inc
+///   Dec
+/// }
+///
+/// fn counter() -> Val[Html] {
+///   let (count, emit) = @rabbita.create_pure_state(0, update=fn(msg, count) {
+///     match msg {
+///       Inc => count + 1
+///       Dec => count - 1
+///     }
+///   })
+///   count.view(count => {
+///     @html.div([
+///       @html.button(on_click=emit(Dec), "-"),
+///       @html.span(count.to_string()),
+///       @html.button(on_click=emit(Inc), "+"),
+///     ])
+///   })
+/// }
+/// ```
 #cfg(target="js")
 pub fn[Model : Eq, Msg] create_pure_state(
   model : Model,
@@ -262,6 +351,32 @@ pub fn[Model : Eq, Msg] create_pure_state(
 }
 
 ///|
+/// Creates component-local state whose updates may schedule commands.
+///
+/// Call this while building a component. The returned emitter creates commands
+/// that deliver messages to `update`; subscriptions are refreshed after each
+/// processed message.
+///
+/// # Example
+///
+/// ```mbt nocheck
+/// priv enum CounterMsg {
+///   Increment
+///   IncrementLater
+/// }
+///
+/// fn counter() -> Val[Html] {
+///   let (count, emit) = @rabbita.create_state(0, update=fn(emit, msg, count) {
+///     match msg {
+///       Increment => (count + 1, @rabbita.none)
+///       IncrementLater => (count, @rabbita.delay(emit(Increment), 1000))
+///     }
+///   })
+///   count.view(count => {
+///     @html.button(on_click=emit(IncrementLater), count.to_string())
+///   })
+/// }
+/// ```
 #cfg(target="js")
 pub fn[Model : Eq, Msg] create_state(
   model : Model,
@@ -278,6 +393,24 @@ pub fn[Model : Eq, Msg] create_state(
 }
 
 ///|
+/// Incrementally maps the entries of a map into an array.
+///
+/// Pass a named component to `assoc`; do not render inline. Each key owns one
+/// branch whose `Val` tracks updates; removing the key disposes it. Output keeps
+/// map order, but the keys are not attached to the resulting `Html`.
+///
+/// # Example
+///
+/// ```mbt nocheck
+/// fn todo_item(id : Int, title : Val[String]) -> Val[Html] {
+///   title.view(title => @html.li("\{id}: \{title}"))
+/// }
+///
+/// fn todo_list(todos : Val[Map[Int, String]]) -> Val[Html] {
+///   let rows = todos.assoc(todo_item)
+///   rows.view(rows => @html.ul(rows))
+/// }
+/// ```
 pub fn[K : Hash + Eq, V : Eq, C : Eq] Val::assoc(
   a : Val[Map[K, V]],
   f : (K, Val[V]) -> Val[C],
@@ -286,6 +419,44 @@ pub fn[K : Hash + Eq, V : Eq, C : Eq] Val::assoc(
 }
 
 ///|
+/// Selects and caches an incremental branch for each enumeration tag.
+///
+/// Immediately match the tag in the `enumerate` callback and dispatch each case
+/// to its own component; do not render inline. Branches are cached with their
+/// state and subscriptions. Use `Val::switch` for disposable branches.
+///
+/// # Example
+///
+/// ```mbt nocheck
+/// priv enum Tab {
+///   First
+///   Second
+/// } derive(Eq)
+///
+/// impl @rabbita.Enumerate for Tab with fn tag(self) {
+///   match self {
+///     First => "first"
+///     Second => "second"
+///   }
+/// }
+///
+/// fn first_tab() -> Val[Html] {
+///   Val::constant(@html.h1("First"))
+/// }
+///
+/// fn second_tab() -> Val[Html] {
+///   Val::constant(@html.h1("Second"))
+/// }
+///
+/// fn tab_content(tab : Val[Tab]) -> Val[Html] {
+///   tab.enumerate(tab => {
+///     match tab {
+///       First => first_tab()
+///       Second => second_tab()
+///     }
+///   })
+/// }
+/// ```
 pub fn[E : Enumerate + Eq, C : Eq] Val::enumerate(
   a : Val[E],
   f : (E) -> Val[C],
@@ -294,6 +465,44 @@ pub fn[E : Enumerate + Eq, C : Eq] Val::enumerate(
 }
 
 ///|
+/// Selects one incremental branch using the input's enumeration tag.
+///
+/// Immediately match the tag in the `switch` callback and dispatch each case to
+/// its own component; do not render inline. Changing the tag disposes the active
+/// component, so returning to an old tag creates a fresh one.
+///
+/// # Example
+///
+/// ```mbt nocheck
+/// priv enum Page {
+///   Home
+///   Settings
+/// } derive(Eq)
+///
+/// impl @rabbita.Enumerate for Page with fn tag(self) {
+///   match self {
+///     Home => "home"
+///     Settings => "settings"
+///   }
+/// }
+///
+/// fn home_page() -> Val[Html] {
+///   Val::constant(@html.h1("Home"))
+/// }
+///
+/// fn settings_page() -> Val[Html] {
+///   Val::constant(@html.h1("Settings"))
+/// }
+///
+/// fn page_content(page : Val[Page]) -> Val[Html] {
+///   page.switch(page => {
+///     match page {
+///       Home => home_page()
+///       Settings => settings_page()
+///     }
+///   })
+/// }
+/// ```
 pub fn[E : Enumerate + Eq, C : Eq] Val::switch(
   a : Val[E],
   f : (E) -> Val[C],
@@ -302,6 +511,39 @@ pub fn[E : Enumerate + Eq, C : Eq] Val::switch(
 }
 
 ///|
+/// Creates component-local state with an emitter-aware initializer.
+///
+/// `init` supplies the initial model and a command to schedule. Later messages
+/// are handled by `update`, as with `create_state`. Call this while building a
+/// component.
+///
+/// # Example
+///
+/// ```mbt nocheck
+/// priv enum Msg {
+///   Inc
+///   Dec
+/// }
+///
+/// fn delayed_counter() -> Val[Html] {
+///   let (count, emit) = @rabbita.create_state_with_init(
+///     init=fn(emit) { (0, @rabbita.delay(emit(Inc), 1000)) },
+///     update=fn(_, msg, count) {
+///       match msg {
+///         Inc => (count + 1, @rabbita.none)
+///         Dec => (count - 1, @rabbita.none)
+///       }
+///     },
+///   )
+///   count.view(count => {
+///     @html.div([
+///       @html.button(on_click=emit(Dec), "-"),
+///       @html.span(count.to_string()),
+///       @html.button(on_click=emit(Inc), "+"),
+///     ])
+///   })
+/// }
+/// ```
 #cfg(target="js")
 pub fn[Model : Eq, Msg] create_state_with_init(
   init~ : (Emit[Msg]) -> (Model, Cmd),
@@ -318,6 +560,42 @@ pub fn[Model : Eq, Msg] create_state_with_init(
 }
 
 ///|
+/// Creates component-local state whose callbacks receive an incremental input.
+///
+/// The current input is passed to `init`, `update`, and `subscriptions` when
+/// those callbacks run. Changing the input alone does not send a message, run
+/// `update`, or refresh subscriptions. Call this while building a component.
+///
+/// # Example
+///
+/// Each click increments or decrements by the current value of `step`.
+///
+/// ```mbt nocheck
+/// priv enum Msg {
+///   Inc
+///   Dec
+/// }
+///
+/// fn stepped_counter(step : Val[Int]) -> Val[Html] {
+///   let (count, emit) = @rabbita.create_state_with_input(
+///     input=step,
+///     init=fn(_, _) { (0, @rabbita.none) },
+///     update=fn(_, step, msg, count) {
+///       match msg {
+///         Inc => (count + step, @rabbita.none)
+///         Dec => (count - step, @rabbita.none)
+///       }
+///     },
+///   )
+///   count.view(count => {
+///     @html.div([
+///       @html.button(on_click=emit(Dec), "-"),
+///       @html.span(count.to_string()),
+///       @html.button(on_click=emit(Inc), "+"),
+///     ])
+///   })
+/// }
+/// ```
 #cfg(target="js")
 pub fn[Model : Eq, Msg, Input : Eq] create_state_with_input(
   init~ : (Emit[Msg], Input) -> (Model, Cmd),
@@ -336,6 +614,29 @@ pub fn[Model : Eq, Msg, Input : Eq] create_state_with_input(
 }
 
 ///|
+/// Creates component-local state updated by transformation functions.
+///
+/// The returned emitter turns a model transformation into a `Cmd`. When that
+/// command is scheduled, the transformation is applied to the current model
+/// and its result becomes the new model. Call this while building a component.
+///
+/// # Example
+///
+/// ```mbt nocheck
+/// fn toggle() -> Val[Html] {
+///   let (open, set_open) = @rabbita.create_variable(false)
+///   open.view(is_open => {
+///     @html.button(
+///       on_click=set_open(v => !v),
+///       if is_open {
+///         "Close"
+///       } else {
+///         "Open"
+///       },
+///     )
+///   })
+/// }
+/// ```
 #cfg(target="js")
 pub fn[Model : Eq] create_variable(
   init : Model,
@@ -347,6 +648,11 @@ pub fn[Model : Eq] create_variable(
 }
 
 ///|
+/// The lifecycle state of an asynchronous resource.
+///
+/// For incremental equality, `Pending` equals `Pending`, loaded values compare
+/// by their payloads, and all `Failed` values compare equal regardless of the
+/// contained error.
 #cfg(target="js")
 pub enum Status[T] {
   Pending
@@ -365,10 +671,34 @@ pub impl[T : Eq] Eq for Status[T] with fn equal(a, b) {
 }
 
 ///|
+/// An incremental asynchronous resource state.
 #cfg(target="js")
 pub type Resource[T] = Val[Status[T]]
 
 ///|
+/// Starts an asynchronous resource command and tracks its result.
+///
+/// The resource starts as `Pending`, then becomes `Loaded` or `Failed` when the
+/// emitter passed to `f` receives a result. Call this while building a
+/// component.
+///
+/// # Example
+///
+/// ```mbt nocheck
+/// fn chapter() -> Val[Html] {
+///   // Import "moonbit-community/rabbita/http" as @http in moon.pkg.
+///   let chapter = @rabbita.create_resource(inject => {
+///     @http.get("/chapter.md").expect_text(inject)
+///   })
+///   chapter.view(status => {
+///     match status {
+///       Pending => @html.p("Loading...")
+///       Loaded(text) => @html.pre(text)
+///       Failed(_) => @html.p("Failed to load chapter")
+///     }
+///   })
+/// }
+/// ```
 #cfg(target="js")
 pub fn[T : Eq] create_resource(
   f : (Emit[Result[T, Error]]) -> Cmd,

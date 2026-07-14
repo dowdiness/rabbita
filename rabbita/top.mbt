@@ -12,23 +12,12 @@ pub type Cmd = @cmd.Cmd
 pub type Html = @html.Html
 
 ///|
-/// Create an application from a root `Cell`.
+/// Creates an application from a root component builder.
 ///
-/// Use `simple_cell()`, `static_cell()`, `cell()`, `cell_with_emit()` to create a cell.
-/// Call `mount` to attach it to a DOM element.
-/// Optionally call `with_route` to install routing callbacks.
-/// 
-/// **For beginners, `simple_cell` is recommended. See its documentation for more details.**
-/// 
-/// ## Example
-/// 
-/// ```moonbit check
-/// test "minimal static page" {
-///   // let app = @rabbita.static_cell(@html.div("hello world"))
-///   // ignore(app)
-///   // use `@rabbita.new(app).mount("id")` in client
-/// }
-/// ```
+/// The builder runs when the app is mounted and must return its root
+/// incremental HTML value. Use `Val::map`, `Val::switch`, and `Val::assoc` to
+/// express subsequent changes, then call `App::mount` to attach the app to a
+/// DOM element.
 #cfg(target="js")
 pub fn new(builder : () -> Val[Html]) -> App {
   let sandbox = @runtime.Sandbox::new()
@@ -37,6 +26,11 @@ pub fn new(builder : () -> Val[Html]) -> App {
 }
 
 ///|
+/// Creates an application using an Elm-style model, update, and view.
+///
+/// This is a convenience wrapper around `create_state` and `new`. Each emitted
+/// message updates the model, schedules the returned command, and refreshes the
+/// optional subscriptions.
 #cfg(target="js")
 pub fn[Model : Eq, Msg] elmish(
   model~ : Model,

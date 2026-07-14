@@ -5,6 +5,10 @@ using @runtime {type VNode}
 using @cmd {type Cmd, type Emit}
 
 ///|
+/// An HTML value produced by the constructors in this package.
+///
+/// `Html` values deliberately compare unequal, including to themselves. This
+/// prevents incremental equality cutoffs from hiding HTML updates.
 #alias(T)
 pub(all) struct Html(@runtime.VNode) derive(Eq)
 

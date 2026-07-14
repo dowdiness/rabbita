@@ -1,4 +1,7 @@
 ///|
+/// Deprecated compatibility alias for the former component type.
+///
+/// New components should return `Val[Html]` directly.
 #deprecated("Use a `() -> Val[Html]` component. Nested `Cell::view()` composition is no longer supported; use `Val::map`, `Val::switch`, or `Val::assoc` instead.", skip_current_package=true)
 pub type Cell = () -> Val[Html]
 

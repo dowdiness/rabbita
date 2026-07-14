@@ -8,6 +8,7 @@ pub(open) trait Scheduler {
 }
 
 ///|
+/// A position in an indexed or keyed runtime tree.
 pub(all) enum Path {
   Index(Int, Path)
   Keyed(String, Path)

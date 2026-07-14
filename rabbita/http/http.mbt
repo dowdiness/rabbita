@@ -485,7 +485,7 @@ pub fn Request::expect_empty(self : Request, msg : Emit[Error?]) -> Cmd {
 /// - storing the `Request` or `Cmd` in a variable
 ///     ```
 ///     let user_api_request = @http.get("api/user")
-///     let user_api_cmd = @http.get("api/user").expect_json(x => emit(x))
+///     let user_api_cmd = @http.get("api/user").expect_json(x => emit(UserLoaded(x)))
 ///     ```
 /// - wrapping the request construction in a helper function
 ///     ```mbt nocheck
@@ -519,7 +519,7 @@ pub fn get(url : String) -> Request {
 /// - storing the `Request` or `Cmd` in a variable
 ///     ```
 ///     let delete_user_request = @http.delete("api/user/1")
-///     let delete_user_cmd = @http.delete("api/user/1").expect_empty(x => emit(x))
+///     let delete_user_cmd = @http.delete("api/user/1").expect_empty(x => emit(UserDeleted(x)))
 ///     ```
 /// - wrapping the request construction in a helper function
 ///     ```mbt nocheck
@@ -555,7 +555,9 @@ pub fn delete(url : String) -> Request {
 ///     ```
 ///     let create_user_request = @http.post("api/user")
 ///     let create_user_built = @http.post("api/user").with_json(payload)
-///     let create_user_cmd = @http.post("api/user").with_json(payload).expect_empty(x => emit(x))
+///     let create_user_cmd = @http.post("api/user")
+///       .with_json(payload)
+///       .expect_empty(x => emit(UserCreated(x)))
 ///     ```
 /// - wrapping the request construction in a helper function
 ///     ```mbt nocheck
@@ -593,7 +595,9 @@ pub fn post(url : String) -> RequestWithBody {
 ///     ```
 ///     let patch_user_request = @http.patch("api/user/1")
 ///     let patch_user_built = @http.patch("api/user/1").with_json(payload)
-///     let patch_user_cmd = @http.patch("api/user/1").with_json(payload).expect_empty(x => emit(x))
+///     let patch_user_cmd = @http.patch("api/user/1")
+///       .with_json(payload)
+///       .expect_empty(x => emit(UserPatched(x)))
 ///     ```
 /// - wrapping the request construction in a helper function
 ///     ```mbt nocheck
@@ -635,7 +639,7 @@ pub fn patch(url : String) -> RequestWithBody {
 ///
 ///     let replace_user_cmd = @http.put("api/user/1")
 ///       .with_json(payload)
-///       .expect_empty(x => emit(x))
+///       .expect_empty(x => emit(UserReplaced(x)))
 ///     ```
 /// - wrapping the request construction in a helper function
 ///     ```mbt nocheck
