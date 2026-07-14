@@ -7,6 +7,7 @@ import {
   "moonbit-community/rabbita/html",
   "moonbit-community/rabbita/sub",
   "moonbit-community/rabbita/url",
+  "moonbitlang/core/immut/vector",
 }
 
 // Values
@@ -72,9 +73,11 @@ pub enum Status[T] {
 pub impl[T : Eq] Eq for Status[T]
 
 type Val[A]
-pub fn[K : Hash + Eq, V : Eq, C : Eq] Val::assoc(Self[Map[K, V]], (K, Self[V]) -> Self[C]) -> Self[Array[C]]
+pub fn[K : Hash + Eq, V : Eq, C : Eq] Val::assoc(Self[@vector.Vector[(K, V)]], (K, Self[V]) -> Self[C]) -> Self[@vector.Vector[C]]
+pub fn[K : Hash + Eq, V : Eq, C : Eq] Val::assoc_by(Self[@vector.Vector[V]], (K, Self[V]) -> Self[C], by~ : (V) -> K) -> Self[@vector.Vector[C]]
 pub fn[A] Val::constant(A) -> Self[A]
 pub fn[E : @common.Enumerate + Eq, C : Eq] Val::enumerate(Self[E], (E) -> Self[C]) -> Self[C]
+pub fn[E : Eq, C : Eq] Val::enumerate_by(Self[E], (E) -> Self[C], by~ : (E) -> String) -> Self[C]
 pub fn[A : Eq, B] Val::map(Self[A], (A) -> B) -> Self[B]
 pub fn[A : Eq, B : Eq, C] Val::map2(Self[A], Self[B], (A, B) -> C) -> Self[C]
 pub fn[A : Eq, B : Eq, C : Eq, D] Val::map3(Self[A], Self[B], Self[C], (A, B, C) -> D) -> Self[D]
@@ -85,6 +88,7 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H] Val::map7(Self
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I] Val::map8(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], (A, B, C, D, E, F, G, H) -> I) -> Self[I]
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq, J] Val::map9(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], Self[I], (A, B, C, D, E, F, G, H, I) -> J) -> Self[J]
 pub fn[E : @common.Enumerate + Eq, C : Eq] Val::switch(Self[E], (E) -> Self[C]) -> Self[C]
+pub fn[E : Eq, C : Eq] Val::switch_by(Self[E], (E) -> Self[C], by~ : (E) -> String) -> Self[C]
 pub fn[A : Eq] Val::view(Self[A], (A) -> @html.Html) -> Self[@html.Html]
 pub fn[A : Eq, B : Eq] Val::view2(Self[A], Self[B], (A, B) -> @html.Html) -> Self[@html.Html]
 pub fn[A : Eq, B : Eq, C : Eq] Val::view3(Self[A], Self[B], Self[C], (A, B, C) -> @html.Html) -> Self[@html.Html]

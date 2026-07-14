@@ -193,7 +193,7 @@ test "switch removes disposed branch scope from owner scope" {
 test "assoc removes disposed entry scopes from owner scope" {
   let mut dispose_runs = 0
   let (owner, values, set_source) = with_scope(owner => {
-    let (source, set_source) = input(Map([(1, 10), (2, 20)]))
+    let (source, set_source) = input(@vector.from_array([(1, 10), (2, 20)]))
     let values = source.assoc((key, value) => {
       on_cleanup(() => dispose_runs = dispose_runs + 1)
       value.map1(v => key * 100 + v)
@@ -202,16 +202,16 @@ test "assoc removes disposed entry scopes from owner scope" {
   })
 
   inspect(global_scopes[owner].sub_scopes.length(), content="0")
-  debug_inspect(values.read(), content="[110, 220]")
+  debug_inspect(values.read(), content="<Vector: [110, 220]>")
   inspect(global_scopes[owner].sub_scopes.length(), content="2")
 
-  set_source(Map([(2, 20)]))
-  debug_inspect(values.read(), content="[220]")
+  set_source(@vector.from_array([(2, 20)]))
+  debug_inspect(values.read(), content="<Vector: [220]>")
   inspect(dispose_runs, content="1")
   inspect(global_scopes[owner].sub_scopes.length(), content="1")
 
-  set_source(Map([]))
-  debug_inspect(values.read(), content="[]")
+  set_source(@vector.from_array([]))
+  debug_inspect(values.read(), content="<Vector: []>")
   inspect(dispose_runs, content="2")
   inspect(global_scopes[owner].sub_scopes.length(), content="0")
 }

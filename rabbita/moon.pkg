@@ -12,6 +12,7 @@ import {
   "moonbit-community/rabbita/common",
   "moonbit-community/rabbita/internal/duplix",
   "moonbit-community/rabbita/internal/slotmap",
+  "moonbitlang/core/immut/vector",
 }
 
 import {

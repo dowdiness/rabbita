@@ -228,46 +228,56 @@ test "map2 recomputes when one parent changes" {
 }
 
 ///|
-test "assoc reuses keyed child graphs" {
-  let (dict, set_dict) = @duplix.input(Map([(1, 10), (2, 20)]))
+test "assoc_by reuses keyed child graphs" {
+  let (dict, set_dict) = @duplix.input(@vector.from_array([(1, 10), (2, 20)]))
   let mut created = 0
   let mut runs = 0
-  let values = dict.assoc((key, value) => {
-    created = created + 1
-    value.map(v => {
-      runs = runs + 1
-      key * 100 + v
-    })
-  })
+  let values = dict.assoc_by(
+    (key, value) => {
+      created = created + 1
+      value.map(pair => {
+        runs = runs + 1
+        key * 100 + pair.1
+      })
+    },
+    by=pair => pair.0,
+  )
 
-  debug_inspect(values.read(), content="[110, 220]")
+  debug_inspect(values.read(), content="<Vector: [110, 220]>")
   inspect(created, content="2")
   inspect(runs, content="2")
 
-  set_dict(Map([(1, 10), (2, 21)]))
-  debug_inspect(values.read(), content="[110, 221]")
+  set_dict(@vector.from_array([(2, 20), (1, 10)]))
+  debug_inspect(values.read(), content="<Vector: [220, 110]>")
+  inspect(created, content="2")
+  inspect(runs, content="2")
+
+  set_dict(@vector.from_array([(1, 10), (2, 21)]))
+  debug_inspect(values.read(), content="<Vector: [110, 221]>")
   inspect(created, content="2")
   inspect(runs, content="3")
 
-  set_dict(Map([(2, 21), (3, 30)]))
-  debug_inspect(values.read(), content="[221, 330]")
+  set_dict(@vector.from_array([(2, 21), (3, 30)]))
+  debug_inspect(values.read(), content="<Vector: [221, 330]>")
   inspect(created, content="3")
   inspect(runs, content="4")
 
-  set_dict(Map([(3, 30)]))
-  debug_inspect(values.read(), content="[330]")
+  set_dict(@vector.from_array([(3, 30)]))
+  debug_inspect(values.read(), content="<Vector: [330]>")
   inspect(created, content="3")
   inspect(runs, content="4")
 
-  set_dict(Map([(1, 11), (3, 30)]))
-  debug_inspect(values.read(), content="[111, 330]")
+  set_dict(@vector.from_array([(1, 11), (3, 30)]))
+  debug_inspect(values.read(), content="<Vector: [111, 330]>")
   inspect(created, content="4")
   inspect(runs, content="5")
 }
 
 ///|
 test "assoc reuses entries and aggregates active results" {
-  let (source, set_source) = @duplix.input(Map([(1, 10), (2, 20)]))
+  let (source, set_source) = @duplix.input(
+    @vector.from_array([(1, 10), (2, 20)]),
+  )
   let mut build_runs = 0
   let mut compute_runs = 0
   let mut output_runs = 0
@@ -292,31 +302,31 @@ test "assoc reuses entries and aggregates active results" {
   inspect(compute_runs, content="2")
   inspect(output_runs, content="1")
 
-  set_source(Map([(1, 11), (2, 20)]))
+  set_source(@vector.from_array([(1, 11), (2, 20)]))
   inspect(total.read(), content="313")
   inspect(build_runs, content="2")
   inspect(compute_runs, content="3")
   inspect(output_runs, content="2")
 
-  set_source(Map([(1, 11)]))
+  set_source(@vector.from_array([(1, 11)]))
   inspect(total.read(), content="111")
   inspect(build_runs, content="2")
   inspect(compute_runs, content="3")
   inspect(output_runs, content="3")
 
-  set_source(Map([(1, 11), (3, 30)]))
+  set_source(@vector.from_array([(1, 11), (3, 30)]))
   inspect(total.read(), content="414")
   inspect(build_runs, content="3")
   inspect(compute_runs, content="4")
   inspect(output_runs, content="4")
 
-  set_source(Map([(1, 11), (3, 30)]))
+  set_source(@vector.from_array([(1, 11), (3, 30)]))
   inspect(total.read(), content="414")
   inspect(build_runs, content="3")
   inspect(compute_runs, content="4")
   inspect(output_runs, content="4")
 
-  set_source(Map([(2, 25), (3, 30)]))
+  set_source(@vector.from_array([(2, 25), (3, 30)]))
   inspect(total.read(), content="555")
   inspect(build_runs, content="4")
   inspect(compute_runs, content="5")
@@ -325,7 +335,9 @@ test "assoc reuses entries and aggregates active results" {
 
 ///|
 test "assoc disposes removed entry scopes" {
-  let (source, set_source) = @duplix.input(Map([(1, 10), (2, 20)]))
+  let (source, set_source) = @duplix.input(
+    @vector.from_array([(1, 10), (2, 20)]),
+  )
   let mut build_runs = 0
   let mut dispose_runs = 0
   let values = source.assoc((key, value) => {
@@ -335,27 +347,27 @@ test "assoc disposes removed entry scopes" {
     result
   })
 
-  debug_inspect(values.read(), content="[110, 220]")
+  debug_inspect(values.read(), content="<Vector: [110, 220]>")
   inspect(build_runs, content="2")
   inspect(dispose_runs, content="0")
 
-  set_source(Map([(1, 11), (2, 20)]))
-  debug_inspect(values.read(), content="[111, 220]")
+  set_source(@vector.from_array([(1, 11), (2, 20)]))
+  debug_inspect(values.read(), content="<Vector: [111, 220]>")
   inspect(build_runs, content="2")
   inspect(dispose_runs, content="0")
 
-  set_source(Map([(2, 20)]))
-  debug_inspect(values.read(), content="[220]")
+  set_source(@vector.from_array([(2, 20)]))
+  debug_inspect(values.read(), content="<Vector: [220]>")
   inspect(build_runs, content="2")
   inspect(dispose_runs, content="1")
 
-  set_source(Map([(1, 12), (2, 20)]))
-  debug_inspect(values.read(), content="[112, 220]")
+  set_source(@vector.from_array([(1, 12), (2, 20)]))
+  debug_inspect(values.read(), content="<Vector: [112, 220]>")
   inspect(build_runs, content="3")
   inspect(dispose_runs, content="1")
 
-  set_source(Map([]))
-  debug_inspect(values.read(), content="[]")
+  set_source(@vector.from_array([]))
+  debug_inspect(values.read(), content="<Vector: []>")
   inspect(build_runs, content="3")
   inspect(dispose_runs, content="3")
 }
@@ -375,26 +387,74 @@ impl @common.Enumerate for Route with fn tag(self) {
 }
 
 ///|
-test "switch disposes only replaced active branch scope" {
+test "by selectors use supplied tags" {
+  let (switch_value, set_switch_value) = @duplix.input(0)
+  let mut switch_builds = 0
+  let switched = switch_value.switch_by(
+    value => {
+      switch_builds += 1
+      @duplix.constant(value)
+    },
+    by=value => if value < 2 { "low" } else { "high" },
+  )
+
+  inspect(switched.read(), content="0")
+  set_switch_value(1)
+  inspect(switched.read(), content="0")
+  inspect(switch_builds, content="1")
+  set_switch_value(2)
+  inspect(switched.read(), content="2")
+  inspect(switch_builds, content="2")
+
+  let (enumerated_value, set_enumerated_value) = @duplix.input(0)
+  let mut enumerate_builds = 0
+  let enumerated = enumerated_value.enumerate_by(
+    value => {
+      enumerate_builds += 1
+      @duplix.constant(value)
+    },
+    by=value => if value < 2 { "low" } else { "high" },
+  )
+
+  inspect(enumerated.read(), content="0")
+  set_enumerated_value(1)
+  inspect(enumerated.read(), content="0")
+  set_enumerated_value(2)
+  inspect(enumerated.read(), content="2")
+  set_enumerated_value(0)
+  inspect(enumerated.read(), content="0")
+  inspect(enumerate_builds, content="2")
+}
+
+///|
+test "switch_by disposes only replaced active branch scope" {
   let (route, set_route) = @duplix.input(Home)
   let (home_input, set_home_input) = @duplix.input(1)
   let (detail_input, set_detail_input) = @duplix.input(10)
   let mut build_runs = 0
   let mut home_disposes = 0
   let mut detail_disposes = 0
-  let selected = route.switch(route => {
-    build_runs = build_runs + 1
-    match route {
-      Home => {
-        on_cleanup(() => home_disposes = home_disposes + 1)
-        home_input.map1(x => x + 100)
+  let selected = route.switch_by(
+    route => {
+      build_runs = build_runs + 1
+      match route {
+        Home => {
+          on_cleanup(() => home_disposes = home_disposes + 1)
+          home_input.map1(x => x + 100)
+        }
+        Detail => {
+          on_cleanup(() => detail_disposes = detail_disposes + 1)
+          detail_input.map1(x => x + 1000)
+        }
       }
-      Detail => {
-        on_cleanup(() => detail_disposes = detail_disposes + 1)
-        detail_input.map1(x => x + 1000)
+    },
+    by=route => {
+      match route {
+        Home => "home"
+        Detail => "detail"
       }
-    }
-  })
+    },
+  )
 
   inspect(selected.read(), content="101")
   inspect(build_runs, content="1")
@@ -429,7 +489,7 @@ test "switch disposes only replaced active branch scope" {
 ///|
 test "switch disposes cleanup registered during lazy assoc recompute" {
   let (route, set_route) = @duplix.input(Home)
-  let (items, set_items) = @duplix.input(Map([(1, 10), (2, 20)]))
+  let (items, set_items) = @duplix.input(@vector.from_array([(1, 10), (2, 20)]))
   let (detail, _) = @duplix.input(0)
   let mut item_builds = 0
   let mut item_disposes = 0
@@ -457,7 +517,7 @@ test "switch disposes cleanup registered during lazy assoc recompute" {
   inspect(item_builds, content="2")
   inspect(item_disposes, content="0")
 
-  set_items(Map([(1, 11), (2, 20)]))
+  set_items(@vector.from_array([(1, 11), (2, 20)]))
   inspect(selected.read(), content="331")
   inspect(item_builds, content="2")
   inspect(item_disposes, content="0")
@@ -468,7 +528,7 @@ test "switch disposes cleanup registered during lazy assoc recompute" {
 }
 
 ///|
-test "enumerate caches branches and switches by tag" {
+test "enumerate_by caches branches and switches by tag" {
   let (route, set_route) = @duplix.input(Home)
   let (home_input, set_home_input) = @duplix.input(1)
   let (detail_input, _) = @duplix.input(10)
@@ -476,21 +536,29 @@ test "enumerate caches branches and switches by tag" {
   let mut home_runs = 0
   let mut detail_runs = 0
   let mut output_runs = 0
-  let selected = route.enumerate(route => {
-    build_runs = build_runs + 1
-    match route {
-      Home =>
-        home_input.map1(x => {
-          home_runs = home_runs + 1
-          x + 100
-        })
-      Detail =>
-        detail_input.map1(x => {
-          detail_runs = detail_runs + 1
-          x + 1000
-        })
-    }
-  })
+  let selected = route.enumerate_by(
+    route => {
+      build_runs = build_runs + 1
+      match route {
+        Home =>
+          home_input.map1(x => {
+            home_runs = home_runs + 1
+            x + 100
+          })
+        Detail =>
+          detail_input.map1(x => {
+            detail_runs = detail_runs + 1
+            x + 1000
+          })
+      }
+    },
+    by=route => {
+      match route {
+        Home => "home"
+        Detail => "detail"
+      }
+    },
+  )
   let output = selected.map1(x => {
     output_runs = output_runs + 1
     x * 2

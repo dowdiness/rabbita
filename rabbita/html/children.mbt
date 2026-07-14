@@ -24,6 +24,11 @@ pub impl IsChildren for Array[Html] with fn to_children(self) {
 }
 
 ///|
+pub impl IsChildren for @vector.Vector[Html] with fn to_children(self) {
+  Array(self.iter().map(x => x.0).to_array())
+}
+
+///|
 pub impl IsChildren for @list.List[Html] with fn to_children(self) {
   Array(self.map(x => x.0).to_array())
 }

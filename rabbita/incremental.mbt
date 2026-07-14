@@ -2,6 +2,9 @@
 pub using @common {trait Enumerate}
 
 ///|
+using @vector {type Vector}
+
+///|
 #cfg(target="js")
 let ambient_graph : Ref[Graph?] = Ref(None)
 
@@ -393,11 +396,11 @@ pub fn[Model : Eq, Msg] create_state(
 }
 
 ///|
-/// Incrementally maps the entries of a map into an array.
+/// Incrementally maps ordered keyed values into a vector.
 ///
-/// Pass a named component to `assoc`; do not render inline. Each key owns one
-/// branch whose `Val` tracks updates; removing the key disposes it. Output keeps
-/// map order, but the keys are not attached to the resulting `Html`.
+/// Pass a named component to `assoc`; do not render inline. Keys must be unique;
+/// each key owns one branch whose `Val` tracks updates, and removing it disposes
+/// the branch. Output follows vector order, but keys are not attached to `Html`.
 ///
 /// # Example
 ///
@@ -406,16 +409,28 @@ pub fn[Model : Eq, Msg] create_state(
 ///   title.view(title => @html.li("\{id}: \{title}"))
 /// }
 ///
-/// fn todo_list(todos : Val[Map[Int, String]]) -> Val[Html] {
+/// fn todo_list(todos : Val[Vector[(Int, String)]]) -> Val[Html] {
 ///   let rows = todos.assoc(todo_item)
 ///   rows.view(rows => @html.ul(rows))
 /// }
 /// ```
 pub fn[K : Hash + Eq, V : Eq, C : Eq] Val::assoc(
-  a : Val[Map[K, V]],
+  a : Val[Vector[(K, V)]],
   f : (K, Val[V]) -> Val[C],
-) -> Val[Array[C]] {
+) -> Val[Vector[C]] {
   a.0.assoc((k, v) => f(k, v).0)
+}
+
+///|
+/// Incrementally maps values using keys derived by `by`.
+///
+/// Derived keys must be unique and stable. Output follows source vector order.
+pub fn[K : Hash + Eq, V : Eq, C : Eq] Val::assoc_by(
+  a : Val[Vector[V]],
+  f : (K, Val[V]) -> Val[C],
+  by~ : (V) -> K,
+) -> Val[Vector[C]] {
+  a.0.assoc_by((k, v) => f(k, v).0, by~)
 }
 
 ///|
@@ -465,6 +480,18 @@ pub fn[E : Enumerate + Eq, C : Eq] Val::enumerate(
 }
 
 ///|
+/// Selects and caches branches using the tag returned by `by`.
+///
+/// Values with the same tag reuse the branch created for its first value.
+pub fn[E : Eq, C : Eq] Val::enumerate_by(
+  a : Val[E],
+  f : (E) -> Val[C],
+  by~ : (E) -> String,
+) -> Val[C] {
+  a.0.enumerate_by(e => f(e).0, by~)
+}
+
+///|
 /// Selects one incremental branch using the input's enumeration tag.
 ///
 /// Immediately match the tag in the `switch` callback and dispatch each case to
@@ -508,6 +535,19 @@ pub fn[E : Enumerate + Eq, C : Eq] Val::switch(
   f : (E) -> Val[C],
 ) -> Val[C] {
   a.0.switch(e => f(e).0)
+}
+
+///|
+/// Selects a disposable branch using the tag returned by `by`.
+///
+/// Values with the same tag keep the current branch; changing it disposes the
+/// branch before creating the next one.
+pub fn[E : Eq, C : Eq] Val::switch_by(
+  a : Val[E],
+  f : (E) -> Val[C],
+  by~ : (E) -> String,
+) -> Val[C] {
+  a.0.switch_by(e => f(e).0, by~)
 }
 
 ///|

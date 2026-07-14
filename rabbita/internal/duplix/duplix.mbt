@@ -1,4 +1,7 @@
 ///|
+using @vector {type Vector}
+
+///|
 let uuid : Ref[Int] = Ref(0)
 
 ///|
@@ -232,9 +235,18 @@ pub fn[E : @common.Enumerate + Eq, A : Eq] Node::switch(
   a : Node[E],
   f : (E) -> Node[A],
 ) -> Node[A] {
+  a.switch_by(f, by=value => value.tag())
+}
+
+///|
+pub fn[E : Eq, A : Eq] Node::switch_by(
+  a : Node[E],
+  f : (E) -> Node[A],
+  by~ : (E) -> String,
+) -> Node[A] {
   let mut active : (String, Node[A], @slotmap.Id)? = None
   a.bind(value => {
-    let tag = value.tag()
+    let tag = by(value)
     fn update_active(value) {
       with_scope(scope => {
         let node = current_scope.protect(scope, () => f(value))
@@ -262,9 +274,18 @@ pub fn[E : @common.Enumerate + Eq, A : Eq] Node::enumerate(
   map : Node[E],
   f : (E) -> Node[A],
 ) -> Node[A] {
+  map.enumerate_by(f, by=value => value.tag())
+}
+
+///|
+pub fn[E : Eq, A : Eq] Node::enumerate_by(
+  map : Node[E],
+  f : (E) -> Node[A],
+  by~ : (E) -> String,
+) -> Node[A] {
   let cache : Map[String, Node[A]] = Map([])
   map.bind(value => {
-    let tag = value.tag()
+    let tag = by(value)
     if cache.get(tag) is Some(node) {
       node
     } else {
@@ -285,17 +306,19 @@ priv struct AssocEntry[V, C] {
 }
 
 ///|
-///             node(dict) ---+
-///                           |
-/// node(v1) --?-> node(c1) --+
-///                           |---> node(array(c))
-/// node(v2) --?-> node(c2) --+
-///   ...                     |
-/// node(vN) --?-> node(cN) --+
-pub fn[K : Hash + Eq, V : Eq, C : Eq] Node::assoc(
-  a : Node[Map[K, V]],
+///             node(entries) ---+
+///                              |
+/// node(v1) --?-> node(c1) -----+
+///                              |---> node(vector(c))
+/// node(v2) --?-> node(c2) -----+
+///   ...                        |
+/// node(vN) --?-> node(cN) -----+
+fn[K : Hash + Eq, I : Eq, V : Eq, C : Eq] Node::assoc_projected(
+  a : Node[Vector[I]],
   f : (K, Node[V]) -> Node[C],
-) -> Node[Array[C]] {
+  key_of : (I) -> K,
+  value_of : (I) -> V,
+) -> Node[Vector[C]] {
   let mut epoch = 0
   let cache : Map[K, AssocEntry[V, C]] = Map([])
   let output_childs : Array[&ErasedNode] = [a]
@@ -303,8 +326,10 @@ pub fn[K : Hash + Eq, V : Eq, C : Eq] Node::assoc(
   fn compute() {
     epoch += 1
     let active_results : Array[Node[C]] = []
-    let dict = a.value.unwrap()
-    for key, value in dict {
+    let entries = a.value.unwrap()
+    for item in entries {
+      let key = key_of(item)
+      let value = value_of(item)
       let entry = if cache.get(key) is Some(entry) {
         if entry.value != value {
           entry.value = value
@@ -344,15 +369,17 @@ pub fn[K : Hash + Eq, V : Eq, C : Eq] Node::assoc(
 
     output_childs.clear()
     output_childs.push(a)
-    let output : Array[C] = []
-    for result in active_results {
-      output_childs.push(result)
-      if result.dirty_flag.parents.all(x => x.id != output_dirty_flag.id) {
-        result.dirty_flag.parents.push(output_dirty_flag)
-      }
-      output.push(result.internal_read())
-    }
-    output
+    @vector.from_iter(
+      active_results
+      .iter()
+      .map(result => {
+        output_childs.push(result)
+        if result.dirty_flag.parents.all(x => x.id != output_dirty_flag.id) {
+          result.dirty_flag.parents.push(output_dirty_flag)
+        }
+        result.internal_read()
+      }),
+    )
   }
 
   {
@@ -365,6 +392,23 @@ pub fn[K : Hash + Eq, V : Eq, C : Eq] Node::assoc(
     childs: output_childs,
     dirty_flag: output_dirty_flag,
   }
+}
+
+///|
+pub fn[K : Hash + Eq, V : Eq, C : Eq] Node::assoc(
+  a : Node[Vector[(K, V)]],
+  f : (K, Node[V]) -> Node[C],
+) -> Node[Vector[C]] {
+  a.assoc_projected(f, pair => pair.0, pair => pair.1)
+}
+
+///|
+pub fn[K : Hash + Eq, V : Eq, C : Eq] Node::assoc_by(
+  a : Node[Vector[V]],
+  f : (K, Node[V]) -> Node[C],
+  by~ : (V) -> K,
+) -> Node[Vector[C]] {
+  a.assoc_projected(f, by, value => value)
 }
 
 ///|

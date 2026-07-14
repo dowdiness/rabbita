@@ -2,6 +2,9 @@
 using @sorted_map {type SortedMap}
 
 ///|
+using @vector {type Vector, from_iter}
+
+///|
 using @rabbita {type Val, none, type Emit, type Html }
 
 ///|
@@ -141,7 +144,7 @@ fn metric_card(label : String, value : Int) -> Html {
 }
 
 ///|
-fn list_content(tab : TodoTab, todos : Val[Array[Html]]) -> Val[Html] {
+fn list_content(tab : TodoTab, todos : Val[Vector[Html]]) -> Val[Html] {
   todos.map(todos => {
     if todos.length() == 0 {
       p(class="empty", tab.empty_text())
@@ -153,8 +156,8 @@ fn list_content(tab : TodoTab, todos : Val[Array[Html]]) -> Val[Html] {
 
 ///|
 fn all_content(model : Val[Model], emit : Emit[Msg]) -> Val[Html] {
-  let map = model.map(m => Map(m.items.to_array()))
-  let todos = map.assoc((id, todo_value) =>
+  let entries = model.map(m => from_iter(m.items.iter()))
+  let todos = entries.assoc((id, todo_value) =>
     todo(id, todo_value, emit)
   )
   list_content(All, todos)
@@ -162,8 +165,10 @@ fn all_content(model : Val[Model], emit : Emit[Msg]) -> Val[Html] {
 
 ///|
 fn active_content(model : Val[Model], emit : Emit[Msg]) -> Val[Html] {
-  let map = model.map(m => Map(m.items.filter((_, todo) => !todo.done).to_array()))
-  let todos = map.assoc((id, todo_value) =>
+  let entries = model.map(m =>
+    from_iter(m.items.iter().filter(pair => !pair.1.done))
+  )
+  let todos = entries.assoc((id, todo_value) =>
     todo(id, todo_value, emit)
   )
   list_content(Active, todos)
@@ -171,8 +176,10 @@ fn active_content(model : Val[Model], emit : Emit[Msg]) -> Val[Html] {
 
 ///|
 fn done_content(model : Val[Model], emit : Emit[Msg]) -> Val[Html] {
-  let map = model.map(m => Map(m.items.filter((_, todo) => todo.done).to_array()))
-  let todos = map.assoc((id, todo_value) =>
+  let entries = model.map(m =>
+    from_iter(m.items.iter().filter(pair => pair.1.done))
+  )
+  let todos = entries.assoc((id, todo_value) =>
     todo(id, todo_value, emit)
   )
   list_content(Done, todos)

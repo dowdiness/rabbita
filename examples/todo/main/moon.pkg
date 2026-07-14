@@ -3,6 +3,7 @@ import {
   "moonbit-community/rabbita/sub",
   "moonbit-community/rabbita/html",
   "moonbitlang/core/immut/sorted_map",
+  "moonbitlang/core/immut/vector",
 }
 
 supported_targets = "js"

@@ -3,6 +3,7 @@ package "moonbit-community/rabbita/internal/duplix"
 
 import {
   "moonbit-community/rabbita/common",
+  "moonbitlang/core/immut/vector",
 }
 
 // Values
@@ -22,9 +23,11 @@ pub impl Compare for DirtyFlag
 pub impl Eq for DirtyFlag
 
 type Node[T]
-pub fn[K : Hash + Eq, V : Eq, C : Eq] Node::assoc(Self[Map[K, V]], (K, Self[V]) -> Self[C]) -> Self[Array[C]]
+pub fn[K : Hash + Eq, V : Eq, C : Eq] Node::assoc(Self[@vector.Vector[(K, V)]], (K, Self[V]) -> Self[C]) -> Self[@vector.Vector[C]]
+pub fn[K : Hash + Eq, V : Eq, C : Eq] Node::assoc_by(Self[@vector.Vector[V]], (K, Self[V]) -> Self[C], by~ : (V) -> K) -> Self[@vector.Vector[C]]
 pub fn[A : Eq, B : Eq] Node::bind(Self[A], (A) -> Self[B]) -> Self[B]
 pub fn[E : @common.Enumerate + Eq, A : Eq] Node::enumerate(Self[E], (E) -> Self[A]) -> Self[A]
+pub fn[E : Eq, A : Eq] Node::enumerate_by(Self[E], (E) -> Self[A], by~ : (E) -> String) -> Self[A]
 pub fn[A : Eq, B] Node::map(Self[A], (A) -> B) -> Self[B]
 pub fn[A : Eq, B] Node::map1(Self[A], (A) -> B) -> Self[B]
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq, J : Eq, K] Node::map10(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], Self[I], Self[J], (A, B, C, D, E, F, G, H, I, J) -> K) -> Self[K]
@@ -40,6 +43,7 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I] Node::
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq, J] Node::map9(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], Self[I], (A, B, C, D, E, F, G, H, I) -> J) -> Self[J]
 pub fn[A : Eq] Node::read(Self[A]) -> A
 pub fn[E : @common.Enumerate + Eq, A : Eq] Node::switch(Self[E], (E) -> Self[A]) -> Self[A]
+pub fn[E : Eq, A : Eq] Node::switch_by(Self[E], (E) -> Self[A], by~ : (E) -> String) -> Self[A]
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq, J : Eq] Node::zip10(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], Self[I], Self[J]) -> Self[(A, B, C, D, E, F, G, H, I, J)]
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq, J : Eq, K : Eq] Node::zip11(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], Self[I], Self[J], Self[K]) -> Self[(A, B, C, D, E, F, G, H, I, J, K)]
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq, J : Eq, K : Eq, L : Eq] Node::zip12(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], Self[I], Self[J], Self[K], Self[L]) -> Self[(A, B, C, D, E, F, G, H, I, J, K, L)]
