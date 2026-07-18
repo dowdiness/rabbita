@@ -127,6 +127,27 @@ pub extern "js" fn Document::query_selector_all(
 ) -> NodeList = "(self,selectors) => self.querySelectorAll(selectors)"
 
 ///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/Document/activeElement
+#cfg(target="js")
+pub fn Document::get_active_element(self : Self) -> Element? {
+  ffi_document_get_active_element(self).to_option()
+}
+
+///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/Document/body
+#cfg(target="js")
+pub fn Document::get_body(self : Self) -> HTMLElement? {
+  ffi_document_get_body(self).to_option()
+}
+
+///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/Document/documentElement
+#cfg(target="js")
+pub fn Document::get_document_element(self : Self) -> Element? {
+  ffi_document_get_document_element(self).to_option()
+}
+
+///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/Document/hidden
 #cfg(target="js")
 pub extern "js" fn Document::hidden(self : Self) -> Bool = "(doc) => doc.hidden"
@@ -134,3 +155,21 @@ pub extern "js" fn Document::hidden(self : Self) -> Bool = "(doc) => doc.hidden"
 ///|
 #cfg(target="js")
 pub extern "js" fn Document::to_node(self : Self) -> Node = "(x) => x"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_document_get_active_element(
+  doc : Document,
+) -> @js.Nullable[Element] = "(doc) => doc.activeElement"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_document_get_body(
+  doc : Document,
+) -> @js.Nullable[HTMLElement] = "(doc) => doc.body"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_document_get_document_element(
+  doc : Document,
+) -> @js.Nullable[Element] = "(doc) => doc.documentElement"

@@ -1,5 +1,6 @@
 ///|
 #cfg(target="js")
+#external
 type Window
 
 ///|
@@ -153,6 +154,25 @@ pub extern "js" fn Window::set_interval(
 pub extern "js" fn Window::clear_interval(self : Self, interval_id : Int) = "(self,id) => self.clearInterval(id)"
 
 ///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout
+#cfg(target="js")
+pub extern "js" fn Window::set_timeout(
+  self : Self,
+  f : () -> Unit,
+  ms : Int,
+) -> Int = "(self, f, ms) => self.setTimeout(f, ms)"
+
+///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/Window/clearTimeout
+#cfg(target="js")
+pub extern "js" fn Window::clear_timeout(self : Self, timeout_id : Int) = "(self, id) => self.clearTimeout(id)"
+
+///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/Window/queueMicrotask
+#cfg(target="js")
+pub extern "js" fn Window::queue_microtask(self : Self, f : () -> Unit) = "(self, f) => self.queueMicrotask(f)"
+
+///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame
 #cfg(target="js")
 pub extern "js" fn Window::request_animation_frame(
@@ -188,3 +208,12 @@ pub extern "js" fn Window::confirm(self : Self, msg : String) -> Bool = "(self,m
 #cfg(target="js")
 pub extern "js" fn Window::navigator(self : Self) -> Navigator =
   #| (self) => self.navigator
+
+///|
+/// Returns the resolved CSS values for an element.
+/// https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle
+#cfg(target="js")
+pub extern "js" fn Window::get_computed_style(
+  self : Self,
+  element : Element,
+) -> CSSStyleDeclaration = "(self, element) => self.getComputedStyle(element)"

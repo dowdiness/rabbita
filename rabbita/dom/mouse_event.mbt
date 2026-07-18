@@ -20,7 +20,8 @@ pub trait IsMouseEvent: IsUIEvent {
   fn get_offset_y(Self) -> Int = _
   fn get_page_x(Self) -> Int = _
   fn get_page_y(Self) -> Int = _
-  fn get_related_target(Self) -> EventTarget = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/relatedTarget
+  fn get_related_target(Self) -> EventTarget? = _
   fn get_screen_x(Self) -> Int = _
   fn get_screen_y(Self) -> Int = _
   fn get_shift_key(Self) -> Bool = _
@@ -140,7 +141,10 @@ impl IsMouseEvent with fn get_page_y(s) {
 ///|
 #cfg(target="js")
 impl IsMouseEvent with fn get_related_target(s) {
-  s |> js_identity |> ffi_mouse_event_related_target
+  s
+  |> js_identity
+  |> ffi_mouse_event_related_target
+  |> related_target => { related_target.to_option() }
 }
 
 ///|
@@ -245,7 +249,9 @@ extern "js" fn ffi_mouse_event_page_y(e : @js.Value) -> Int = "(e) => e.pageY"
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_related_target(e : @js.Value) -> EventTarget = "(e) => e.relatedTarget"
+extern "js" fn ffi_mouse_event_related_target(
+  e : @js.Value,
+) -> @js.Nullable[EventTarget] = "(e) => e.relatedTarget"
 
 ///|
 #cfg(target="js")

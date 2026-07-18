@@ -24,5 +24,14 @@ pub impl @js.Cast for FocusEvent with fn from(value) {
 }
 
 ///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/FocusEvent/relatedTarget
 #cfg(target="js")
-pub extern "js" fn FocusEvent::related_target(self : Self) -> EventTarget = "(e) => e.relatedTarget"
+pub fn FocusEvent::related_target(self : Self) -> EventTarget? {
+  ffi_focus_event_related_target(self).to_option()
+}
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_focus_event_related_target(
+  event : FocusEvent,
+) -> @js.Nullable[EventTarget] = "(event) => event.relatedTarget"

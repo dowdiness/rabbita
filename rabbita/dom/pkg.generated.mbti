@@ -29,6 +29,11 @@ pub fn window() -> Window
 // Errors
 
 // Types and methods
+type Animation
+pub fn Animation::finish(Self) -> Unit
+pub impl IsEventTarget for Animation
+pub impl @js.Cast for Animation
+
 type AnimationEvent
 pub fn AnimationEvent::get_animation_name(Self) -> String
 pub fn AnimationEvent::get_elapsed_time(Self) -> Double
@@ -55,6 +60,9 @@ pub fn BlobEvent::get_timecode(Self) -> Double
 pub fn BlobEvent::new() -> Self
 pub impl IsEvent for BlobEvent
 pub impl @js.Cast for BlobEvent
+
+type CSS
+pub fn CSS::supports(String, String) -> Bool
 
 type CSSRule
 
@@ -232,6 +240,9 @@ pub fn Document::create_document_fragment(Self) -> DocumentFragment
 pub fn Document::create_element(Self, String) -> Element
 pub fn Document::create_element_ns(Self, String, String, on_namespace_error? : (DOMException) -> Element, on_invalid_character_error? : (DOMException) -> Element) -> Element
 pub fn Document::create_text_node(Self, String) -> Element
+pub fn Document::get_active_element(Self) -> Element?
+pub fn Document::get_body(Self) -> HTMLElement?
+pub fn Document::get_document_element(Self) -> Element?
 pub fn Document::get_element_by_id(Self, String) -> @js.Nullable[Element]
 pub fn Document::get_elements_by_class_name(Self, String) -> HTMLCollection
 pub fn Document::get_elements_by_name(Self, String) -> NodeList
@@ -268,6 +279,7 @@ pub impl @js.Cast for Element
 type ElementInternals
 
 type Event
+pub fn Event::new(String, bubbles? : Bool, cancelable? : Bool, composed? : Bool) -> Self
 pub impl IsEvent for Event
 pub impl @js.Cast for Event
 
@@ -276,7 +288,7 @@ pub impl IsEventTarget for EventTarget
 pub impl @js.Cast for EventTarget
 
 type FocusEvent
-pub fn FocusEvent::related_target(Self) -> EventTarget
+pub fn FocusEvent::related_target(Self) -> EventTarget?
 pub impl IsEvent for FocusEvent
 pub impl IsUIEvent for FocusEvent
 pub impl @js.Cast for FocusEvent
@@ -360,6 +372,7 @@ pub impl IsNode for HTMLImageElement
 pub impl @js.Cast for HTMLImageElement
 
 type HTMLInputElement
+pub fn HTMLInputElement::set_value(Self, String) -> Unit
 pub fn HTMLInputElement::value(Self) -> String
 pub impl IsElement for HTMLInputElement
 pub impl IsEventTarget for HTMLInputElement
@@ -410,6 +423,14 @@ pub impl IsEvent for InputEvent
 pub impl IsUIEvent for InputEvent
 pub impl @js.Cast for InputEvent
 
+type IntersectionObserver
+pub fn IntersectionObserver::disconnect(Self) -> Unit
+pub fn IntersectionObserver::new((Array[IntersectionObserverEntry], Self) -> Unit, threshold? : Array[Double]) -> Self
+pub fn IntersectionObserver::observe(Self, Element) -> Unit
+pub fn IntersectionObserver::unobserve(Self, Element) -> Unit
+
+type IntersectionObserverEntry
+
 type KeyboardEvent
 pub fn KeyboardEvent::alt_key(Self) -> Bool
 pub fn KeyboardEvent::code(Self) -> String
@@ -428,6 +449,11 @@ type MediaError
 
 type MediaKeys
 
+type MediaQueryList
+pub fn MediaQueryList::get_matches(Self) -> Bool
+pub impl IsEventTarget for MediaQueryList
+pub impl @js.Cast for MediaQueryList
+
 type MediaStream
 
 type MessageEvent
@@ -441,6 +467,14 @@ pub impl IsEvent for MouseEvent
 pub impl IsMouseEvent for MouseEvent
 pub impl IsUIEvent for MouseEvent
 pub impl @js.Cast for MouseEvent
+
+type MutationObserver
+pub fn MutationObserver::disconnect(Self) -> Unit
+pub fn MutationObserver::new((Array[MutationRecord], Self) -> Unit) -> Self
+pub fn MutationObserver::observe(Self, Node, child_list? : Bool, attributes? : Bool, character_data? : Bool, subtree? : Bool, attribute_old_value? : Bool, character_data_old_value? : Bool, attribute_filter? : Array[String]) -> Unit
+
+type MutationRecord
+pub fn MutationRecord::get_attribute_name(Self) -> String?
 
 #external
 pub type Navigator
@@ -461,7 +495,36 @@ type Path2D
 pub fn Path2D::add_path(Self, Self, transform? : @js.Optional[DOMMatrix2DInit]) -> Unit
 pub fn Path2D::new(path? : @js.Optional[@js.Union2[Self, String]]) -> Self
 
+type Performance
+pub fn Performance::now(Self) -> Double
+
+type PointerEvent
+pub fn PointerEvent::get_altitude_angle(Self) -> Double
+pub fn PointerEvent::get_azimuth_angle(Self) -> Double
+pub fn PointerEvent::get_height(Self) -> Double
+pub fn PointerEvent::get_is_primary(Self) -> Bool
+pub fn PointerEvent::get_pointer_id(Self) -> Int
+pub fn PointerEvent::get_pointer_type(Self) -> String
+pub fn PointerEvent::get_pressure(Self) -> Double
+pub fn PointerEvent::get_tangential_pressure(Self) -> Double
+pub fn PointerEvent::get_tilt_x(Self) -> Int
+pub fn PointerEvent::get_tilt_y(Self) -> Int
+pub fn PointerEvent::get_twist(Self) -> Int
+pub fn PointerEvent::get_width(Self) -> Double
+pub impl IsEvent for PointerEvent
+pub impl IsMouseEvent for PointerEvent
+pub impl IsUIEvent for PointerEvent
+pub impl @js.Cast for PointerEvent
+
 type RemotePlayback
+
+type ResizeObserver
+pub fn ResizeObserver::disconnect(Self) -> Unit
+pub fn ResizeObserver::new((Array[ResizeObserverEntry], Self) -> Unit) -> Self
+pub fn ResizeObserver::observe(Self, Element) -> Unit
+pub fn ResizeObserver::unobserve(Self, Element) -> Unit
+
+type ResizeObserverEntry
 
 type SVGAnimatedTransformList
 
@@ -503,6 +566,19 @@ type TextTrackList
 
 type TimeRanges
 
+type ToggleEvent
+pub fn ToggleEvent::get_new_state(Self) -> String
+pub fn ToggleEvent::get_old_state(Self) -> String
+pub impl IsEvent for ToggleEvent
+pub impl @js.Cast for ToggleEvent
+
+type TransitionEvent
+pub fn TransitionEvent::get_elapsed_time(Self) -> Double
+pub fn TransitionEvent::get_property_name(Self) -> String
+pub fn TransitionEvent::get_pseudo_element(Self) -> String
+pub impl IsEvent for TransitionEvent
+pub impl @js.Cast for TransitionEvent
+
 type UIEvent
 pub impl IsEvent for UIEvent
 pub impl IsUIEvent for UIEvent
@@ -513,6 +589,14 @@ type Uint8ClampedArray
 type VideoFrame
 
 type VideoTrackList
+
+type VisualViewport
+pub fn VisualViewport::get_height(Self) -> Double
+pub fn VisualViewport::get_offset_left(Self) -> Double
+pub fn VisualViewport::get_offset_top(Self) -> Double
+pub fn VisualViewport::get_width(Self) -> Double
+pub impl IsEventTarget for VisualViewport
+pub impl @js.Cast for VisualViewport
 
 type WebGL2RenderingContext
 
@@ -549,15 +633,21 @@ type Window
 pub fn Window::alert(Self, String) -> Unit
 pub fn Window::cancel_animation_frame(Self, Double) -> Unit
 pub fn Window::clear_interval(Self, Int) -> Unit
+pub fn Window::clear_timeout(Self, Int) -> Unit
 pub fn Window::confirm(Self, String) -> Bool
 pub fn Window::current_url(Self) -> String
+pub fn Window::get_computed_style(Self, Element) -> CSSStyleDeclaration
+pub fn Window::get_performance(Self) -> Performance
+pub fn Window::get_visual_viewport(Self) -> VisualViewport?
 pub fn Window::history_go_back(Self) -> Unit
 pub fn Window::history_go_forward(Self) -> Unit
 pub fn Window::inner_height(Self) -> Int
 pub fn Window::inner_width(Self) -> Int
 pub fn Window::load_url(Self, String) -> Unit
+pub fn Window::match_media(Self, String) -> MediaQueryList
 pub fn Window::navigator(Self) -> Navigator
 pub fn Window::push_url(Self, String) -> Unit
+pub fn Window::queue_microtask(Self, () -> Unit) -> Unit
 pub fn Window::reload_url(Self) -> Unit
 pub fn Window::replace_url(Self, String) -> Unit
 pub fn Window::request_animation_frame(Self, (Double) -> Unit) -> Double
@@ -568,6 +658,7 @@ pub fn Window::scroll_to_top(Self, behavior? : String) -> Unit
 pub fn Window::scroll_x(Self) -> Int
 pub fn Window::scroll_y(Self) -> Int
 pub fn Window::set_interval(Self, () -> Unit, Int) -> Int
+pub fn Window::set_timeout(Self, () -> Unit, Int) -> Int
 pub fn Window::to_event_target(Self) -> EventTarget
 pub impl IsEventTarget for Window
 pub impl @js.Cast for Window
@@ -583,13 +674,27 @@ pub type PredefinedColorSpace = String
 pub trait IsElement : IsNode {
   fn as_element(Self) -> Element
   fn get_children(Self) -> Array[Element]
+  fn query_selector(Self, String) -> Element?
+  fn query_selector_all(Self, String) -> Array[Element]
+  fn closest(Self, String) -> Element?
+  fn matches(Self, String) -> Bool
+  fn has_attribute(Self, String) -> Bool
+  fn get_client_width(Self) -> Double
+  fn get_client_height(Self) -> Double
+  fn get_client_left(Self) -> Double
+  fn get_client_top(Self) -> Double
+  fn get_client_rects(Self) -> Array[DOMRect]
+  fn set_pointer_capture(Self, Int) -> Unit
+  fn release_pointer_capture(Self, Int) -> Unit
+  fn has_pointer_capture(Self, Int) -> Bool
   fn set_attribute(Self, String, String) -> Unit
-  fn get_attribute(Self, String) -> String
+  fn get_attribute(Self, String) -> String?
   fn remove_attribute(Self, String) -> Unit
   fn set_property(Self, String, @js.Value) -> Unit
   fn get_property(Self, String) -> @js.Optional[String]
   fn remove_property(Self, String) -> Unit
   fn scroll_into_view(Self, behavior? : String) -> Unit
+  fn scroll_into_view_with_options(Self, behavior? : String, block? : String, inline? : String, container? : String) -> Unit
   fn get_scroll_top(Self) -> Double
   fn set_scroll_top(Self, Double) -> Unit
   fn get_scroll_left(Self) -> Double
@@ -598,17 +703,23 @@ pub trait IsElement : IsNode {
   fn get_scroll_height(Self) -> Double
   fn set_inner_html(Self, String) -> Unit
   fn get_bounding_client_rect(Self) -> DOMRect
+  fn get_animations(Self) -> Array[Animation]
 }
 
 pub trait IsEvent : @js.Cast {
   fn target(Self) -> EventTarget
   fn current_target(Self) -> @js.Nullable[EventTarget]
+  fn get_default_prevented(Self) -> Bool
+  fn get_time_stamp(Self) -> Double
+  fn composed_path(Self) -> Array[EventTarget]
   fn prevent_default(Self) -> Unit
   fn stop_propagation(Self) -> Unit
+  fn stop_immediate_propagation(Self) -> Unit
   fn as_event(Self) -> Event
   fn to_ui_event(Self) -> UIEvent?
   fn to_clipboard_event(Self) -> ClipboardEvent?
   fn to_mouse_event(Self) -> MouseEvent?
+  fn to_pointer_event(Self) -> PointerEvent?
   fn to_input_event(Self) -> InputEvent?
   fn to_focus_event(Self) -> FocusEvent?
   fn to_keyboard_event(Self) -> KeyboardEvent?
@@ -626,7 +737,9 @@ pub trait IsEvent : @js.Cast {
 pub trait IsEventTarget : @js.Cast {
   fn as_event_target(Self) -> EventTarget
   fn add_event_listener(Self, String, (Event) -> Unit) -> Unit
+  fn add_event_listener_with_options(Self, String, (Event) -> Unit, capture? : Bool, passive? : Bool, once? : Bool) -> Unit
   fn remove_event_listener(Self, String, (Event) -> Unit) -> Unit
+  fn remove_event_listener_with_options(Self, String, (Event) -> Unit, capture? : Bool) -> Unit
   fn dispatch_event(Self, Event) -> Unit
   fn to_clipboard(Self) -> Clipboard?
   fn to_node(Self) -> Node?
@@ -772,6 +885,7 @@ pub trait IsHtmlElement : IsElement {
   fn blur(Self) -> Unit
   fn click(Self) -> Unit
   fn focus(Self) -> Unit
+  fn focus_with_options(Self, prevent_scroll? : Bool, focus_visible? : Bool) -> Unit
   fn hide_popover(Self) -> Unit
   fn show_popover(Self) -> Unit
   fn toggle_popover(Self, Bool?) -> Bool
@@ -792,7 +906,7 @@ pub trait IsMouseEvent : IsUIEvent {
   fn get_offset_y(Self) -> Int
   fn get_page_x(Self) -> Int
   fn get_page_y(Self) -> Int
-  fn get_related_target(Self) -> EventTarget
+  fn get_related_target(Self) -> EventTarget?
   fn get_screen_x(Self) -> Int
   fn get_screen_y(Self) -> Int
   fn get_shift_key(Self) -> Bool
@@ -812,6 +926,9 @@ pub trait IsNode : IsEventTarget {
   fn get_next_sibling(Self) -> @js.Nullable[Node]
   fn get_previous_sibling(Self) -> @js.Nullable[Node]
   fn get_parent_node(Self) -> @js.Nullable[Node]
+  fn get_parent_element(Self) -> Element?
+  fn get_is_connected(Self) -> Bool
+  fn contains(Self, Node) -> Bool
   fn append_child(Self, Node) -> Unit
   fn remove_child(Self, Node) -> Unit
   fn replace_child(Self, Node, Node) -> Unit
