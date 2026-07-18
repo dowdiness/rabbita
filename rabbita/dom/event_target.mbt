@@ -8,7 +8,18 @@ type EventTarget
 pub trait IsEventTarget: @js.Cast {
   fn as_event_target(Self) -> EventTarget = _
   fn add_event_listener(Self, String, Listener) -> Unit = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
+  fn add_event_listener_with_options(
+    Self,
+    String,
+    Listener,
+    capture? : Bool,
+    passive? : Bool,
+    once? : Bool,
+  ) -> Unit = _
   fn remove_event_listener(Self, String, Listener) -> Unit = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener
+  fn remove_event_listener_with_options(Self, String, Listener, capture? : Bool) -> Unit = _
   fn dispatch_event(Self, Event) -> Unit = _
   fn to_clipboard(Self) -> Clipboard? = _
   fn to_node(Self) -> Node? = _
@@ -59,8 +70,46 @@ impl IsEventTarget with fn add_event_listener(s, type_, callback) {
 
 ///|
 #cfg(target="js")
+impl IsEventTarget with fn add_event_listener_with_options(
+  s,
+  type_,
+  callback,
+  capture?,
+  passive?,
+  once?,
+) {
+  s
+  |> js_identity
+  |> ffi_add_event_listener_with_options(
+    type_,
+    callback,
+    capture.unwrap_or(false),
+    passive.unwrap_or(false),
+    once.unwrap_or(false),
+  )
+}
+
+///|
+#cfg(target="js")
 impl IsEventTarget with fn remove_event_listener(s, type_, callback) {
   s |> js_identity |> ffi_remove_event_listener(type_, callback)
+}
+
+///|
+#cfg(target="js")
+impl IsEventTarget with fn remove_event_listener_with_options(
+  s,
+  type_,
+  callback,
+  capture?,
+) {
+  s
+  |> js_identity
+  |> ffi_remove_event_listener_with_options(
+    type_,
+    callback,
+    capture.unwrap_or(false),
+  )
 }
 
 ///|
@@ -210,12 +259,42 @@ extern "js" fn ffi_add_event_listener(
 
 ///|
 #cfg(target="js")
+extern "js" fn ffi_add_event_listener_with_options(
+  x : @js.Value,
+  type_ : String,
+  callback : Listener,
+  capture : Bool,
+  passive : Bool,
+  once : Bool,
+) =
+  #| (target, type, listener, capture, passive, once) => target.addEventListener(
+  #|   type,
+  #|   listener,
+  #|   { capture, passive, once },
+  #| )
+
+///|
+#cfg(target="js")
 extern "js" fn ffi_remove_event_listener(
   x : @js.Value,
   type_ : String,
   callback : Listener,
 ) =
   #| (target, type, listener) => target.removeEventListener(type, listener)
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_remove_event_listener_with_options(
+  x : @js.Value,
+  type_ : String,
+  callback : Listener,
+  capture : Bool,
+) =
+  #| (target, type, listener, capture) => target.removeEventListener(
+  #|   type,
+  #|   listener,
+  #|   { capture },
+  #| )
 
 ///|
 #cfg(target="js")
@@ -287,7 +366,9 @@ extern "js" fn ffi_to_html_dialog_element(
 extern "js" fn ffi_to_html_image_element(
   x : @js.Value,
 ) -> @js.Nullable[HTMLImageElement] =
-  #| (x) => x instanceof HTMLImageElement ? x : null
+  #| (x) => typeof HTMLImageElement !== "undefined" && x instanceof HTMLImageElement
+  #|   ? x
+  #|   : null
 
 ///|
 #cfg(target="js")

@@ -83,8 +83,13 @@ pub trait IsHtmlElement: IsElement {
   fn blur(Self) -> Unit = _
   fn click(Self) -> Unit = _
   fn focus(Self) -> Unit = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus
+  fn focus_with_options(Self, prevent_scroll? : Bool, focus_visible? : Bool) -> Unit = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/hidePopover
   fn hide_popover(Self) -> Unit = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/showPopover
   fn show_popover(Self) -> Unit = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/togglePopover
   fn toggle_popover(Self, Bool?) -> Bool = _
 }
 
@@ -496,6 +501,20 @@ impl IsHtmlElement with fn focus(s) {
 
 ///|
 #cfg(target="js")
+impl IsHtmlElement with fn focus_with_options(
+  s,
+  prevent_scroll?,
+  focus_visible?,
+) {
+  ffi_html_element_focus_with_options(
+    s.as_html_element(),
+    prevent_scroll.unwrap_or(false),
+    @js.Optional::from_option(focus_visible),
+  )
+}
+
+///|
+#cfg(target="js")
 impl IsHtmlElement with fn hide_popover(s) {
   ffi_html_element_hide_popover(s.as_html_element())
 }
@@ -742,7 +761,7 @@ extern "js" fn ffi_html_element_set_outer_text(
 #cfg(target="js")
 extern "js" fn ffi_html_element_get_popover(
   s : HTMLElement,
-) -> @js.Nullable[String] = "(s) => s.popover"
+) -> @js.Nullable[String] = "(s) => s.popover ?? null"
 
 ///|
 #cfg(target="js")
@@ -851,6 +870,18 @@ extern "js" fn ffi_html_element_click(s : HTMLElement) -> Unit = "(s) => s.click
 ///|
 #cfg(target="js")
 extern "js" fn ffi_html_element_focus(s : HTMLElement) -> Unit = "(s) => s.focus()"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_html_element_focus_with_options(
+  s : HTMLElement,
+  prevent_scroll : Bool,
+  focus_visible : @js.Optional[Bool],
+) -> Unit =
+  #| (element, preventScroll, focusVisible) => {
+  #|   if (focusVisible === undefined) element.focus({ preventScroll })
+  #|   else element.focus({ preventScroll, focusVisible })
+  #| }
 
 ///|
 #cfg(target="js")

@@ -34,3 +34,8 @@ pub impl IsHtmlElement for HTMLInputElement
 ///|
 #cfg(target="js")
 pub extern "js" fn HTMLInputElement::value(self : Self) -> String = "(self) => self.value"
+
+///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/value
+#cfg(target="js")
+pub extern "js" fn HTMLInputElement::set_value(self : Self, value : String) = "(input, value) => input.value = value"

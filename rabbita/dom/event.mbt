@@ -4,6 +4,21 @@
 type Event
 
 ///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/Event/Event
+#cfg(target="js")
+pub extern "js" fn Event::new(
+  type_ : String,
+  bubbles? : Bool = false,
+  cancelable? : Bool = false,
+  composed? : Bool = false,
+) -> Self =
+  #| (type, bubbles, cancelable, composed) => new Event(type, {
+  #|   bubbles,
+  #|   cancelable,
+  #|   composed,
+  #| })
+
+///|
 #cfg(target="js")
 fn[A, B] js_identity(a : A) -> B {
   @js.Value::cast_from(a).cast()
@@ -14,12 +29,22 @@ fn[A, B] js_identity(a : A) -> B {
 pub trait IsEvent: @js.Cast {
   fn target(Self) -> EventTarget = _
   fn current_target(Self) -> @js.Nullable[EventTarget] = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/Event/defaultPrevented
+  fn get_default_prevented(Self) -> Bool = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/Event/timeStamp
+  fn get_time_stamp(Self) -> DOMHighResTimeStamp = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/Event/composedPath
+  fn composed_path(Self) -> Array[EventTarget] = _
   fn prevent_default(Self) -> Unit = _
   fn stop_propagation(Self) -> Unit = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/Event/stopImmediatePropagation
+  fn stop_immediate_propagation(Self) -> Unit = _
   fn as_event(Self) -> Event = _
   fn to_ui_event(Self) -> UIEvent? = _
   fn to_clipboard_event(Self) -> ClipboardEvent? = _
   fn to_mouse_event(Self) -> MouseEvent? = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent
+  fn to_pointer_event(Self) -> PointerEvent? = _
   fn to_input_event(Self) -> InputEvent? = _
   fn to_focus_event(Self) -> FocusEvent? = _
   fn to_keyboard_event(Self) -> KeyboardEvent? = _
@@ -64,6 +89,24 @@ impl IsEvent with fn current_target(s) {
 
 ///|
 #cfg(target="js")
+impl IsEvent with fn get_default_prevented(s) {
+  s |> js_identity |> ffi_event_get_default_prevented
+}
+
+///|
+#cfg(target="js")
+impl IsEvent with fn get_time_stamp(s) {
+  s |> js_identity |> ffi_event_get_time_stamp
+}
+
+///|
+#cfg(target="js")
+impl IsEvent with fn composed_path(s) {
+  s |> js_identity |> ffi_event_composed_path
+}
+
+///|
+#cfg(target="js")
 impl IsEvent with fn prevent_default(s) {
   s.as_event() |> ffi_event_prevent_default
 }
@@ -72,6 +115,12 @@ impl IsEvent with fn prevent_default(s) {
 #cfg(target="js")
 impl IsEvent with fn stop_propagation(s) {
   s.as_event() |> ffi_event_stop_propagation
+}
+
+///|
+#cfg(target="js")
+impl IsEvent with fn stop_immediate_propagation(s) {
+  s.as_event() |> ffi_event_stop_immediate_propagation
 }
 
 ///|
@@ -96,6 +145,12 @@ impl IsEvent with fn to_clipboard_event(s) {
 #cfg(target="js")
 impl IsEvent with fn to_mouse_event(s) {
   s |> js_identity |> ffi_to_mouse_event |> y => { y.to_option() }
+}
+
+///|
+#cfg(target="js")
+impl IsEvent with fn to_pointer_event(s) {
+  s |> js_identity |> ffi_to_pointer_event |> y => { y.to_option() }
 }
 
 ///|
@@ -182,6 +237,18 @@ extern "js" fn ffi_event_current_target(
 
 ///|
 #cfg(target="js")
+extern "js" fn ffi_event_get_default_prevented(x : @js.Value) -> Bool = "(self) => self.defaultPrevented"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_event_get_time_stamp(x : @js.Value) -> DOMHighResTimeStamp = "(self) => self.timeStamp"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_event_composed_path(x : @js.Value) -> Array[EventTarget] = "(self) => self.composedPath()"
+
+///|
+#cfg(target="js")
 extern "js" fn ffi_to_ui_event(x : @js.Value) -> @js.Nullable[UIEvent] =
   #| (x) => x instanceof UIEvent ? x : null
 
@@ -202,8 +269,37 @@ extern "js" fn ffi_event_stop_propagation(x : Event) = "(self) => self.stopPropa
 
 ///|
 #cfg(target="js")
+extern "js" fn ffi_event_stop_immediate_propagation(x : Event) = "(self) => self.stopImmediatePropagation()"
+
+///|
+#cfg(target="js")
 extern "js" fn ffi_to_mouse_event(x : @js.Value) -> @js.Nullable[MouseEvent] =
   #| (e) => e instanceof MouseEvent ? e : null
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_to_pointer_event(
+  x : @js.Value,
+) -> @js.Nullable[PointerEvent] =
+  #| (e) => typeof PointerEvent !== "undefined" && e instanceof PointerEvent
+  #|   ? e
+  #|   : null
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_to_transition_event(
+  x : @js.Value,
+) -> @js.Nullable[TransitionEvent] =
+  #| (e) => typeof TransitionEvent !== "undefined" && e instanceof TransitionEvent
+  #|   ? e
+  #|   : null
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_to_toggle_event(x : @js.Value) -> @js.Nullable[ToggleEvent] =
+  #| (e) => typeof ToggleEvent !== "undefined" && e instanceof ToggleEvent
+  #|   ? e
+  #|   : null
 
 ///|
 #cfg(target="js")

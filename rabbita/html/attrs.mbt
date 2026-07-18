@@ -26,7 +26,8 @@ fn Attrs::to_props(self : Attrs) -> Props {
 }
 
 ///|
-fn Attrs::copy(self : Attrs) -> Attrs {
+/// Return an independent copy that can be extended without mutating `self`.
+pub fn Attrs::copy(self : Attrs) -> Attrs {
   Attrs(self.0.copy())
 }
 
@@ -66,13 +67,20 @@ pub fn Attrs::style(self : Attrs, key : String, value : String) -> Attrs {
 }
 
 ///|
-/// Set an event handler.
+/// Add an event handler after handlers already registered for the same event.
 fn Attrs::handler(
   self : Attrs,
   key : String,
   value : (Event, &@cmd.Scheduler) -> Unit,
 ) -> Attrs {
-  self.0.handlers[key] = value
+  if self.0.handlers.get(key) is Some(previous) {
+    self.0.handlers[key] = (event, scheduler) => {
+      previous(event, scheduler)
+      value(event, scheduler)
+    }
+  } else {
+    self.0.handlers[key] = value
+  }
   self
 }
 

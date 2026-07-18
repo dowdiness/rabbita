@@ -73,6 +73,7 @@ fn write_variant_text(buf : StringBuilder, value : @variant.Variant) -> Unit {
 ///|
 fn write_property_attrs(
   buf : StringBuilder,
+  tag : String,
   attrs : Map[String, String],
   props : Map[String, @variant.Variant],
 ) -> Unit {
@@ -80,6 +81,7 @@ fn write_property_attrs(
     if name == "textContent" ||
       name == "innerHTML" ||
       name == "style" ||
+      (tag == "textarea" && name == "value") ||
       attrs.contains(name) {
       continue
     }
@@ -138,7 +140,7 @@ fn vnode_to_string(buf : StringBuilder, vnode : VNode) -> Unit {
         write_attr(buf, name, value)
       }
       write_styles_attr(buf, attrs, styles)
-      write_property_attrs(buf, attrs, props)
+      write_property_attrs(buf, tag, attrs, props)
       if is_html_void_element(tag) {
         buf.write_char('>')
       } else {
@@ -149,7 +151,11 @@ fn vnode_to_string(buf : StringBuilder, vnode : VNode) -> Unit {
         if props.get("textContent") is Some(text_content) {
           write_variant_text(buf, text_content)
         }
-        children_to_string(buf, children)
+        if tag == "textarea" && props.get("value") is Some(String(value)) {
+          write_escaped_text(buf, value)
+        } else {
+          children_to_string(buf, children)
+        }
 
         buf.write_string("</")
         buf.write_string(tag)

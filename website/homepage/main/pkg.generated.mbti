@@ -29,6 +29,8 @@ type Msg
 
 type NavModel derive(Eq)
 
+type NavPage derive(Eq)
+
 type Page derive(Eq)
 
 type Theme derive(Eq)

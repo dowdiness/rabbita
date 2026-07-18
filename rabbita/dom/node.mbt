@@ -16,6 +16,12 @@ pub trait IsNode: IsEventTarget {
   fn get_next_sibling(Self) -> @js.Nullable[Node] = _
   fn get_previous_sibling(Self) -> @js.Nullable[Node] = _
   fn get_parent_node(Self) -> @js.Nullable[Node] = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/Node/parentElement
+  fn get_parent_element(Self) -> Element? = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/Node/isConnected
+  fn get_is_connected(Self) -> Bool = _
+  /// https://developer.mozilla.org/en-US/docs/Web/API/Node/contains
+  fn contains(Self, Node) -> Bool = _
   fn append_child(Self, Node) -> Unit = _
   fn remove_child(Self, Node) -> Unit = _
   fn replace_child(Self, Node, Node) -> Unit = _
@@ -107,6 +113,27 @@ impl IsNode with fn get_parent_node(s) {
 
 ///|
 #cfg(target="js")
+impl IsNode with fn get_parent_element(s) {
+  s
+  |> js_identity
+  |> ffi_node_get_parent_element
+  |> parent => { parent.to_option() }
+}
+
+///|
+#cfg(target="js")
+impl IsNode with fn get_is_connected(s) {
+  s |> js_identity |> ffi_node_get_is_connected
+}
+
+///|
+#cfg(target="js")
+impl IsNode with fn contains(s, other) {
+  s |> js_identity |> ffi_node_contains(other)
+}
+
+///|
+#cfg(target="js")
 impl IsNode with fn append_child(s, child) {
   s |> js_identity |> ffi_append_child(child)
 }
@@ -180,6 +207,20 @@ extern "js" fn ffi_previous_sibling(x : @js.Value) -> @js.Nullable[Node] = "(x) 
 ///|
 #cfg(target="js")
 extern "js" fn ffi_parent_node(x : @js.Value) -> @js.Nullable[Node] = "(x) => x.parentNode"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_node_get_parent_element(
+  x : @js.Value,
+) -> @js.Nullable[Element] = "(self) => self.parentElement"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_node_get_is_connected(x : @js.Value) -> Bool = "(self) => self.isConnected"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_node_contains(x : @js.Value, other : Node) -> Bool = "(self, other) => self.contains(other)"
 
 ///|
 #cfg(target="js")

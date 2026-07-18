@@ -65,6 +65,11 @@ extern "js" fn tour_base_url() -> String =
   #| }
 
 ///|
+fn components_base_url() -> String {
+  site_base_url() + "components/"
+}
+
+///|
 fn playground_url() -> String {
   site_base_url() + "playground/"
 }
@@ -118,6 +123,44 @@ fn is_tour_url(chapters : Array[TourChapter], path : String) -> Bool {
     }
   }
   false
+}
+
+///|
+fn is_components_url(path : String) -> Bool {
+  component_slug_from_path(path) != ""
+}
+
+///|
+fn component_slug_from_path(path : String) -> String {
+  let p = strip_base(path)
+  if p == "components" || p == "components/" {
+    return "accordion"
+  }
+  let prefix = "components/"
+  if !p.has_prefix(prefix) {
+    return ""
+  }
+  let builder = StringBuilder::new()
+  let mut index = 0
+  let mut invalid = false
+  for character in p {
+    if index >= prefix.length() {
+      if character == '/' {
+        if index != p.length() - 1 {
+          invalid = true
+        }
+      } else {
+        builder.write_char(character)
+      }
+    }
+    index = index + 1
+  }
+  let slug = builder.to_string()
+  if invalid || slug == "" {
+    ""
+  } else {
+    slug
+  }
 }
 
 // Finds the chapter index matching a URL path; defaults to 0

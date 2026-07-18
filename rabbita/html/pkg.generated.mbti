@@ -346,6 +346,7 @@ pub fn Attrs::content(Self, String) -> Self
 pub fn Attrs::contenteditable(Self, String) -> Self
 pub fn Attrs::controls(Self, Bool) -> Self
 pub fn Attrs::coords(Self, String) -> Self
+pub fn Attrs::copy(Self) -> Self
 pub fn Attrs::crossorigin(Self, String) -> Self
 pub fn Attrs::csp(Self, String) -> Self
 pub fn Attrs::data(Self, String) -> Self
@@ -438,6 +439,10 @@ pub fn Attrs::on_mouseout(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mouseover(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mouseup(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_paste(Self, (@dom.ClipboardEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointercancel(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointerdown(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointermove(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointerup(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_reset(Self, (@dom.Event) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_scroll(Self, (@dom.UIEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_submit(Self, (@dom.Event) -> @cmd.Cmd) -> Self

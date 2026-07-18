@@ -16,6 +16,8 @@ moon run --target native scripts/assets.mbtx
 warren dev main --public-dir public
 ```
 
+The component showcase is served by the same application at `/components/`.
+
 ## Build
 
 ```sh

@@ -210,7 +210,15 @@ body::before {
 
 .nav-link--active:hover {
   color: var(--accent);
-  opacity: 0.8;
+}
+
+.nav-logo:focus-visible,
+.nav-link:focus-visible,
+.mobile-link:focus-visible,
+.theme-toggle:focus-visible,
+.nav-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .nav-link--ext {
@@ -331,6 +339,16 @@ body::before {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+@media (max-width: 800px) {
+  .nav-links {
+    display: none;
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
 }
 
 /* ─── Hero ────────────────────────────────────────────────── */
@@ -1660,5 +1678,339 @@ body::before {
   .tour-content {
     border-left: none;
     padding: 1.5rem 1rem;
+  }
+}
+
+/* ─── Components showcase ────────────────────────────────── */
+
+.rui-showcase-demo-code-summary {
+  position: absolute;
+  inset: 0;
+  display: block;
+  height: 6.75rem;
+  overflow: hidden;
+  cursor: pointer;
+  list-style: none;
+  outline: none;
+}
+
+.rui-showcase-demo-code {
+  position: relative;
+  max-height: 6.75rem;
+  overflow: hidden;
+}
+
+.rui-showcase-demo-code-peek {
+  pointer-events: none;
+  user-select: none;
+}
+
+.rui-showcase-demo-code-disclosure {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.rui-showcase-demo-code-disclosure > .rui-showcase-demo-code-summary {
+  pointer-events: auto;
+}
+
+.rui-showcase-demo-code-summary::-webkit-details-marker {
+  display: none;
+}
+
+.rui-showcase-demo-code-summary::marker {
+  content: "";
+}
+
+.rui-showcase-demo-code-summary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(
+        in oklab,
+        var(--rui-showcase-code-background) 30%,
+        transparent
+      )
+      26%,
+    var(--rui-showcase-code-background) 88%
+  );
+  pointer-events: none;
+}
+
+.rui-showcase-demo-code-toggle {
+  box-sizing: border-box;
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 2;
+  display: inline-flex;
+  height: 2rem;
+  min-height: 2rem;
+  width: 6rem;
+  min-width: 6rem;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-50%);
+  border: 1px solid var(--rui-border);
+  border-radius: 0.625rem;
+  background: var(--rui-background);
+  padding: 0 0.75rem;
+  color: var(--rui-foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.rui-showcase-demo-code-summary:hover .rui-showcase-demo-code-toggle {
+  background: var(--rui-muted);
+}
+
+.rui-showcase-demo-code-summary:focus-visible
+  .rui-showcase-demo-code-toggle {
+  outline: 2px solid var(--rui-ring);
+  outline-offset: 2px;
+}
+
+.rui-showcase-demo-code:has(> .rui-showcase-demo-code-disclosure[open]) {
+  max-height: none;
+  overflow: visible;
+}
+
+.rui-showcase-demo-code-disclosure[open]
+  > .rui-showcase-demo-code-summary {
+  display: none;
+}
+
+.rui-showcase-demo-code:has(> .rui-showcase-demo-code-disclosure[open])
+  > .rui-showcase-demo-code-peek {
+  overflow-x: auto !important;
+  pointer-events: auto;
+  user-select: text;
+}
+
+.rui-showcase-demo-code-disclosure[open]
+  > .rui-showcase-demo-code-panel {
+  animation: rui-showcase-code-in 160ms ease-out;
+}
+
+.rui-showcase-shiki,
+.rui-showcase-shiki > yoorkin-shiki-code {
+  display: block;
+  min-width: 0;
+}
+
+.rui-showcase-shiki .shiki,
+.rui-showcase-shiki yoorkin-shiki-code > pre {
+  box-sizing: border-box;
+  min-width: max-content;
+  margin: 0;
+  background: transparent !important;
+  padding: 1.5rem 0;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.75;
+  tab-size: 2;
+  white-space: pre;
+}
+
+.rui-showcase-shiki code {
+  display: grid;
+  counter-reset: rui-showcase-code-line;
+}
+
+/* Keep the unloaded plain-text fallback on the same text baseline as Shiki's
+   numbered lines. Highlighting can then replace paint without moving layout. */
+.rui-showcase-shiki
+  > yoorkin-shiki-code:not([data-shiki-highlighted])
+  > pre
+  > code {
+  display: block;
+  box-sizing: border-box;
+  padding-inline: 4rem;
+}
+
+.rui-showcase-shiki code > .line {
+  display: block;
+  min-height: 1lh;
+  padding: 0 4rem 0 0;
+  counter-increment: rui-showcase-code-line;
+}
+
+.rui-showcase-shiki code > .line::before {
+  content: counter(rui-showcase-code-line);
+  display: inline-block;
+  box-sizing: border-box;
+  width: 4rem;
+  padding-right: 1.5rem;
+  color: var(--rui-muted-foreground);
+  text-align: right;
+  opacity: 0.65;
+  user-select: none;
+}
+
+.rui-showcase-demo-code-peek .shiki,
+.rui-showcase-demo-code-peek yoorkin-shiki-code > pre {
+  padding: 1.125rem 0;
+}
+
+.rui-showcase-demo-section {
+  scroll-margin-top: calc(var(--nav-h, 60px) + 1rem);
+}
+
+.rui-showcase-rail-link {
+  border-radius: 0.5rem;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.rui-showcase-rail-link:hover {
+  color: var(--rui-foreground) !important;
+}
+
+.rui-showcase-catalog .rui-showcase-rail-link:hover,
+.rui-showcase-catalog .rui-showcase-rail-link--active {
+  background: var(--rui-accent);
+  color: var(--rui-foreground) !important;
+}
+
+.rui-showcase-page-navigation-link:hover {
+  border-color: color-mix(
+    in oklab,
+    var(--rui-foreground) 22%,
+    var(--rui-border)
+  );
+  background: var(--rui-accent);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.07);
+}
+
+.rui-showcase-page-navigation-link:active {
+  background: color-mix(
+    in oklab,
+    var(--rui-accent) 82%,
+    var(--rui-foreground)
+  );
+  transform: translateY(1px);
+}
+
+.rui-showcase-page-navigation-link:focus-visible {
+  outline: 2px solid var(--rui-ring);
+  outline-offset: 2px;
+}
+
+.rui-showcase-rail-link:focus-visible {
+  outline: 2px solid var(--rui-ring);
+  outline-offset: 2px;
+  color: var(--rui-foreground) !important;
+}
+
+.rui-showcase-component-toc .rui-showcase-rail-link:hover {
+  background: var(--rui-accent);
+}
+
+@keyframes rui-showcase-code-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rui-showcase-demo-code-disclosure[open]
+    > .rui-showcase-demo-code-panel {
+    animation: none;
+  }
+
+  .rui-showcase-demo-code-toggle,
+  .rui-showcase-rail-link,
+  .rui-showcase-page-navigation-link {
+    transition: none;
+  }
+}
+
+@media (max-width: 80rem) {
+  #rui-showcase {
+    --rui-showcase-component-columns: minmax(0, 46rem);
+  }
+
+  .rui-showcase-component-toc {
+    display: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  #rui-showcase {
+    --rui-showcase-catalog-columns: minmax(0, 1fr);
+    --rui-showcase-component-columns: minmax(0, 1fr);
+  }
+
+  .rui-showcase-component {
+    grid-template-columns: minmax(0, 1fr) !important;
+    justify-content: stretch !important;
+  }
+
+  .rui-showcase-component-toc {
+    display: none !important;
+  }
+
+  .rui-showcase-catalog {
+    display: none !important;
+  }
+
+  .rui-showcase-mobile-catalog {
+    display: block !important;
+  }
+
+  .rui-showcase-mobile-catalog-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .rui-showcase-mobile-catalog-summary::marker {
+    content: "";
+  }
+
+  .rui-showcase-mobile-catalog details[open]
+    .rui-showcase-mobile-catalog-summary > :last-child {
+    transform: rotate(90deg);
+  }
+
+  .rui-showcase-mobile-catalog .rui-showcase-rail-link {
+    padding: 0.375rem 0.625rem !important;
+  }
+
+  .rui-showcase-mobile-catalog .rui-showcase-rail-link:hover,
+  .rui-showcase-mobile-catalog .rui-showcase-rail-link--active {
+    background: var(--rui-accent);
+    color: var(--rui-foreground) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  #rui-showcase {
+    padding: 1rem 0 3rem !important;
+  }
+
+  .rui-showcase-page-navigation {
+    gap: 0.5rem !important;
+  }
+
+  .rui-showcase-page-navigation-link {
+    min-height: 2.75rem !important;
+    padding: 0.5rem 0.625rem !important;
   }
 }

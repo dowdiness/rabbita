@@ -52,6 +52,7 @@ enum Theme {
 enum Page {
   Home
   Tour(TourModel)
+  Components(String)
 } derive(Eq)
 
 ///|
@@ -59,6 +60,7 @@ impl @rabbita.Enumerate for Page with fn tag(self) {
   match self {
     Home => "home"
     Tour(_) => "tour"
+    Components(slug) => "components:" + slug
   }
 }
 
@@ -350,6 +352,10 @@ fn theme_icon(theme : Theme) -> Html {
   }
 }
 
+///|
+extern "js" fn prefers_dark_color_scheme() -> Bool =
+  #| () => globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
+
 // ─── Navigation ───────────────────────────────────────────────────────────
 
 ///|
@@ -376,23 +382,45 @@ fn hamburger(is_open : Bool) -> Html {
 }
 
 ///|
+enum NavPage {
+  NavHome
+  NavTour
+  NavComponents
+} derive(Eq)
+
+///|
 struct NavModel {
   theme : Theme
-  is_home : Bool
+  current : NavPage
 } derive(Eq)
+
+///|
+fn nav_link_attrs(is_current : Bool) -> @html.Attrs {
+  let attrs = @html.Attrs::build()
+  if is_current {
+    ignore(attrs.aria_current("page"))
+  }
+  attrs
+}
 
 ///|
 fn site_nav(model : Val[NavModel], on_cycle_theme : Cmd) -> Val[Html] {
   let (menu_open, set_menu_open) = @rabbita.create_variable(false)
   model.map2(menu_open, (model, menu_open) => {
-    let is_home = model.is_home
-    let is_tour = !model.is_home
+    let is_home = model.current == NavHome
+    let is_tour = model.current == NavTour
+    let is_components = model.current == NavComponents
     let home_cls = if is_home {
       "nav-link nav-link--active"
     } else {
       "nav-link"
     }
     let tour_cls = if is_tour {
+      "nav-link nav-link--active"
+    } else {
+      "nav-link"
+    }
+    let components_cls = if is_components {
       "nav-link nav-link--active"
     } else {
       "nav-link"
@@ -407,40 +435,103 @@ fn site_nav(model : Val[NavModel], on_cycle_theme : Cmd) -> Val[Html] {
     } else {
       "mobile-link"
     }
+    let components_m = if is_components {
+      "mobile-link mobile-link--active"
+    } else {
+      "mobile-link"
+    }
+    let theme_label = match model.theme {
+      System => "Theme: system"
+      Light => "Theme: light"
+      Dark => "Theme: dark"
+    }
     header(class="site-header", [
-      nav(class="navbar", [
-        a(class="nav-logo", href=github_url, "Rabbita"),
-        div(class="nav-links", [
-          a(href=site_base_url(), class=home_cls, "Home"),
-          a(href=tour_base_url(), class=tour_cls, "Tour"),
-          a(
-            href=playground_url(),
-            class="nav-link nav-link--ext",
-            escape=true,
-            [text("Playground"), icon_ext_link()],
-          ),
-          a(href=docs_url, target=Blank, class="nav-link nav-link--ext", [
-            text("Docs"),
-            icon_ext_link(),
+      nav(
+        class="navbar",
+        attrs=@html.Attrs::build().aria_label("Primary navigation"),
+        [
+          a(class="nav-logo", href=github_url, "Rabbita"),
+          div(class="nav-links", [
+            a(
+              href=site_base_url(),
+              class=home_cls,
+              attrs=nav_link_attrs(is_home),
+              "Home",
+            ),
+            a(
+              href=tour_base_url(),
+              class=tour_cls,
+              attrs=nav_link_attrs(is_tour),
+              "Tour",
+            ),
+            a(
+              href=components_base_url(),
+              class=components_cls,
+              attrs=nav_link_attrs(is_components),
+              "Components",
+            ),
+            a(
+              href=playground_url(),
+              class="nav-link nav-link--ext",
+              escape=true,
+              [text("Playground"), icon_ext_link()],
+            ),
+            a(href=docs_url, target=Blank, class="nav-link nav-link--ext", [
+              text("Docs"),
+              icon_ext_link(),
+            ]),
+            a(href=github_url, target=Blank, class="nav-link nav-link--ext", [
+              text("GitHub"),
+              icon_ext_link(),
+            ]),
           ]),
-          a(href=github_url, target=Blank, class="nav-link nav-link--ext", [
-            text("GitHub"),
-            icon_ext_link(),
+          div(class="nav-actions", [
+            button(
+              class="theme-toggle",
+              title=theme_label,
+              attrs=@html.Attrs::build().aria_label(theme_label),
+              on_click=on_cycle_theme,
+              [theme_icon(model.theme)],
+            ),
+            button(
+              class="nav-toggle",
+              title=if menu_open { "Close menu" } else { "Open menu" },
+              attrs=@html.Attrs::build()
+                .aria_label(if menu_open { "Close menu" } else { "Open menu" })
+                .aria_controls("mobile-navigation")
+                .aria_expanded(if menu_open { "true" } else { "false" }),
+              on_click=set_menu_open(open => !open),
+              [hamburger(menu_open)],
+            ),
           ]),
-        ]),
-        div(class="nav-actions", [
-          button(class="theme-toggle", on_click=on_cycle_theme, [
-            theme_icon(model.theme),
-          ]),
-          button(class="nav-toggle", on_click=set_menu_open(open => !open), [
-            hamburger(menu_open),
-          ]),
-        ]),
-      ]),
+        ],
+      ),
       if menu_open {
-        div(class="mobile-menu", [
-          a(href=site_base_url(), class=home_m, "Home"),
-          a(href=tour_base_url(), class=tour_m, "Tour"),
+        div(id="mobile-navigation", class="mobile-menu", [
+          a(
+            href=site_base_url(),
+            class=home_m,
+            attrs=nav_link_attrs(is_home).on_click(_ => {
+              set_menu_open(_ => false)
+            }),
+            "Home",
+          ),
+          a(
+            href=tour_base_url(),
+            class=tour_m,
+            attrs=nav_link_attrs(is_tour).on_click(_ => {
+              set_menu_open(_ => false)
+            }),
+            "Tour",
+          ),
+          a(
+            href=components_base_url(),
+            class=components_m,
+            attrs=nav_link_attrs(is_components).on_click(_ => {
+              set_menu_open(_ => false)
+            }),
+            "Components",
+          ),
           a(
             href=playground_url(),
             class="mobile-link mobile-link--ext",
@@ -923,7 +1014,16 @@ fn app() -> Val[Html] {
             External(url) => (@nav.load(url), model)
           }
         UrlChanged(url) =>
-          if is_tour_url(chapters, url.path) {
+          if is_components_url(url.path) {
+            let scroll_cmd = match url.fragment {
+              Some(frag) => scroll_to_heading(frag)
+              None => @nav.scroll_to_top()
+            }
+            (
+              scroll_cmd,
+              { page: Components(component_slug_from_path(url.path)) },
+            )
+          } else if is_tour_url(chapters, url.path) {
             let idx = chapter_idx_from_path(chapters, url.path)
             let scroll_cmd = match url.fragment {
               Some(frag) => scroll_to_heading(frag)
@@ -951,17 +1051,22 @@ fn app() -> Val[Html] {
   let (theme, set_theme) = @rabbita.create_variable(System)
   let page = model.map(model => model.page)
   let nav_model = theme.map2(page, (theme, page) => {
-    let is_home = match page {
-      Home => true
-      Tour(_) => false
+    let current = match page {
+      Home => NavHome
+      Tour(_) => NavTour
+      Components(_) => NavComponents
     }
-    { theme, is_home }
+    { theme, current }
   })
-  let site_class_name = theme.map(theme => {
-    match theme {
+  let site_class_name = theme.map2(page, (theme, page) => {
+    let theme_class = match theme {
       System => "site"
       Light => "site light"
       Dark => "site dark"
+    }
+    match page {
+      Components(_) => theme_class + " site--components"
+      Home | Tour(_) => theme_class
     }
   })
   let header_html = site_nav(
@@ -974,15 +1079,23 @@ fn app() -> Val[Html] {
       }
     }),
   )
+  let components_dark = theme.map(theme => {
+    match theme {
+      System => prefers_dark_color_scheme()
+      Light => false
+      Dark => true
+    }
+  })
   let page_html = page.switch(current => {
     match current {
       Home => home()
+      Components(slug) => @components.components_page(components_dark, slug)
       Tour(_) =>
         tour(
           page.map2(chapters, (page, chapters) => {
             let tour = match page {
               Tour(model) => model
-              Home => init_tour
+              Home | Components(_) => init_tour
             }
             { chapters, tour }
           }),
@@ -1001,7 +1114,7 @@ fn app() -> Val[Html] {
 /// see README.md to get started.
 #warnings("-alert_unstable")
 fn main {
-  @shiki.initialize(langs=["moonbit", "text"], themes=[
+  @shiki.initialize(langs=["moonbit"], themes=[
     "github-light", "github-dark-default",
   ])
   @rabbita.new(app).mount("app")
