@@ -96,6 +96,9 @@ impl[T : Eq] ErasedNode for Node[T] with fn dirty_flag(self) {
 }
 
 ///|
+extend Node with ErasedNode::{dirty_flag}
+
+///|
 impl[T : Eq] ErasedNode for Node[T] with fn recompute(self) {
   current_scope.protect(self.scope, () => {
     match self.value {

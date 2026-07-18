@@ -1464,10 +1464,6 @@ pub fn input(
     Url => "url"
     Week => "week"
   }
-  let auto_complete = match auto_complete {
-    Some(On) => "on"
-    _ => "off"
-  }
   let attrs = resolve_attrs(attrs)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
@@ -1476,7 +1472,9 @@ pub fn input(
   push_list(list, attrs)
   push_inputmode(inputmode, attrs)
   ignore(attrs.attribute("type", input_type))
-  ignore(attrs.attribute("autocomplete", auto_complete))
+  if auto_complete is Some(value) {
+    ignore(attrs.autocomplete(value))
+  }
   push_name(name, attrs)
   push_value_prop_string(value, attrs)
   push_checked(checked, attrs)

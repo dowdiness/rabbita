@@ -21,3 +21,18 @@ test "ssr keeps end tags for non-void empty elements" {
     "<iframe src=\"frame.html\"></iframe>",
   )
 }
+
+///|
+test "ssr writes textarea value as escaped text content" {
+  let props = Props::new(
+    Map([]),
+    { "value": @variant.String("one < two & three") },
+    Map([]),
+    Map([]),
+  )
+  let vnode = VNode::elem("textarea", props, Array([]))
+  assert_eq(
+    render_vnode_for_test(vnode),
+    "<textarea>one &lt; two &amp; three</textarea>",
+  )
+}

@@ -79,6 +79,14 @@ type InputEvent = Unit
 type DomEvent = Unit
 
 ///|
+// Browsers dispatch `scroll` as a plain Event in current Chromium, even though
+// older DOM typings exposed it as UIEvent. The wrapper only relies on the
+// shared Event surface, so preserve the public callback type without an
+// `instanceof UIEvent` assertion that would panic for valid scroll events.
+#cfg(target="js")
+extern "js" fn scroll_event_as_ui_event(event : DomEvent) -> UIEvent = "(event) => event"
+
+///|
 #cfg(target="js")
 fn Attrs::on_mouse_event(
   self : Attrs,
@@ -290,6 +298,37 @@ pub fn Attrs::on_mouseout(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
 }
 
 ///|
+/// Handle a primary or auxiliary pointer starting contact with the element.
+///
+/// `PointerEvent` extends the browser's mouse-event surface, so the callback
+/// uses Rabbita's existing `MouseEvent` wrapper while preserving pointer-only
+/// fields for JavaScript FFI helpers.
+pub fn Attrs::on_pointerdown(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
+  self.on_mouse_event("pointerdown", msg)
+}
+
+///|
+/// Handle movement from a captured mouse, pen, or touch pointer.
+pub fn Attrs::on_pointermove(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
+  self.on_mouse_event("pointermove", msg)
+}
+
+///|
+/// Handle the end of a mouse, pen, or touch pointer interaction.
+pub fn Attrs::on_pointerup(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
+  self.on_mouse_event("pointerup", msg)
+}
+
+///|
+/// Handle browser cancellation of an active pointer interaction.
+pub fn Attrs::on_pointercancel(
+  self : Attrs,
+  msg : (MouseEvent) -> Cmd,
+) -> Attrs {
+  self.on_mouse_event("pointercancel", msg)
+}
+
+///|
 pub fn Attrs::on_contextmenu(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
   self.on_mouse_event("contextmenu", msg)
 }
@@ -298,7 +337,7 @@ pub fn Attrs::on_contextmenu(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
 #cfg(target="js")
 pub fn Attrs::on_scroll(self : Attrs, msg : (UIEvent) -> Cmd) -> Attrs {
   self.handler("scroll", (event, scheduler) => {
-    scheduler.add(msg(event.to_ui_event().unwrap()))
+    scheduler.add(msg(scroll_event_as_ui_event(event)))
   })
 }
 

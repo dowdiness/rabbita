@@ -101,6 +101,12 @@ HTML wrappers provide common events as optional arguments like `on_click`,
 `Msg` you define. When an event fires, the `Msg` (and any extra payload) is
 forwarded to the centralized state update function.
 
+Registering the same event more than once composes the handlers in registration
+order. When a wrapper receives both an event in `attrs` and its matching named
+event argument, the `attrs` handler runs first and the named handler runs
+second. Non-event attributes and properties keep their usual last-write-wins
+behavior.
+
 Example:
 
 ```moonbit check
