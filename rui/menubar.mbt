@@ -12,13 +12,10 @@ struct MenubarScope {
   model : MenubarModel
   counter : Ref[Int]
   focus_claimed : Ref[Bool]
-  activate : @cmd.Emit[(String, Int)]
   toggle : @cmd.Emit[(String, Int)]
   close_command : @cmd.Cmd
-  set_active : @cmd.Emit[Int]
   toggle_checked : @cmd.Emit[String]
   set_radio : @cmd.Emit[(String, String)]
-  set_submenu : @cmd.Emit[MenuSubmenuChange]
 }
 
 ///|
@@ -570,26 +567,20 @@ fn menubar_trigger_id(id : String, index : Int) -> String {
 fn menubar_scope(
   id : String,
   model : MenubarModel,
-  activate : @cmd.Emit[(String, Int)],
   toggle : @cmd.Emit[(String, Int)],
   close_command : @cmd.Cmd,
-  set_active : @cmd.Emit[Int],
   toggle_checked : @cmd.Emit[String],
   set_radio : @cmd.Emit[(String, String)],
-  set_submenu : @cmd.Emit[MenuSubmenuChange],
 ) -> MenubarScope {
   {
     id,
     model,
     counter: Ref(0),
     focus_claimed: Ref(false),
-    activate,
     toggle,
     close_command,
-    set_active,
     toggle_checked,
     set_radio,
-    set_submenu,
   }
 }
 
@@ -686,7 +677,6 @@ pub fn menubar(
             (current, @cmd.none)
           } else {
             let next = {
-              ..current,
               active_value: Some(value),
               active_index: index,
               focus_index: index,
@@ -706,7 +696,6 @@ pub fn menubar(
           }
         MenubarSwitch(value, index) => {
           let next = {
-            ..current,
             active_value: Some(value),
             active_index: index,
             focus_index: index,
@@ -736,7 +725,6 @@ pub fn menubar(
           } else if current.active_value == Some(value) {
             (
               {
-                ..current,
                 active_value: None,
                 active_index: -1,
                 focus_index: index,
@@ -754,7 +742,6 @@ pub fn menubar(
             )
           } else {
             let next = {
-              ..current,
               active_value: Some(value),
               active_index: index,
               focus_index: index,
@@ -780,7 +767,6 @@ pub fn menubar(
           if current.active_value is Some(_) {
             (
               {
-                ..current,
                 active_value: None,
                 active_index: -1,
                 focus_index: current.active_index,
@@ -811,7 +797,6 @@ pub fn menubar(
             } else {
               (
                 {
-                  ..current,
                   active_value: Some(value),
                   active_index: index,
                   focus_index: index,
@@ -823,7 +808,6 @@ pub fn menubar(
           } else if current.active_value == Some(value) {
             (
               {
-                ..current,
                 active_value: None,
                 active_index: -1,
                 focus_index: index,
@@ -895,13 +879,10 @@ pub fn menubar(
     let scope = menubar_scope(
       id,
       model,
-      emit.map(pair => MenubarActivate(pair.0, pair.1)),
       emit.map(pair => MenubarToggle(pair.0, pair.1)),
       emit(MenubarClose),
-      emit.map(index => MenubarSetActive(index)),
       emit.map(value => MenubarToggleChecked(value)),
       emit.map(pair => MenubarSetRadio(pair.0, pair.1)),
-      emit.map(value => MenubarSetSubmenu(value)),
     )
     let element_attrs = menu_state_attrs(
         attrs,
@@ -962,10 +943,7 @@ pub fn menubar(
     id,
     model,
     menu_noop_emit(),
-    menu_noop_emit(),
     @cmd.none,
-    menu_noop_emit(),
-    menu_noop_emit(),
     menu_noop_emit(),
     menu_noop_emit(),
   )
@@ -1048,13 +1026,10 @@ pub fn[C : @html.IsChildren] menubar_menu(
     trigger_id: menubar_trigger_id(scope.id, index),
     model: menu_model,
     counter: Ref(0),
-    open_command: (scope.activate)((value, index)),
     close_command: scope.close_command,
     toggle_command: (scope.toggle)((value, index)),
-    set_active: scope.set_active,
     toggle_checked: scope.toggle_checked,
     set_radio: scope.set_radio,
-    set_submenu: scope.set_submenu,
   }
   @html.div(
     style=ui_styles([UiBoxSizing, "display:contents"], style),

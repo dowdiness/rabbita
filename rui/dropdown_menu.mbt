@@ -41,10 +41,8 @@ fn dropdown_scope(
   id : String,
   model : MenuCoreModel,
   set_open : @cmd.Emit[Bool],
-  set_active : @cmd.Emit[Int],
   toggle_checked : @cmd.Emit[String],
   set_radio : @cmd.Emit[(String, String)],
-  set_submenu : @cmd.Emit[MenuSubmenuChange],
 ) -> DropdownMenuScope {
   {
     menu: {
@@ -53,13 +51,10 @@ fn dropdown_scope(
       trigger_id: id + "-trigger",
       model,
       counter: Ref(0),
-      open_command: set_open(true),
       close_command: set_open(false),
       toggle_command: set_open(!model.open),
-      set_active,
       toggle_checked,
       set_radio,
-      set_submenu,
     },
   }
 }
@@ -200,10 +195,8 @@ pub fn dropdown_menu(
       id,
       model,
       emit.map(open => DropdownSetOpen(open)),
-      emit.map(index => DropdownSetActive(index)),
       emit.map(value => DropdownToggleChecked(value)),
       emit.map(pair => DropdownSetRadio(pair.0, pair.1)),
-      emit.map(value => DropdownSetSubmenu(value)),
     )
     menu_root_surface(
       "dropdown-menu",
@@ -232,8 +225,6 @@ pub fn dropdown_menu(
   let scope = dropdown_scope(
     id,
     menu_core_model(default_open, default_checked_values, default_radio_values),
-    menu_noop_emit(),
-    menu_noop_emit(),
     menu_noop_emit(),
     menu_noop_emit(),
     menu_noop_emit(),

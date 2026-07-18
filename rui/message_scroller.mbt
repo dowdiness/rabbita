@@ -8,12 +8,12 @@ pub(all) enum MessageScrollDirection {
 priv struct MessageScrollerPosition {
   at_start : Bool
   at_end : Bool
-} derive(Debug, Eq)
+} derive(Eq)
 
 ///|
 priv enum MessageScrollerMsg {
   SetScrollerPosition(Bool, Bool)
-} derive(Debug)
+}
 
 ///|
 /// Opaque render scope owned by `message_scroller`.

@@ -1,7 +1,7 @@
 ///|
 priv enum ToggleGroupMsg {
   ToggleGroupValue(String)
-} derive(Debug)
+}
 
 ///|
 /// Opaque render scope owned by `toggle_group`.

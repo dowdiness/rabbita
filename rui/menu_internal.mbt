@@ -17,19 +17,16 @@ enum MenuSubmenuChange {
 } derive(Eq)
 
 ///|
-struct MenuScope {
+priv struct MenuScope {
   id : String
   content_id : String
   trigger_id : String
   model : MenuCoreModel
   counter : Ref[Int]
-  open_command : @cmd.Cmd
   close_command : @cmd.Cmd
   toggle_command : @cmd.Cmd
-  set_active : @cmd.Emit[Int]
   toggle_checked : @cmd.Emit[String]
   set_radio : @cmd.Emit[(String, String)]
-  set_submenu : @cmd.Emit[MenuSubmenuChange]
 }
 
 ///|
@@ -242,6 +239,7 @@ fn menu_scope_next_index(scope : MenuScope) -> Int {
 }
 
 ///|
+#cfg(not(target="js"))
 fn[A] menu_noop_emit() -> @cmd.Emit[A] {
   @cmd.Emit(_ => @cmd.none)
 }

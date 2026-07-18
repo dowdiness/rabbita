@@ -454,10 +454,8 @@ fn context_scope(
   point_x : Int,
   point_y : Int,
   set_open : @cmd.Emit[Bool],
-  set_active : @cmd.Emit[Int],
   toggle_checked : @cmd.Emit[String],
   set_radio : @cmd.Emit[(String, String)],
-  set_submenu : @cmd.Emit[MenuSubmenuChange],
 ) -> ContextMenuScope {
   {
     point_x,
@@ -468,13 +466,10 @@ fn context_scope(
       trigger_id: id + "-trigger",
       model,
       counter: Ref(0),
-      open_command: set_open(true),
       close_command: set_open(false),
       toggle_command: set_open(!model.open),
-      set_active,
       toggle_checked,
       set_radio,
-      set_submenu,
     },
   }
 }
@@ -656,10 +651,8 @@ pub fn context_menu(
       model.point_x,
       model.point_y,
       emit.map(open => ContextSetOpen(open)),
-      emit.map(index => ContextSetActive(index)),
       emit.map(value => ContextToggleChecked(value)),
       emit.map(pair => ContextSetRadio(pair.0, pair.1)),
-      emit.map(value => ContextSetSubmenu(value)),
     )
     menu_root_surface(
       "context-menu",
@@ -690,8 +683,6 @@ pub fn context_menu(
     menu_core_model(default_open, default_checked_values, default_radio_values),
     0,
     0,
-    menu_noop_emit(),
-    menu_noop_emit(),
     menu_noop_emit(),
     menu_noop_emit(),
     menu_noop_emit(),

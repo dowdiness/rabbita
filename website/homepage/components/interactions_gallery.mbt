@@ -1220,11 +1220,6 @@ fn ig_navigation_page(selected : String) -> @rabbita.Val[@html.Html] {
 }
 
 ///|
-fn ig_navigation_section() -> @rabbita.Val[@html.Html] {
-  ig_navigation_page("")
-}
-
-///|
 fn ig_dialog_variant(
   id : String,
   modal : Bool,
@@ -2698,11 +2693,6 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
 }
 
 ///|
-fn ig_overlay_section() -> @rabbita.Val[@html.Html] {
-  ig_overlay_page("")
-}
-
-///|
 fn ig_resizable_component(
   horizontal_html : @html.Html,
   vertical_html : @html.Html,
@@ -3146,9 +3136,4 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
       )
     },
   )
-}
-
-///|
-fn ig_feedback_section() -> @rabbita.Val[@html.Html] {
-  ig_feedback_page("")
 }

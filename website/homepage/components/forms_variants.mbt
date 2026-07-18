@@ -1,7 +1,4 @@
 ///|
-const FormsVariantsStackStyle : String = "display:flex;min-width:0;flex-direction:column;gap:4rem"
-
-///|
 const FormsVariantControlStyle : String = "display:flex;min-width:0;flex:1;align-items:center;justify-content:space-between;gap:1rem"
 
 ///|
@@ -1980,67 +1977,4 @@ fn forms_otp_variants() -> @rabbita.Val[@html.Html] {
       ],
     )
   })
-}
-
-///|
-fn forms_choice_variants_gallery() -> @rabbita.Val[@html.Html] {
-  let checkbox_variants = forms_checkbox_variants()
-  let switch_variants = forms_switch_variants()
-  let combobox_variants = forms_combobox_variants()
-  let select_variants = forms_select_variants()
-  checkbox_variants.view4(switch_variants, combobox_variants, select_variants, (
-    checkbox_html,
-    switch_html,
-    combobox_html,
-    select_html,
-  ) => {
-    @html.div(style=[FormsVariantsStackStyle], [
-      checkbox_html, switch_html, combobox_html, select_html,
-    ])
-  })
-}
-
-///|
-fn forms_otp_and_native_select_variants() -> @rabbita.Val[@html.Html] {
-  forms_otp_variants().view(otp_html => {
-    @html.div(style=[FormsVariantsStackStyle], [
-      forms_native_select_variants(),
-      otp_html,
-    ])
-  })
-}
-
-///|
-fn forms_variants_gallery() -> @rabbita.Val[@html.Html] {
-  let checkbox_variants = forms_checkbox_variants()
-  let switch_variants = forms_switch_variants()
-  let combobox_variants = forms_combobox_variants()
-  let select_variants = forms_select_variants()
-  let otp_variants = forms_otp_variants()
-  let input_group_variants = forms_input_group_variants()
-  checkbox_variants.view6(
-    switch_variants,
-    combobox_variants,
-    select_variants,
-    otp_variants,
-    input_group_variants,
-    (
-      checkbox_html,
-      switch_html,
-      combobox_html,
-      select_html,
-      otp_html,
-      input_group_html,
-    ) => {
-      @html.div(style=[FormsVariantsStackStyle], [
-        checkbox_html,
-        switch_html,
-        combobox_html,
-        select_html,
-        input_group_html,
-        forms_native_select_variants(),
-        otp_html,
-      ])
-    },
-  )
 }

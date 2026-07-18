@@ -44,26 +44,6 @@ fn assert_showcase_stage_contains(
 }
 
 ///|
-fn showcase_component_fragment(
-  html : String,
-  component_id : String,
-  next_component_id : String,
-) -> String raise {
-  let component_marker = "id=\"\{component_id}\""
-  let next_component_marker = "id=\"\{next_component_id}\""
-  if html.split(component_marker).to_array() is [_, component_and_rest] {
-    if component_and_rest.split(next_component_marker).to_array()
-      is [component, _] {
-      component.to_owned()
-    } else {
-      fail("expected showcase HTML to contain component `\{next_component_id}`")
-    }
-  } else {
-    fail("expected showcase HTML to contain component `\{component_id}`")
-  }
-}
-
-///|
 fn showcase_component_tail(
   html : String,
   component_id : String,
@@ -200,7 +180,7 @@ test "sidebar variants render as independent full-stage examples" {
 
 ///|
 test "sidebar stages render the intended public API compositions" {
-  let html = render_showcase_incremental(ig_navigation_section)
+  let html = render_showcase_incremental(() => ig_navigation_page("sidebar"))
   let sidebar_html = showcase_component_tail(html, "component-Sidebar")
   for
     expected in [
@@ -302,13 +282,12 @@ test "fixed sidebar specimen omits ineffective controls" {
 
 ///|
 test "pagination and carousel variants render as independent stages" {
-  let html = render_showcase_incremental(ig_navigation_section)
-  let pagination_html = showcase_component_fragment(
-    html, "component-Pagination", "component-Carousel",
-  )
-  let carousel_html = showcase_component_fragment(
-    html, "component-Carousel", "component-Navigation-Menu",
-  )
+  let pagination_html = render_showcase_incremental(() => {
+    ig_navigation_page("pagination")
+  })
+  let carousel_html = render_showcase_incremental(() => {
+    ig_navigation_page("carousel")
+  })
   assert_showcase_component_stages(pagination_html, "component-Pagination", [
     "Default", "Compact",
   ])
@@ -332,10 +311,9 @@ test "pagination and carousel variants render as independent stages" {
 
 ///|
 test "resizable variants render as independent stages" {
-  let html = render_showcase_incremental(ig_feedback_section)
-  let resizable_html = showcase_component_fragment(
-    html, "component-Resizable", "component-Scroll-Area",
-  )
+  let resizable_html = render_showcase_incremental(() => {
+    ig_feedback_page("resizable")
+  })
   assert_showcase_component_stages(resizable_html, "component-Resizable", [
     "Horizontal-multi-panel", "Vertical-two-panel",
   ])
@@ -413,16 +391,15 @@ test "slider variants render as independent stages" {
 
 ///|
 test "menu showcases render independent stages with matching code actions" {
-  let html = render_showcase_incremental(ig_overlay_section)
-  let context_menu_html = showcase_component_fragment(
-    html, "component-Context-Menu", "component-Command",
-  )
-  let dropdown_menu_html = showcase_component_fragment(
-    html, "component-Dropdown-Menu", "component-Menubar",
-  )
-  let menubar_html = showcase_component_fragment(
-    html, "component-Menubar", "component-Popover",
-  )
+  let context_menu_html = render_showcase_incremental(() => {
+    ig_overlay_page("context-menu")
+  })
+  let dropdown_menu_html = render_showcase_incremental(() => {
+    ig_overlay_page("dropdown-menu")
+  })
+  let menubar_html = render_showcase_incremental(() => {
+    ig_overlay_page("menubar")
+  })
   assert_menu_showcase_component(context_menu_html, "component-Context-Menu", [
     "Actions-shortcuts", "Submenu-destructive-action", "Checkbox-items", "Radio-group",
   ])
@@ -709,28 +686,27 @@ test "notification variants expose independent stages" {
 
 ///|
 test "form controls expose one stage and copy action per variant" {
-  let html = render_showcase_incremental(forms_gallery)
-  let input_html = showcase_component_fragment(
-    html, "component-Input", "component-Textarea",
-  )
+  let input_html = render_showcase_incremental(() => {
+    showcase_forms_page("input")
+  })
   assert_showcase_component_stages(input_html, "component-Input", [
     "Text", "Email", "Disabled",
   ])
-  let textarea_html = showcase_component_fragment(
-    html, "component-Textarea", "component-Field",
-  )
+  let textarea_html = render_showcase_incremental(() => {
+    showcase_forms_page("textarea")
+  })
   assert_showcase_component_stages(textarea_html, "component-Textarea", [
     "Default", "Invalid", "Disabled",
   ])
-  let field_html = showcase_component_fragment(
-    html, "component-Field", "component-Radio-Group",
-  )
+  let field_html = render_showcase_incremental(() => {
+    showcase_forms_page("field")
+  })
   assert_showcase_component_stages(field_html, "component-Field", [
     "Complete-form-composition", "Horizontal", "Responsive", "Fieldset-and-legend",
   ])
-  let radio_html = showcase_component_fragment(
-    html, "component-Radio-Group", "component-Slider",
-  )
+  let radio_html = render_showcase_incremental(() => {
+    showcase_forms_page("radio-group")
+  })
   assert_showcase_component_stages(radio_html, "component-Radio-Group", [
     "Horizontal", "Vertical",
   ])
@@ -741,35 +717,34 @@ test "form controls expose one stage and copy action per variant" {
 }
 
 ///|
-test "form variant gallery keeps every copied example independent" {
-  let html = render_showcase_incremental(forms_variants_gallery)
-  let checkbox_html = showcase_component_fragment(
-    html, "component-Checkbox", "component-Switch",
-  )
+test "form variant pages keep every copied example independent" {
+  let checkbox_html = render_showcase_incremental(() => {
+    showcase_forms_page("checkbox")
+  })
   assert_showcase_component_stages(checkbox_html, "component-Checkbox", [
     "Mixed", "Invalid", "Disabled",
   ])
-  let switch_html = showcase_component_fragment(
-    html, "component-Switch", "component-Combobox",
-  )
+  let switch_html = render_showcase_incremental(() => {
+    showcase_forms_page("switch")
+  })
   assert_showcase_component_stages(switch_html, "component-Switch", [
     "Default", "Small", "Invalid", "Disabled",
   ])
-  let combobox_html = showcase_component_fragment(
-    html, "component-Combobox", "component-Select",
-  )
+  let combobox_html = render_showcase_incremental(() => {
+    showcase_forms_page("combobox")
+  })
   assert_showcase_component_stages(combobox_html, "component-Combobox", [
     "Multiple", "Grouped", "Empty-result", "Invalid", "Disabled",
   ])
-  let select_html = showcase_component_fragment(
-    html, "component-Select", "component-Input-Group",
-  )
+  let select_html = render_showcase_incremental(() => {
+    showcase_forms_page("select")
+  })
   assert_showcase_component_stages(select_html, "component-Select", [
     "Compound-collection", "Invalid", "Disabled",
   ])
-  let input_group_html = showcase_component_fragment(
-    html, "component-Input-Group", "component-Native-Select",
-  )
+  let input_group_html = render_showcase_incremental(() => {
+    showcase_forms_page("input-group")
+  })
   assert_showcase_component_stages(input_group_html, "component-Input-Group", [
     "Basic", "Inline-start", "Inline-end", "Block-start-input", "Block-start-textarea",
     "Block-end-input", "Block-end-textarea", "Icon-search", "Icon-email", "Icons-card-validation",
@@ -817,15 +792,17 @@ test "form variant gallery keeps every copied example independent" {
   if FormsInputGroupCustomControlCode.contains("data_set(\"slot\"") {
     fail("custom Input Group recipe must use the public black-box adapter")
   }
-  let native_select_html = showcase_component_fragment(
-    html, "component-Native-Select", "component-Input-OTP",
-  )
+  let native_select_html = render_showcase_incremental(() => {
+    showcase_forms_page("native-select")
+  })
   assert_showcase_component_stages(
     native_select_html,
     "component-Native-Select",
     ["Default-with-groups", "Small", "Invalid", "Disabled"],
   )
-  let otp_html = render_showcase_incremental(forms_otp_variants)
+  let otp_html = render_showcase_incremental(() => {
+    showcase_forms_page("input-otp")
+  })
   assert_showcase_component_stages(otp_html, "component-Input-OTP", [
     "Default", "Pattern", "2-2-2-Separator", "3-3", "4-4", "Four-Digits", "Alphanumeric",
     "Invalid-and-editable", "Disabled", "Form",
@@ -901,40 +878,38 @@ test "foundation variants expose one stage and copy action per example" {
 }
 
 ///|
-test "identity variants keep copied examples independent" {
-  let html = render_showcase_stage(foundations_identity_variants())
-  let avatar_html = showcase_component_fragment(
-    html, "component-Avatar", "component-Card",
-  )
+test "identity variant pages keep copied examples independent" {
+  let avatar_html = render_showcase_incremental(() => {
+    showcase_foundations_page("avatar")
+  })
   assert_showcase_component_stages(avatar_html, "component-Avatar", [
     "Default", "Small", "Large", "Image-and-badge", "Group-and-count",
   ])
-  let card_html = showcase_component_fragment(
-    html, "component-Card", "component-Aspect-Ratio",
-  )
+  let card_html = render_showcase_incremental(() => {
+    showcase_foundations_page("card")
+  })
   assert_showcase_component_stages(card_html, "component-Card", [
     "Default", "Small",
   ])
-  let aspect_html = showcase_component_fragment(
-    html, "component-Aspect-Ratio", "component-Direction",
-  )
+  let aspect_html = render_showcase_incremental(() => {
+    showcase_foundations_page("aspect-ratio")
+  })
   assert_showcase_component_stages(aspect_html, "component-Aspect-Ratio", [
     "Square-1-1", "Standard-4-3", "Widescreen-16-9",
   ])
-  let separator_html = showcase_component_tail(html, "component-Separator")
+  let separator_html = render_showcase_incremental(() => {
+    showcase_foundations_page("separator")
+  })
   assert_showcase_component_stages(separator_html, "component-Separator", [
     "Horizontal", "Vertical",
   ])
 }
 
 ///|
-test "data display variants keep copied examples independent" {
-  let html = render_showcase_stage(
-    foundations_data_variants(@html.span("data-table")),
-  )
-  let attachment_html = showcase_component_fragment(
-    html, "component-Attachment", "component-Typography",
-  )
+test "data display variant pages keep copied examples independent" {
+  let attachment_html = render_showcase_incremental(() => {
+    showcase_foundations_page("attachment")
+  })
   assert_showcase_component_stages(attachment_html, "component-Attachment", [
     "Image-attachment", "File-attachment", "Idle", "Uploading", "Processing", "Error",
     "Done", "Default-size", "Small", "Extra-small", "Group", "Full-card-trigger",
@@ -989,32 +964,34 @@ test "data display variants keep copied examples independent" {
     "Remove market-research.pdf",
   )
   assert_showcase_stage_contains(FdvAttachmentErrorCode, "Retry upload")
-  let typography_html = showcase_component_fragment(
-    html, "component-Typography", "component-Data-Table",
-  )
+  let typography_html = render_showcase_incremental(() => {
+    showcase_foundations_page("typography")
+  })
   assert_showcase_component_stages(typography_html, "component-Typography", [
     "H1", "H2", "H3", "H4", "Paragraph", "Lead", "Large", "Small", "Muted", "Blockquote",
     "List", "Inline-code",
   ])
-  let item_html = showcase_component_fragment(
-    html, "component-Item", "component-Empty",
-  )
+  let item_html = render_showcase_incremental(() => {
+    showcase_foundations_page("item")
+  })
   assert_showcase_component_stages(item_html, "component-Item", [
     "Default", "Outline-small", "Muted-image",
   ])
-  let empty_html = showcase_component_fragment(
-    html, "component-Empty", "component-Marker",
-  )
+  let empty_html = render_showcase_incremental(() => {
+    showcase_foundations_page("empty")
+  })
   assert_showcase_component_stages(empty_html, "component-Empty", [
     "Default-media", "Icon-media",
   ])
-  let marker_html = showcase_component_fragment(
-    html, "component-Marker", "component-Progress",
-  )
+  let marker_html = render_showcase_incremental(() => {
+    showcase_foundations_page("marker")
+  })
   assert_showcase_component_stages(marker_html, "component-Marker", [
     "Default", "Separator", "Border",
   ])
-  let progress_html = showcase_component_tail(html, "component-Progress")
+  let progress_html = render_showcase_incremental(() => {
+    showcase_foundations_page("progress")
+  })
   assert_showcase_component_stages(progress_html, "component-Progress", [
     "Indeterminate", "Determinate",
   ])

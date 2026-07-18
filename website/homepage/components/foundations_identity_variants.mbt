@@ -1,7 +1,4 @@
 ///|
-const IdentityVariantsStackStyle : String = "display:flex;min-width:0;flex-direction:column;gap:4rem;align-items:stretch"
-
-///|
 const IdentityVariantsGridStyle : String = "display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr));gap:1rem;align-items:start"
 
 ///|
@@ -461,15 +458,4 @@ fn foundations_separator_demo() -> @html.Html {
       ),
     ],
   )
-}
-
-///|
-fn foundations_identity_variants() -> @html.Html {
-  @html.div(style=[IdentityVariantsStackStyle], [
-    foundations_avatar_demo(),
-    foundations_card_demo(),
-    foundations_aspect_ratio_demo(),
-    foundations_direction_demo(),
-    foundations_separator_demo(),
-  ])
 }

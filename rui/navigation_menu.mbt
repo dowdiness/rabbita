@@ -14,9 +14,7 @@ struct NavigationMenuScope {
   viewport : Bool
   contents : Ref[Array[NavigationMenuContentEntry]]
   viewport_rendered : Ref[Bool]
-  activate : @cmd.Emit[(String, Int)]
   toggle : @cmd.Emit[(String, Int)]
-  close_command : @cmd.Cmd
 }
 
 ///|
@@ -30,9 +28,7 @@ struct NavigationMenuItemScope {
   active_value_set : Bool
   viewport : Bool
   contents : Ref[Array[NavigationMenuContentEntry]]
-  activate_command : @cmd.Cmd
   toggle_command : @cmd.Cmd
-  close_command : @cmd.Cmd
 }
 
 ///|
@@ -726,9 +722,7 @@ pub fn navigation_menu(
       viewport,
       contents: Ref([]),
       viewport_rendered: Ref(false),
-      activate: emit.map(pair => NavigationActivate(pair.0, pair.1)),
       toggle: emit.map(pair => NavigationToggle(pair.0, pair.1)),
-      close_command: emit(NavigationClose),
     }
     let element_attrs = menu_state_attrs(
       attrs,
@@ -798,9 +792,7 @@ pub fn navigation_menu(
     viewport,
     contents: Ref([]),
     viewport_rendered: Ref(false),
-    activate: menu_noop_emit(),
     toggle: menu_noop_emit(),
-    close_command: @cmd.none,
   }
   let element_attrs = menu_state_attrs(
     attrs,
@@ -902,9 +894,7 @@ pub fn[C : @html.IsChildren] navigation_menu_item(
     active_value_set: scope.model.value is Some(_),
     viewport: scope.viewport,
     contents: scope.contents,
-    activate_command: (scope.activate)((value, index)),
     toggle_command: (scope.toggle)((value, index)),
-    close_command: scope.close_command,
   }
   @html.li(
     style=ui_styles([UiBoxSizing, NavigationMenuItemStyle], style),

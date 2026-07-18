@@ -1319,16 +1319,3 @@ fn fdv_progress_demo() -> @html.Html {
     ],
   )
 }
-
-///|
-fn foundations_data_variants(data_table_html : @html.Html) -> @html.Html {
-  @html.fragment([
-    fdv_attachments_demo(),
-    fdv_typography_demo(),
-    fdv_data_table_demo(data_table_html),
-    fdv_items_demo(),
-    fdv_empty_demo(),
-    fdv_marker_demo(),
-    fdv_progress_demo(),
-  ])
-}

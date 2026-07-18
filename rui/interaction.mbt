@@ -325,61 +325,6 @@ fn ui_dialog_close(id : String) -> @cmd.Cmd {
 
 ///|
 #cfg(target="js")
-fn ui_dialog_request_close(id : String) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.after_render, _ => {
-    if @dom.document().get_element_by_id(id).to_option() is Some(element) &&
-      element.to_html_element() is Some(html_element) &&
-      html_element.to_html_dialog_element() is Some(dialog) {
-      dialog.request_close()
-    }
-  })
-}
-
-///|
-#cfg(not(target="js"))
-fn ui_dialog_request_close(id : String) -> @cmd.Cmd {
-  ignore(id)
-  @cmd.none
-}
-
-///|
-#cfg(target="js")
-fn ui_popover_show(id : String) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.after_render, _ => {
-    if @dom.document().get_element_by_id(id).to_option() is Some(element) &&
-      element.to_html_element() is Some(html_element) {
-      html_element.show_popover()
-    }
-  })
-}
-
-///|
-#cfg(not(target="js"))
-fn ui_popover_show(id : String) -> @cmd.Cmd {
-  ignore(id)
-  @cmd.none
-}
-
-///|
-#cfg(target="js")
-fn ui_popover_hide(id : String) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.after_render, _ => {
-    if @dom.document().get_element_by_id(id).to_option() is Some(element) &&
-      element.to_html_element() is Some(html_element) {
-      html_element.hide_popover()
-    }
-  })
-}
-
-///|
-#cfg(not(target="js"))
-fn ui_popover_hide(id : String) -> @cmd.Cmd {
-  ignore(id)
-  @cmd.none
-}
-
-///|
-#cfg(target="js")
 fn ui_focus_id(id : String) -> @cmd.Cmd {
   @cmd.custom_cmd(kind=@cmd.after_render, _ => {
     if @dom.document().get_element_by_id(id).to_option() is Some(element) &&

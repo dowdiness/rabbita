@@ -1072,8 +1072,6 @@ type MenuCoreModel derive(Eq)
 
 type MenuIndicatorPlacement derive(Eq)
 
-type MenuScope
-
 type MenuSubmenuChange derive(Eq)
 
 type MenubarMenuScope
