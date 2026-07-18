@@ -1,0 +1,11 @@
+import {
+  "moonbit-community/rabbita",
+  "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita/clipboard",
+  "moonbit-community/rabbita/html",
+  "moonbit-community/rabbita/svg",
+  "Yoorkin/rui",
+  "Yoorkin/shiki",
+}
+
+supported_targets = "js"

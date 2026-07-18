@@ -9,6 +9,7 @@ on:
       - 'doc/**'
       - 'examples/**'
       - 'rabbita/**'
+      - 'rui/**'
       - 'warren/**'
       - 'utils/shiki/**'
       - 'moon.work'
