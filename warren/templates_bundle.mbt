@@ -2,54 +2,52 @@
 
 ///|
 let _embed_main_mbt : String =
-  #|///|
   #|using @html {a, button, div, h1, h2, li, text, ul}
+  #|using @rabbita {type Val, type Html}
   #|
-  #|///|
-  #|using @rabbita {new, create_pure_state}
-  #|
-  #|///|
   #|enum Msg {
   #|  Clicked
   #|}
   #|
-  #|///|
-  #|fn main {
-  #|  fn app() {
-  #|    let (count, emit) = create_pure_state(
-  #|      0,
-  #|      update=(msg, count) => {
-  #|        match msg {
-  #|          Clicked => count + 1
-  #|        }
-  #|      },
-  #|    )
-  #|    count.map(count => {
-  #|      div(class="app") <| [
-  #|        h1(class="title", "Hello Rabbita"),
-  #|        div(class="lead", "You built it successfully!"),
-  #|        button(class="click-btn", on_click=emit(Clicked), "You clicked \{count} times"),
-  #|        div(class="next") <| [
-  #|          h2(class="next-title", "What's next"),
-  #|          ul(class="next-list") <| [
-  #|            li(
-  #|              "Edit a MoonBit file while the dev server runs for instant refresh.",
+  #|fn app() -> Val[Html] {
+  #|  let (count, emit) = @rabbita.create_pure_state(0, update=fn(msg, count) {
+  #|    match msg {
+  #|      Clicked => count + 1
+  #|    }
+  #|  })
+  #|
+  #|  count.view(count => {
+  #|    div(class="app") <| [
+  #|      h1(class="title", "Hello Rabbita"),
+  #|      div(class="lead", "You built it successfully!"),
+  #|      button(
+  #|        class="click-btn",
+  #|        on_click=emit(Clicked),
+  #|        "You clicked \{count} times",
+  #|      ),
+  #|      div(class="next") <| [
+  #|        h2(class="next-title", "What's next"),
+  #|        ul(class="next-list") <| [
+  #|          li(
+  #|            "Edit a MoonBit file while the dev server runs for instant refresh.",
+  #|          ),
+  #|          li <| [
+  #|            text("Explore "),
+  #|            a(
+  #|              class="inline-link",
+  #|              target=Blank,
+  #|              href="https://github.com/moonbit-community/rabbita",
+  #|              "tutorials and examples",
   #|            ),
-  #|            li <| [
-  #|              text("Explore "),
-  #|              a(
-  #|                class="inline-link",
-  #|                target=Blank,
-  #|                href="https://github.com/moonbit-community/rabbita",
-  #|                "tutorials and examples",
-  #|              ),
-  #|            ],
   #|          ],
   #|        ],
-  #|      ]
-  #|    })
-  #|  }
-  #|  new(app).mount("app")
+  #|      ],
+  #|    ]
+  #|  })
+  #|}
+  #|
+  #|fn main {
+  #|  @rabbita.new(app).mount("app")
   #|}
   #|
 
@@ -62,9 +60,7 @@ let _embed_moon_pkg : String =
   #|
   #|supported_targets = "js"
   #|
-  #|options(
-  #|  "is-main": true,
-  #|)
+  #|pkgtype(kind: "executable")
   #|
 
 ///|
@@ -184,7 +180,7 @@ let _embed_moon_mod : String =
   #|version = "0.1.0"
   #|
   #|import {
-  #|  "moonbit-community/rabbita@0.12.4",
+  #|  "moonbit-community/rabbita@__RABBITA_VERSION__",
   #|}
   #|
   #|readme = "README.md"
@@ -217,7 +213,7 @@ let _embed_readme_md : String =
 
 ///|
 let _embed_main_mbt_2 : String =
-  #|using @rabbita { new, create_pure_state }
+  #|using @rabbita { type Val, type Html }
   #|using @html { button, div, h1 }
   #|
   #|enum Msg {
@@ -225,25 +221,28 @@ let _embed_main_mbt_2 : String =
   #|  Dec
   #|}
   #|
+  #|fn app() -> Val[Html] {
+  #|  let (model, emit) = @rabbita.create_pure_state(
+  #|    0,
+  #|    update=fn(msg, model) {
+  #|      match msg {
+  #|        Inc => model + 1
+  #|        Dec => model - 1
+  #|      }
+  #|    },
+  #|  )
+  #|
+  #|  model.view(model => div(class="app") <| [
+  #|    h1("\{model}"),
+  #|    div(class="actions") <| [
+  #|      button(on_click=emit(Dec), "-"),
+  #|      button(on_click=emit(Inc), "+"),
+  #|    ],
+  #|  ])
+  #|}
+  #|
   #|fn main {
-  #|  fn app() {
-  #|    let (model, emit) = create_pure_state(
-  #|      0,
-  #|      update=(msg, model) =>
-  #|        match msg {
-  #|          Inc => model + 1
-  #|          Dec => model - 1
-  #|        },
-  #|    )
-  #|    model.map(model => div(class="app") <| [
-  #|      h1("\{model}"),
-  #|      div(class="actions") <| [
-  #|        button(on_click=emit(Dec), "-"),
-  #|        button(on_click=emit(Inc), "+"),
-  #|      ],
-  #|    ])
-  #|  }
-  #|  new(app).mount("app")
+  #|  @rabbita.new(app).mount("app")
   #|}
   #|
 
@@ -254,7 +253,7 @@ let _embed_moon_mod_2 : String =
   #|version = "0.1.0"
   #|
   #|import {
-  #|  "moonbit-community/rabbita@0.12.4",
+  #|  "moonbit-community/rabbita@__RABBITA_VERSION__",
   #|}
   #|
   #|readme = "README.md"
@@ -279,9 +278,7 @@ let _embed_moon_pkg_2 : String =
   #|
   #|supported_targets = "js"
   #|
-  #|options(
-  #|  "is-main": true,
-  #|)
+  #|pkgtype(kind: "executable")
   #|
 
 ///|

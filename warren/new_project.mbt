@@ -2,6 +2,12 @@
 let new_project_name_placeholder = "__WARREN_PROJECT_NAME__"
 
 ///|
+let rabbita_version_placeholder = "__RABBITA_VERSION__"
+
+///|
+let rabbita_version = "0.13.1"
+
+///|
 let default_new_project_template = "default"
 
 ///|
@@ -33,7 +39,9 @@ let minimized_template_dir : TemplateEntry = Dir("", [
 
 ///|
 fn render_new_project_file(content : String, project_name : String) -> String {
-  content.split(new_project_name_placeholder).collect().join(project_name)
+  let content = content.split(new_project_name_placeholder).join(project_name)
+  let content = content.split(rabbita_version_placeholder).join(rabbita_version)
+  content
 }
 
 ///|

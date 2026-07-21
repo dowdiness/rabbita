@@ -3,7 +3,7 @@ name = "local/__WARREN_PROJECT_NAME__"
 version = "0.1.0"
 
 import {
-  "moonbit-community/rabbita@0.12.4",
+  "moonbit-community/rabbita@__RABBITA_VERSION__",
 }
 
 readme = "README.md"
