@@ -85,12 +85,9 @@ test "checkbox exposes mixed state and native ARIA semantics" {
 ///|
 test "switch and toggle expose black-box initial state" {
   let switch_html = render_incremental(() => {
-    @rui.switch(
-      default_checked=true,
-      size=@rui.Sm,
-      aria_label="Notifications",
-      style=["outline-offset:4px"],
-    )
+    @rui.switch(default_checked=true, size=Sm, aria_label="Notifications", style=[
+      "outline-offset:4px",
+    ])
   })
   assert_contains(switch_html, "role=\"switch\"")
   assert_contains(switch_html, "aria-checked=\"true\"")
@@ -107,7 +104,7 @@ test "switch and toggle expose black-box initial state" {
   )
 
   let toggle_html = render_incremental(() => {
-    @rui.toggle(default_pressed=true, variant=@rui.Outline, "Bold")
+    @rui.toggle(default_pressed=true, variant=Outline, "Bold")
   })
   assert_contains(toggle_html, "aria-pressed=\"true\"")
   assert_contains(toggle_html, "data-slot=\"toggle\"")
@@ -134,7 +131,7 @@ test "switch thumb keeps the Vega checked endpoint at both sizes" {
   assert_not_contains(default_checked, "background-clip:padding-box")
 
   let small_checked = render_incremental(() => {
-    @rui.switch(default_checked=true, size=@rui.Sm, aria_label="Small switch")
+    @rui.switch(default_checked=true, size=Sm, aria_label="Small switch")
   })
   assert_contains(small_checked, "width:1.5rem;height:0.875rem")
   assert_contains(small_checked, "width:0.75rem;height:0.75rem")
@@ -168,7 +165,7 @@ test "alert and separator expose semantic roles" {
   assert_contains(alert_html, "data-slot=\"alert-title\"")
 
   let separator_html = render(
-    @rui.separator(orientation=@rui.Vertical, decorative=false),
+    @rui.separator(orientation=Vertical, decorative=false),
   )
   assert_contains(separator_html, "role=\"separator\"")
   assert_contains(separator_html, "aria-orientation=\"vertical\"")

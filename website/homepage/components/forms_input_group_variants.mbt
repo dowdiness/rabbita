@@ -697,11 +697,11 @@ const FormsInputGroupCustomControlCode : String =
 fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
   let connection_info = @rui.popover(
     id="forms-variants-input-group-connection-info",
-    side=@rui.Bottom,
-    align=@rui.Start,
+    side=Bottom,
+    align=Start,
     side_offset=8,
-    trigger_variant=@rui.Secondary,
-    trigger_size=@rui.IconXs,
+    trigger_variant=Secondary,
+    trigger_size=IconXs,
     trigger_attrs=@html.Attrs::build().aria_label("Connection information"),
     trigger_style=["border-radius:9999px"],
     forms_input_group_info_icon(),
@@ -720,7 +720,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
   )
   let favorite = @rui.toggle(
     id="forms-variants-input-group-favorite",
-    size=@rui.Sm,
+    size=Sm,
     aria_label="Favorite connection",
     style=[
       "width:1.5rem;height:1.5rem;min-width:1.5rem;padding:0;border-radius:9999px",
@@ -733,13 +733,13 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
       @html.fragment([
         @rui.dropdown_menu_trigger(
           scope,
-          variant=@rui.Ghost,
-          size=@rui.IconXs,
+          variant=Ghost,
+          size=IconXs,
           aria_label="More file actions",
           showcase_more_horizontal_icon(),
         ),
         @rui.dropdown_menu_portal([
-          @rui.dropdown_menu_content(scope, align=@rui.End, side_offset=8, [
+          @rui.dropdown_menu_content(scope, align=End, side_offset=8, [
             @rui.dropdown_menu_item(scope, "Settings"),
             @rui.dropdown_menu_item(scope, "Copy path"),
             @rui.dropdown_menu_item(scope, "Open location"),
@@ -754,8 +754,8 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
       @html.fragment([
         @rui.dropdown_menu_trigger(
           scope,
-          variant=@rui.Ghost,
-          size=@rui.Xs,
+          variant=Ghost,
+          size=Xs,
           aria_label="Choose search scope",
           style=["gap:0.25rem;padding-inline:0.375rem;font-size:0.75rem"],
           [@html.span("Search in"), forms_input_group_chevron_down_icon()],
@@ -763,7 +763,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
         @rui.dropdown_menu_portal([
           @rui.dropdown_menu_content(
             scope,
-            align=@rui.End,
+            align=End,
             side_offset=8,
             align_offset=-4,
             [
@@ -798,12 +798,12 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Search...",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineStart,
+                  align=InputInlineStart,
                   for_="forms-variants-input-group-basic",
                   showcase_search_icon(),
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineEnd,
+                  align=InputInlineEnd,
                   for_="forms-variants-input-group-basic",
                   @rui.input_group_text("12 results"),
                 ),
@@ -826,7 +826,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Search...",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineStart,
+                  align=InputInlineStart,
                   for_="forms-variants-input-group-inline-start",
                   showcase_search_icon(),
                 ),
@@ -845,12 +845,12 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
               style=["width:min(100%,24rem);margin-inline:auto"],
               @rui.input_group([
                 @rui.input_group_input(
-                  input_type=@html.Password,
+                  input_type=Password,
                   id="forms-variants-input-group-inline-end",
                   placeholder="Enter password",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineEnd,
+                  align=InputInlineEnd,
                   for_="forms-variants-input-group-inline-end",
                   showcase_eye_off_icon(),
                 ),
@@ -873,7 +873,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Enter your name",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputBlockStart,
+                  align=InputBlockStart,
                   for_="forms-variants-input-group-block-start",
                   @rui.input_group_text("Full name"),
                 ),
@@ -896,19 +896,17 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   rows=5,
                   placeholder="println(\"Hello, world!\")",
                 ),
-                @rui.input_group_addon(align=@rui.InputBlockStart, [
+                @rui.input_group_addon(align=InputBlockStart, [
                   @rui.input_group_text([
                     showcase_file_icon(),
                     @html.span("script.mbt"),
                   ]),
                   @rui.input_group_button(
-                    size=@rui.InputButtonIconXs,
+                    size=InputButtonIconXs,
                     title="Copy script",
                     attrs=@html.Attrs::build().aria_label("Copy script"),
                     style=["margin-inline-start:auto"],
-                    on_click=@clipboard.copy(
-                      @clipboard.Text("println(\"Hello, world!\")"),
-                    ),
+                    on_click=@clipboard.copy(Text("println(\"Hello, world!\")")),
                     showcase_copy_icon(),
                   ),
                 ]),
@@ -931,7 +929,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Enter amount",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputBlockEnd,
+                  align=InputBlockEnd,
                   @rui.input_group_text("USD"),
                 ),
               ]),
@@ -953,11 +951,11 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   rows=4,
                   placeholder="Write a comment...",
                 ),
-                @rui.input_group_addon(align=@rui.InputBlockEnd, [
+                @rui.input_group_addon(align=InputBlockEnd, [
                   @rui.input_group_text(style=["flex:1"], "0/280"),
                   @rui.input_group_button(
-                    size=@rui.InputButtonSm,
-                    variant=@rui.Default,
+                    size=InputButtonSm,
+                    variant=Default,
                     "Post",
                   ),
                 ]),
@@ -980,7 +978,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Search...",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineStart,
+                  align=InputInlineStart,
                   for_="forms-variants-input-group-icon-search",
                   showcase_search_icon(),
                 ),
@@ -999,12 +997,12 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
               style=["width:min(100%,24rem);margin-inline:auto"],
               @rui.input_group([
                 @rui.input_group_input(
-                  input_type=@html.Email,
+                  input_type=Email,
                   id="forms-variants-input-group-icon-email",
                   placeholder="Enter your email",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineStart,
+                  align=InputInlineStart,
                   for_="forms-variants-input-group-icon-email",
                   showcase_mail_icon(),
                 ),
@@ -1027,12 +1025,12 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Card number",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineStart,
+                  align=InputInlineStart,
                   for_="forms-variants-input-group-icons",
                   showcase_credit_card_icon(),
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineEnd,
+                  align=InputInlineEnd,
                   for_="forms-variants-input-group-icons",
                   showcase_check_icon(),
                 ),
@@ -1055,7 +1053,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Card number",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineEnd,
+                  align=InputInlineEnd,
                   for_="forms-variants-input-group-icon-metadata",
                   [forms_input_group_star_icon(), forms_input_group_info_icon()],
                 ),
@@ -1078,12 +1076,12 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="0.00",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineStart,
+                  align=InputInlineStart,
                   for_="forms-variants-input-group-text-currency",
                   @rui.input_group_text("$"),
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineEnd,
+                  align=InputInlineEnd,
                   for_="forms-variants-input-group-text-currency",
                   @rui.input_group_text("USD"),
                 ),
@@ -1106,12 +1104,12 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="example",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineStart,
+                  align=InputInlineStart,
                   for_="forms-variants-input-group-text",
                   @rui.input_group_text("https://"),
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineEnd,
+                  align=InputInlineEnd,
                   for_="forms-variants-input-group-text",
                   @rui.input_group_text(".com"),
                 ),
@@ -1134,7 +1132,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Enter your username",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineEnd,
+                  align=InputInlineEnd,
                   for_="forms-variants-input-group-text-username",
                   @rui.input_group_text("@company.com"),
                 ),
@@ -1158,7 +1156,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Enter your message",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputBlockEnd,
+                  align=InputBlockEnd,
                   @rui.input_group_text("120 characters left"),
                 ),
               ]),
@@ -1180,14 +1178,12 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   value="https://rabbit-tea.dev",
                   read_only=true,
                 ),
-                @rui.input_group_addon(align=@rui.InputInlineEnd, [
+                @rui.input_group_addon(align=InputInlineEnd, [
                   @rui.input_group_button(
-                    size=@rui.InputButtonIconXs,
+                    size=InputButtonIconXs,
                     title="Copy URL",
                     attrs=@html.Attrs::build().aria_label("Copy URL"),
-                    on_click=@clipboard.copy(
-                      @clipboard.Text("https://rabbit-tea.dev"),
-                    ),
+                    on_click=@clipboard.copy(Text("https://rabbit-tea.dev")),
                     showcase_copy_icon(),
                   ),
                 ]),
@@ -1210,13 +1206,13 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   value="rabbit-tea.dev",
                   read_only=true,
                 ),
-                @rui.input_group_addon(align=@rui.InputInlineStart, info_html),
+                @rui.input_group_addon(align=InputInlineStart, info_html),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineStart,
+                  align=InputInlineStart,
                   for_="forms-variants-input-group-secure",
                   @rui.input_group_text("https://"),
                 ),
-                @rui.input_group_addon(align=@rui.InputInlineEnd, favorite_html),
+                @rui.input_group_addon(align=InputInlineEnd, favorite_html),
               ]),
             ),
             FormsInputGroupConnectionButtonsCode,
@@ -1235,10 +1231,10 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   id="forms-variants-input-group-search-button",
                   placeholder="Type to search...",
                 ),
-                @rui.input_group_addon(align=@rui.InputInlineEnd, [
+                @rui.input_group_addon(align=InputInlineEnd, [
                   @rui.input_group_button(
-                    size=@rui.InputButtonXs,
-                    variant=@rui.Secondary,
+                    size=InputButtonXs,
+                    variant=Secondary,
                     "Search",
                   ),
                 ]),
@@ -1261,12 +1257,12 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Search...",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineStart,
+                  align=InputInlineStart,
                   for_="forms-variants-input-group-kbd",
                   showcase_search_icon(),
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineEnd,
+                  align=InputInlineEnd,
                   for_="forms-variants-input-group-kbd",
                   @rui.kbd("⌘K"),
                 ),
@@ -1288,7 +1284,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   id="forms-variants-input-group-dropdown",
                   placeholder="Enter file name",
                 ),
-                @rui.input_group_addon(align=@rui.InputInlineEnd, dropdown_html),
+                @rui.input_group_addon(align=InputInlineEnd, dropdown_html),
               ]),
             ),
             FormsInputGroupDropdownCode,
@@ -1308,7 +1304,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Enter search query",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineEnd,
+                  align=InputInlineEnd,
                   query_dropdown_html,
                 ),
               ]),
@@ -1330,7 +1326,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Searching...",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineEnd,
+                  align=InputInlineEnd,
                   @rui.spinner(label="Searching"),
                 ),
               ]),
@@ -1352,7 +1348,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Processing...",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineStart,
+                  align=InputInlineStart,
                   @rui.spinner(label="Processing"),
                 ),
               ]),
@@ -1373,7 +1369,7 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   id="forms-variants-input-group-loading",
                   placeholder="Saving changes...",
                 ),
-                @rui.input_group_addon(align=@rui.InputInlineEnd, [
+                @rui.input_group_addon(align=InputInlineEnd, [
                   @rui.input_group_text("Saving..."),
                   @rui.spinner(label="Saving changes"),
                 ]),
@@ -1396,11 +1392,11 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   placeholder="Refreshing data...",
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineStart,
+                  align=InputInlineStart,
                   @rui.spinner(label="Refreshing data"),
                 ),
                 @rui.input_group_addon(
-                  align=@rui.InputInlineEnd,
+                  align=InputInlineEnd,
                   @rui.input_group_text("Please wait..."),
                 ),
               ]),
@@ -1422,35 +1418,32 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                   rows=7,
                   placeholder="println(\"Hello, world!\")",
                 ),
-                @rui.input_group_addon(align=@rui.InputBlockStart, [
+                @rui.input_group_addon(align=InputBlockStart, [
                   @rui.input_group_text([
                     showcase_file_icon(),
                     @html.span("main.mbt"),
                   ]),
                   @rui.input_group_button(
-                    size=@rui.InputButtonIconXs,
+                    size=InputButtonIconXs,
                     title="Refresh",
                     attrs=@html.Attrs::build().aria_label("Refresh"),
                     style=["margin-inline-start:auto"],
                     showcase_refresh_icon(),
                   ),
                   @rui.input_group_button(
-                    size=@rui.InputButtonIconXs,
+                    size=InputButtonIconXs,
                     title="Copy editor content",
                     attrs=@html.Attrs::build().aria_label("Copy editor content"),
-                    on_click=@clipboard.copy(
-                      @clipboard.Text("println(\"Hello, world!\")"),
-                    ),
+                    on_click=@clipboard.copy(Text("println(\"Hello, world!\")")),
                     showcase_copy_icon(),
                   ),
                 ]),
-                @rui.input_group_addon(align=@rui.InputBlockEnd, [
+                @rui.input_group_addon(align=InputBlockEnd, [
                   @rui.input_group_text(style=["flex:1"], "Line 1, Column 1"),
-                  @rui.input_group_button(
-                    size=@rui.InputButtonSm,
-                    variant=@rui.Default,
-                    [@html.span("Run"), showcase_corner_down_left_icon()],
-                  ),
+                  @rui.input_group_button(size=InputButtonSm, variant=Default, [
+                    @html.span("Run"),
+                    showcase_corner_down_left_icon(),
+                  ]),
                 ]),
               ]),
             ),
@@ -1481,10 +1474,10 @@ fn forms_input_group_variants() -> @rabbita.Val[@html.Html] {
                     )
                   },
                 ),
-                @rui.input_group_addon(align=@rui.InputBlockEnd, [
+                @rui.input_group_addon(align=InputBlockEnd, [
                   @rui.input_group_button(
-                    size=@rui.InputButtonSm,
-                    variant=@rui.Default,
+                    size=InputButtonSm,
+                    variant=Default,
                     style=["margin-inline-start:auto"],
                     "Submit",
                   ),

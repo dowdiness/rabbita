@@ -376,7 +376,7 @@ fn hover_card_bind_events_cmd(
   id : String,
   emit : @cmd.Emit[HoverCardMsg],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_ready("hover-card-events:" + id, () => {
       bind_hover_card_events(id, (kind, wait) => {
         scheduler.add(emit(HoverCardDomEvent(kind, wait)))

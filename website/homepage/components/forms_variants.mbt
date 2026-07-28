@@ -999,7 +999,7 @@ fn forms_switch_variants() -> @rabbita.Val[@html.Html] {
   )
   let switch_small = @rui.switch(
     id="forms-variants-switch-small",
-    size=@rui.Sm,
+    size=Sm,
     aria_label="Enable compact activity",
   )
   let switch_invalid = @rui.switch(
@@ -1422,7 +1422,7 @@ fn forms_field_variants(form_composition : @html.Html) -> @html.Html {
         showcase_demo_stage(
           @html.div(
             style=["width:min(100%,30rem);margin-inline:auto"],
-            @rui.field(orientation=@rui.FieldHorizontal, [
+            @rui.field(orientation=FieldHorizontal, [
               @rui.field_label(
                 for_="forms-variants-field-horizontal",
                 style=["width:7rem;flex:none"],
@@ -1448,7 +1448,7 @@ fn forms_field_variants(form_composition : @html.Html) -> @html.Html {
         showcase_demo_stage(
           @html.div(
             style=["width:min(100%,30rem);margin-inline:auto"],
-            @rui.field(orientation=@rui.FieldResponsive, [
+            @rui.field(orientation=FieldResponsive, [
               @rui.field_label(
                 for_="forms-variants-field-responsive",
                 "Repository",
@@ -1474,10 +1474,7 @@ fn forms_field_variants(form_composition : @html.Html) -> @html.Html {
           @html.div(
             style=["width:min(100%,34rem);margin-inline:auto"],
             @rui.field_set([
-              @rui.field_legend(
-                variant=@rui.FieldLabelLegend,
-                "Delivery settings",
-              ),
+              @rui.field_legend(variant=FieldLabelLegend, "Delivery settings"),
               @rui.field_group(style=["gap:1rem"], [
                 @rui.field([
                   @rui.field_label(for_="forms-variants-field-region", "Region"),
@@ -1551,7 +1548,7 @@ fn forms_native_select_variants() -> @html.Html {
               @rui.label(for_="forms-variants-native-small", "Release channel"),
               @rui.native_select(
                 id="forms-variants-native-small",
-                size=@rui.NativeSelectSm,
+                size=NativeSelectSm,
                 [
                   @rui.native_select_option(
                     value="stable",
@@ -1931,7 +1928,7 @@ fn forms_otp_variants() -> @rabbita.Val[@html.Html] {
                         for_="forms-variants-otp-form",
                         "Verification code",
                       ),
-                      @rui.button(variant=@rui.Outline, size=@rui.Xs, [
+                      @rui.button(variant=Outline, size=Xs, [
                         showcase_refresh_icon(),
                         @html.span("Resend Code"),
                       ]),

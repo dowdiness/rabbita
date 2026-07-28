@@ -542,7 +542,7 @@ fn bind_slider_pointer(id : String) -> Unit {
 ///|
 #cfg(target="js")
 fn slider_bind_pointer_cmd(id : String) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, _ => {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
     ui_after_mount(
       id + "-root",
       () => bind_slider_pointer(id),
@@ -784,7 +784,7 @@ fn render_slider_values(
     )
     children.push(
       @html.input(
-        input_type=@html.Range,
+        input_type=Range,
         value=value.to_string(),
         min~,
         max~,
@@ -1025,7 +1025,7 @@ fn slider_single_notify(
   match notify {
     Some(notify) =>
       Some(
-        @cmd.Emit(values => {
+        Emit(values => {
           notify(if values.length() == 0 { fallback } else { values[0] })
         }),
       )

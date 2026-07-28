@@ -6,7 +6,7 @@ struct Id(Int) derive(Eq, Hash, Compare)
 
 ///|
 pub impl Show for Id with fn output(self, buf) {
-  self.0.output(buf)
+  Show::output(self.0, buf)
 }
 
 ///|

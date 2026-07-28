@@ -233,7 +233,7 @@ fn foundations_avatar_demo() -> @html.Html {
         "Small",
         "Small fallback avatar.",
         @html.div(style=[IdentitySurfaceStyle], [
-          @rui.avatar(size=@rui.Sm, @rui.avatar_fallback("SM")),
+          @rui.avatar(size=Sm, @rui.avatar_fallback("SM")),
         ]),
         IdentityAvatarSmallCode,
       ),
@@ -241,7 +241,7 @@ fn foundations_avatar_demo() -> @html.Html {
         "Large",
         "Large fallback avatar.",
         @html.div(style=[IdentitySurfaceStyle], [
-          @rui.avatar(size=@rui.Lg, @rui.avatar_fallback("LG")),
+          @rui.avatar(size=Lg, @rui.avatar_fallback("LG")),
         ]),
         IdentityAvatarLargeCode,
       ),
@@ -249,7 +249,7 @@ fn foundations_avatar_demo() -> @html.Html {
         "Image and badge",
         "Image, fallback, and badge form one avatar.",
         @html.div(style=[IdentitySurfaceStyle], [
-          @rui.avatar(size=@rui.Lg, [
+          @rui.avatar(size=Lg, [
             @rui.avatar_image(
               src=IdentityAvatarImage,
               alt="Alex Rivera",
@@ -294,14 +294,12 @@ fn foundations_card_demo() -> @html.Html {
             @rui.card_description(
               "Review the changes included in this release.",
             ),
-            @rui.card_action(
-              @rui.button(variant=@rui.Ghost, size=@rui.Sm, "Open"),
-            ),
+            @rui.card_action(@rui.button(variant=Ghost, size=Sm, "Open")),
           ]),
           @rui.card_content(
             @html.p("The component package is ready for review."),
           ),
-          @rui.card_footer(@rui.button(size=@rui.Sm, "Review")),
+          @rui.card_footer(@rui.button(size=Sm, "Review")),
         ]),
         IdentityCardDefaultCode,
         tall=true,
@@ -309,18 +307,16 @@ fn foundations_card_demo() -> @html.Html {
       identity_demo_section(
         "Small",
         "Compact card composition.",
-        @rui.card(size=@rui.Sm, [
+        @rui.card(size=Sm, [
           @rui.card_header([
             @rui.card_title("Preview build"),
             @rui.card_description("A compact card using the same composition."),
-            @rui.card_action(
-              @rui.button(variant=@rui.Ghost, size=@rui.Xs, "Open"),
-            ),
+            @rui.card_action(@rui.button(variant=Ghost, size=Xs, "Open")),
           ]),
           @rui.card_content(
             @html.p("Checks passed and the preview is available."),
           ),
-          @rui.card_footer(@rui.button(size=@rui.Xs, "View")),
+          @rui.card_footer(@rui.button(size=Xs, "View")),
         ]),
         IdentityCardSmallCode,
         tall=true,
@@ -383,7 +379,7 @@ fn foundations_direction_demo() -> @html.Html {
       identity_variant(
         "Ltr",
         @rui.direction(
-          direction=@rui.Ltr,
+          direction=Ltr,
           style=[IdentitySurfaceStyle, "text-align:start"],
           [
             @html.div(style=["font-weight:600"], "Build complete"),
@@ -399,7 +395,7 @@ fn foundations_direction_demo() -> @html.Html {
       identity_variant(
         "Rtl",
         @rui.direction(
-          direction=@rui.Rtl,
+          direction=Rtl,
           style=[IdentitySurfaceStyle, "text-align:start"],
           [
             @html.div(style=["font-weight:600"], "اكتمل البناء"),
@@ -434,7 +430,7 @@ fn foundations_separator_demo() -> @html.Html {
           ],
           [
             @html.span("Release"),
-            @rui.separator(orientation=@rui.Horizontal),
+            @rui.separator(orientation=Horizontal),
             @html.span("Activity"),
           ],
         ),
@@ -450,7 +446,7 @@ fn foundations_separator_demo() -> @html.Html {
           ],
           [
             @html.span("Release"),
-            @rui.separator(orientation=@rui.Vertical, style=["height:2.5rem"]),
+            @rui.separator(orientation=Vertical, style=["height:2.5rem"]),
             @html.span("Activity"),
           ],
         ),

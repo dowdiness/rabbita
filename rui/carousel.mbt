@@ -683,7 +683,7 @@ fn carousel_sync_layout_cmd(
   id : String,
   emit : @cmd.Emit[CarouselMsg],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       id,
       () => {

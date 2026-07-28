@@ -257,7 +257,7 @@ fn ui_listbox_bind_sync_cmd(
   slot : String,
   sync : @cmd.Emit[Bool],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     let content_id = find_listbox_content_id(root_id, slot)
     if content_id != "" {
       bind_floating_sync(content_id, open => scheduler.add(sync(open)))
@@ -310,7 +310,7 @@ fn select_popup_cmd(
   focus_slot : String?,
   focus_value : String,
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, _ => {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
     let content_id = find_listbox_content_id(id, "select-content")
     if content_id != "" {
       // Resolve the rendered trigger instead of assuming the default id. This
@@ -890,7 +890,7 @@ fn select_render(
   }
   let hidden_control = if scope.name is Some(name) {
     @html.input(
-      input_type=@html.Hidden,
+      input_type=Hidden,
       name~,
       value=scope.model.value.unwrap_or(""),
       attrs=@html.Attrs::build()

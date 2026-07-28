@@ -21,7 +21,7 @@ fn tooltip_test_update(
     "test-tooltip",
     close_on_click,
     None,
-    @cmd.Emit(_ => @cmd.none),
+    Emit(_ => @cmd.none),
     message,
     current,
   )

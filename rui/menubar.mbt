@@ -509,7 +509,7 @@ fn focus_menubar_content(id : String, index : Int) -> Bool {
 ///|
 #cfg(target="js")
 fn menubar_focus_content_cmd(id : String, index : Int) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, _ => {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
     ui_after_ready("menubar-focus-content:" + id, () => {
       focus_menubar_content(id, index)
     })
@@ -526,7 +526,7 @@ fn menubar_bind_cmd(
   close_command : @cmd.Cmd,
   set_focus : @cmd.Emit[Int],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       id,
       () => {

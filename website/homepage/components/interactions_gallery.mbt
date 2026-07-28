@@ -170,12 +170,12 @@ fn ig_pagination_demo() -> @html.Html {
                 @rui.pagination_link(
                   href="#page-1",
                   is_active=true,
-                  size=@rui.Sm,
+                  size=Sm,
                   "1",
                 ),
               ),
               @rui.pagination_item(
-                @rui.pagination_link(href="#page-2", size=@rui.Sm, "2"),
+                @rui.pagination_link(href="#page-2", size=Sm, "2"),
               ),
               @rui.pagination_item(@rui.pagination_next(href="#page-2")),
             ]),
@@ -307,7 +307,7 @@ fn ig_navigation_menu_component(
 
 ///|
 fn ig_sidebar_panel_icon(side : @rui.SidebarSide) -> @html.Html {
-  if side == @rui.SidebarRight {
+  if side == SidebarRight {
     showcase_stroke_icon("M3 3h18v18H3zM15 3v18")
   } else {
     showcase_panel_left_icon()
@@ -410,12 +410,12 @@ fn ig_sidebar_navigation(
           @rui.sidebar_menu_button(
             href="#account",
             size=menu_size,
-            variant=if menu_size == @rui.SidebarMenuLg {
-              @rui.SidebarMenuButtonOutline
+            variant=if menu_size == SidebarMenuLg {
+              SidebarMenuButtonOutline
             } else {
-              @rui.SidebarMenuButtonDefault
+              SidebarMenuButtonDefault
             },
-            if menu_size == @rui.SidebarMenuLg {
+            if menu_size == SidebarMenuLg {
               [
                 showcase_user_icon(),
                 @html.span(style=["display:grid;min-width:0;line-height:1.1"], [
@@ -527,7 +527,7 @@ fn ig_sidebar_variant(
     default_collapsed~,
     style=[IgSidebarVariantFrameStyle],
     scope => {
-      let interactive = collapsible != @rui.SidebarFixed
+      let interactive = collapsible != SidebarFixed
       let rail = if mobile || !interactive {
         @html.nothing
       } else if resizable {
@@ -565,21 +565,15 @@ fn ig_sidebar_loading_variant() -> @rabbita.Val[@html.Html] {
         @rui.sidebar(
           scope,
           id~,
-          side=@rui.SidebarLeft,
-          variant=@rui.SidebarDefault,
-          collapsible=@rui.SidebarFixed,
+          side=SidebarLeft,
+          variant=SidebarDefault,
+          collapsible=SidebarFixed,
           mobile=false,
           ig_sidebar_loading_navigation(),
         ),
         @html.div(
           style=[IgSidebarWorkspaceStyle],
-          ig_sidebar_workspace_content(
-            scope,
-            id,
-            @rui.SidebarLeft,
-            false,
-            false,
-          ),
+          ig_sidebar_workspace_content(scope, id, SidebarLeft, false, false),
         ),
       ])
     },
@@ -700,7 +694,7 @@ fn ig_sidebar_component(
 fn ig_navigation_page(selected : String) -> @rabbita.Val[@html.Html] {
   let accordion_view = @rui.accordion(
     id="showcase-accordion",
-    type_=@rui.Single,
+    type_=Single,
     collapsible=true,
     default_value="keyboard",
     items=[
@@ -732,7 +726,7 @@ fn ig_navigation_page(selected : String) -> @rabbita.Val[@html.Html] {
   )
   let accordion_multiple_view = @rui.accordion(
     id="showcase-accordion-multiple",
-    type_=@rui.Multiple,
+    type_=Multiple,
     default_values=["motion", "focus"],
     items=[
       @rui.accordion_entry(
@@ -763,7 +757,7 @@ fn ig_navigation_page(selected : String) -> @rabbita.Val[@html.Html] {
     id="showcase-carousel",
     count=3,
     loop_=true,
-    orientation=@rui.CarouselHorizontal,
+    orientation=CarouselHorizontal,
     aria_label="Rabbita UI highlights",
     style=[IgCarouselStyle],
     scope => {
@@ -782,7 +776,7 @@ fn ig_navigation_page(selected : String) -> @rabbita.Val[@html.Html] {
     id="showcase-carousel-vertical",
     count=3,
     default_index=1,
-    orientation=@rui.CarouselVertical,
+    orientation=CarouselVertical,
     aria_label="Vertical Rabbita UI highlights",
     style=[IgVerticalCarouselStyle],
     scope => {
@@ -914,33 +908,33 @@ fn ig_navigation_page(selected : String) -> @rabbita.Val[@html.Html] {
   )
   let sidebar_default_view = ig_sidebar_variant(
     "showcase-sidebar-default",
-    @rui.SidebarLeft,
-    @rui.SidebarDefault,
-    @rui.SidebarOffcanvas,
+    SidebarLeft,
+    SidebarDefault,
+    SidebarOffcanvas,
     false,
-    @rui.SidebarMenuDefault,
+    SidebarMenuDefault,
     false,
     false,
     false,
   )
   let sidebar_fixed_view = ig_sidebar_variant(
     "showcase-sidebar-fixed",
-    @rui.SidebarLeft,
-    @rui.SidebarDefault,
-    @rui.SidebarFixed,
+    SidebarLeft,
+    SidebarDefault,
+    SidebarFixed,
     false,
-    @rui.SidebarMenuSm,
+    SidebarMenuSm,
     false,
     false,
     false,
   )
   let sidebar_icon_view = ig_sidebar_variant(
     "showcase-sidebar-icon",
-    @rui.SidebarLeft,
-    @rui.SidebarDefault,
-    @rui.SidebarIcon,
+    SidebarLeft,
+    SidebarDefault,
+    SidebarIcon,
     true,
-    @rui.SidebarMenuDefault,
+    SidebarMenuDefault,
     false,
     false,
     false,
@@ -948,55 +942,55 @@ fn ig_navigation_page(selected : String) -> @rabbita.Val[@html.Html] {
   let sidebar_loading_view = ig_sidebar_loading_variant()
   let sidebar_floating_view = ig_sidebar_variant(
     "showcase-sidebar-floating",
-    @rui.SidebarLeft,
-    @rui.SidebarFloating,
-    @rui.SidebarIcon,
+    SidebarLeft,
+    SidebarFloating,
+    SidebarIcon,
     false,
-    @rui.SidebarMenuLg,
+    SidebarMenuLg,
     false,
     false,
     false,
   )
   let sidebar_inset_view = ig_sidebar_variant(
     "showcase-sidebar-inset",
-    @rui.SidebarLeft,
-    @rui.SidebarInset,
-    @rui.SidebarOffcanvas,
+    SidebarLeft,
+    SidebarInset,
+    SidebarOffcanvas,
     false,
-    @rui.SidebarMenuDefault,
+    SidebarMenuDefault,
     true,
     false,
     false,
   )
   let sidebar_right_view = ig_sidebar_variant(
     "showcase-sidebar-right",
-    @rui.SidebarRight,
-    @rui.SidebarDefault,
-    @rui.SidebarIcon,
+    SidebarRight,
+    SidebarDefault,
+    SidebarIcon,
     false,
-    @rui.SidebarMenuDefault,
+    SidebarMenuDefault,
     false,
     false,
     false,
   )
   let sidebar_resize_view = ig_sidebar_variant(
     "showcase-sidebar-resize",
-    @rui.SidebarLeft,
-    @rui.SidebarDefault,
-    @rui.SidebarIcon,
+    SidebarLeft,
+    SidebarDefault,
+    SidebarIcon,
     false,
-    @rui.SidebarMenuDefault,
+    SidebarMenuDefault,
     false,
     false,
     true,
   )
   let sidebar_mobile_view = ig_sidebar_variant(
     "showcase-sidebar-mobile",
-    @rui.SidebarLeft,
-    @rui.SidebarDefault,
-    @rui.SidebarOffcanvas,
+    SidebarLeft,
+    SidebarDefault,
+    SidebarOffcanvas,
     false,
-    @rui.SidebarMenuDefault,
+    SidebarMenuDefault,
     false,
     true,
     false,
@@ -1004,7 +998,7 @@ fn ig_navigation_page(selected : String) -> @rabbita.Val[@html.Html] {
   let tabs_view = @rui.tabs(
     id="showcase-tabs",
     default_value="preview",
-    orientation=@rui.TabsHorizontal,
+    orientation=TabsHorizontal,
     aria_label="Component workflow",
     items=[
       @rui.tab_entry(
@@ -1045,7 +1039,7 @@ fn ig_navigation_page(selected : String) -> @rabbita.Val[@html.Html] {
   let tabs_vertical_view = @rui.tabs(
     id="showcase-tabs-vertical",
     default_value="general",
-    orientation=@rui.TabsVertical,
+    orientation=TabsVertical,
     aria_label="Vertical settings tabs",
     items=[
       @rui.tab_entry(
@@ -1074,7 +1068,7 @@ fn ig_navigation_page(selected : String) -> @rabbita.Val[@html.Html] {
   let tabs_line_view = @rui.tabs(
     id="showcase-tabs-line",
     default_value="account",
-    list_variant=@rui.TabsLine,
+    list_variant=TabsLine,
     aria_label="Account sections",
     items=[
       @rui.tab_entry(
@@ -1261,7 +1255,7 @@ fn ig_drawer_variant(
 ) -> @rabbita.Val[@html.Html] {
   @rui.drawer(id~, scope => {
     @html.fragment([
-      @rui.drawer_trigger(scope, variant=@rui.Outline, trigger_label),
+      @rui.drawer_trigger(scope, variant=Outline, trigger_label),
       @rui.drawer_portal([
         @rui.drawer_content(
           scope,
@@ -1292,7 +1286,7 @@ fn ig_sheet_variant(
 ) -> @rabbita.Val[@html.Html] {
   @rui.sheet(id~, scope => {
     @html.fragment([
-      @rui.sheet_trigger(scope, variant=@rui.Outline, trigger_label),
+      @rui.sheet_trigger(scope, variant=Outline, trigger_label),
       @rui.sheet_content(scope, side~, [
         @rui.sheet_header([
           @rui.sheet_title(scope, trigger_label),
@@ -1325,7 +1319,7 @@ fn ig_popover_variant(
     align~,
     title_id~,
     description_id~,
-    trigger_variant=@rui.Outline,
+    trigger_variant=Outline,
     trigger_label,
     @html.div(style=[StackStyle, "gap:0.75rem"], [
       @rui.popover_header([
@@ -1339,7 +1333,7 @@ fn ig_popover_variant(
         value="320 px",
         attrs=@html.Attrs::build().aria_label("Preferred width"),
       ),
-      @rui.popover_close_button(target_id=id, size=@rui.Sm, "Apply"),
+      @rui.popover_close_button(target_id=id, size=Sm, "Apply"),
     ]),
   )
 }
@@ -1358,7 +1352,7 @@ fn ig_hover_card_variant(
     close_delay=80,
     side~,
     align~,
-    trigger_variant=@rui.Link,
+    trigger_variant=Link,
     trigger_label,
     @html.div(style=[StackStyle, "gap:0.5rem"], [
       @html.strong("Rabbita UI"),
@@ -1367,8 +1361,8 @@ fn ig_hover_card_variant(
         "Native MoonBit components with incremental state.",
       ),
       @html.div(style=[RowStyle], [
-        @rui.badge(variant=@rui.Secondary, "Vega"),
-        @rui.badge(variant=@rui.Outline, "Inline"),
+        @rui.badge(variant=Secondary, "Vega"),
+        @rui.badge(variant=Outline, "Inline"),
       ]),
     ]),
   )
@@ -1388,7 +1382,7 @@ fn ig_tooltip_variant(
     side~,
     align~,
     show_arrow=true,
-    trigger_variant=@rui.Outline,
+    trigger_variant=Outline,
     trigger_size=size,
     trigger_attrs=@html.Attrs::build().aria_label(label),
     showcase_circle_help_icon(),
@@ -1647,11 +1641,7 @@ fn ig_sheet_component(
 fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
   let alert_dialog_view = @rui.alert_dialog(id="showcase-alert-dialog", scope => {
     @html.fragment([
-      @rui.alert_dialog_trigger(
-        scope,
-        variant=@rui.Destructive,
-        "Delete snapshot",
-      ),
+      @rui.alert_dialog_trigger(scope, variant=Destructive, "Delete snapshot"),
       @rui.alert_dialog_portal([
         @rui.alert_dialog_content(scope, [
           @rui.alert_dialog_header([
@@ -1673,11 +1663,7 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
     id="showcase-alert-dialog-default",
     scope => {
       @html.fragment([
-        @rui.alert_dialog_trigger(
-          scope,
-          variant=@rui.Outline,
-          "Archive project",
-        ),
+        @rui.alert_dialog_trigger(scope, variant=Outline, "Archive project"),
         @rui.alert_dialog_portal([
           @rui.alert_dialog_content(scope, [
             @rui.alert_dialog_header([
@@ -1732,7 +1718,7 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
     id="showcase-command-dialog",
     aria_label="Command palette",
     trigger=scope => {
-      @rui.command_dialog_trigger(scope~, variant=@rui.Outline, "Open palette")
+      @rui.command_dialog_trigger(scope~, variant=Outline, "Open palette")
     },
     scope => {
       @html.fragment([
@@ -1907,66 +1893,57 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
   let dialog_modal_view = ig_dialog_variant(
     "showcase-dialog-modal",
     true,
-    @rui.Outline,
+    Outline,
     "Edit profile",
   )
   let dialog_nonmodal_view = ig_dialog_variant(
     "showcase-dialog-nonmodal",
     false,
-    @rui.Secondary,
+    Secondary,
     "Open non-modal",
   )
   let drawer_top_view = ig_drawer_variant(
     "showcase-drawer-top",
-    @rui.DrawerTop,
+    DrawerTop,
     "Open top drawer",
   )
   let drawer_right_view = ig_drawer_variant(
     "showcase-drawer-right",
-    @rui.DrawerRight,
+    DrawerRight,
     "Open right drawer",
   )
   let drawer_bottom_view = ig_drawer_variant(
     "showcase-drawer-bottom",
-    @rui.DrawerBottom,
+    DrawerBottom,
     "Open bottom drawer",
   )
   let drawer_left_view = ig_drawer_variant(
     "showcase-drawer-left",
-    @rui.DrawerLeft,
+    DrawerLeft,
     "Open left drawer",
   )
   let dropdown_basic_view = @rui.dropdown_menu(
     id="showcase-dropdown-menu-basic",
     scope => {
       @html.fragment([
-        @rui.dropdown_menu_trigger(
-          scope,
-          variant=@rui.Outline,
-          "Workspace menu",
-        ),
+        @rui.dropdown_menu_trigger(scope, variant=Outline, "Workspace menu"),
         @rui.dropdown_menu_portal([
-          @rui.dropdown_menu_content(
-            scope,
-            side=@rui.Bottom,
-            align=@rui.Start,
-            [
-              @rui.dropdown_menu_group(aria_label="Workspace", [
-                @rui.dropdown_menu_label("Workspace"),
-                @rui.dropdown_menu_item(scope, [
-                  @html.span("New tab"),
-                  @rui.dropdown_menu_shortcut("⌘T"),
-                ]),
-                @rui.dropdown_menu_item(scope, "Invite member"),
-                @rui.dropdown_menu_item(scope, "Move workspace"),
-                @rui.dropdown_menu_item(
-                  scope,
-                  disabled=true,
-                  "Duplicate workspace",
-                ),
+          @rui.dropdown_menu_content(scope, side=Bottom, align=Start, [
+            @rui.dropdown_menu_group(aria_label="Workspace", [
+              @rui.dropdown_menu_label("Workspace"),
+              @rui.dropdown_menu_item(scope, [
+                @html.span("New tab"),
+                @rui.dropdown_menu_shortcut("⌘T"),
               ]),
-            ],
-          ),
+              @rui.dropdown_menu_item(scope, "Invite member"),
+              @rui.dropdown_menu_item(scope, "Move workspace"),
+              @rui.dropdown_menu_item(
+                scope,
+                disabled=true,
+                "Duplicate workspace",
+              ),
+            ]),
+          ]),
         ]),
       ])
     },
@@ -1975,12 +1952,12 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
     id="showcase-dropdown-menu-icons",
     scope => {
       @html.fragment([
-        @rui.dropdown_menu_trigger(scope, variant=@rui.Outline, "Account"),
+        @rui.dropdown_menu_trigger(scope, variant=Outline, "Account"),
         @rui.dropdown_menu_portal([
           @rui.dropdown_menu_content(
             scope,
-            side=@rui.Bottom,
-            align=@rui.Start,
+            side=Bottom,
+            align=Start,
             style=["min-width:12rem"],
             [
               @rui.dropdown_menu_item(scope, [
@@ -2011,7 +1988,7 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
     default_checked_values=["email", "push"],
     scope => {
       @html.fragment([
-        @rui.dropdown_menu_trigger(scope, variant=@rui.Outline, "Notifications"),
+        @rui.dropdown_menu_trigger(scope, variant=Outline, "Notifications"),
         @rui.dropdown_menu_portal([
           @rui.dropdown_menu_content(scope, style=["min-width:14rem"], [
             @rui.dropdown_menu_group(aria_label="Notifications", [
@@ -2039,11 +2016,7 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
     default_radio_values=[("payment", "card")],
     scope => {
       @html.fragment([
-        @rui.dropdown_menu_trigger(
-          scope,
-          variant=@rui.Outline,
-          "Payment method",
-        ),
+        @rui.dropdown_menu_trigger(scope, variant=Outline, "Payment method"),
         @rui.dropdown_menu_portal([
           @rui.dropdown_menu_content(scope, style=["min-width:14rem"], [
             @rui.dropdown_menu_group(aria_label="Payment method", [
@@ -2076,15 +2049,15 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
       @html.fragment([
         @rui.dropdown_menu_trigger(
           scope,
-          variant=@rui.Secondary,
-          size=@rui.Sm,
+          variant=Secondary,
+          size=Sm,
           "Top-end menu",
         ),
         @rui.dropdown_menu_portal([
           @rui.dropdown_menu_content(
             scope,
-            side=@rui.Top,
-            align=@rui.End,
+            side=Top,
+            align=End,
             style=["min-width:12rem"],
             [
               @rui.dropdown_menu_item(scope, [
@@ -2114,7 +2087,7 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
     id="showcase-dropdown-menu-multilevel",
     scope => {
       @html.fragment([
-        @rui.dropdown_menu_trigger(scope, variant=@rui.Outline, "Organize file"),
+        @rui.dropdown_menu_trigger(scope, variant=Outline, "Organize file"),
         @rui.dropdown_menu_portal([
           @rui.dropdown_menu_content(scope, style=["min-width:13rem"], [
             @rui.dropdown_menu_item(scope, [
@@ -2282,14 +2255,14 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
   )
   let hover_card_top_view = ig_hover_card_variant(
     "showcase-hover-card-top",
-    @rui.Top,
-    @rui.Center,
+    Top,
+    Center,
     "Top-center preview",
   )
   let hover_card_left_view = ig_hover_card_variant(
     "showcase-hover-card-left",
-    @rui.Left,
-    @rui.End,
+    Left,
+    End,
     "Left-end preview",
   )
   let menubar_commands_view = @rui.menubar(id="showcase-menubar-commands", scope => {
@@ -2452,62 +2425,62 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
   )
   let popover_bottom_view = ig_popover_variant(
     "showcase-popover-bottom",
-    @rui.Bottom,
-    @rui.Start,
+    Bottom,
+    Start,
     "Bottom-start popover",
   )
   let popover_right_view = ig_popover_variant(
     "showcase-popover-right",
-    @rui.Right,
-    @rui.Center,
+    Right,
+    Center,
     "Right-center popover",
   )
   let sheet_top_view = ig_sheet_variant(
     "showcase-sheet-top",
-    @rui.SheetTop,
+    SheetTop,
     "Open top sheet",
   )
   let sheet_right_view = ig_sheet_variant(
     "showcase-sheet-right",
-    @rui.SheetRight,
+    SheetRight,
     "Open right sheet",
   )
   let sheet_bottom_view = ig_sheet_variant(
     "showcase-sheet-bottom",
-    @rui.SheetBottom,
+    SheetBottom,
     "Open bottom sheet",
   )
   let sheet_left_view = ig_sheet_variant(
     "showcase-sheet-left",
-    @rui.SheetLeft,
+    SheetLeft,
     "Open left sheet",
   )
   let tooltip_top_view = ig_tooltip_variant(
     "showcase-tooltip-top",
-    @rui.Top,
-    @rui.Start,
-    @rui.IconSm,
+    Top,
+    Start,
+    IconSm,
     "Top-start tooltip",
   )
   let tooltip_right_view = ig_tooltip_variant(
     "showcase-tooltip-right",
-    @rui.Right,
-    @rui.Center,
-    @rui.Icon,
+    Right,
+    Center,
+    Icon,
     "Right-center tooltip",
   )
   let tooltip_bottom_view = ig_tooltip_variant(
     "showcase-tooltip-bottom",
-    @rui.Bottom,
-    @rui.End,
-    @rui.IconLg,
+    Bottom,
+    End,
+    IconLg,
     "Bottom-end tooltip",
   )
   let tooltip_left_view = ig_tooltip_variant(
     "showcase-tooltip-left",
-    @rui.Left,
-    @rui.Center,
-    @rui.Icon,
+    Left,
+    Center,
+    Icon,
     "Left-center tooltip",
   )
   let dropdown_component = if selected == "" || selected == "dropdown-menu" {
@@ -2787,7 +2760,7 @@ fn ig_toast_component() -> @html.Html {
         "Default",
         "A neutral status can include a compact action.",
         showcase_demo_stage(
-          @rui.toast(variant=@rui.ToastDefault, [
+          @rui.toast(variant=ToastDefault, [
             @rui.toast_title("Draft saved"),
             @rui.toast_description("Your changes remain local."),
             @rui.toast_action("View"),
@@ -2799,7 +2772,7 @@ fn ig_toast_component() -> @html.Html {
         "Success",
         "A positive status confirms a completed action.",
         showcase_demo_stage(
-          @rui.toast(variant=@rui.ToastSuccess, [
+          @rui.toast(variant=ToastSuccess, [
             @rui.toast_title("Published"),
             @rui.toast_description("The latest preview is live."),
           ]),
@@ -2810,7 +2783,7 @@ fn ig_toast_component() -> @html.Html {
         "Destructive",
         "An error status calls attention to a failed action.",
         showcase_demo_stage(
-          @rui.toast(variant=@rui.ToastDestructive, [
+          @rui.toast(variant=ToastDestructive, [
             @rui.toast_title("Could not sync"),
             @rui.toast_description("Check the connection and try again."),
           ]),
@@ -2825,23 +2798,23 @@ fn ig_toast_component() -> @html.Html {
 fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
   let sonner_default_view = @rui.sonner(max_toasts=3, position="bottom-right", scope => {
     @rui.button(
-      size=@rui.Sm,
+      size=Sm,
       on_click=scope.show(
         title="Saved",
         description="The draft remains in this workspace.",
-        variant=@rui.ToastDefault,
+        variant=ToastDefault,
       ),
       "Default toast",
     )
   })
   let sonner_success_view = @rui.sonner(max_toasts=3, position="bottom-right", scope => {
     @rui.button(
-      size=@rui.Sm,
-      variant=@rui.Secondary,
+      size=Sm,
+      variant=Secondary,
       on_click=scope.show(
         title="Published",
         description="The latest UI preview is live.",
-        variant=@rui.ToastSuccess,
+        variant=ToastSuccess,
       ),
       "Success toast",
     )
@@ -2851,12 +2824,12 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
     position="bottom-right",
     scope => {
       @rui.button(
-        size=@rui.Sm,
-        variant=@rui.Destructive,
+        size=Sm,
+        variant=Destructive,
         on_click=scope.show(
           title="Could not sync",
           description="Check the connection and try again.",
-          variant=@rui.ToastDestructive,
+          variant=ToastDestructive,
         ),
         "Error toast",
       )
@@ -2865,17 +2838,17 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
   let sonner_queue_view = @rui.sonner(max_toasts=3, position="bottom-right", scope => {
     @html.div(style=[IgControlWrapStyle], [
       @rui.button(
-        size=@rui.Sm,
+        size=Sm,
         on_click=scope.show(
           title="Queued",
           description="This notification joins the bounded queue.",
-          variant=@rui.ToastDefault,
+          variant=ToastDefault,
         ),
         "Add toast",
       ),
       @rui.button(
-        size=@rui.Sm,
-        variant=@rui.Ghost,
+        size=Sm,
+        variant=Ghost,
         on_click=scope.dismiss_all(),
         "Dismiss queue",
       ),
@@ -2897,7 +2870,7 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
                   @rui.message_header("Rabbita · 09:41"),
                   @rui.bubble_group(
                     @rui.bubble(
-                      variant=@rui.BubbleSecondary,
+                      variant=BubbleSecondary,
                       @rui.bubble_content(
                         "The component catalogue is ready for review.",
                       ),
@@ -2907,13 +2880,13 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
               ]),
             ),
             @rui.message_scroller_item(
-              @rui.message(align=@rui.AlignEnd, [
+              @rui.message(align=AlignEnd, [
                 @rui.message_avatar(@rui.avatar(@rui.avatar_fallback("YO"))),
                 @rui.message_content([
                   @rui.message_header("You · 09:42"),
                   @rui.bubble_group(
                     @rui.bubble(
-                      align=@rui.AlignEnd,
+                      align=AlignEnd,
                       @rui.bubble_content(
                         "Great — keep state local and the API black-box.",
                       ),
@@ -2929,7 +2902,7 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
                 @rui.message_content(
                   @rui.bubble_group(
                     @rui.bubble(
-                      variant=@rui.BubbleMuted,
+                      variant=BubbleMuted,
                       @rui.bubble_content(
                         "This scroller tracks both edges and exposes jump controls.",
                       ),
@@ -2940,12 +2913,12 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
             ),
             @rui.message_scroller_item(
               scroll_anchor=true,
-              @rui.message(align=@rui.AlignEnd, [
+              @rui.message(align=AlignEnd, [
                 @rui.message_avatar(@rui.avatar(@rui.avatar_fallback("YO"))),
                 @rui.message_content(
                   @rui.bubble_group(
                     @rui.bubble(
-                      align=@rui.AlignEnd,
+                      align=AlignEnd,
                       @rui.bubble_content("Ship the showcase."),
                     ),
                   ),
@@ -2961,16 +2934,16 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
           [
             @rui.message_scroller_button(
               scope~,
-              direction=@rui.ScrollStart,
+              direction=ScrollStart,
               label="Jump to first message",
-              size=@rui.IconSm,
+              size=IconSm,
               showcase_arrow_up_icon(),
             ),
             @rui.message_scroller_button(
               scope~,
-              direction=@rui.ScrollEnd,
+              direction=ScrollEnd,
               label="Jump to latest message",
-              size=@rui.IconSm,
+              size=IconSm,
               showcase_arrow_down_icon(),
             ),
           ],
@@ -2983,7 +2956,7 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
     default_sizes=[26, 44, 30],
     min_sizes=[16, 24, 18],
     max_sizes=[52, 68, 54],
-    orientation=@rui.Horizontal,
+    orientation=Horizontal,
     style=[IgResizeStyle],
     scope => {
       @html.fragment([
@@ -3025,14 +2998,14 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
     default_size=42,
     min=24,
     max=72,
-    orientation=@rui.Vertical,
+    orientation=Vertical,
     aria_label="Resize preview and console",
     style=[IgResizeStyle, IgResizableVerticalStyle],
     scope => {
       @html.fragment([
         @rui.resizable_panel(
           scope~,
-          side=@rui.FirstPanel,
+          side=FirstPanel,
           style=[IgResizePanelStyle],
           "Preview",
         ),
@@ -3043,7 +3016,7 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
         ),
         @rui.resizable_panel(
           scope~,
-          side=@rui.SecondPanel,
+          side=SecondPanel,
           style=[IgResizePanelStyle],
           "Console",
         ),
@@ -3052,7 +3025,7 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
   )
   let scroll_view = @rui.scroll_area_with_scrollbar(
     id="showcase-scroll-area",
-    orientation=@rui.Vertical,
+    orientation=Vertical,
     style=[IgScrollAreaStyle],
     @html.div(style=[IgScrollContentStyle], [
       @html.strong("Release checklist"),
@@ -3071,15 +3044,15 @@ fn ig_feedback_page(selected : String) -> @rabbita.Val[@html.Html] {
   )
   let scroll_horizontal_view = @rui.scroll_area_with_scrollbar(
     id="showcase-scroll-area-horizontal",
-    orientation=@rui.Horizontal,
+    orientation=Horizontal,
     style=[IgHorizontalScrollAreaStyle],
     @html.div(style=[IgHorizontalScrollContentStyle], [
-      @rui.badge(variant=@rui.Secondary, "Keyboard"),
-      @rui.badge(variant=@rui.Secondary, "Pointer"),
-      @rui.badge(variant=@rui.Secondary, "Touch"),
-      @rui.badge(variant=@rui.Secondary, "RTL"),
-      @rui.badge(variant=@rui.Secondary, "Measured thumb"),
-      @rui.badge(variant=@rui.Secondary, "Native fallback"),
+      @rui.badge(variant=Secondary, "Keyboard"),
+      @rui.badge(variant=Secondary, "Pointer"),
+      @rui.badge(variant=Secondary, "Touch"),
+      @rui.badge(variant=Secondary, "RTL"),
+      @rui.badge(variant=Secondary, "Measured thumb"),
+      @rui.badge(variant=Secondary, "Native fallback"),
     ]),
   )
   let scroller_variants = if selected == "" || selected == "message-scroller" {

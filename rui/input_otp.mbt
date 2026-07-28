@@ -237,7 +237,7 @@ fn render_input_otp(
     ),
     [
       @html.input(
-        input_type=@html.Text,
+        input_type=Text,
         value=scope.model.value,
         maxlength=scope.max_length,
         inputmode~,

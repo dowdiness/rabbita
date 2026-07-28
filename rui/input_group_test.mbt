@@ -34,7 +34,7 @@ test "input group addon is a label only when it targets a control" {
 
   let action_html = render_input_group_test(
     @rui.input_group_addon(
-      align=@rui.InputInlineEnd,
+      align=InputInlineEnd,
       @rui.input_group_button("Copy"),
     ),
   )
@@ -48,10 +48,10 @@ test "input group addon is a label only when it targets a control" {
 test "input group addons expose all four alignment contracts" {
   let html = render_input_group_test(
     @html.div([
-      @rui.input_group_addon(align=@rui.InputInlineStart, "Inline start"),
-      @rui.input_group_addon(align=@rui.InputInlineEnd, "Inline end"),
-      @rui.input_group_addon(align=@rui.InputBlockStart, "Block start"),
-      @rui.input_group_addon(align=@rui.InputBlockEnd, "Block end"),
+      @rui.input_group_addon(align=InputInlineStart, "Inline start"),
+      @rui.input_group_addon(align=InputInlineEnd, "Inline end"),
+      @rui.input_group_addon(align=InputBlockStart, "Block start"),
+      @rui.input_group_addon(align=InputBlockEnd, "Block end"),
     ]),
   )
   assert_true(html.contains("data-align=\"inline-start\""))
@@ -75,16 +75,16 @@ test "input group addons expose all four alignment contracts" {
 ///|
 test "input group buttons map every public size to the compact button recipe" {
   let xs = render_input_group_test(
-    @rui.input_group_button(size=@rui.InputButtonXs, "Extra small"),
+    @rui.input_group_button(size=InputButtonXs, "Extra small"),
   )
   let sm = render_input_group_test(
-    @rui.input_group_button(size=@rui.InputButtonSm, "Small"),
+    @rui.input_group_button(size=InputButtonSm, "Small"),
   )
   let icon_xs = render_input_group_test(
-    @rui.input_group_button(size=@rui.InputButtonIconXs, "X"),
+    @rui.input_group_button(size=InputButtonIconXs, "X"),
   )
   let icon_sm = render_input_group_test(
-    @rui.input_group_button(size=@rui.InputButtonIconSm, "X"),
+    @rui.input_group_button(size=InputButtonIconSm, "X"),
   )
   assert_true(xs.contains("data-slot=\"input-group-button\""))
   assert_true(xs.contains("data-size=\"xs\""))

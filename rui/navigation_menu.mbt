@@ -525,7 +525,7 @@ fn navigation_bind_cmd(
   close_command : @cmd.Cmd,
   set_focus : @cmd.Emit[Int],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       id,
       () => {

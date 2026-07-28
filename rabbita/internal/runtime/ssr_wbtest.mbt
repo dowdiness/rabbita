@@ -26,7 +26,7 @@ test "ssr keeps end tags for non-void empty elements" {
 test "ssr writes textarea value as escaped text content" {
   let props = Props::new(
     Map([]),
-    { "value": @variant.String("one < two & three") },
+    { "value": String("one < two & three") },
     Map([]),
     Map([]),
   )

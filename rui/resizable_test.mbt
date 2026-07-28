@@ -94,7 +94,7 @@ test "generic vertical resizable aligns layout range and separator axes" {
     @rui.resizable_group(
       id="stack-layout",
       default_sizes=[25, 35, 40],
-      orientation=@rui.Vertical,
+      orientation=Vertical,
       scope => {
         [
           @rui.resizable_group_panel(scope~, index=0, "Top"),
@@ -129,9 +129,9 @@ test "legacy two panel API keeps its sizing and control contract" {
       max=82,
       scope => {
         [
-          @rui.resizable_panel(scope~, side=@rui.FirstPanel, "Primary"),
+          @rui.resizable_panel(scope~, side=FirstPanel, "Primary"),
           @rui.resizable_handle(scope~, with_handle=true),
-          @rui.resizable_panel(scope~, side=@rui.SecondPanel, "Secondary"),
+          @rui.resizable_panel(scope~, side=SecondPanel, "Secondary"),
         ]
       },
     )

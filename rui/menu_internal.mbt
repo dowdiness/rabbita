@@ -1144,7 +1144,7 @@ fn position_menu_submenus(id : String) -> Unit {
 ///|
 #cfg(target="js")
 fn menu_position_submenus_cmd(id : String) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, _ => position_menu_submenus(id))
+  @cmd.custom_cmd(kind=AfterRender, _ => position_menu_submenus(id))
 }
 
 ///|
@@ -1162,7 +1162,7 @@ fn menu_bind_surface_cmd(
   close_command : @cmd.Cmd,
   set_submenu : @cmd.Emit[MenuSubmenuChange],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       id,
       () => {
@@ -1203,7 +1203,7 @@ fn menu_focus_item_cmd(
   index : Int,
   content_id? : String = "",
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, _ => {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
     ui_after_ready("menu-focus-item:" + id, () => {
       focus_menu_item(id, content_id, index)
     })
@@ -1224,7 +1224,7 @@ fn menu_focus_item_cmd(
 ///|
 #cfg(target="js")
 fn menu_focus_first_cmd(id : String, set_active : @cmd.Emit[Int]) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     focus_first_menu_item(id, index => scheduler.add(set_active(index)))
   })
 }
@@ -1236,7 +1236,7 @@ fn menu_open_marked_cmd(
   slot : String,
   set_index : @cmd.Emit[Int],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       id,
       () => {

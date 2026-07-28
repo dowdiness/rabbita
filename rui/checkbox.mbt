@@ -238,7 +238,7 @@ pub fn checkbox(
       class?,
       title?,
       aria_label?,
-      on_checked_change=@cmd.Emit(checked => emit(CheckboxChange(checked))),
+      on_checked_change=Emit(checked => emit(CheckboxChange(checked))),
       attrs?,
       style~,
     )

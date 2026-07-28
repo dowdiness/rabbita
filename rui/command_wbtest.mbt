@@ -5,7 +5,7 @@ fn command_test_update(
   current : CommandModel,
 ) -> CommandModel {
   let (next, _) = command_update(
-    @cmd.Emit(_ => @cmd.none),
+    Emit(_ => @cmd.none),
     "command-root",
     Some("command-dialog"),
     true,
@@ -231,7 +231,7 @@ test "command root composes caller keydown with keyboard navigation" {
     true,
     false,
     true,
-    @cmd.Emit(_ => {
+    Emit(_ => {
       ffi_note_command_internal_keydown()
       @cmd.none
     }),

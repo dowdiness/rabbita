@@ -21,13 +21,13 @@ test "Vega catalog content primitives expose stable slots" {
   let html = render(
     @html.div([
       @rui.aspect_ratio(ratio=1.5, "Preview"),
-      @rui.direction(direction=@rui.Rtl, "RTL"),
+      @rui.direction(direction=Rtl, "RTL"),
       @rui.spinner(label="Loading"),
       @rui.kbd_group([@rui.kbd("⌘"), @rui.kbd("K")]),
       @rui.empty([
         @rui.empty_header([
           @rui.empty_media(
-            variant=@rui.EmptyMediaIcon,
+            variant=EmptyMediaIcon,
             catalog_test_icon("M12 5v14M5 12h14"),
           ),
           @rui.empty_title("No results"),
@@ -36,19 +36,19 @@ test "Vega catalog content primitives expose stable slots" {
         @rui.empty_content(@rui.button("Create")),
       ]),
       @rui.item_group(
-        @rui.item(variant=@rui.ItemOutline, [
+        @rui.item(variant=ItemOutline, [
           @rui.item_media(
-            variant=@rui.ItemMediaIcon,
+            variant=ItemMediaIcon,
             catalog_test_icon("M4 4h16v16H4zM4 9h16"),
           ),
           @rui.item_content([
             @rui.item_title("Account"),
             @rui.item_description("Workspace owner"),
           ]),
-          @rui.item_actions(@rui.button(size=@rui.Sm, "Open")),
+          @rui.item_actions(@rui.button(size=Sm, "Open")),
         ]),
       ),
-      @rui.marker(variant=@rui.MarkerSeparator, [
+      @rui.marker(variant=MarkerSeparator, [
         @rui.marker_icon(catalog_test_icon("M12 12h.01")),
         @rui.marker_content("Today"),
       ]),
@@ -74,11 +74,11 @@ test "message attachment and bubble families compose without global CSS" {
   let html = render(
     @html.div([
       @rui.message_group(
-        @rui.message(align=@rui.AlignEnd, [
+        @rui.message(align=AlignEnd, [
           @rui.message_avatar("Y"),
           @rui.message_content([
             @rui.message_header("Yorkin"),
-            @rui.bubble(variant=@rui.BubbleSecondary, [
+            @rui.bubble(variant=BubbleSecondary, [
               @rui.bubble_content("Ship it."),
               @rui.bubble_reactions([
                 catalog_test_icon("M20 6 9 17l-5-5"),
@@ -91,8 +91,8 @@ test "message attachment and bubble families compose without global CSS" {
       ),
       @rui.attachment_group(
         @rui.attachment(
-          state=@rui.AttachmentUploading,
-          orientation=@rui.AttachmentHorizontal,
+          state=AttachmentUploading,
+          orientation=AttachmentHorizontal,
           [
             @rui.attachment_media("PDF"),
             @rui.attachment_content([
@@ -128,9 +128,7 @@ test "message attachment and bubble families compose without global CSS" {
   assert_contains(html, "data-slot=\"attachment-action\"")
   assert_contains(html, "data-slot=\"attachment-trigger\"")
 
-  let error_html = render(
-    @rui.attachment(state=@rui.AttachmentError, @html.nothing),
-  )
+  let error_html = render(@rui.attachment(state=AttachmentError, @html.nothing))
   assert_contains(
     error_html, "--rui-attachment-base-border:color-mix(in oklch,var(--rui-destructive,oklch(0.577 0.245 27.325)) 30%,transparent)",
   )
@@ -157,7 +155,7 @@ test "field form input-group scroll-area and chart expose the official parts" {
       @rui.field_set([
         @rui.field_legend("Profile"),
         @rui.field_group(
-          @rui.field(orientation=@rui.FieldHorizontal, [
+          @rui.field(orientation=FieldHorizontal, [
             @rui.field_label(for_="name", "Name"),
             @rui.field_content(@rui.input(id="name")),
           ]),
@@ -177,7 +175,7 @@ test "field form input-group scroll-area and chart expose the official parts" {
                 @rui.chart_tooltip_item(
                   label="Revenue",
                   value="$120k",
-                  indicator=@rui.ChartLine,
+                  indicator=ChartLine,
                 ),
               ]),
             ),
@@ -242,9 +240,9 @@ test "stateful catalog components render their incremental initial model" {
       default_size=40,
       scope => {
         @html.div([
-          @rui.resizable_panel(scope~, side=@rui.FirstPanel, "A"),
+          @rui.resizable_panel(scope~, side=FirstPanel, "A"),
           @rui.resizable_handle(scope~, with_handle=true),
-          @rui.resizable_panel(scope~, side=@rui.SecondPanel, "B"),
+          @rui.resizable_panel(scope~, side=SecondPanel, "B"),
         ])
       },
     )
@@ -327,13 +325,13 @@ test "message scroller initial position matches its requested edge" {
         @rui.message_scroller_viewport(scope~, "Messages"),
         @rui.message_scroller_button(
           scope~,
-          direction=@rui.ScrollStart,
+          direction=ScrollStart,
           label="Jump to first message",
           catalog_test_icon("m18 15-6-6-6 6"),
         ),
         @rui.message_scroller_button(
           scope~,
-          direction=@rui.ScrollEnd,
+          direction=ScrollEnd,
           label="Jump to latest message",
           catalog_test_icon("m6 9 6 6 6-6"),
         ),

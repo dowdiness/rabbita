@@ -523,7 +523,7 @@ fn combobox_bind_events_cmd(
   id : String,
   emit : @cmd.Emit[ComboboxMsg],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       id + "-root",
       () => bind_combobox_events(id, _ => scheduler.add(emit(ComboboxDismiss))),
@@ -741,7 +741,7 @@ fn combobox_input_surface(
     ignore(input_attrs.disabled(true))
   }
   @html.input(
-    input_type=@html.Text,
+    input_type=Text,
     value=display_value,
     placeholder=scope.placeholder,
     auto_complete~,
@@ -768,7 +768,7 @@ fn combobox_input_surface(
 pub fn combobox_input(
   scope~ : ComboboxScope,
   aria_label? : String = "Search options",
-  auto_complete? : @html.AutoComplete = @html.Off,
+  auto_complete? : @html.AutoComplete = Off,
   id? : String,
   class? : String,
   title? : String,
@@ -798,7 +798,7 @@ pub fn combobox_input(
 pub fn combobox_chips_input(
   scope~ : ComboboxScope,
   aria_label? : String = "Search options",
-  auto_complete? : @html.AutoComplete = @html.Off,
+  auto_complete? : @html.AutoComplete = Off,
   id? : String,
   class? : String,
   title? : String,
@@ -1353,7 +1353,7 @@ fn combobox_hidden_inputs(scope : ComboboxScope) -> @html.Html {
     if scope.model.values.length() == 0 {
       controls.push(
         @html.input(
-          input_type=@html.Hidden,
+          input_type=Hidden,
           name~,
           value="",
           attrs=@html.Attrs::build().disabled(scope.disabled),
@@ -1363,7 +1363,7 @@ fn combobox_hidden_inputs(scope : ComboboxScope) -> @html.Html {
       for value in scope.model.values {
         controls.push(
           @html.input(
-            input_type=@html.Hidden,
+            input_type=Hidden,
             name~,
             value~,
             attrs=@html.Attrs::build().disabled(scope.disabled),

@@ -50,7 +50,7 @@ fn slider_assert_not_contains(
 
 ///|
 test "two-thumb slider renders unique native controls and a bounded range" {
-  let notify : @cmd.Emit[Array[Int]] = @cmd.Emit(_ => @cmd.none)
+  let notify : @cmd.Emit[Array[Int]] = Emit(_ => @cmd.none)
   let html = render_incremental_slider(() => {
     @rui.slider_values(
       id="two-band",
@@ -97,7 +97,7 @@ test "two-thumb slider renders unique native controls and a bounded range" {
 
 ///|
 test "three-thumb and empty sliders keep every thumb operable" {
-  let notify : @cmd.Emit[Array[Int]] = @cmd.Emit(values => {
+  let notify : @cmd.Emit[Array[Int]] = Emit(values => {
     ignore(values)
     @cmd.none
   })

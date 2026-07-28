@@ -316,7 +316,7 @@ pub fn[C : @html.IsChildren] toggle_group_item(
     id?,
     class?,
     title?,
-    on_pressed_change=@cmd.Emit(_ => (scope.emit)(ToggleGroupValue(value))),
+    on_pressed_change=Emit(_ => (scope.emit)(ToggleGroupValue(value))),
     attrs=item_attrs,
     style=ui_styles(
       [

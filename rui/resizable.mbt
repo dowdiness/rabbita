@@ -509,7 +509,7 @@ fn resizable_bind_pointer_cmd(
   orientation : SeparatorOrientation,
   emit : @cmd.Emit[ResizableGroupMsg],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       id,
       () => {
@@ -859,7 +859,7 @@ fn render_resizable_handle(
         @html.nothing
       },
       @html.input(
-        input_type=@html.Range,
+        input_type=Range,
         value="\{bounds.value}",
         min=bounds.min,
         max=bounds.max,

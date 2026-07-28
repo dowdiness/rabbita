@@ -533,7 +533,7 @@ pub fn command_input(
   scope~ : CommandScope,
   placeholder? : String = "Type a command or search...",
   aria_label? : String = "Search commands",
-  auto_complete? : @html.AutoComplete = @html.Off,
+  auto_complete? : @html.AutoComplete = Off,
   disabled? : Bool = false,
   on_input? : @cmd.Emit[String],
   id? : String,
@@ -595,7 +595,7 @@ pub fn command_input(
         ui_search_icon(),
       ),
       @html.input(
-        input_type=@html.Text,
+        input_type=Text,
         value=scope.model.query,
         placeholder~,
         auto_complete~,

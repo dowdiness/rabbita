@@ -45,7 +45,7 @@ fn ig_collapsible_order_view() -> @rabbita.Val[@html.Html] {
           @html.strong("Order #4189"),
           @html.span(style=[MutedStyle], "July 16 · 2 items"),
         ]),
-        @rui.badge(variant=@rui.Secondary, "Paid"),
+        @rui.badge(variant=Secondary, "Paid"),
       ],
     ),
     content=@html.div(style=["display:grid;gap:0.625rem"], [
@@ -303,7 +303,7 @@ fn ig_collapsible_file_tree_view() -> @rabbita.Val[@html.Html] {
         public_images,
       ],
     )
-    @rui.card(size=@rui.Sm, style=[IgCollapsibleTreeCardStyle], [
+    @rui.card(size=Sm, style=[IgCollapsibleTreeCardStyle], [
       @rui.card_header(tabs_html),
       @rui.card_content(
         @html.div(style=[IgCollapsibleTreeListStyle], [

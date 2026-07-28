@@ -680,12 +680,12 @@ fn Request::send_response(
     let (content_type, body_kind, text_body, bytes_body, blob_body) = match
       self.body {
       Json(json) =>
-        ("application/json", "text", json.stringify(), Bytes::default(), None)
-      Text(text) => ("text/plain", "text", text, Bytes::default(), None)
+        ("application/json", "text", json.stringify(), Default::default(), None)
+      Text(text) => ("text/plain", "text", text, Default::default(), None)
       BytesBody(content_type, bytes) => (content_type, "bytes", "", bytes, None)
       BlobBody(content_type, blob) =>
-        (content_type, "blob", "", Bytes::default(), Some(blob))
-      Empty => ("", "empty", "", Bytes::default(), None)
+        (content_type, "blob", "", Default::default(), Some(blob))
+      Empty => ("", "empty", "", Default::default(), None)
     }
     js_request(
       self.url,
@@ -741,6 +741,11 @@ extern "js" fn js_request(
   #|   }
   #|   fetch(url, config)
   #|     .then((response) => {
+  #|       if (!response.ok) {
+  #|         const statusText = response.statusText ? ` ${response.statusText}` : "";
+  #|         failed(`HTTP ${response.status}${statusText}`);
+  #|         return;
+  #|       }
   #|       switch (responseKind) {
   #|         case "text":
   #|           return response.text().then((text) => succeedText(text));

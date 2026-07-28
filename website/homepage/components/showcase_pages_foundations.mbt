@@ -6,14 +6,14 @@ fn showcase_static_page(body : @html.Html) -> @rabbita.Val[@html.Html] {
 ///|
 fn showcase_toggle_page() -> @rabbita.Val[@html.Html] {
   let pin_view = @rui.toggle(
-    variant=@rui.Outline,
-    size=@rui.Lg,
+    variant=Outline,
+    size=Lg,
     aria_label="Pin release",
     "Pin release",
   )
   let watch_view = @rui.toggle(
-    variant=@rui.Default,
-    size=@rui.Sm,
+    variant=Default,
+    size=Sm,
     aria_label="Watch release",
     "Watch",
   )
@@ -24,8 +24,8 @@ fn showcase_toggle_page() -> @rabbita.Val[@html.Html] {
 fn showcase_toggle_group_page() -> @rabbita.Val[@html.Html] {
   let density_view = @rui.toggle_group(
     default_values=["grid"],
-    variant=@rui.Outline,
-    size=@rui.Sm,
+    variant=Outline,
+    size=Sm,
     aria_label="Preview layout",
     scope => {
       @html.fragment([
@@ -37,8 +37,8 @@ fn showcase_toggle_group_page() -> @rabbita.Val[@html.Html] {
   let formatting_view = @rui.toggle_group(
     default_values=["bold"],
     multiple=true,
-    variant=@rui.Default,
-    size=@rui.Lg,
+    variant=Default,
+    size=Lg,
     aria_label="Text formatting",
     scope => {
       @html.fragment([

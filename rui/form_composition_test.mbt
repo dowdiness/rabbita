@@ -50,9 +50,9 @@ test "native select exposes wrapper options and controlled value" {
 test "button group supplies one shared control surface" {
   let html = render(
     @rui.button_group(aria_label="History", [
-      @rui.button(variant=@rui.Outline, "Back"),
+      @rui.button(variant=Outline, "Back"),
       @rui.button_group_text("2 / 5"),
-      @rui.button(variant=@rui.Outline, "Next"),
+      @rui.button(variant=Outline, "Next"),
     ]),
   )
   assert_contains(html, "role=\"group\"")
@@ -141,7 +141,7 @@ test "field responsive layout uses its own container and shared label slot" {
   let html = render(
     @rui.theme(
       @rui.field_group(
-        @rui.field(orientation=@rui.FieldResponsive, [
+        @rui.field(orientation=FieldResponsive, [
           @rui.field_title("Workspace"),
           @rui.field_content(@rui.input()),
         ]),

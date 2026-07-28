@@ -253,7 +253,7 @@ fn mark_dialog_layer(id : String, open : Bool) -> Unit {
 ///|
 #cfg(target="js")
 fn ui_dialog_bind(id : String, request_close : @cmd.Cmd) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       id,
       () => bind_dialog_layer(id, () => scheduler.add(request_close)),

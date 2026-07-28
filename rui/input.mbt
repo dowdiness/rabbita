@@ -19,7 +19,7 @@ fn input_invalid_style(invalid : Bool) -> String {
 /// `on_input` is the immediate value-change channel; `on_change` follows the
 /// browser's native change event. User styles are appended last.
 pub fn input(
-  input_type? : @html.InputType = @html.Text,
+  input_type? : @html.InputType = Text,
   name? : String,
   value? : String,
   checked? : Bool,
