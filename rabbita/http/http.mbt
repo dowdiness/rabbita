@@ -741,6 +741,11 @@ extern "js" fn js_request(
   #|   }
   #|   fetch(url, config)
   #|     .then((response) => {
+  #|       if (!response.ok) {
+  #|         const statusText = response.statusText ? ` ${response.statusText}` : "";
+  #|         failed(`HTTP ${response.status}${statusText}`);
+  #|         return;
+  #|       }
   #|       switch (responseKind) {
   #|         case "text":
   #|           return response.text().then((text) => succeedText(text));
