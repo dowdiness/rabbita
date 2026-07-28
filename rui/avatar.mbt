@@ -30,7 +30,7 @@ fn bind_avatar_image_cmd(
   id : String,
   emit : @cmd.Emit[AvatarImageStatus],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       id,
       () => {

@@ -4,9 +4,9 @@ test "toggle group propagates the Vega variant size and spacing recipe" {
     @rui.toggle_group(
       default_values=["bold"],
       multiple=true,
-      orientation=@rui.Vertical,
-      variant=@rui.Outline,
-      size=@rui.Lg,
+      orientation=Vertical,
+      variant=Outline,
+      size=Lg,
       spacing=0,
       scope => {
         [

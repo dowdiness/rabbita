@@ -24,8 +24,8 @@ fn assert_not_contains(actual : String, unexpected : String) -> Unit raise {
 test "button is a zero-setup native button" {
   let html = render(
     @rui.button(
-      variant=@rui.Outline,
-      size=@rui.Sm,
+      variant=Outline,
+      size=Sm,
       disabled=true,
       style=["background:rebeccapurple"],
       "Save",
@@ -65,13 +65,13 @@ test "caller styles are appended after the built-in recipe" {
 
 ///|
 test "destructive controls keep the Vega solid surface before hover" {
-  let button_html = render(@rui.button(variant=@rui.Destructive, "Delete"))
+  let button_html = render(@rui.button(variant=Destructive, "Delete"))
   assert_contains(
     button_html, "--rui-button-base-bg:var(--rui-destructive-surface,var(--rui-destructive",
   )
   assert_contains(button_html, "--rui-button-base-fg:white")
 
-  let badge_html = render(@rui.badge(variant=@rui.Destructive, "Failed"))
+  let badge_html = render(@rui.badge(variant=Destructive, "Failed"))
   assert_contains(
     badge_html, "--rui-badge-base-bg:var(--rui-destructive-surface,var(--rui-destructive",
   )
@@ -80,7 +80,7 @@ test "destructive controls keep the Vega solid surface before hover" {
 
 ///|
 test "theme supplies dark Neutral tokens inline" {
-  let html = render(@rui.theme(mode=@rui.Dark, @rui.badge("Dark")))
+  let html = render(@rui.theme(mode=Dark, @rui.badge("Dark")))
   assert_contains(html, "color-scheme:dark")
   assert_contains(html, "--rui-background:oklch(0.145 0 0)")
   assert_contains(

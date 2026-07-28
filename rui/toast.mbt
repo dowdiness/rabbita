@@ -701,7 +701,7 @@ fn toast_bind_document_pause_cmd(
   slot : String,
   emit : @cmd.Emit[ToastMsg],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     bind_toast_document_pause(slot, paused => {
       scheduler.add(emit(SetToastPaused("document", paused)))
     })

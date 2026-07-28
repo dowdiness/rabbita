@@ -356,7 +356,7 @@ fn context_bind_trigger_cmd(
   content_id : String,
   open_at : @cmd.Emit[(Int, Int, Int, Int)],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       trigger_id,
       () => {
@@ -376,7 +376,7 @@ fn context_bind_close_cmd(
   content_id : String,
   request_close : @cmd.Cmd,
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       content_id,
       () => {
@@ -390,7 +390,7 @@ fn context_bind_close_cmd(
 ///|
 #cfg(target="js")
 fn context_hide_after_transition_cmd(id : String) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, _ => {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
     ui_after_mount(
       id,
       () => hide_context_menu_after_transition(id),
@@ -425,7 +425,7 @@ fn context_show_cmd(
   point_x : Int,
   point_y : Int,
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, _ => {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
     ui_after_mount(
       id,
       () => show_context_menu(id, x, y, point_x, point_y),

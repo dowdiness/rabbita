@@ -2,7 +2,7 @@
 test "form controls use logical inline spacing and indicators" {
   let native_html = render(
     @rui.direction(
-      direction=@rui.Rtl,
+      direction=Rtl,
       @rui.native_select(@rui.native_select_option(value="one", "One")),
     ),
   )
@@ -13,9 +13,9 @@ test "form controls use logical inline spacing and indicators" {
 
   let group_html = render(
     @rui.input_group([
-      @rui.input_group_addon(align=@rui.InputInlineStart, "Start"),
+      @rui.input_group_addon(align=InputInlineStart, "Start"),
       @rui.input_group_input(),
-      @rui.input_group_addon(align=@rui.InputInlineEnd, "End"),
+      @rui.input_group_addon(align=InputInlineEnd, "End"),
     ]),
   )
   assert_contains(group_html, "padding-inline-start:0.5rem")

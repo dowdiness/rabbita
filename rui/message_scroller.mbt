@@ -30,7 +30,7 @@ fn message_scroller_initialize_cmd(
   scroll_to_end : Bool,
   emit : @cmd.Emit[MessageScrollerMsg],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       viewport_id,
       () => {

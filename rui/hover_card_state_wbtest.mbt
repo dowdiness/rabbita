@@ -20,7 +20,7 @@ fn hover_card_test_update(
   let (next, _) = hover_card_update(
     "test-hover-card",
     None,
-    @cmd.Emit(_ => @cmd.none),
+    Emit(_ => @cmd.none),
     message,
     current,
   )

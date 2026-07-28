@@ -267,7 +267,7 @@ fn combobox_key_test_result(
     align: Start,
     side_offset: 4,
     align_offset: 0,
-    emit: @cmd.Emit(message => {
+    emit: Emit(message => {
       messages.push(message)
       @cmd.none
     }),
@@ -350,7 +350,7 @@ test "combobox root handlers open after input release and preserve item press fo
     align: Start,
     side_offset: 4,
     align_offset: 0,
-    emit: @cmd.Emit(message => {
+    emit: Emit(message => {
       messages.push(message)
       @cmd.none
     }),

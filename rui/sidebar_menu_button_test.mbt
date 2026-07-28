@@ -44,7 +44,7 @@ test "sidebar menu button variants preserve native button and anchor semantics" 
     @rui.sidebar_menu_button(
       href="/projects",
       is_active=true,
-      variant=@rui.SidebarMenuButtonOutline,
+      variant=SidebarMenuButtonOutline,
       "Projects",
     ),
   )
@@ -67,8 +67,8 @@ test "sidebar tooltip reuses its anchor trigger without an interactive wrapper" 
       id="projects-link",
       tooltip="Projects",
       href="/projects",
-      variant=@rui.SidebarMenuButtonOutline,
-      tooltip_side=@rui.Right,
+      variant=SidebarMenuButtonOutline,
+      tooltip_side=Right,
       "Projects",
     )
   })

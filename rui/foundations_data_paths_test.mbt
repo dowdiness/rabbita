@@ -44,15 +44,15 @@ test "native as-child link paths retain semantics and disabled state" {
     @html.div([
       @rui.badge_link(
         href="/status",
-        variant=@rui.Outline,
+        variant=Outline,
         disabled=true,
         aria_label="Unavailable status",
         "Status",
       ),
       @rui.item_link(
         href="/workspace",
-        variant=@rui.ItemMuted,
-        size=@rui.ItemSm,
+        variant=ItemMuted,
+        size=ItemSm,
         disabled=true,
         aria_label="Unavailable workspace",
         @rui.item_content([
@@ -71,7 +71,7 @@ test "native as-child link paths retain semantics and disabled state" {
         ),
       ),
       @rui.bubble(
-        variant=@rui.BubbleSecondary,
+        variant=BubbleSecondary,
         @rui.bubble_content_link(
           href="/reply",
           disabled=true,
@@ -81,7 +81,7 @@ test "native as-child link paths retain semantics and disabled state" {
       ),
       @rui.marker_link(
         href="/activity",
-        variant=@rui.MarkerSeparator,
+        variant=MarkerSeparator,
         disabled=true,
         aria_label="Unavailable activity",
         @rui.marker_content("Activity"),
@@ -111,8 +111,8 @@ test "native as-child link paths retain semantics and disabled state" {
 test "interactive bubble button follows parent variant and native button state" {
   let html = audit_render(
     @rui.bubble(
-      variant=@rui.BubbleDestructive,
-      align=@rui.AlignEnd,
+      variant=BubbleDestructive,
+      align=AlignEnd,
       @rui.bubble_content_button(
         disabled=true,
         aria_label="Retry unavailable",
@@ -143,7 +143,7 @@ test "interactive bubble button follows parent variant and native button state" 
 test "message and bubble recipes cover Vega variants alignment and reactions" {
   let html = audit_render(
     @rui.message(
-      align=@rui.AlignEnd,
+      align=AlignEnd,
       @rui.message_content([
         @rui.message_header(
           "A long sender label that must stay inside a narrow message row",
@@ -154,27 +154,21 @@ test "message and bubble recipes cover Vega variants alignment and reactions" {
               "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz",
             ),
           ),
-          @rui.bubble(
-            variant=@rui.BubbleSecondary,
-            @rui.bubble_content("Secondary"),
-          ),
-          @rui.bubble(variant=@rui.BubbleMuted, @rui.bubble_content("Muted")),
-          @rui.bubble(variant=@rui.BubbleTinted, @rui.bubble_content("Tinted")),
-          @rui.bubble(
-            variant=@rui.BubbleOutline,
-            @rui.bubble_content("Outline"),
-          ),
-          @rui.bubble(variant=@rui.BubbleGhost, @rui.bubble_content("Ghost")),
-          @rui.bubble(variant=@rui.BubbleDestructive, align=@rui.AlignEnd, [
+          @rui.bubble(variant=BubbleSecondary, @rui.bubble_content("Secondary")),
+          @rui.bubble(variant=BubbleMuted, @rui.bubble_content("Muted")),
+          @rui.bubble(variant=BubbleTinted, @rui.bubble_content("Tinted")),
+          @rui.bubble(variant=BubbleOutline, @rui.bubble_content("Outline")),
+          @rui.bubble(variant=BubbleGhost, @rui.bubble_content("Ghost")),
+          @rui.bubble(variant=BubbleDestructive, align=AlignEnd, [
             @rui.bubble_content("Destructive"),
             @rui.bubble_reactions(
-              side=@rui.ReactionTop,
-              align=@rui.AlignStart,
+              side=ReactionTop,
+              align=AlignStart,
               audit_test_icon("M20 6 9 17l-5-5"),
             ),
             @rui.bubble_reactions(
-              side=@rui.ReactionBottom,
-              align=@rui.AlignEnd,
+              side=ReactionBottom,
+              align=AlignEnd,
               @html.span("2"),
             ),
           ]),
@@ -218,12 +212,12 @@ test "button and button-group children expose per-edge merge variables" {
   let html = audit_render(
     @rui.button_group([
       @rui.button(
-        size=@rui.IconXs,
+        size=IconXs,
         attrs=@html.Attrs::build().aria_label("Previous item"),
         audit_test_icon("m15 18-6-6 6-6"),
       ),
       @rui.button_group_text("of 3"),
-      @rui.button(size=@rui.Lg, "Next"),
+      @rui.button(size=Lg, "Next"),
     ]),
   )
   audit_contains(html, "data-slot=\"button-group\"")
@@ -264,7 +258,7 @@ test "separator, spinner, and skeleton cover semantic and motion branches" {
   audit_not_contains(decorative, "aria-orientation")
 
   let semantic = audit_render(
-    @rui.separator(orientation=@rui.Vertical, decorative=false),
+    @rui.separator(orientation=Vertical, decorative=false),
   )
   audit_contains(semantic, "role=\"separator\"")
   audit_contains(semantic, "aria-orientation=\"vertical\"")
@@ -290,22 +284,22 @@ test "attachment size orientation and state variables propagate to parts" {
   let html = audit_render(
     @html.div([
       @rui.attachment(
-        state=@rui.AttachmentIdle,
-        size=@rui.AttachmentXs,
-        orientation=@rui.AttachmentHorizontal,
+        state=AttachmentIdle,
+        size=AttachmentXs,
+        orientation=AttachmentHorizontal,
         @rui.attachment_media("File"),
       ),
       @rui.attachment(
-        state=@rui.AttachmentError,
-        size=@rui.AttachmentSm,
-        orientation=@rui.AttachmentVertical,
+        state=AttachmentError,
+        size=AttachmentSm,
+        orientation=AttachmentVertical,
         [
-          @rui.attachment_media(variant=@rui.AttachmentImage, "Preview"),
+          @rui.attachment_media(variant=AttachmentImage, "Preview"),
           @rui.attachment_content(@rui.attachment_description("Upload failed")),
         ],
       ),
       @rui.attachment(
-        state=@rui.AttachmentProcessing,
+        state=AttachmentProcessing,
         @rui.attachment_content(@rui.attachment_title("Processing file")),
       ),
     ]),
@@ -406,7 +400,7 @@ test "alert and card optional tracks do not reserve empty columns" {
 test "logical-direction and long-content recipes remain narrow-safe" {
   let html = audit_render(
     @rui.direction(
-      direction=@rui.Rtl,
+      direction=Rtl,
       @html.div([
         @rui.item_link(
           href="/rtl",
@@ -414,7 +408,7 @@ test "logical-direction and long-content recipes remain narrow-safe" {
             "A very long unbroken identifier abcdefghijklmnopqrstuvwxyz0123456789",
           ),
         ),
-        @rui.message(align=@rui.AlignEnd, @rui.message_content("Message")),
+        @rui.message(align=AlignEnd, @rui.message_content("Message")),
         @rui.table(
           @rui.table_body(
             @rui.table_row(

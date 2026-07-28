@@ -252,7 +252,7 @@ test "carousel boundary controls and wrap-around use native buttons" {
       default_index=2,
       count=3,
       loop_=true,
-      orientation=@rui.CarouselVertical,
+      orientation=CarouselVertical,
       scope => {
         [
           @rui.carousel_items(scope~, items=[

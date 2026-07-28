@@ -400,11 +400,11 @@ fn fdv_attachments_demo() -> @html.Html {
         fdv_attachment_stage(
           @rui.attachment_group(style=["width:100%"], [
             @rui.attachment(
-              orientation=@rui.AttachmentVertical,
+              orientation=AttachmentVertical,
               style=[FdvAttachmentVerticalStyle],
               [
                 @rui.attachment_media(
-                  variant=@rui.AttachmentImage,
+                  variant=AttachmentImage,
                   @html.img(
                     src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900&auto=format&fit=crop&q=80",
                     alt="Workspace",
@@ -415,11 +415,11 @@ fn fdv_attachments_demo() -> @html.Html {
               ],
             ),
             @rui.attachment(
-              orientation=@rui.AttachmentVertical,
+              orientation=AttachmentVertical,
               style=[FdvAttachmentVerticalStyle],
               [
                 @rui.attachment_media(
-                  variant=@rui.AttachmentImage,
+                  variant=AttachmentImage,
                   @html.img(
                     src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=900&auto=format&fit=crop&q=80",
                     alt="Desk",
@@ -430,11 +430,11 @@ fn fdv_attachments_demo() -> @html.Html {
               ],
             ),
             @rui.attachment(
-              orientation=@rui.AttachmentVertical,
+              orientation=AttachmentVertical,
               style=[FdvAttachmentVerticalStyle],
               [
                 @rui.attachment_media(
-                  variant=@rui.AttachmentImage,
+                  variant=AttachmentImage,
                   @html.img(
                     src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=900&auto=format&fit=crop&q=80",
                     alt="Office",
@@ -463,7 +463,7 @@ fn fdv_attachments_demo() -> @html.Html {
         "Idle",
         "A selected file waiting to upload.",
         fdv_attachment_stage(
-          @rui.attachment(state=@rui.AttachmentIdle, style=["width:100%"], [
+          @rui.attachment(state=AttachmentIdle, style=["width:100%"], [
             @rui.attachment_media(fdv_attachment_clock_icon()),
             fdv_attachment_content("selected-file.pdf", "Ready to upload"),
             @rui.attachment_actions(
@@ -480,22 +480,16 @@ fn fdv_attachments_demo() -> @html.Html {
         "Uploading",
         "An in-progress upload with a spinner.",
         fdv_attachment_stage(
-          @rui.attachment(
-            state=@rui.AttachmentUploading,
-            style=["width:100%"],
-            [
-              @rui.attachment_media(
-                @rui.spinner(label="Uploading design system"),
+          @rui.attachment(state=AttachmentUploading, style=["width:100%"], [
+            @rui.attachment_media(@rui.spinner(label="Uploading design system")),
+            fdv_attachment_content("design-system.zip", "Uploading · 64%"),
+            @rui.attachment_actions(
+              @rui.attachment_action(
+                aria_label="Cancel upload",
+                showcase_close_icon(),
               ),
-              fdv_attachment_content("design-system.zip", "Uploading · 64%"),
-              @rui.attachment_actions(
-                @rui.attachment_action(
-                  aria_label="Cancel upload",
-                  showcase_close_icon(),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ]),
           FdvAttachmentUploadingCode,
         ),
       ),
@@ -503,22 +497,16 @@ fn fdv_attachments_demo() -> @html.Html {
         "Processing",
         "A file being processed after upload.",
         fdv_attachment_stage(
-          @rui.attachment(
-            state=@rui.AttachmentProcessing,
-            style=["width:100%"],
-            [
-              @rui.attachment_media(fdv_attachment_processing_icon()),
-              fdv_attachment_content(
-                "market-research.pdf", "Processing document",
+          @rui.attachment(state=AttachmentProcessing, style=["width:100%"], [
+            @rui.attachment_media(fdv_attachment_processing_icon()),
+            fdv_attachment_content("market-research.pdf", "Processing document"),
+            @rui.attachment_actions(
+              @rui.attachment_action(
+                aria_label="Remove market-research.pdf",
+                showcase_close_icon(),
               ),
-              @rui.attachment_actions(
-                @rui.attachment_action(
-                  aria_label="Remove market-research.pdf",
-                  showcase_close_icon(),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ]),
           FdvAttachmentProcessingCode,
         ),
       ),
@@ -526,7 +514,7 @@ fn fdv_attachments_demo() -> @html.Html {
         "Error",
         "A failed upload with destructive media treatment.",
         fdv_attachment_stage(
-          @rui.attachment(state=@rui.AttachmentError, style=["width:100%"], [
+          @rui.attachment(state=AttachmentError, style=["width:100%"], [
             @rui.attachment_media(fdv_attachment_error_icon()),
             fdv_attachment_content(
               "financial-model.xlsx", "Upload failed. Try again.",
@@ -549,7 +537,7 @@ fn fdv_attachments_demo() -> @html.Html {
         "Done",
         "A completed upload with a success icon.",
         fdv_attachment_stage(
-          @rui.attachment(state=@rui.AttachmentDone, style=["width:100%"], [
+          @rui.attachment(state=AttachmentDone, style=["width:100%"], [
             @rui.attachment_media(showcase_check_icon()),
             fdv_attachment_content("uploaded-report.pdf", "Uploaded · 1.8 MB"),
             @rui.attachment_actions(
@@ -566,14 +554,10 @@ fn fdv_attachments_demo() -> @html.Html {
         "Default size",
         "The default attachment size.",
         fdv_attachment_stage(
-          @rui.attachment(
-            size=@rui.AttachmentDefaultSize,
-            style=["width:100%"],
-            [
-              @rui.attachment_media(showcase_file_icon()),
-              fdv_attachment_content("Default attachment", "PDF · 2.4 MB"),
-            ],
-          ),
+          @rui.attachment(size=AttachmentDefaultSize, style=["width:100%"], [
+            @rui.attachment_media(showcase_file_icon()),
+            fdv_attachment_content("Default attachment", "PDF · 2.4 MB"),
+          ]),
           FdvAttachmentDefaultSizeCode,
         ),
       ),
@@ -581,7 +565,7 @@ fn fdv_attachments_demo() -> @html.Html {
         "Small",
         "A compact attachment row.",
         fdv_attachment_stage(
-          @rui.attachment(size=@rui.AttachmentSm, style=["width:100%"], [
+          @rui.attachment(size=AttachmentSm, style=["width:100%"], [
             @rui.attachment_media(showcase_file_icon()),
             fdv_attachment_content("Small attachment", "PDF · 2.4 MB"),
           ]),
@@ -592,7 +576,7 @@ fn fdv_attachments_demo() -> @html.Html {
         "Extra small",
         "The most compact attachment row.",
         fdv_attachment_stage(
-          @rui.attachment(size=@rui.AttachmentXs, style=["width:100%"], [
+          @rui.attachment(size=AttachmentXs, style=["width:100%"], [
             @rui.attachment_media(showcase_file_icon()),
             fdv_attachment_content("Extra small attachment", "PDF · 2.4 MB"),
           ]),
@@ -1100,11 +1084,11 @@ fn fdv_data_table_view() -> @rabbita.Val[@html.Html] {
       value=row => row.status,
       render=row => {
         let variant : @rui.BadgeVariant = if row.status == "Failed" {
-          @rui.BadgeVariant::Destructive
+          Destructive
         } else if row.status == "Processing" {
-          @rui.BadgeVariant::Secondary
+          Secondary
         } else {
-          @rui.BadgeVariant::Outline
+          Outline
         }
         @rui.badge(variant~, row.status)
       },
@@ -1161,7 +1145,7 @@ fn fdv_items_demo() -> @html.Html {
       fdv_demo_section(
         "Default",
         "A default item with title and description.",
-        @rui.item(variant=@rui.ItemDefault, size=@rui.ItemDefaultSize, [
+        @rui.item(variant=ItemDefault, size=ItemDefaultSize, [
           @rui.item_content([
             @rui.item_title("Release notes"),
             @rui.item_description("Documentation for the current release."),
@@ -1173,15 +1157,13 @@ fn fdv_items_demo() -> @html.Html {
       fdv_demo_section(
         "Outline small",
         "A compact outlined item with an action.",
-        @rui.item(variant=@rui.ItemOutline, size=@rui.ItemSm, [
-          @rui.item_media(variant=@rui.ItemMediaIcon, showcase_runtime_icon()),
+        @rui.item(variant=ItemOutline, size=ItemSm, [
+          @rui.item_media(variant=ItemMediaIcon, showcase_runtime_icon()),
           @rui.item_content([
             @rui.item_title("Runtime"),
             @rui.item_description("JS and native targets are healthy."),
           ]),
-          @rui.item_actions(
-            @rui.button(variant=@rui.Ghost, size=@rui.Xs, "Inspect"),
-          ),
+          @rui.item_actions(@rui.button(variant=Ghost, size=Xs, "Inspect")),
         ]),
         FdvItemOutlineSmallCode,
         stage_variant=ShowcaseStageSurface,
@@ -1189,9 +1171,9 @@ fn fdv_items_demo() -> @html.Html {
       fdv_demo_section(
         "Muted image",
         "A muted item with image media and metadata.",
-        @rui.item(variant=@rui.ItemMuted, size=@rui.ItemDefaultSize, [
+        @rui.item(variant=ItemMuted, size=ItemDefaultSize, [
           @rui.item_media(
-            variant=@rui.ItemMediaImage,
+            variant=ItemMediaImage,
             @html.div(
               style=["width:100%;height:100%;background:var(--rui-muted)"],
               @html.nothing,
@@ -1222,14 +1204,11 @@ fn fdv_empty_demo() -> @html.Html {
         "A default media treatment and action.",
         @rui.empty(style=["padding:1.5rem 1rem"], [
           @rui.empty_header([
-            @rui.empty_media(
-              variant=@rui.EmptyMediaDefault,
-              showcase_archive_icon(),
-            ),
+            @rui.empty_media(variant=EmptyMediaDefault, showcase_archive_icon()),
             @rui.empty_title("No archives"),
             @rui.empty_description("Archived projects will appear here."),
           ]),
-          @rui.empty_content(@rui.button(size=@rui.Sm, "Browse projects")),
+          @rui.empty_content(@rui.button(size=Sm, "Browse projects")),
         ]),
         FdvEmptyDefaultCode,
         tall=true,
@@ -1239,11 +1218,11 @@ fn fdv_empty_demo() -> @html.Html {
         "A framed icon treatment and action.",
         @rui.empty(style=["padding:1.5rem 1rem"], [
           @rui.empty_header([
-            @rui.empty_media(variant=@rui.EmptyMediaIcon, showcase_plus_icon()),
+            @rui.empty_media(variant=EmptyMediaIcon, showcase_plus_icon()),
             @rui.empty_title("No release channels"),
             @rui.empty_description("Create a channel for preview builds."),
           ]),
-          @rui.empty_content(@rui.button(size=@rui.Sm, "Create channel")),
+          @rui.empty_content(@rui.button(size=Sm, "Create channel")),
         ]),
         FdvEmptyIconCode,
         tall=true,
@@ -1261,7 +1240,7 @@ fn fdv_marker_demo() -> @html.Html {
       fdv_demo_section(
         "Default",
         "A default timeline marker.",
-        @rui.marker(variant=@rui.MarkerDefault, [
+        @rui.marker(variant=MarkerDefault, [
           @rui.marker_icon(showcase_activity_icon()),
           @rui.marker_content("Deployment started"),
         ]),
@@ -1271,7 +1250,7 @@ fn fdv_marker_demo() -> @html.Html {
       fdv_demo_section(
         "Separator",
         "A marker that divides timeline sections.",
-        @rui.marker(variant=@rui.MarkerSeparator, [
+        @rui.marker(variant=MarkerSeparator, [
           @rui.marker_icon(showcase_separator_dot_icon()),
           @rui.marker_content("Today"),
         ]),
@@ -1281,7 +1260,7 @@ fn fdv_marker_demo() -> @html.Html {
       fdv_demo_section(
         "Border",
         "A bordered marker for a completed event.",
-        @rui.marker(variant=@rui.MarkerBorder, [
+        @rui.marker(variant=MarkerBorder, [
           @rui.marker_icon(showcase_check_icon()),
           @rui.marker_content("Validation complete"),
         ]),

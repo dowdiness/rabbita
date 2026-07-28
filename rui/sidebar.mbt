@@ -1307,7 +1307,7 @@ fn sidebar_sync_mobile_layers() -> Unit {
 ///|
 #cfg(target="js")
 fn sidebar_mobile_effect_cmd(open : Bool, restore_on_close : Bool) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, _ => {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
     sidebar_sync_mobile_layers()
     if open {
       ignore(sidebar_focus_open())
@@ -1405,10 +1405,10 @@ fn sidebar_restore_desktop_collapse_focus() -> Unit {
 #cfg(target="js")
 fn sidebar_desktop_collapse_focus_cmd() -> @cmd.Cmd {
   @cmd.batch([
-    @cmd.custom_cmd(kind=@cmd.Immediately, _ => {
+    @cmd.custom_cmd(kind=Immediately, _ => {
       sidebar_capture_desktop_collapse_focus()
     }),
-    @cmd.custom_cmd(kind=@cmd.AfterRender, _ => {
+    @cmd.custom_cmd(kind=AfterRender, _ => {
       sidebar_restore_desktop_collapse_focus()
     }),
   ])
@@ -2831,7 +2831,7 @@ pub fn sidebar_input(
     ignore(element_attrs.disabled(true).data_set("disabled", ""))
   }
   @html.input(
-    input_type=@html.Text,
+    input_type=Text,
     name?,
     value?,
     placeholder?,

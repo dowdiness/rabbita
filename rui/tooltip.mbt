@@ -594,7 +594,7 @@ fn tooltip_bind_events_cmd(
   id : String,
   emit : @cmd.Emit[TooltipMsg],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_ready("tooltip-events:" + id, () => {
       bind_tooltip_events(id, (kind, wait) => {
         scheduler.add(emit(TooltipDomEvent(kind, wait)))
@@ -611,7 +611,7 @@ fn tooltip_bind_trigger_events_cmd(
   root_id : String,
   emit : @cmd.Emit[TooltipMsg],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_ready("tooltip-events:" + id, () => {
       bind_tooltip_events_for_trigger(id, trigger_id, root_id, (kind, wait) => {
         scheduler.add(emit(TooltipDomEvent(kind, wait)))

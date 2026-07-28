@@ -229,7 +229,7 @@ fn showcase_view(
   current_slug : String,
   component : @html.Html,
 ) -> @html.Html {
-  let mode = if dark { @rui.Dark } else { @rui.Light }
+  let mode = if dark { @rui.Dark } else { Light }
   @rui.theme(
     mode~,
     id="rui-showcase",

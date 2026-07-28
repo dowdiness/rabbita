@@ -352,9 +352,9 @@ fn data_table_columns_dismiss_subscription(
 ) -> @sub.Sub {
   @sub.custom_sub(
     "data-table-columns-dismiss:\{id}",
-    @sub.Local,
+    Local,
     WatchDataTableColumns(id, close),
-    @sub.SubLoader(data_table_columns_subscription_loader),
+    SubLoader(data_table_columns_subscription_loader),
   )
 }
 
@@ -625,7 +625,7 @@ fn[T] render_data_table(
     let on_input = data_table_value_emit(emit, query => DataTableSetQuery(query))
     toolbar_children.push(
       input(
-        input_type=@html.Search,
+        input_type=Search,
         value=model.query,
         placeholder=search_placeholder,
         on_input?,

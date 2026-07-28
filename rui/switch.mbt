@@ -243,7 +243,7 @@ pub fn switch(
       class?,
       title?,
       aria_label?,
-      on_checked_change=@cmd.Emit(next => {
+      on_checked_change=Emit(next => {
         let update = set_checked(_ => next)
         if on_checked_change is Some(notify) {
           @cmd.batch([update, notify(next)])

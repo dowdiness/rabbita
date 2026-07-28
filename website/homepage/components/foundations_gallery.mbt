@@ -720,62 +720,62 @@ fn foundations_button_demo() -> @html.Html {
       foundations_centered_section(
         "Secondary",
         "Lower-emphasis action.",
-        @rui.button(variant=@rui.Secondary, "Duplicate"),
+        @rui.button(variant=Secondary, "Duplicate"),
         FoundationsButtonSecondaryCode,
       ),
       foundations_centered_section(
         "Outline",
         "Bordered action.",
-        @rui.button(variant=@rui.Outline, "Preview"),
+        @rui.button(variant=Outline, "Preview"),
         FoundationsButtonOutlineCode,
       ),
       foundations_centered_section(
         "Ghost",
         "Unframed action.",
-        @rui.button(variant=@rui.Ghost, "More"),
+        @rui.button(variant=Ghost, "More"),
         FoundationsButtonGhostCode,
       ),
       foundations_centered_section(
         "Destructive",
         "Destructive action.",
-        @rui.button(variant=@rui.Destructive, "Remove"),
+        @rui.button(variant=Destructive, "Remove"),
         FoundationsButtonDestructiveCode,
       ),
       foundations_centered_section(
         "Link",
         "Action styled as a link.",
-        @rui.button(variant=@rui.Link, "Documentation"),
+        @rui.button(variant=Link, "Documentation"),
         FoundationsButtonLinkCode,
       ),
       foundations_centered_section(
         "Large",
         "Large text button.",
-        @rui.button(size=@rui.Lg, "Large"),
+        @rui.button(size=Lg, "Large"),
         FoundationsButtonLargeCode,
       ),
       foundations_centered_section(
         "Default size",
         "Default text-button size.",
-        @rui.button(size=@rui.Default, "Default"),
+        @rui.button(size=Default, "Default"),
         FoundationsButtonDefaultSizeCode,
       ),
       foundations_centered_section(
         "Small",
         "Small text button.",
-        @rui.button(size=@rui.Sm, "Small"),
+        @rui.button(size=Sm, "Small"),
         FoundationsButtonSmallCode,
       ),
       foundations_centered_section(
         "Extra small",
         "Extra-small text button.",
-        @rui.button(size=@rui.Xs, "Extra small"),
+        @rui.button(size=Xs, "Extra small"),
         FoundationsButtonExtraSmallCode,
       ),
       foundations_centered_section(
         "Large icon",
         "Large icon-only button.",
         @rui.button(
-          size=@rui.IconLg,
+          size=IconLg,
           attrs=@html.Attrs::build().aria_label("Add large item"),
           showcase_plus_icon(),
         ),
@@ -785,7 +785,7 @@ fn foundations_button_demo() -> @html.Html {
         "Default icon",
         "Default icon-only button.",
         @rui.button(
-          size=@rui.Icon,
+          size=Icon,
           attrs=@html.Attrs::build().aria_label("Open settings"),
           showcase_settings_icon(),
         ),
@@ -795,7 +795,7 @@ fn foundations_button_demo() -> @html.Html {
         "Small icon",
         "Small icon-only button.",
         @rui.button(
-          size=@rui.IconSm,
+          size=IconSm,
           attrs=@html.Attrs::build().aria_label("Change layout"),
           showcase_layout_icon(),
         ),
@@ -805,7 +805,7 @@ fn foundations_button_demo() -> @html.Html {
         "Extra-small icon",
         "Extra-small icon-only button.",
         @rui.button(
-          size=@rui.IconXs,
+          size=IconXs,
           attrs=@html.Attrs::build().aria_label("Close"),
           showcase_close_icon(),
         ),
@@ -830,31 +830,31 @@ fn foundations_badge_demo() -> @html.Html {
       foundations_centered_section(
         "Secondary",
         "Lower-emphasis status label.",
-        @rui.badge(variant=@rui.Secondary, "Draft"),
+        @rui.badge(variant=Secondary, "Draft"),
         FoundationsBadgeSecondaryCode,
       ),
       foundations_centered_section(
         "Outline",
         "Bordered status label.",
-        @rui.badge(variant=@rui.Outline, "v0.2.0"),
+        @rui.badge(variant=Outline, "v0.2.0"),
         FoundationsBadgeOutlineCode,
       ),
       foundations_centered_section(
         "Destructive",
         "Failure status label.",
-        @rui.badge(variant=@rui.Destructive, "Failed"),
+        @rui.badge(variant=Destructive, "Failed"),
         FoundationsBadgeDestructiveCode,
       ),
       foundations_centered_section(
         "Ghost",
         "Quiet status label.",
-        @rui.badge(variant=@rui.Ghost, "Archived"),
+        @rui.badge(variant=Ghost, "Archived"),
         FoundationsBadgeGhostCode,
       ),
       foundations_centered_section(
         "Link",
         "Navigable badge.",
-        @rui.badge_link(href="#forms", variant=@rui.Link, "Open forms"),
+        @rui.badge_link(href="#forms", variant=Link, "Open forms"),
         FoundationsBadgeLinkCode,
       ),
     ],
@@ -874,8 +874,8 @@ fn foundations_button_group_demo() -> @html.Html {
           @html.div(
             style=[FoundationsCenteredRowStyle],
             @rui.button_group(aria_label="Release actions", [
-              @rui.button(variant=@rui.Outline, "Preview"),
-              @rui.button(variant=@rui.Outline, "Publish"),
+              @rui.button(variant=Outline, "Preview"),
+              @rui.button(variant=Outline, "Publish"),
               @rui.button_group_separator(),
               @rui.button_group_text("v0.2"),
             ]),
@@ -890,24 +890,20 @@ fn foundations_button_group_demo() -> @html.Html {
         showcase_demo_stage(
           @html.div(
             style=[FoundationsCenteredRowStyle],
-            @rui.button_group(
-              orientation=@rui.Vertical,
-              aria_label="Canvas zoom",
-              [
-                @rui.button(
-                  variant=@rui.Outline,
-                  size=@rui.IconSm,
-                  attrs=@html.Attrs::build().aria_label("Zoom in"),
-                  showcase_plus_icon(),
-                ),
-                @rui.button(
-                  variant=@rui.Outline,
-                  size=@rui.IconSm,
-                  attrs=@html.Attrs::build().aria_label("Reset layout"),
-                  showcase_layout_icon(),
-                ),
-              ],
-            ),
+            @rui.button_group(orientation=Vertical, aria_label="Canvas zoom", [
+              @rui.button(
+                variant=Outline,
+                size=IconSm,
+                attrs=@html.Attrs::build().aria_label("Zoom in"),
+                showcase_plus_icon(),
+              ),
+              @rui.button(
+                variant=Outline,
+                size=IconSm,
+                attrs=@html.Attrs::build().aria_label("Reset layout"),
+                showcase_layout_icon(),
+              ),
+            ]),
           ),
           FoundationsButtonGroupVerticalCode,
           variant=ShowcaseStageSurface,
@@ -1078,9 +1074,7 @@ fn foundations_alert_demo() -> @html.Html {
             @rui.alert([
               @rui.alert_title("Deployment is ready"),
               @rui.alert_description("The preview passed all required checks."),
-              @rui.alert_action(
-                @rui.button(variant=@rui.Ghost, size=@rui.Xs, "View"),
-              ),
+              @rui.alert_action(@rui.button(variant=Ghost, size=Xs, "View")),
             ]),
           ),
           FoundationsAlertDefaultCode,
@@ -1093,7 +1087,7 @@ fn foundations_alert_demo() -> @html.Html {
         showcase_demo_stage(
           @html.div(
             style=[FoundationsNarrowStackStyle],
-            @rui.alert(variant=@rui.Destructive, [
+            @rui.alert(variant=Destructive, [
               @rui.alert_title("Two checks need attention"),
               @rui.alert_description(
                 "Update the package lock before publishing.",
@@ -1153,12 +1147,12 @@ fn foundations_message_demo() -> @html.Html {
               "display:flex;width:min(100%,42rem);min-width:0;margin-inline:auto;flex-direction:column",
             ],
             [
-              @rui.message(align=@rui.AlignEnd, [
+              @rui.message(align=AlignEnd, [
                 @rui.message_avatar(@rui.avatar(@rui.avatar_fallback("RA"))),
                 @rui.message_content([
                   @rui.message_header("Rabbita · 09:42"),
                   @rui.bubble_group([
-                    @rui.bubble(variant=@rui.BubbleSecondary, [
+                    @rui.bubble(variant=BubbleSecondary, [
                       @rui.bubble_content(
                         "Reviewed. The inline styles and native semantics are both visible.",
                       ),
@@ -1186,7 +1180,7 @@ fn foundations_bubble_demo() -> @html.Html {
       foundations_centered_section(
         "Default",
         "Current-user emphasis.",
-        @rui.bubble(align=@rui.AlignEnd, [
+        @rui.bubble(align=AlignEnd, [
           @rui.bubble_content("Default · current-user emphasis"),
         ]),
         FoundationsBubbleDefaultCode,
@@ -1194,7 +1188,7 @@ fn foundations_bubble_demo() -> @html.Html {
       foundations_centered_section(
         "Secondary",
         "Neutral conversation surface.",
-        @rui.bubble(variant=@rui.BubbleSecondary, [
+        @rui.bubble(variant=BubbleSecondary, [
           @rui.bubble_content("Secondary · neutral conversation"),
         ]),
         FoundationsBubbleSecondaryCode,
@@ -1202,7 +1196,7 @@ fn foundations_bubble_demo() -> @html.Html {
       foundations_centered_section(
         "Muted",
         "Quiet supporting surface.",
-        @rui.bubble(variant=@rui.BubbleMuted, [
+        @rui.bubble(variant=BubbleMuted, [
           @rui.bubble_content("Muted · quiet supporting text"),
         ]),
         FoundationsBubbleMutedCode,
@@ -1210,7 +1204,7 @@ fn foundations_bubble_demo() -> @html.Html {
       foundations_centered_section(
         "Tinted",
         "Primary-derived surface.",
-        @rui.bubble(variant=@rui.BubbleTinted, [
+        @rui.bubble(variant=BubbleTinted, [
           @rui.bubble_content("Tinted · primary-derived surface"),
         ]),
         FoundationsBubbleTintedCode,
@@ -1218,7 +1212,7 @@ fn foundations_bubble_demo() -> @html.Html {
       foundations_centered_section(
         "Outline link",
         "Bordered navigable content.",
-        @rui.bubble(variant=@rui.BubbleOutline, [
+        @rui.bubble(variant=BubbleOutline, [
           @rui.bubble_content_link(href="#forms", "Open form controls"),
         ]),
         FoundationsBubbleOutlineCode,
@@ -1226,7 +1220,7 @@ fn foundations_bubble_demo() -> @html.Html {
       foundations_centered_section(
         "Ghost",
         "Unframed assistant content.",
-        @rui.bubble(variant=@rui.BubbleGhost, [
+        @rui.bubble(variant=BubbleGhost, [
           @rui.bubble_content("Ghost · unframed assistant content."),
         ]),
         FoundationsBubbleGhostCode,
@@ -1234,7 +1228,7 @@ fn foundations_bubble_demo() -> @html.Html {
       foundations_centered_section(
         "Destructive",
         "Failed action content.",
-        @rui.bubble(variant=@rui.BubbleDestructive, [
+        @rui.bubble(variant=BubbleDestructive, [
           @rui.bubble_content("Destructive · an action failed."),
         ]),
         FoundationsBubbleDestructiveCode,
@@ -1253,7 +1247,7 @@ fn foundations_chart_demo() -> @html.Html {
     @html.div(style=[StackStyle], [
       @html.div(
         style=["display:flex;justify-content:flex-end"],
-        @rui.badge(variant=@rui.Outline, "+18.4%"),
+        @rui.badge(variant=Outline, "+18.4%"),
       ),
       @rui.chart_style(
         variables=[
@@ -1294,7 +1288,7 @@ fn foundations_chart_demo() -> @html.Html {
                     label="Preview",
                     value="1,204",
                     color="var(--color-preview)",
-                    indicator=@rui.ChartDashed,
+                    indicator=ChartDashed,
                   ),
                 ]),
               ),
@@ -1346,13 +1340,13 @@ fn foundations_table_demo() -> @html.Html {
         @rui.table_row([
           @rui.table_cell("rui"),
           @rui.table_cell("Native"),
-          @rui.table_cell(@rui.badge(variant=@rui.Secondary, "Passing")),
+          @rui.table_cell(@rui.badge(variant=Secondary, "Passing")),
           @rui.table_cell(style=[FoundationsTableNumberStyle], "Full suite"),
         ]),
         @rui.table_row([
           @rui.table_cell("showcase"),
           @rui.table_cell("In-app browser"),
-          @rui.table_cell(@rui.badge(variant=@rui.Outline, "Replayed")),
+          @rui.table_cell(@rui.badge(variant=Outline, "Replayed")),
           @rui.table_cell(style=[FoundationsTableNumberStyle], "Key flows"),
         ]),
       ]),

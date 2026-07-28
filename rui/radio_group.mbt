@@ -176,7 +176,7 @@ fn render_radio_group_item(
   radio_group_bind_keyboard(control_attrs)
   let on_change = on_value_change
   @html.input(
-    input_type=@html.Radio,
+    input_type=Radio,
     name?,
     value~,
     checked~,
@@ -284,7 +284,7 @@ pub fn[C : @html.IsChildren] radio_group(
       required~,
       invalid~,
       orientation~,
-      on_value_change=@cmd.Emit(next => {
+      on_value_change=Emit(next => {
         let update = set_value(_ => next)
         if on_value_change is Some(notify) {
           @cmd.batch([update, notify(next)])
@@ -369,7 +369,7 @@ pub fn radio_group_item(
     class?,
     title?,
     aria_label?,
-    on_value_change=@cmd.Emit(_ => (scope.emit)(value)),
+    on_value_change=Emit(_ => (scope.emit)(value)),
     attrs?,
     style~,
   )

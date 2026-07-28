@@ -21,7 +21,7 @@ fn showcase_input_page() -> @rabbita.Val[@html.Html] {
       style=["width:min(100%,24rem);margin-inline:auto"],
       @rui.input(
         id="forms-gallery-input-email",
-        input_type=@html.Email,
+        input_type=Email,
         value=email,
         invalid=email == "invalid",
         placeholder="ada@example.com",
@@ -86,7 +86,7 @@ fn showcase_radio_group_page() -> @rabbita.Val[@html.Html] {
   let horizontal = @rui.radio_group(
     default_value="monthly",
     name="forms-gallery-billing",
-    orientation=@rui.RadioHorizontal,
+    orientation=RadioHorizontal,
     aria_label="Billing cycle",
     on_value_change=set_plan.map(value => _ => value),
     scope => {
@@ -115,7 +115,7 @@ fn showcase_radio_group_page() -> @rabbita.Val[@html.Html] {
   let vertical = @rui.radio_group(
     default_value="automatic",
     name="forms-gallery-sync",
-    orientation=@rui.RadioVertical,
+    orientation=RadioVertical,
     aria_label="Sync strategy",
     scope => {
       @html.div(style=[StackStyle, "gap:0.625rem"], [
@@ -182,7 +182,7 @@ fn showcase_slider_page() -> @rabbita.Val[@html.Html] {
   let vertical_slider = @rui.slider(
     id="forms-gallery-volume",
     default_value=68,
-    orientation=@rui.Vertical,
+    orientation=Vertical,
     aria_label="Preview volume",
     style=["height:10rem"],
   )
@@ -249,7 +249,7 @@ fn showcase_field_page() -> @rabbita.Val[@html.Html] {
                   name="display-name",
                   value=name,
                   required=true,
-                  auto_complete=@html.On,
+                  auto_complete=On,
                   placeholder="Ada Lovelace",
                   on_input=set_form_state.map(value => {
                     state => (value, state.1, state.2, state.3, false)
@@ -272,13 +272,13 @@ fn showcase_field_page() -> @rabbita.Val[@html.Html] {
               @rui.form_label(for_="forms-gallery-email", "Email"),
               @rui.form_control(
                 @rui.input(
-                  input_type=@html.Email,
+                  input_type=Email,
                   id="forms-gallery-email",
                   name="email",
                   value=email,
                   required=true,
                   invalid=email_invalid,
-                  auto_complete=@html.On,
+                  auto_complete=On,
                   placeholder="ada@example.com",
                   on_input=set_form_state.map(value => {
                     state => (state.0, value, state.2, state.3, false)
@@ -316,7 +316,7 @@ fn showcase_field_page() -> @rabbita.Val[@html.Html] {
                 }),
               ),
               @rui.input_group_addon(
-                align=@rui.InputInlineEnd,
+                align=InputInlineEnd,
                 @rui.input_group_text(".moonbit.app"),
               ),
             ]),

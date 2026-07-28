@@ -61,7 +61,7 @@ async fn invoke_js_request(url : String, response_kind : String) -> String {
       body_kind="empty",
       response_kind~,
       text_body="",
-      bytes_body=Bytes::default(),
+      bytes_body=Default::default(),
       blob_body=@js.Nullable::from_option(None),
       succeed_text=text => resolve("text:\{text}"),
       succeed_blob=_ => resolve("blob"),

@@ -34,7 +34,7 @@ test "sheet drawer and sidebar static parts render on JS" {
         @rui.sheet_header("Sheet header"),
         @rui.sheet_footer("Sheet footer"),
         @rui.drawer_portal([
-          @rui.drawer_handle(direction=@rui.DrawerLeft),
+          @rui.drawer_handle(direction=DrawerLeft),
           @rui.drawer_header("Drawer header"),
         ]),
         @rui.sidebar_menu([

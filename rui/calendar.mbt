@@ -499,7 +499,7 @@ fn focus_calendar_day(root_id : String, iso_date : String) -> Unit {
 ///|
 #cfg(target="js")
 fn calendar_focus_day_cmd(root_id : String?, date : CalendarDate) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, _ => {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
     focus_calendar_day(root_id.unwrap_or(""), date.to_iso_string())
   })
 }

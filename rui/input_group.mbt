@@ -228,7 +228,7 @@ pub fn[C : @html.IsChildren] input_group_button(
 
 ///|
 pub fn input_group_input(
-  input_type? : @html.InputType = @html.Text,
+  input_type? : @html.InputType = Text,
   name? : String,
   value? : String,
   placeholder? : String,

@@ -458,7 +458,7 @@ fn scroll_area_initialize_cmd(
   orientation : SeparatorOrientation,
   emit : @cmd.Emit[ScrollAreaMsg],
 ) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       viewport_id,
       () => {

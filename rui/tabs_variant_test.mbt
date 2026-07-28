@@ -40,7 +40,7 @@ test "tabs expose the Vega line list variant through the black-box API" {
     @rui.tab_entry(value="code", label="Code", content=@html.p("Code content")),
   ]
   let html = render_incremental(() => {
-    @rui.tabs(items~, default_value="preview", list_variant=@rui.TabsLine, list_style=[
+    @rui.tabs(items~, default_value="preview", list_variant=TabsLine, list_style=[
       "gap:0.75rem",
     ])
   })
@@ -74,7 +74,7 @@ test "theme supplies line tab indicators without consumer CSS" {
   let html = render(
     @rui.theme(
       @rui.tabs_list(
-        variant=@rui.TabsLine,
+        variant=TabsLine,
         @rui.tabs_trigger(value="one", selected=true, "One"),
       ),
     ),

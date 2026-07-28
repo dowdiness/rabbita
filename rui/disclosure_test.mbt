@@ -186,7 +186,7 @@ test "accordion multiple mode keeps independent default open values" {
     @rui.accordion(
       items~,
       default_values=["one", "two"],
-      type_=@rui.Multiple,
+      type_=Multiple,
       id="sections",
     )
   })
@@ -218,7 +218,7 @@ test "tabs expose tablist, roving tab stops, and linked panels" {
     @rui.tabs(
       items~,
       default_value="password",
-      orientation=@rui.TabsVertical,
+      orientation=TabsVertical,
       aria_label="Settings",
       id="settings",
       trigger_style=["background:rebeccapurple"],

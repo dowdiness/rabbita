@@ -166,13 +166,13 @@ fn showcase_code_copy_panel(code : String) -> @html.Html {
     class="rui-showcase-demo-code-panel",
     style=[ShowcaseDemoCodePanelStyle],
     @rui.button(
-      variant=@rui.Ghost,
-      size=@rui.IconSm,
+      variant=Ghost,
+      size=IconSm,
       class="rui-showcase-demo-code-copy",
       title="Copy code",
       attrs=@html.Attrs::build().aria_label("Copy code"),
       style=[ShowcaseDemoCodeCopyStyle],
-      on_click=@clipboard.copy(@clipboard.Text(code)),
+      on_click=@clipboard.copy(Text(code)),
       showcase_copy_icon(),
     ),
   )

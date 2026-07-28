@@ -33,7 +33,7 @@ impl @cmd.Scheduler for EventCompositionScheduler with fn drain_message(self) {
 #cfg(target="js")
 impl @cmd.Scheduler for EventCompositionScheduler with fn hooks(self) {
   ignore(self)
-  @cmd.Hooks::{ url_request: None, url_changed: None }
+  { url_request: None, url_changed: None }
 }
 
 ///|
@@ -232,10 +232,10 @@ test "input and change named callbacks append to attrs handlers" {
     .on_change(_ => event_composition_command(trace, "change-caller"))
   let html = input(
     attrs=caller_attrs,
-    on_input=@cmd.Emit(value => {
+    on_input=Emit(value => {
       event_composition_command(trace, "input-internal:\{value}")
     }),
-    on_change=@cmd.Emit(value => {
+    on_change=Emit(value => {
       event_composition_command(trace, "change-internal:\{value}")
     }),
   )

@@ -13,7 +13,7 @@ pub struct CloseInfo {
 
 ///|
 pub impl Show for CloseInfo with fn output(self, buf) {
-  self.to_repr().output(buf)
+  Show::output(self.to_repr(), buf)
 }
 
 ///|
@@ -28,7 +28,7 @@ pub(all) enum Event {
 
 ///|
 pub impl Show for Event with fn output(self, buf) {
-  self.to_repr().output(buf)
+  Show::output(self.to_repr(), buf)
 }
 
 ///|
@@ -44,7 +44,7 @@ pub impl Show for Payload with fn output(self, buf) {
   match self {
     Text(text) => {
       buf.write_string("Text(")
-      text.output(buf)
+      Show::output(text, buf)
       buf.write_string(")")
     }
     Json(value) => {
@@ -73,7 +73,7 @@ pub(all) enum ReadyState {
 
 ///|
 pub impl Show for ReadyState with fn output(self, buf) {
-  self.to_repr().output(buf)
+  Show::output(self.to_repr(), buf)
 }
 
 ///|
@@ -89,5 +89,5 @@ pub struct Snapshot {
 
 ///|
 pub impl Show for Snapshot with fn output(self, buf) {
-  self.to_repr().output(buf)
+  Show::output(self.to_repr(), buf)
 }

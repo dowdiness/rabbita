@@ -261,11 +261,11 @@ test "fixed sidebar specimen omits ineffective controls" {
   let html = render_showcase_incremental(() => {
     ig_sidebar_variant(
       "showcase-sidebar-fixed-test",
-      @rui.SidebarLeft,
-      @rui.SidebarDefault,
-      @rui.SidebarFixed,
+      SidebarLeft,
+      SidebarDefault,
+      SidebarFixed,
       false,
-      @rui.SidebarMenuDefault,
+      SidebarMenuDefault,
       false,
       false,
       false,

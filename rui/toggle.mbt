@@ -186,7 +186,7 @@ pub fn[C : @html.IsChildren] toggle(
       class?,
       title?,
       aria_label?,
-      on_pressed_change=@cmd.Emit(next => {
+      on_pressed_change=Emit(next => {
         let update = set_pressed(_ => next)
         if on_pressed_change is Some(notify) {
           @cmd.batch([update, notify(next)])

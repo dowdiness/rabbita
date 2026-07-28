@@ -1331,7 +1331,7 @@ fn position_floating(id : String) -> Unit {
 ///|
 #cfg(target="js")
 fn floating_bind_sync_cmd(id : String, sync : @cmd.Emit[Bool]) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, scheduler => {
+  @cmd.custom_cmd(kind=AfterRender, scheduler => {
     ui_after_mount(
       id,
       () => bind_floating_sync(id, open => scheduler.add(sync(open))),
@@ -1355,9 +1355,7 @@ fn floating_set_open_when_ready(id : String, open : Bool) -> Unit {
 ///|
 #cfg(target="js")
 fn floating_set_open_cmd(id : String, open : Bool) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, _ => {
-    floating_set_open_when_ready(id, open)
-  })
+  @cmd.custom_cmd(kind=AfterRender, _ => floating_set_open_when_ready(id, open))
 }
 
 ///|
@@ -1370,7 +1368,7 @@ fn floating_set_open_cmd(id : String, open : Bool) -> @cmd.Cmd {
 ///|
 #cfg(target="js")
 fn floating_toggle_cmd(id : String) -> @cmd.Cmd {
-  @cmd.custom_cmd(kind=@cmd.AfterRender, _ => {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
     toggle_floating(id)
     position_floating(id)
   })
