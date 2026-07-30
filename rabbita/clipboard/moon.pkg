@@ -4,4 +4,6 @@ import {
   "moonbit-community/rabbita/js",
 }
 
-supported_targets = "js"
+warnings = "-unused_package"
+
+supported_targets = "js+native"

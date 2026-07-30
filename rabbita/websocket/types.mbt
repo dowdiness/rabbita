@@ -1,10 +1,9 @@
 ///|
-#cfg(target="js")
 using @debug {trait Debug, type Repr}
 
 ///|
 /// Close event information surfaced by `@websocket.connect(...)`.
-#cfg(target="js")
+#warnings("-struct_never_constructed")
 pub struct CloseInfo {
   code : Int
   reason : String
@@ -18,7 +17,6 @@ pub impl Show for CloseInfo with fn output(self, buf) {
 
 ///|
 /// Inbound events emitted by a managed WebSocket connection.
-#cfg(target="js")
 pub(all) enum Event {
   Opened
   Message(String)
@@ -33,7 +31,6 @@ pub impl Show for Event with fn output(self, buf) {
 
 ///|
 /// Outbound payload for `send(...)`.
-#cfg(target="js")
 pub(all) enum Payload {
   Text(String)
   Json(Json)
@@ -56,14 +53,15 @@ pub impl Show for Payload with fn output(self, buf) {
 }
 
 ///|
-#cfg(target="js")
 pub impl Debug for Payload with fn to_repr(self) {
-  Repr::literal(self.to_string())
+  match self {
+    Text(text) => Repr::ctor("Text", [(None, Repr(text))])
+    Json(value) => Repr::ctor("Json", [(None, Repr(value))])
+  }
 }
 
 ///|
 /// Browser `WebSocket.readyState` mapped to a MoonBit enum.
-#cfg(target="js")
 pub(all) enum ReadyState {
   Connecting
   Open
@@ -78,7 +76,7 @@ pub impl Show for ReadyState with fn output(self, buf) {
 
 ///|
 /// Snapshot of the current connection state for a named socket.
-#cfg(target="js")
+#warnings("-struct_never_constructed")
 pub struct Snapshot {
   id : String
   url : String

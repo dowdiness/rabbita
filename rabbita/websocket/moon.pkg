@@ -7,4 +7,6 @@ import {
   "moonbitlang/core/ref",
 }
 
-supported_targets = "js"
+warnings = "-unused_package"
+
+supported_targets = "js+native"

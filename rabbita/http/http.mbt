@@ -78,12 +78,19 @@ pub fn RequestWithBody::with_bytes(
 /// ```mbt nocheck
 /// @http.post("api/file").with_blob(file).expect_empty(x => emit(FileSent(x)))
 /// ```
+#cfg(target="js")
 pub fn RequestWithBody::with_blob(self : RequestWithBody, x : Blob) -> Request {
   {
     url: self.url,
     http_method: self.http_method,
     body: BlobBody(x.get_type(), x),
   }
+}
+
+///|
+#cfg(not(target="js"))
+pub fn RequestWithBody::with_blob(self : RequestWithBody, x : Blob) -> Request {
+  { url: self.url, http_method: self.http_method, body: BlobBody("", x) }
 }
 
 ///|

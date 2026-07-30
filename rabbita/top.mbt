@@ -1,5 +1,4 @@
 ///|
-#cfg(target="js")
 pub using @cmd {perform, attempt, effect, delay}
 
 ///|

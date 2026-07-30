@@ -13,7 +13,7 @@ priv enum Expecting {
   Json((Result[Json, HttpError]) -> Cmd)
   Text((Result[String, HttpError]) -> Cmd)
   Bytes((Result[(ContentType, Bytes), HttpError]) -> Cmd)
-  Blob((Result[@dom.Blob, HttpError]) -> Cmd)
+  Blob((Result[Blob, HttpError]) -> Cmd)
 }
 
 ///|
@@ -236,48 +236,71 @@ fn init {
       _ => raise Unhandled
     }
     guard handler.val is Some(request_handler) else { raise Unhandled }
-    if expect is Blob(_) {
+    if expect is Blob(f) {
+      ignore(f)
       raise Unhandled
     }
-    let response = request_handler(request_method, url, body)
-    match (expect, response) {
-      (Json(f), Response::Json(json)) => {
-        let result = Ok(json)
-        settle(ToJson::to_json(result))
-        scheduler.add(f(result))
+    request_handler(request_method, url, body, response => {
+      match (expect, response) {
+        (Json(f), Json(json)) => {
+          let result = Ok(json)
+          settle(ToJson::to_json(result))
+          scheduler.add(f(result))
+        }
+        (Text(f), Text(text)) => {
+          let result = Ok(text)
+          settle(ToJson::to_json(result))
+          scheduler.add(f(result))
+        }
+        (Text(f), Empty) => {
+          let result = Ok("")
+          settle(ToJson::to_json(result))
+          scheduler.add(f(result))
+        }
+        (Bytes(f), Bytes(content_type, bytes)) => {
+          let result = Ok((content_type, bytes))
+          settle(ToJson::to_json(result))
+          scheduler.add(f(result))
+        }
+        (Json(f), Error(error)) => {
+          let result : Result[Json, HttpError] = Err(error)
+          settle(ToJson::to_json(result))
+          scheduler.add(f(result))
+        }
+        (Text(f), Error(error)) => {
+          let result : Result[String, HttpError] = Err(error)
+          settle(ToJson::to_json(result))
+          scheduler.add(f(result))
+        }
+        (Bytes(f), Error(error)) => {
+          let result : Result[(ContentType, Bytes), HttpError] = Err(error)
+          settle(ToJson::to_json(result))
+          scheduler.add(f(result))
+        }
+        (Json(f), _) => {
+          let result : Result[Json, HttpError] = Err(
+            RequestError("unexpected HTTP response kind"),
+          )
+          settle(ToJson::to_json(result))
+          scheduler.add(f(result))
+        }
+        (Text(f), _) => {
+          let result : Result[String, HttpError] = Err(
+            RequestError("unexpected HTTP response kind"),
+          )
+          settle(ToJson::to_json(result))
+          scheduler.add(f(result))
+        }
+        (Bytes(f), _) => {
+          let result : Result[(ContentType, Bytes), HttpError] = Err(
+            RequestError("unexpected HTTP response kind"),
+          )
+          settle(ToJson::to_json(result))
+          scheduler.add(f(result))
+        }
+        (Blob(_), _) => ()
       }
-      (Text(f), Response::Text(text)) => {
-        let result = Ok(text)
-        settle(ToJson::to_json(result))
-        scheduler.add(f(result))
-      }
-      (Text(f), Response::Empty) => {
-        let result = Ok("")
-        settle(ToJson::to_json(result))
-        scheduler.add(f(result))
-      }
-      (Bytes(f), Response::Bytes(content_type, bytes)) => {
-        let result = Ok((content_type, bytes))
-        settle(ToJson::to_json(result))
-        scheduler.add(f(result))
-      }
-      (Json(f), Response::Error(error)) => {
-        let result : Result[Json, HttpError] = Err(error)
-        settle(ToJson::to_json(result))
-        scheduler.add(f(result))
-      }
-      (Text(f), Response::Error(error)) => {
-        let result : Result[String, HttpError] = Err(error)
-        settle(ToJson::to_json(result))
-        scheduler.add(f(result))
-      }
-      (Bytes(f), Response::Error(error)) => {
-        let result : Result[(ContentType, Bytes), HttpError] = Err(error)
-        settle(ToJson::to_json(result))
-        scheduler.add(f(result))
-      }
-      _ => raise Unhandled
-    }
+    })
   })
 }
 
@@ -305,6 +328,8 @@ let handler : Ref[((Method, String, Body, (Response) -> Unit) -> Unit)?] = Ref(
 )
 
 ///|
-pub fn handle(callback : (Method, String, Body, (Response) -> Unit) -> Unit) -> Unit {
+pub fn handle(
+  callback : (Method, String, Body, (Response) -> Unit) -> Unit,
+) -> Unit {
   handler.val = Some(callback)
 }

@@ -3,6 +3,11 @@
 type Blob
 
 ///|
+#cfg(not(target="js"))
+#warnings("-unused_type_declaration")
+type Blob
+
+///|
 #cfg(target="js")
 pub extern "js" fn Blob::get_size(self : Self) -> Int = "(self) => self.size"
 

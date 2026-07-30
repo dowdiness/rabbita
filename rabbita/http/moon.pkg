@@ -5,4 +5,10 @@ import {
   "moonbitlang/core/json",
 }
 
-supported_targets = "js"
+warnings = "-unused_package"
+
+supported_targets = "js+native"
+
+options(
+  targets: { "http_wbtest.mbt": [ "js" ] },
+)
