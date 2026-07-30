@@ -8,7 +8,7 @@ import {
 }
 
 // Values
-pub fn mount(@dom.Node, VNode, &@cmd.Scheduler) -> Mounted
+pub fn mount(String, VNode, &@cmd.Scheduler) -> Mounted
 
 pub fn server_side_render(() -> VNode) -> String
 

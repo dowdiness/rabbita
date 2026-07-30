@@ -5,7 +5,6 @@ pub using @common {trait Enumerate}
 using @vector {type Vector}
 
 ///|
-#cfg(target="js")
 let ambient_graph : Ref[Graph?] = Ref(None)
 
 ///|
@@ -16,13 +15,11 @@ let ambient_graph : Ref[Graph?] = Ref(None)
 struct Val[A](@duplix.Node[A])
 
 ///|
-#cfg(target="js")
 priv struct Graph {
   sandbox : @runtime.Sandbox
 }
 
 ///|
-#cfg(target="js")
 fn Graph::Graph(sandbox : @runtime.Sandbox) -> Self {
   { sandbox, }
 }
@@ -339,7 +336,6 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq] V
 ///   })
 /// }
 /// ```
-#cfg(target="js")
 pub fn[Model : Eq, Msg] create_pure_state(
   model : Model,
   update~ : (Model, Msg) -> Model,
@@ -380,7 +376,6 @@ pub fn[Model : Eq, Msg] create_pure_state(
 ///   })
 /// }
 /// ```
-#cfg(target="js")
 pub fn[Model : Eq, Msg] create_state(
   model : Model,
   update~ : (Model, Msg, Emit[Msg]) -> (Model, Cmd),
@@ -584,7 +579,6 @@ pub fn[E : Eq, C : Eq] Val::switch_by(
 ///   })
 /// }
 /// ```
-#cfg(target="js")
 pub fn[Model : Eq, Msg] create_state_with_init(
   init~ : (Emit[Msg]) -> (Model, Cmd),
   update~ : (Model, Msg, Emit[Msg]) -> (Model, Cmd),
@@ -636,7 +630,6 @@ pub fn[Model : Eq, Msg] create_state_with_init(
 ///   })
 /// }
 /// ```
-#cfg(target="js")
 pub fn[Model : Eq, Msg, Input : Eq] create_state_with_input(
   init~ : (Emit[Msg], Input) -> (Model, Cmd),
   update~ : (Model, Input, Msg, Emit[Msg]) -> (Model, Cmd),
@@ -677,7 +670,6 @@ pub fn[Model : Eq, Msg, Input : Eq] create_state_with_input(
 ///   })
 /// }
 /// ```
-#cfg(target="js")
 pub fn[Model : Eq] create_variable(
   init : Model,
 ) -> (Val[Model], Emit[(Model) -> Model]) {
@@ -693,7 +685,6 @@ pub fn[Model : Eq] create_variable(
 /// For incremental equality, `Pending` equals `Pending`, loaded values compare
 /// by their payloads, and all `Failed` values compare equal regardless of the
 /// contained error.
-#cfg(target="js")
 pub enum Status[T] {
   Pending
   Loaded(T)
@@ -701,7 +692,6 @@ pub enum Status[T] {
 }
 
 ///|
-#cfg(target="js")
 pub impl[T : Eq] Eq for Status[T] with fn equal(a, b) {
   match (a, b) {
     (Pending, Pending) | (Failed(_), Failed(_)) => true
@@ -712,7 +702,6 @@ pub impl[T : Eq] Eq for Status[T] with fn equal(a, b) {
 
 ///|
 /// An incremental asynchronous resource state.
-#cfg(target="js")
 pub type Resource[T] = Val[Status[T]]
 
 ///|
@@ -739,7 +728,6 @@ pub type Resource[T] = Val[Status[T]]
 ///   })
 /// }
 /// ```
-#cfg(target="js")
 pub fn[T : Eq] create_resource(
   f : (Emit[Result[T, Error]]) -> Cmd,
 ) -> Resource[T] {

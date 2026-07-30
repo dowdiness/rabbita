@@ -29,6 +29,13 @@ struct Mounted {
 }
 
 ///|
+#cfg(not(target="js"))
+#warnings("-unused_field")
+struct Mounted {
+  mut vnode : VNode
+}
+
+///|
 #cfg(target="js")
 fn INode::start(self : Self) -> @dom.Node {
   match self {
@@ -224,10 +231,12 @@ fn VNode::insert(
 ///|
 #cfg(target="js")
 pub fn mount(
-  parent : @dom.Node,
+  element_id : String,
   vnode : VNode,
   scheduler : &Scheduler,
 ) -> Mounted {
+  let parent = @dom.document().get_element_by_id(element_id).unwrap()
+  parent.set_inner_html("<div></div>")
   let captured_link_listener : @dom.Listener = event => {
     if event.to_mouse_event() is Some(mouse_event) &&
       scheduler.hooks().url_request is Some(hook) &&
@@ -244,10 +253,26 @@ pub fn mount(
     }
   }
   {
-    root: vnode.insert(scheduler, captured_link_listener, parent, null()),
+    root: vnode.insert(
+      scheduler,
+      captured_link_listener,
+      parent.as_node(),
+      null(),
+    ),
     scheduler,
     captured_link_listener,
   }
+}
+
+///|
+#cfg(not(target="js"))
+pub fn mount(
+  element_id : String,
+  vnode : VNode,
+  scheduler : &Scheduler,
+) -> Mounted {
+  ignore((element_id, scheduler))
+  { vnode, }
 }
 
 ///|
@@ -264,6 +289,12 @@ pub fn Mounted::update(self : Self, vnode : VNode) -> Unit {
     parent,
     next_sibling,
   )
+}
+
+///|
+#cfg(not(target="js"))
+pub fn Mounted::update(self : Self, vnode : VNode) -> Unit {
+  self.vnode = vnode
 }
 
 ///|

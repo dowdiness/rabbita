@@ -5,7 +5,6 @@ import {
   "moonbit-community/rabbita/cmd",
   "moonbit-community/rabbita/sub",
   "moonbitlang/core/queue",
-  "moonbitlang/core/random",
   "moonbit-community/rabbita/internal/key",
   "moonbit-community/rabbita/internal/any",
   "moonbit-community/rabbita/internal/slotmap",

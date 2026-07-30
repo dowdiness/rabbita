@@ -2,11 +2,9 @@
 pub using @vdom {type Children, type Props, type VNode}
 
 ///|
-#cfg(target="js")
 using @cmd {trait Scheduler}
 
 ///|
-#cfg(target="js")
 using @queue {type Queue}
 
 ///|
@@ -16,8 +14,7 @@ using @queue {type Queue}
 ///      compute new vdom from model
 ///
 /// 2. reconcile(oldView, newView)
-///      compare with the mounted tree and update the real DOM
-#cfg(target="js")
+///      update the mounted render state
 pub(all) struct Sandbox {
   priv after_render_queue : Queue[(&Scheduler) -> Unit]
   priv msg_queue : Queue[(@slotmap.Id, @any.Any)]
@@ -25,12 +22,10 @@ pub(all) struct Sandbox {
   priv mut drain_scheduled : Bool
   priv mut paint_scheduled : Bool
   priv mut mounted : @vdom.Mounted?
-  mut mount : String
   hooks : @cmd.Hooks
 }
 
 ///|
-#cfg(target="js")
 pub fn Sandbox::new() -> Sandbox {
   {
     msg_queue: Queue([]),
@@ -39,48 +34,67 @@ pub fn Sandbox::new() -> Sandbox {
     hooks: { url_request: None, url_changed: None },
     paint_scheduled: false,
     drain_scheduled: false,
-    mount: "",
     after_render_queue: Queue([]),
   }
 }
 
 ///|
-#cfg(target="js")
-pub fn Sandbox::initialize(self : Self, vnode : @duplix.Node[VNode]) -> Unit {
-  let element = @dom.document().get_element_by_id(self.mount).unwrap() // TODO: handle error
-
-  // trigger a url_changed message 
+pub fn Sandbox::initialize(
+  self : Self,
+  element_id : String,
+  vnode : @duplix.Node[VNode],
+) -> Unit {
+  // Trigger a url_changed message after subscriptions have installed hooks.
   if self.hooks().url_changed is Some(hook) {
-    hook(self, @dom.window().current_url())
+    hook(self, current_url())
   }
-
   self.root_view = Some(vnode)
   let vnode = self.root_view.unwrap().read()
-  self.mounted = Some(@vdom.mount(element.as_node(), vnode, self))
+  self.mounted = Some(@vdom.mount(element_id, vnode, self))
 }
 
 ///|
 /// Schedules a drawing frame to be rendered on the next animation frame.
-#cfg(target="js")
 pub fn Sandbox::flush(self : Self) -> Unit {
-  if !self.paint_scheduled {
-    self.paint_scheduled = true
-    @dom.window().request_animation_frame(fn(_) {
-      if self.mounted is Some(mounted) {
-        let vnode = self.root_view.unwrap().read()
-        mounted.update(vnode)
-      }
-      self.paint_scheduled = false
-      while self.after_render_queue.pop() is Some(f) {
-        f(self)
-      }
-    })
-    |> ignore
-  }
+  guard !self.paint_scheduled else { return }
+  self.paint_scheduled = true
+  request_frame(fn() {
+    if self.mounted is Some(mounted) {
+      let vnode = self.root_view.unwrap().read()
+      mounted.update(vnode)
+    }
+    self.paint_scheduled = false
+    while self.after_render_queue.pop() is Some(f) {
+      f(self)
+    }
+  })
 }
 
 ///|
 #cfg(target="js")
+fn current_url() -> String {
+  @dom.window().current_url()
+}
+
+///|
+#cfg(not(target="js"))
+fn current_url() -> String {
+  ""
+}
+
+///|
+#cfg(target="js")
+fn request_frame(callback : () -> Unit) -> Unit {
+  @dom.window().request_animation_frame(_ => callback()) |> ignore
+}
+
+///|
+#cfg(not(target="js"))
+fn request_frame(callback : () -> Unit) -> Unit {
+  callback()
+}
+
+///|
 pub impl Scheduler for Sandbox with fn run_effect(self, kind, f) {
   match kind {
     Immediately => f(self)
@@ -89,14 +103,12 @@ pub impl Scheduler for Sandbox with fn run_effect(self, kind, f) {
 }
 
 ///|
-#cfg(target="js")
 pub impl Scheduler for Sandbox with fn queue_message(self, path, msg) {
   self.msg_queue.push((path, msg))
 }
 
 ///|
 /// Processing all pending messages FIFO to update all relevant models
-#cfg(target="js")
 pub impl Scheduler for Sandbox with fn drain_message(self) {
   if !self.drain_scheduled {
     self.drain_scheduled = true
@@ -110,7 +122,6 @@ pub impl Scheduler for Sandbox with fn drain_message(self) {
 }
 
 ///|
-#cfg(target="js")
 pub impl Scheduler for Sandbox with fn hooks(self) {
   self.hooks
 }
