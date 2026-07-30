@@ -64,7 +64,7 @@ pub fn Op::on_describe(Self, (Extension) -> Json raise Unhandled) -> Unit
 pub fn Op::on_invoke(Self, (Extension, &Scheduler) -> Unit raise Unhandled) -> Unit
 pub fn Op::on_resume(Self, (Extension, Json, &Scheduler) -> Unit raise HydrateExn) -> Unit
 pub fn Op::on_settle(Self, (Extension, (Json) -> Unit, &Scheduler) -> Unit raise Unhandled) -> Unit
-pub fn Op::request(Self, Extension) -> Cmd
+pub fn Op::request(Self, Extension, kind? : EffectKind) -> Cmd
 
 // Type aliases
 pub type Hook[Arg] = (&Scheduler, Arg) -> Unit

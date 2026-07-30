@@ -24,7 +24,16 @@ impl Scheduler with fn add(self, cmd) {
       Effect(k, f) => self.run_effect(k, f)
       Message(id, msg) => self.queue_message(id, msg)
       LegacyMessage(f) => f(self)
-      Invoke(op, e) => (op.inovke)(e, self) catch { Unhandled => () }
+      Invoke(op, e, Immediately) =>
+        (op.inovke)(e, self) catch {
+          Unhandled => ()
+        }
+      Invoke(op, e, AfterRender) =>
+        self.run_effect(AfterRender, s => {
+          (op.inovke)(e, s) catch {
+            Unhandled => ()
+          }
+        })
     }
   }
   go(cmd)

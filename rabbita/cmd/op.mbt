@@ -39,7 +39,7 @@ pub fn Op::Op() -> Self {
 pub impl Debug for Cmd with fn to_repr(cmd) {
   match cmd {
     Batch(cmds) => Repr::array(cmds.map(Debug::to_repr))
-    Invoke(op, extension) =>
+    Invoke(op, extension, _) =>
       (op.debug)(extension) catch {
         Unhandled => Repr::omitted()
       }
@@ -100,6 +100,10 @@ pub fn Op::on_invoke(
 }
 
 ///|
-pub fn Op::request(self : Self, extension : Extension) -> Cmd {
-  Invoke(self, extension)
+pub fn Op::request(
+  self : Self,
+  extension : Extension,
+  kind? : EffectKind = Immediately,
+) -> Cmd {
+  Invoke(self, extension, kind)
 }
