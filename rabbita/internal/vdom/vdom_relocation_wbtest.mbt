@@ -29,6 +29,28 @@ extern "js" fn relocation_test_document() -> @dom.Document =
 
 ///|
 #cfg(target="js")
+struct RelocationTestScheduler {}
+
+///|
+#cfg(target="js")
+impl @cmd.Scheduler for RelocationTestScheduler with fn queue_command(self, cmd) {
+  ignore((self, cmd))
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Scheduler for RelocationTestScheduler with fn current_url(_self) {
+  ""
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Scheduler for RelocationTestScheduler with fn hooks(_self) {
+  { url_request: None, url_changed: None }
+}
+
+///|
+#cfg(target="js")
 test "diffing unchanged keyed children does not reinsert DOM nodes" {
   let document = relocation_test_document()
   let parent = document.create_element("div")
@@ -48,7 +70,18 @@ test "diffing unchanged keyed children does not reinsert DOM nodes" {
     ]),
   )
 
-  ignore(diff_children(old, new, Sandbox::new(), parent.as_node(), null()))
+  let scheduler = RelocationTestScheduler::{  }
+  let captured_link_listener : @dom.Listener = _ => ()
+  ignore(
+    diff_children(
+      old,
+      new,
+      scheduler,
+      captured_link_listener,
+      parent.as_node(),
+      null(),
+    ),
+  )
 
   assert_eq(parent.get_attribute("data-insert-count"), Some("0"))
 }

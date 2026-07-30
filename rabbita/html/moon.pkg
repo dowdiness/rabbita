@@ -1,5 +1,5 @@
 import {
-  "moonbit-community/rabbita/internal/runtime",
+  "moonbit-community/rabbita/internal/vdom",
   "moonbit-community/rabbita/dom",
   "moonbit-community/rabbita/common",
   "moonbit-community/rabbita/cmd",

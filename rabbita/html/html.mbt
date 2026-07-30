@@ -1,5 +1,5 @@
 ///|
-using @runtime {type Children, type VNode}
+using @vdom {type Children, type VNode}
 
 ///|
 using @cmd {type Cmd, type Emit}
@@ -7,15 +7,15 @@ using @cmd {type Cmd, type Emit}
 ///|
 /// An HTML value produced by the constructors in this package.
 #alias(T)
-pub(all) struct Html(@runtime.VNode) derive(Eq)
+pub(all) struct Html(@vdom.VNode) derive(Eq)
 
 ///|
-pub fn Html::to_virtual_dom(self : Html) -> @runtime.VNode {
+pub fn Html::to_virtual_dom(self : Html) -> @vdom.VNode {
   self.0
 }
 
 ///|
-pub fn Html::from_vnode(vdom : @runtime.VNode) -> Html {
+pub fn Html::from_vnode(vdom : @vdom.VNode) -> Html {
   Html(vdom)
 }
 
@@ -25,7 +25,7 @@ pub fn[C : IsChildren] node(tag : String, attrs : Attrs, children : C) -> Html {
   if props.props.get("innerHTML") is Some(String(raw_html)) {
     let props = props.copy()
     props.props.remove("innerHTML")
-    VNode::elem(tag, props, @runtime.RawHtml(raw_html))
+    VNode::elem(tag, props, @vdom.RawHtml(raw_html))
   } else {
     VNode::elem(tag, props, children.to_children())
   }
@@ -42,7 +42,7 @@ fn[C : IsChildren] resolve_attrs(
   }
   let children = if attrs.0.props.get("innerHTML") is Some(String(raw_html)) {
     attrs.0.props.remove("innerHTML")
-    @runtime.RawHtml(raw_html)
+    @vdom.RawHtml(raw_html)
   } else {
     children.to_children()
   }
@@ -55,7 +55,7 @@ pub let nothing : Html = VNode::fragment([])
 
 ///|
 pub fn fragment(children : Array[Html]) -> Html {
-  @runtime.VNode::fragment(children.map(x => x.0))
+  @vdom.VNode::fragment(children.map(x => x.0))
 }
 
 ///|
@@ -875,7 +875,7 @@ pub fn[C : IsChildren] a(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  @runtime.VNode::link(attrs.to_props(), children, escape~)
+  @vdom.VNode::link(attrs.to_props(), children, escape~)
 }
 
 ///|

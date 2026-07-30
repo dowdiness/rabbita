@@ -1,6 +1,7 @@
 import {
   "moonbit-community/rabbita/html",
   "moonbit-community/rabbita/internal/runtime",
+  "moonbit-community/rabbita/internal/vdom",
   "moonbit-community/rabbita/url",
   "moonbit-community/rabbita/dom",
   "moonbit-community/rabbita/cmd",

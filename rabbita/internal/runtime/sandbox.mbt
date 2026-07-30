@@ -1,4 +1,11 @@
 ///|
+pub using @vdom {type Children, type Props, type VNode}
+
+///|
+#cfg(target="js")
+using @cmd {trait Scheduler}
+
+///|
 #cfg(target="js")
 using @queue {type Queue}
 
@@ -8,11 +15,8 @@ using @queue {type Queue}
 /// 1. view(model) -> newView  
 ///      compute new vdom from model
 ///
-/// 2. diff(oldView, newView) -> patch
-///      generate patches by comparing to old vdom
-///
-/// 3. mount(patch)
-///      apply patches to real DOM
+/// 2. reconcile(oldView, newView)
+///      compare with the mounted tree and update the real DOM
 #cfg(target="js")
 pub(all) struct Sandbox {
   priv after_render_queue : Queue[(&Scheduler) -> Unit]
@@ -20,8 +24,7 @@ pub(all) struct Sandbox {
   priv mut root_view : @duplix.Node[VNode]?
   priv mut drain_scheduled : Bool
   priv mut paint_scheduled : Bool
-  priv mut inode : INode?
-  priv captured_link_listener : @dom.Listener
+  priv mut mounted : @vdom.Mounted?
   mut mount : String
   hooks : @cmd.Hooks
 }
@@ -29,37 +32,16 @@ pub(all) struct Sandbox {
 ///|
 #cfg(target="js")
 pub fn Sandbox::new() -> Sandbox {
-  let mut sandbox : Sandbox? = None
-  let captured_link_listener = fn(event : @dom.Event) {
-    if event.to_mouse_event() is Some(mouse_event) &&
-      sandbox is Some(sandbox) &&
-      sandbox.hooks.url_request is Some(hook) &&
-      !(mouse_event.get_meta_key() || mouse_event.get_ctrl_key()) {
-      event.prevent_default()
-      let href = event
-        .current_target()
-        .unwrap()
-        .to_element()
-        .unwrap()
-        .get_property("href")
-        .unwrap()
-
-      hook(sandbox, href)
-    }
-  }
-  let sandbox_value = {
+  {
     msg_queue: Queue([]),
     root_view: None,
-    inode: None,
+    mounted: None,
     hooks: { url_request: None, url_changed: None },
     paint_scheduled: false,
     drain_scheduled: false,
     mount: "",
-    captured_link_listener,
     after_render_queue: Queue([]),
   }
-  sandbox = Some(sandbox_value)
-  sandbox_value
 }
 
 ///|
@@ -74,8 +56,7 @@ pub fn Sandbox::initialize(self : Self, vnode : @duplix.Node[VNode]) -> Unit {
 
   self.root_view = Some(vnode)
   let vnode = self.root_view.unwrap().read()
-  let inode = vnode.insert(self, element.as_node(), null())
-  self.inode = Some(inode)
+  self.mounted = Some(@vdom.mount(element.as_node(), vnode, self))
 }
 
 ///|
@@ -85,13 +66,9 @@ pub fn Sandbox::flush(self : Self) -> Unit {
   if !self.paint_scheduled {
     self.paint_scheduled = true
     @dom.window().request_animation_frame(fn(_) {
-      if self.inode is Some(inode) {
-        let end = inode.end()
-        let parent = end.get_parent_node().unwrap()
-        let next_sibling = end.get_next_sibling()
+      if self.mounted is Some(mounted) {
         let vnode = self.root_view.unwrap().read()
-        let inode = diff_node(inode, vnode, self, parent, next_sibling)
-        self.inode = Some(inode)
+        mounted.update(vnode)
       }
       self.paint_scheduled = false
       while self.after_render_queue.pop() is Some(f) {

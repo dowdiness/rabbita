@@ -110,7 +110,7 @@ fn event_composition_command(trace : Array[String], label : String) -> @cmd.Cmd 
 
 ///|
 #cfg(target="js")
-fn event_composition_props(html : Html) -> @runtime.Props raise {
+fn event_composition_props(html : Html) -> @vdom.Props raise {
   match html.to_virtual_dom() {
     Elem(_, props, _, namespace_uri=None) => props
     _ => fail("expected an HTML element")
@@ -120,7 +120,7 @@ fn event_composition_props(html : Html) -> @runtime.Props raise {
 ///|
 #cfg(target="js")
 fn dispatch_composed_event(
-  props : @runtime.Props,
+  props : @vdom.Props,
   event_name : String,
   event_kind : String,
   value : String,

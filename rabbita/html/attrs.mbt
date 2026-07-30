@@ -1,5 +1,5 @@
 ///|
-using @runtime {type Props}
+using @vdom {type Props}
 
 ///|
 using @variant {type Variant}
