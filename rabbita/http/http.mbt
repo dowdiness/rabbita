@@ -1,5 +1,5 @@
 ///|
-using @cmd {type Cmd, trait Scheduler, type Emit}
+using @cmd {type Cmd, type Emit}
 
 ///|
 using @dom {type Blob}
@@ -295,18 +295,23 @@ pub fn[T : FromJson] Request::expect_json(
   self : Request,
   msg : Emit[Result[T, Error]],
 ) -> Cmd {
-  self.send_response(
-    response_kind="text",
-    on_text=body => {
-      try @json.from_json(@json.parse(body)) catch {
-        error => msg(Err(error))
-      } noraise {
-        value => msg(Ok(value))
-      }
-    },
-    on_blob=_ => @cmd.none,
-    on_bytes=(_, _) => @cmd.none,
-    on_failure=error => msg(Err(error)),
+  op.request(
+    Request(
+      url=self.url,
+      http_method=self.http_method,
+      body=self.body,
+      expect=Json(result => {
+        match result {
+          Ok(json) =>
+            try @json.from_json(json) catch {
+              error => msg(Err(error))
+            } noraise {
+              value => msg(Ok(value))
+            }
+          Err(error) => msg(Err(error))
+        }
+      }),
+    ),
   )
 }
 
@@ -340,12 +345,18 @@ pub fn Request::expect_blob(
   self : Request,
   msg : Emit[Result[Blob, Error]],
 ) -> Cmd {
-  self.send_response(
-    response_kind="blob",
-    on_text=_ => @cmd.none,
-    on_blob=blob => msg(Ok(blob)),
-    on_bytes=(_, _) => @cmd.none,
-    on_failure=error => msg(Err(error)),
+  op.request(
+    Request(
+      url=self.url,
+      http_method=self.http_method,
+      body=self.body,
+      expect=Blob(result => {
+        match result {
+          Ok(blob) => msg(Ok(blob))
+          Err(error) => msg(Err(error))
+        }
+      }),
+    ),
   )
 }
 
@@ -379,12 +390,18 @@ pub fn Request::expect_bytes(
   self : Request,
   msg : Emit[Result[(ContentType, Bytes), Error]],
 ) -> Cmd {
-  self.send_response(
-    response_kind="bytes",
-    on_text=_ => @cmd.none,
-    on_blob=_ => @cmd.none,
-    on_bytes=(content_type, bytes) => msg(Ok((content_type, bytes))),
-    on_failure=error => msg(Err(error)),
+  op.request(
+    Request(
+      url=self.url,
+      http_method=self.http_method,
+      body=self.body,
+      expect=Bytes(result => {
+        match result {
+          Ok(value) => msg(Ok(value))
+          Err(error) => msg(Err(error))
+        }
+      }),
+    ),
   )
 }
 
@@ -418,12 +435,18 @@ pub fn Request::expect_text(
   self : Request,
   msg : Emit[Result[String, Error]],
 ) -> Cmd {
-  self.send_response(
-    response_kind="text",
-    on_text=body => msg(Ok(body)),
-    on_blob=_ => @cmd.none,
-    on_bytes=(_, _) => @cmd.none,
-    on_failure=error => msg(Err(error)),
+  op.request(
+    Request(
+      url=self.url,
+      http_method=self.http_method,
+      body=self.body,
+      expect=Text(result => {
+        match result {
+          Ok(text) => msg(Ok(text))
+          Err(error) => msg(Err(error))
+        }
+      }),
+    ),
   )
 }
 
@@ -454,12 +477,18 @@ pub fn Request::expect_text(
 ///     @http.delete("api/user/1").expect_empty(x => emit(UserDeleted(x))) |> ignore
 ///     ```
 pub fn Request::expect_empty(self : Request, msg : Emit[Error?]) -> Cmd {
-  self.send_response(
-    response_kind="text",
-    on_text=_ => msg(None),
-    on_blob=_ => @cmd.none,
-    on_bytes=(_, _) => @cmd.none,
-    on_failure=error => msg(Some(error)),
+  op.request(
+    Request(
+      url=self.url,
+      http_method=self.http_method,
+      body=self.body,
+      expect=Text(result => {
+        match result {
+          Ok(_) => msg(None)
+          Err(error) => msg(Some(error))
+        }
+      }),
+    ),
   )
 }
 
@@ -663,106 +692,6 @@ pub(all) enum Body {
 }
 
 ///|
-pub(all) suberror RequestError {
+pub(all) suberror HttpError {
   RequestError(String)
-}
-
-///|
-fn Request::send_response(
-  self : Request,
-  response_kind~ : String,
-  on_text~ : (String) -> Cmd,
-  on_blob~ : (Blob) -> Cmd,
-  on_bytes~ : (ContentType, Bytes) -> Cmd,
-  on_failure~ : (Error) -> Cmd,
-) -> Cmd {
-  @cmd.custom_cmd(fn(scheduler : &Scheduler) {
-    let (content_type, body_kind, text_body, bytes_body, blob_body) = match
-      self.body {
-      Json(json) =>
-        ("application/json", "text", json.stringify(), Default::default(), None)
-      Text(text) => ("text/plain", "text", text, Default::default(), None)
-      BytesBody(content_type, bytes) => (content_type, "bytes", "", bytes, None)
-      BlobBody(content_type, blob) =>
-        (content_type, "blob", "", Default::default(), Some(blob))
-      Empty => ("", "empty", "", Default::default(), None)
-    }
-    js_request(
-      self.url,
-      self.http_method,
-      content_type~,
-      body_kind~,
-      response_kind~,
-      text_body~,
-      bytes_body~,
-      blob_body=@js.Nullable::from_option(blob_body),
-      succeed_text=text => scheduler.add(on_text(text)),
-      succeed_blob=blob => scheduler.add(on_blob(blob)),
-      succeed_bytes=(content_type, bytes) => {
-        scheduler.add(on_bytes(content_type, bytes))
-      },
-      failed=detail => {
-        scheduler.add(on_failure(RequestError("Http request failed:\{detail}")))
-      },
-    )
-  })
-}
-
-///|
-extern "js" fn js_request(
-  url : String,
-  http_method : String,
-  content_type~ : String,
-  body_kind~ : String,
-  response_kind~ : String,
-  text_body~ : String,
-  bytes_body~ : Bytes,
-  blob_body~ : @js.Nullable[Blob],
-  succeed_text~ : (String) -> Unit,
-  succeed_blob~ : (Blob) -> Unit,
-  succeed_bytes~ : (ContentType, Bytes) -> Unit,
-  failed~ : (String) -> Unit,
-) =
-  #| (url, method, contentType, bodyKind, responseKind, textBody, bytesBody, blobBody, succeedText, succeedBlob, succeedBytes, failed) => {
-  #|   const config = { method };
-  #|   if (contentType !== "") {
-  #|     config.headers = { "Content-Type": contentType };
-  #|   }
-  #|   switch (bodyKind) {
-  #|     case "text":
-  #|       config.body = textBody;
-  #|       break;
-  #|     case "bytes":
-  #|       config.body = bytesBody;
-  #|       break;
-  #|     case "blob":
-  #|       config.body = blobBody;
-  #|       break;
-  #|   }
-  #|   fetch(url, config)
-  #|     .then((response) => {
-  #|       if (!response.ok) {
-  #|         const statusText = response.statusText ? ` ${response.statusText}` : "";
-  #|         failed(`HTTP ${response.status}${statusText}`);
-  #|         return;
-  #|       }
-  #|       switch (responseKind) {
-  #|         case "text":
-  #|           return response.text().then((text) => succeedText(text));
-  #|         case "blob":
-  #|           return response.blob().then((blob) => succeedBlob(blob));
-  #|         case "bytes": {
-  #|           const responseContentType = response.headers.get("Content-Type");
-  #|           if (!responseContentType) {
-  #|             throw new Error("Missing Content-Type header");
-  #|           }
-  #|           return response
-  #|             .arrayBuffer()
-  #|             .then((buffer) => succeedBytes(responseContentType, new Uint8Array(buffer)));
-  #|         }
-  #|         default:
-  #|           throw new Error(`Unknown response kind: ${responseKind}`);
-  #|       }
-  #|     })
-  #|     .catch((error) => failed(error.toString()));
-  #| }
+} derive(FromJson, ToJson)

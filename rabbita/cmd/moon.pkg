@@ -5,6 +5,7 @@ import {
   "moonbit-community/rabbita/internal/any",
   "moonbit-community/rabbita/internal/slotmap",
   "moonbitlang/core/queue",
+  "moonbitlang/core/json",
 }
 
 warnings = "-unused_package"

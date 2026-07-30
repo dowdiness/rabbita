@@ -4,6 +4,7 @@ package "moonbit-community/rabbita/cmd"
 import {
   "moonbit-community/rabbita/internal/any",
   "moonbit-community/rabbita/internal/slotmap",
+  "moonbitlang/core/debug",
 }
 
 // Values
@@ -27,9 +28,17 @@ pub let none : Cmd
 pub fn[A] perform((A) -> Cmd, async () -> A noraise) -> Cmd
 
 // Errors
+pub(all) suberror HydrateExn {
+  Unhandled
+  Fallback
+  Skip
+}
+
+pub(all) suberror Unhandled
 
 // Types and methods
 type Cmd
+pub impl @debug.Debug for Cmd
 
 pub(all) enum EffectKind {
   Immediately
@@ -40,19 +49,27 @@ pub(all) enum EffectKind {
 pub(all) struct Emit[Msg]((Msg) -> Cmd)
 pub fn[A, B] Emit::map(Self[A], (B) -> A) -> Self[B]
 
+pub(all) extenum Extension {
+}
+
 pub(all) struct Hooks {
   mut url_request : ((&Scheduler, String) -> Unit)?
   mut url_changed : ((&Scheduler, String) -> Unit)?
 }
 
-pub(all) enum Path {
-  Index(Int, Path)
-  Keyed(String, Path)
-  Root
-} derive(Compare, Eq, Hash)
+type Op
+pub fn Op::Op() -> Self
+pub fn Op::on_debug(Self, (Extension) -> @debug.Repr raise Unhandled) -> Unit
+pub fn Op::on_describe(Self, (Extension) -> Json raise Unhandled) -> Unit
+pub fn Op::on_invoke(Self, (Extension, &Scheduler) -> Unit raise Unhandled) -> Unit
+pub fn Op::on_resume(Self, (Extension, Json, &Scheduler) -> Unit raise HydrateExn) -> Unit
+pub fn Op::on_settle(Self, (Extension, (Json) -> Unit, &Scheduler) -> Unit raise Unhandled) -> Unit
+pub fn Op::request(Self, Extension) -> Cmd
 
 // Type aliases
 pub type Hook[Arg] = (&Scheduler, Arg) -> Unit
+
+pub type Settle = (Json) -> Unit
 
 // Traits
 pub(open) trait Scheduler {

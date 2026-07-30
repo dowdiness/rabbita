@@ -15,6 +15,7 @@ enum Cmd {
   Effect(EffectKind, OnExecute)
   Message(@slotmap.Id, @any.Any)
   LegacyMessage(OnExecute)
+  Invoke(Op, Extension)
 }
 
 ///|

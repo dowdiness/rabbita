@@ -8,14 +8,6 @@ pub(open) trait Scheduler {
 }
 
 ///|
-/// A position in an indexed or keyed runtime tree.
-pub(all) enum Path {
-  Index(Int, Path)
-  Keyed(String, Path)
-  Root
-} derive(Eq, Compare, Hash)
-
-///|
 pub(all) struct Hooks {
   mut url_request : Hook[String]?
   mut url_changed : Hook[String]?
@@ -32,6 +24,7 @@ impl Scheduler with fn add(self, cmd) {
       Effect(k, f) => self.run_effect(k, f)
       Message(id, msg) => self.queue_message(id, msg)
       LegacyMessage(f) => f(self)
+      Invoke(op, e) => (op.inovke)(e, self) catch { Unhandled => () }
     }
   }
   go(cmd)

@@ -12,6 +12,8 @@ pub fn delete(String) -> Request
 
 pub fn get(String) -> Request
 
+pub fn handle((Method, String, Body, (Response) -> Unit) -> Unit) -> Unit
+
 pub fn patch(String) -> RequestWithBody
 
 pub fn post(String) -> RequestWithBody
@@ -19,9 +21,9 @@ pub fn post(String) -> RequestWithBody
 pub fn put(String) -> RequestWithBody
 
 // Errors
-pub(all) suberror RequestError {
+pub(all) suberror HttpError {
   RequestError(String)
-}
+} derive(ToJson, @json.FromJson)
 
 // Types and methods
 pub(all) enum Body {
@@ -30,6 +32,14 @@ pub(all) enum Body {
   BytesBody(String, Bytes)
   BlobBody(String, @dom.Blob)
   Empty
+}
+
+pub(all) enum Method {
+  GET
+  DELETE
+  POST
+  PATCH
+  PUT
 }
 
 type Request
@@ -49,6 +59,14 @@ pub fn RequestWithBody::with_blob(Self, @dom.Blob) -> Request
 pub fn RequestWithBody::with_bytes(Self, String, Bytes) -> Request
 pub fn[T : ToJson] RequestWithBody::with_json(Self, T) -> Request
 pub fn RequestWithBody::with_text(Self, String) -> Request
+
+pub(all) enum Response {
+  Json(Json)
+  Text(String)
+  Bytes(String, Bytes)
+  Empty
+  Error(HttpError)
+}
 
 // Type aliases
 pub type ContentType = String
