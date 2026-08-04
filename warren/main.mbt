@@ -24,25 +24,18 @@ let shell_html_template =
   $|</html>
 
 ///|
-let preview_html_template =
+let app_html_template =
   $|<!DOCTYPE html>
   $|<html lang="en">
   $|<head>
   $|    <meta charset="UTF-8">
   $|    <meta name="viewport" content="width=device-width, initial-scale=1.0">
   $|    <title>warren preview</title>
-  $|    \{preview_assets_patch}
   $|</head>
   $|<body>
   $|    <div id="app"></div>
   $|</body>
   $|</html>
-
-///|
-let preview_assets_patch =
-  #|<base href="/">
-  #|<script src="/index.js" type="module"></script>
-  #|<link rel="stylesheet" type="text/css" href="/styles.css"></link>
 
 ///|
 let preview_base_patch =
@@ -55,6 +48,26 @@ let preview_entry_script_patch =
 ///|
 let preview_stylesheet_patch =
   #|<link rel="stylesheet" type="text/css" href="/styles.css"></link>
+
+///|
+let direct_client_patch =
+  #|<script src="/__warren/direct.js" type="module"></script>
+
+///|
+let direct_client_js =
+  #|function connect() {
+  #|  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  #|  const socket = new WebSocket(`${protocol}//${location.host}/__warren/events`);
+  #|  socket.addEventListener("message", event => {
+  #|    if (event.data === "reload") {
+  #|      location.reload();
+  #|    }
+  #|  });
+  #|  socket.addEventListener("close", () => {
+  #|    setTimeout(connect, 1000);
+  #|  });
+  #|}
+  #|connect();
 
 ///|
 async fn main {
@@ -75,6 +88,12 @@ async fn main {
             about="Static files directory. Defaults to ./public when present.",
           ),
           OptionArg("port", about="Local preview server port. Default: 4300."),
+        ],
+        flags=[
+          FlagArg(
+            "direct",
+            about="Serve the application as the top-level page without the Warren devtool iframe.",
+          ),
         ],
         about="Start a local preview server with live reload.",
       ),
@@ -145,8 +164,9 @@ async fn main {
         }
         _ => 4300U
       }
+      let direct = submatches.flags.get("direct") is Some(true)
       let target_dir = @fs.tmpdir(prefix="warren")
-      dev_server(main_pkg_dir~, target_dir~, public_dir~, port~)
+      dev_server(main_pkg_dir~, target_dir~, public_dir~, port~, direct~)
     }
     "build" => {
       let cwd_main = Path::join(cwd, "main").to_string()
@@ -183,6 +203,17 @@ async fn main {
 fn inject_preview_assets(html : String) -> String {
   let html = inject_preview_base(html)
   let patch = preview_assets_for(html)
+  inject_assets(html, patch)
+}
+
+///|
+fn inject_direct_assets(html : String) -> String {
+  let patch = preview_assets_for(html) + direct_client_for(html)
+  inject_assets(html, patch)
+}
+
+///|
+fn inject_assets(html : String, patch : String) -> String {
   guard patch != "" else { html }
   let tag = match html.rev_find("</head>") {
     None => html.rev_find("</html>")
@@ -198,6 +229,15 @@ fn inject_preview_assets(html : String) -> String {
         html + "\n" + patch
       }
     }
+  }
+}
+
+///|
+fn direct_client_for(html : String) -> String {
+  if html.contains("/__warren/direct.js") {
+    ""
+  } else {
+    direct_client_patch + "\n"
   }
 }
 
@@ -270,6 +310,7 @@ async fn dev_server(
   target_dir~ : String,
   public_dir~ : String?,
   port~ : UInt,
+  direct~ : Bool,
 ) -> Unit {
   let watcher = @fs.Watcher(main_pkg_dir, ignored_paths=path => {
     path.contains(".mooncakes") ||
@@ -278,33 +319,34 @@ async fn dev_server(
   })
 
   let vfs = @vfs.new(Map([]))
-  if public_dir is Some(dir) {
-    vfs.mount("/", DirectoryMapping(SourcePath::new(dir)))
-    let files = @fs.readdir(dir)
-    if files.contains("index.html") {
-      let html = @fs.read_file(Path::join(dir, "index.html").to_string()).text()
-      vfs.mount(
-        "/__warren/preview/index.html",
-        FileContent(inject_preview_assets(html)),
-      )
-    } else {
-      vfs.mount(
-        "/__warren/preview/index.html",
-        FileContent(preview_html_template),
-      )
+  let app_html = match public_dir {
+    Some(dir) => {
+      vfs.mount("/", DirectoryMapping(SourcePath::new(dir)))
+      let files = @fs.readdir(dir)
+      if files.contains("index.html") {
+        @fs.read_file(Path::join(dir, "index.html").to_string()).text()
+      } else {
+        app_html_template
+      }
     }
+    None => app_html_template
+  }
+  if direct {
+    vfs.mount("/index.html", FileContent(inject_direct_assets(app_html)))
+    vfs.mount("/__warren/direct.js", FileContent(direct_client_js))
   } else {
     vfs.mount(
       "/__warren/preview/index.html",
-      FileContent(preview_html_template),
+      FileContent(inject_preview_assets(app_html)),
     )
+    vfs.mount("/index.html", FileContent(shell_html_template))
+    vfs.mount("/warren_devtool.js", FileContent(embbed_devtool_js))
+    vfs.mount("/warren_devtool.css", FileContent(embbed_devtool_css))
   }
-  vfs.mount("/index.html", FileContent(shell_html_template))
-  vfs.mount("/warren_devtool.js", FileContent(embbed_devtool_js))
-  vfs.mount("/warren_devtool.css", FileContent(embbed_devtool_css))
 
   @async.with_task_group <| group => {
-    let hub = Devhub(port, vfs)
+    let html_fallback_path = if direct { Some("/index.html") } else { None }
+    let hub = Devhub(port, vfs, html_fallback_path?)
     group.spawn_bg(no_wait=true, allow_failure=true, () => hub.run_forever())
     log("info", "Running server on http://127.0.0.1:\{hub.port()}")
 
