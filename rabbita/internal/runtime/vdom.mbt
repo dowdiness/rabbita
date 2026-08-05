@@ -46,6 +46,19 @@ fn INode::end(s : Self) -> @dom.Node {
 
 ///|
 #cfg(target="js")
+fn INode::needs_relocation(
+  self : Self,
+  anchor : @js.Nullable[@dom.Node],
+) -> Bool {
+  match (self.end().get_next_sibling().to_option(), anchor.to_option()) {
+    (None, None) => false
+    (Some(actual), Some(expected)) => !actual.is_same_node(expected)
+    _ => true
+  }
+}
+
+///|
+#cfg(target="js")
 fn INode::remove(self : Self, sandbox : Sandbox, parent : @dom.Node) -> Unit {
   match self {
     Elem(_, _, _, e, ..) | Text(_, e) => parent.remove_child(e.as_node())
@@ -72,6 +85,7 @@ fn INode::relocate(
   parent : @dom.Node,
   before : @js.Nullable[@dom.Node],
 ) -> Unit {
+  guard self.needs_relocation(before) else { return }
   match self {
     Elem(_, _, _, e, ..) | Text(_, e) =>
       parent.insert_before(e.as_node(), before)
