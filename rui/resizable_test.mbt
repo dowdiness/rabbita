@@ -70,6 +70,7 @@ test "generic resizable renders three panels and two unique handles" {
   assert_contains(html, "data-slot=\"resizable-control\"")
   assert_contains(html, "data-slot=\"resizable-handle-line\"")
   assert_contains(html, "data-slot=\"resizable-handle-hit-area\"")
+  assert_contains(html, "left:-6px;top:0;width:13px;height:100%")
   assert_contains(html, "data-slot=\"resizable-handle-grip\"")
   assert_contains(html, "width:0.25rem;height:1.5rem")
   assert_contains(html, "border-radius:9999px")
@@ -146,4 +147,23 @@ test "legacy two panel API keeps its sizing and control contract" {
   )
   assert_contains(html, "id=\"compat-split-handle\"")
   assert_not_contains(html, "id=\"compat-split-handle-0\"")
+}
+
+///|
+test "two panel input API renders parent input inside the resizable scope" {
+  let html = render_incremental_resizable(() => {
+    @rui.resizable_panel_group_with_input(
+      id="input-split",
+      input=@rabbita.Val::constant("Current document"),
+      (scope, document) => {
+        [
+          @rui.resizable_panel(scope~, side=FirstPanel, document),
+          @rui.resizable_handle(scope~),
+          @rui.resizable_panel(scope~, side=SecondPanel, "Preview"),
+        ]
+      },
+    )
+  })
+  assert_contains(html, "Current document")
+  assert_contains(html, "id=\"input-split\"")
 }

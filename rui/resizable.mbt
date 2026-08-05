@@ -635,8 +635,9 @@ fn[C : @html.IsChildren] render_resizable_group(
 
 ///|
 #cfg(target="js")
-pub fn[C : @html.IsChildren] resizable_group(
+fn[T : Eq, C : @html.IsChildren] resizable_group_with_input(
   id~ : String,
+  input~ : @rabbita.Val[T],
   default_sizes~ : Array[Int],
   min_sizes? : Array[Int] = [],
   max_sizes? : Array[Int] = [],
@@ -647,7 +648,7 @@ pub fn[C : @html.IsChildren] resizable_group(
   title? : String,
   attrs? : @html.Attrs,
   style? : Array[String] = [],
-  children : (ResizableGroupScope) -> C,
+  children : (ResizableGroupScope, T) -> C,
 ) -> @rabbita.Val[@html.Html] {
   let (initial, minimums, maximums) = resizable_prepare_layout(
     default_sizes, min_sizes, max_sizes,
@@ -670,7 +671,7 @@ pub fn[C : @html.IsChildren] resizable_group(
       (next, command)
     },
   )
-  sizes.view(sizes => {
+  sizes.view2(input, (sizes, input) => {
     render_resizable_group(
       {
         id,
@@ -685,13 +686,54 @@ pub fn[C : @html.IsChildren] resizable_group(
       title,
       attrs,
       style,
-      children,
+      scope => children(scope, input),
     )
   })
 }
 
 ///|
 #cfg(not(target="js"))
+fn[T : Eq, C : @html.IsChildren] resizable_group_with_input(
+  id~ : String,
+  input~ : @rabbita.Val[T],
+  default_sizes~ : Array[Int],
+  min_sizes? : Array[Int] = [],
+  max_sizes? : Array[Int] = [],
+  orientation? : SeparatorOrientation = Horizontal,
+  aria_label? : String = "Resize panels",
+  on_resize? : @cmd.Emit[Array[Int]],
+  class? : String,
+  title? : String,
+  attrs? : @html.Attrs,
+  style? : Array[String] = [],
+  children : (ResizableGroupScope, T) -> C,
+) -> @rabbita.Val[@html.Html] {
+  ignore(on_resize)
+  let (sizes, minimums, maximums) = resizable_prepare_layout(
+    default_sizes, min_sizes, max_sizes,
+  )
+  let emit = @cmd.Emit(_ => @cmd.none)
+  input.view(input => {
+    render_resizable_group(
+      {
+        id,
+        sizes,
+        min_sizes: minimums,
+        max_sizes: maximums,
+        orientation,
+        aria_label,
+        emit,
+      },
+      class,
+      title,
+      attrs,
+      style,
+      scope => children(scope, input),
+    )
+  })
+}
+
+///|
 pub fn[C : @html.IsChildren] resizable_group(
   id~ : String,
   default_sizes~ : Array[Int],
@@ -706,28 +748,20 @@ pub fn[C : @html.IsChildren] resizable_group(
   style? : Array[String] = [],
   children : (ResizableGroupScope) -> C,
 ) -> @rabbita.Val[@html.Html] {
-  ignore(on_resize)
-  let (sizes, minimums, maximums) = resizable_prepare_layout(
-    default_sizes, min_sizes, max_sizes,
-  )
-  let emit = @cmd.Emit(_ => @cmd.none)
-  @rabbita.Val::constant(
-    render_resizable_group(
-      {
-        id,
-        sizes,
-        min_sizes: minimums,
-        max_sizes: maximums,
-        orientation,
-        aria_label,
-        emit,
-      },
-      class,
-      title,
-      attrs,
-      style,
-      children,
-    ),
+  resizable_group_with_input(
+    id~,
+    input=@rabbita.Val::constant(()),
+    default_sizes~,
+    min_sizes~,
+    max_sizes~,
+    orientation~,
+    aria_label~,
+    on_resize?,
+    class?,
+    title?,
+    attrs?,
+    style~,
+    (scope, _) => children(scope),
   )
 }
 
@@ -833,9 +867,9 @@ fn render_resizable_handle(
         style=[
           "position:absolute;z-index:2;display:block",
           if vertical {
-            "left:0;top:-2px;width:100%;height:4px;cursor:row-resize"
+            "left:0;top:-6px;width:100%;height:13px;cursor:row-resize"
           } else {
-            "left:-2px;top:0;width:4px;height:100%;cursor:col-resize"
+            "left:-6px;top:0;width:13px;height:100%;cursor:col-resize"
           },
         ],
         "",
@@ -880,9 +914,9 @@ fn render_resizable_handle(
         style=[
           "position:absolute;z-index:2;margin:0;opacity:0;pointer-events:none",
           if vertical {
-            "left:0;top:-2px;width:100%;height:4px;writing-mode:vertical-lr;cursor:row-resize"
+            "left:0;top:-6px;width:100%;height:13px;writing-mode:vertical-lr;cursor:row-resize"
           } else {
-            "left:-2px;top:0;width:4px;height:100%;writing-mode:horizontal-tb;cursor:col-resize"
+            "left:-6px;top:0;width:13px;height:100%;writing-mode:horizontal-tb;cursor:col-resize"
           },
         ],
       ),
@@ -917,6 +951,49 @@ pub fn resizable_group_handle(
 }
 
 ///|
+/// Render a two-panel resizable group whose content follows one incremental
+/// parent input without moving the group's local resize state into that parent.
+pub fn[T : Eq, C : @html.IsChildren] resizable_panel_group_with_input(
+  id~ : String,
+  input~ : @rabbita.Val[T],
+  default_size? : Int = 50,
+  min? : Int = 10,
+  max? : Int = 90,
+  orientation? : SeparatorOrientation = Horizontal,
+  aria_label? : String = "Resize panels",
+  on_resize? : @cmd.Emit[Int],
+  class? : String,
+  title? : String,
+  attrs? : @html.Attrs,
+  style? : Array[String] = [],
+  children : (ResizableScope, T) -> C,
+) -> @rabbita.Val[@html.Html] {
+  let min = resizable_clamp(min, 0, 100)
+  let max = resizable_clamp(max, min, 100)
+  let initial = resizable_clamp(default_size, min, max)
+  let on_resize = if on_resize is Some(notify) {
+    Some(notify.map(sizes => resizable_value_at(sizes, 0, initial)))
+  } else {
+    None
+  }
+  resizable_group_with_input(
+    id~,
+    input~,
+    default_sizes=[initial, 100 - initial],
+    min_sizes=[min, 100 - max],
+    max_sizes=[max, 100 - min],
+    orientation~,
+    aria_label~,
+    on_resize?,
+    class?,
+    title?,
+    attrs?,
+    style~,
+    (group, input) => children({ group, control_id: "\{id}-handle" }, input),
+  )
+}
+
+///|
 pub fn[C : @html.IsChildren] resizable_panel_group(
   id~ : String,
   default_size? : Int = 50,
@@ -931,19 +1008,12 @@ pub fn[C : @html.IsChildren] resizable_panel_group(
   style? : Array[String] = [],
   children : (ResizableScope) -> C,
 ) -> @rabbita.Val[@html.Html] {
-  let min = resizable_clamp(min, 0, 100)
-  let max = resizable_clamp(max, min, 100)
-  let initial = resizable_clamp(default_size, min, max)
-  let on_resize = if on_resize is Some(notify) {
-    Some(notify.map(sizes => resizable_value_at(sizes, 0, initial)))
-  } else {
-    None
-  }
-  resizable_group(
+  resizable_panel_group_with_input(
     id~,
-    default_sizes=[initial, 100 - initial],
-    min_sizes=[min, 100 - max],
-    max_sizes=[max, 100 - min],
+    input=@rabbita.Val::constant(()),
+    default_size~,
+    min~,
+    max~,
     orientation~,
     aria_label~,
     on_resize?,
@@ -951,7 +1021,7 @@ pub fn[C : @html.IsChildren] resizable_panel_group(
     title?,
     attrs?,
     style~,
-    group => children({ group, control_id: "\{id}-handle" }),
+    (scope, _) => children(scope),
   )
 }
 
