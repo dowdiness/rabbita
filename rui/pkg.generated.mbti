@@ -637,6 +637,8 @@ pub fn[C : @html.IsChildren] resizable_panel(scope~ : ResizableScope, side~ : Re
 
 pub fn[C : @html.IsChildren] resizable_panel_group(id~ : String, default_size? : Int, min? : Int, max? : Int, orientation? : SeparatorOrientation, aria_label? : String, on_resize? : @cmd.Emit[Int], class? : String, title? : String, attrs? : @html.Attrs, style? : Array[String], (ResizableScope) -> C) -> @rabbita.Val[@html.Html]
 
+pub fn[T : Eq, C : @html.IsChildren] resizable_panel_group_with_input(id~ : String, input~ : @rabbita.Val[T], default_size? : Int, min? : Int, max? : Int, orientation? : SeparatorOrientation, aria_label? : String, on_resize? : @cmd.Emit[Int], class? : String, title? : String, attrs? : @html.Attrs, style? : Array[String], (ResizableScope, T) -> C) -> @rabbita.Val[@html.Html]
+
 pub fn[C : @html.IsChildren] scroll_area(orientation? : SeparatorOrientation, id? : String, class? : String, title? : String, attrs? : @html.Attrs, style? : Array[String], C) -> @html.Html
 
 pub fn[C : @html.IsChildren] scroll_area_with_scrollbar(orientation? : SeparatorOrientation, id~ : String, class? : String, title? : String, attrs? : @html.Attrs, style? : Array[String], C) -> @rabbita.Val[@html.Html]
