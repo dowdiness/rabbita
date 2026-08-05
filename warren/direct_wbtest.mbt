@@ -20,7 +20,7 @@ test "direct dev assets keep the app in the top-level document" {
       "<link rel=\"stylesheet\" type=\"text/css\" href=\"/styles.css\"></link>",
     ),
   )
-  assert_false(output.contains("<base "))
+  assert_true(output.contains("<base href=\"/\">"))
 }
 
 ///|
@@ -29,6 +29,7 @@ test "direct dev assets do not duplicate existing entries" {
     $|<!doctype html>
     $|<html>
     $|<head>
+    $|<base href="/">
     $|<script src="/index.js" type="module"></script>
     $|<script src="/__warren/direct.js" type="module"></script>
     $|<link rel="stylesheet" type="text/css" href="/styles.css"></link>

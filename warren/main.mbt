@@ -208,6 +208,7 @@ fn inject_preview_assets(html : String) -> String {
 
 ///|
 fn inject_direct_assets(html : String) -> String {
+  let html = inject_preview_base(html)
   let patch = preview_assets_for(html) + direct_client_for(html)
   inject_assets(html, patch)
 }
