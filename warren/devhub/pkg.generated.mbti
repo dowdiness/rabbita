@@ -24,7 +24,7 @@ pub(all) enum ClientMsg {
 pub struct Devhub {
   // private fields
 }
-pub async fn Devhub::Devhub(UInt, @vfs.VirtualFileSystem) -> Self
+pub async fn Devhub::Devhub(UInt, @vfs.VirtualFileSystem, html_fallback_path? : String) -> Self
 pub fn Devhub::broadcast(Self, BroadcastMsg) -> Unit
 pub fn Devhub::port(Self) -> Int
 pub async fn Devhub::run_forever(Self) -> Unit

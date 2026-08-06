@@ -53,6 +53,14 @@ You can also choose the main package, static files directory, or port:
 warren dev path/to/main --public-dir path/to/public --port 4301
 ```
 
+To serve the application directly as the top-level page instead, use:
+
+```sh
+warren dev --direct
+```
+
+Direct mode keeps live reload but does not load the Warren development UI. It is useful for applications that depend on top-level navigation, browser APIs, or end-to-end tests without an iframe.
+
 If the port is already used by a previous `warren` preview, `warren` will stop it and continue. If another program is using the port, stop that program manually or choose a different port.
 
 ## Release Build

@@ -14,6 +14,7 @@ pub(all) enum ClientMsg {
 pub struct Devhub {
   priv server : @http.Server
   priv vfs : @vfs.VirtualFileSystem
+  priv html_fallback_path : String?
   priv client_msgs : @async.Queue[ClientMsg]
   priv mut next_id : Int
   priv subscribers : Map[Int, @async.Queue[BroadcastMsg]]
@@ -145,15 +146,28 @@ async fn check_port(port : UInt) -> Unit {
 }
 
 ///|
-pub async fn Devhub::Devhub(port : UInt, vfs : @vfs.VirtualFileSystem) -> Self {
+pub async fn Devhub::Devhub(
+  port : UInt,
+  vfs : @vfs.VirtualFileSystem,
+  html_fallback_path? : String,
+) -> Self {
   check_port(port)
 
   {
     server: Server(@socket.Addr::parse("127.0.0.1:\{port}"), reuse_addr=true),
     vfs,
+    html_fallback_path,
     client_msgs: Queue(kind=Unbounded),
     next_id: 0,
     subscribers: Map([]),
+  }
+}
+
+///|
+fn request_accepts_html(request : @http.Request) -> Bool {
+  match request.headers.get("accept") {
+    Some(accept) => accept.to_lower().contains("text/html")
+    None => false
   }
 }
 
@@ -208,10 +222,18 @@ async fn Devhub::handle_request(
   }
   match path {
     "/__warren/events" => self.handle_ws(request, conn)
-    path =>
-      match self.vfs.read(path) {
-        Some(content) => {
-          let content_type = match @path.Path::extname(path) {
+    path => {
+      let resource = if self.vfs.read(path) is Some(content) {
+        Some((path, content))
+      } else if request_accepts_html(request) &&
+        self.html_fallback_path is Some(fallback) {
+        self.vfs.read(fallback).map(content => (fallback, content))
+      } else {
+        None
+      }
+      match resource {
+        Some((resource_path, content)) => {
+          let content_type = match @path.Path::extname(resource_path) {
             ".png" => "image/png"
             ".jpg" | ".jpeg" => "image/jpeg"
             ".html" => "text/html"
@@ -240,6 +262,7 @@ async fn Devhub::handle_request(
           ..write("\{path} Not Found")
           .end_response()
       }
+    }
   }
 }
 
