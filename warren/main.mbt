@@ -390,7 +390,7 @@ async fn dev_server(
           Path::join(target_dir, "js/debug/build").to_string(),
         )
         guard js_paths is [js_path] else {
-          log("error", "found multiple entries: \{Repr(js_paths)}")
+          log("error", "found multiple entries: \{to_repr(js_paths)}")
           log(
             "info", "Use `warren dev path/to/main/package/dir` to choose one entry.",
           )
