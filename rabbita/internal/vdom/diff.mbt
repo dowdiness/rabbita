@@ -95,9 +95,9 @@ fn INode::relocate(
     Thunk(_, node) => node.relocate(parent, before)
     Frag(_, start, end) => {
       {
-        guard! start.get_parent_node().to_option() is Some(a)
-        guard! end.get_parent_node().to_option() is Some(b)
-        guard! a.is_same_node(b)
+        guard start.get_parent_node().to_option() is Some(a)
+        guard end.get_parent_node().to_option() is Some(b)
+        guard a.is_same_node(b)
       }
       let start = start.as_node()
       let end = end.as_node()
@@ -559,7 +559,7 @@ fn diff_node(
         parent,
         nullable(end.as_node()),
       )
-      guard! children is Array(children)
+      guard children is Array(children)
       Frag(children, start, end)
     }
     (Thunk(hash1, node) as old, Thunk(hash2, render)) =>

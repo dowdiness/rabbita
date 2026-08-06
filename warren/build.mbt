@@ -238,7 +238,7 @@ pub async fn build_project(
     [] => abort("Release JS artifact not found under \{build_dir}")
     _ =>
       abort(
-        "Found multiple release JS artifacts: \{Repr(js_paths)}. Use `warren build path/to/main/package/dir` to choose one entry.",
+        "Found multiple release JS artifacts: \{to_repr(js_paths)}. Use `warren build path/to/main/package/dir` to choose one entry.",
       )
   }
 
