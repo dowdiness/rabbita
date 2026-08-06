@@ -350,3 +350,4 @@ pub fn Svg::to_virtual_dom(Self) -> @runtime.VNode
 // Type aliases
 
 // Traits
+

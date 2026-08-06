@@ -1,0 +1,2 @@
+# MoonBit emits a final blank line in generated package interfaces.
+**/pkg.generated.mbti whitespace=-blank-at-eof

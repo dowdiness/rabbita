@@ -969,3 +969,4 @@ pub trait IsSVGGraphicsElement : IsSVGElement {
 pub trait IsUIEvent : IsEvent {
   fn as_ui_event(Self) -> UIEvent
 }
+
