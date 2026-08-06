@@ -23,4 +23,3 @@ type Config derive(Eq)
 // Type aliases
 
 // Traits
-

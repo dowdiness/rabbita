@@ -15,4 +15,3 @@ pub fn get_context2d(String) -> @dom.CanvasRenderingContext2D?
 // Type aliases
 
 // Traits
-

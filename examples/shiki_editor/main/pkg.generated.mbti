@@ -11,4 +11,3 @@ type ControlsState derive(Eq)
 // Type aliases
 
 // Traits
-

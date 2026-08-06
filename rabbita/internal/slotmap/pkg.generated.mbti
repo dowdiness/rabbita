@@ -22,4 +22,3 @@ pub fn[T] SlotMap::write(Self[T], Id, T) -> Unit
 // Type aliases
 
 // Traits
-

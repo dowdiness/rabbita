@@ -560,4 +560,3 @@ pub impl IsChildren for Array[Html]
 pub impl IsChildren for Map[String, Html]
 pub impl IsChildren for @vector.Vector[Html]
 pub impl IsChildren for @list.List[Html]
-

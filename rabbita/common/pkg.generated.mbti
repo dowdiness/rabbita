@@ -57,4 +57,3 @@ pub impl Show for Viewport
 pub(open) trait Enumerate {
   fn tag(Self) -> String
 }
-

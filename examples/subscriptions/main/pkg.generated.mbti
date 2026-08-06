@@ -15,4 +15,3 @@ type Tab derive(Eq)
 // Type aliases
 
 // Traits
-

@@ -52,4 +52,3 @@ pub(all) enum Target {
 pub using @moonbitlang/x/path {type Path}
 
 // Traits
-

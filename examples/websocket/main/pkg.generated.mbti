@@ -23,4 +23,3 @@ type TranscriptPanelModel derive(Eq)
 // Type aliases
 
 // Traits
-

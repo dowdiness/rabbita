@@ -52,4 +52,3 @@ pub(all) struct TourModel {
 // Type aliases
 
 // Traits
-

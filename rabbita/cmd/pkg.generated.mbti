@@ -62,4 +62,3 @@ pub(open) trait Scheduler {
   fn add(Self, Cmd) -> Unit = _
   fn hooks(Self) -> Hooks
 }
-

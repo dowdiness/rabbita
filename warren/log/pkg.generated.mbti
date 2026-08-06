@@ -11,4 +11,3 @@ pub fn log(String, String) -> Unit
 // Type aliases
 
 // Traits
-

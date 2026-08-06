@@ -206,4 +206,3 @@ pub impl Cast for Int
 pub impl Cast for Double
 pub impl Cast for String
 pub impl[A : Cast] Cast for Array[A]
-

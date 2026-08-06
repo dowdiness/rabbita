@@ -64,4 +64,3 @@ pub impl Eq for VNode
 // Type aliases
 
 // Traits
-

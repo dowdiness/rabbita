@@ -23,4 +23,3 @@ type TodoTab derive(Eq)
 // Type aliases
 
 // Traits
-
