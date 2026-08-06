@@ -7,7 +7,7 @@ fn op1() -> String? noraise {
 ///|
 #cfg(target="js")
 fn op2() -> String? noraise {
-  guard op1() is Some(prefix)
+  guard! op1() is Some(prefix)
   Some(prefix + ", World")
 }
 
