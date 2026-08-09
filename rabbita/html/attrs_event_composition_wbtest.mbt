@@ -170,6 +170,19 @@ test "event families compose through one handler per event name" {
 
 ///|
 #cfg(target="js")
+test "beforeinput handlers compose as input events" {
+  let trace : Array[String] = []
+  let attrs = Attrs::build()
+    .on_beforeinput(_ => event_composition_command(trace, "A"))
+    .on_beforeinput(_ => event_composition_command(trace, "B"))
+  assert_eq(attrs.0.handlers.length(), 1)
+  assert_true(attrs.0.handlers.contains("beforeinput"))
+  ignore(dispatch_composed_event(attrs.0, "beforeinput", "input", "typed"))
+  assert_eq(trace.join(","), "A,B")
+}
+
+///|
+#cfg(target="js")
 test "same event handlers compose once in registration order" {
   let trace : Array[String] = []
   let attrs = Attrs::build()
