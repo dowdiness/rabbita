@@ -22,11 +22,10 @@ let op : @cmd.Op = @cmd.Op()
 #cfg(target="js")
 fn op_invoke(
   extension : @cmd.Extension,
-  scheduler : &@cmd.Scheduler,
-) -> Unit raise @cmd.Unhandled {
+) -> @cmd.OpCont[@cmd.Cmd] raise @cmd.Unhandled {
   match extension {
     ClipboardCopy(item, copied, failed) =>
-      @js.async_run(() => {
+      Async(() => {
         try {
           match item {
             Text(text) =>
@@ -34,30 +33,29 @@ fn op_invoke(
               |> ignore
           }
           if copied is Some(message) {
-            scheduler.add(message)
+            message
+          } else {
+            @cmd.none
           }
         } catch {
           error =>
             if failed is Some(to_message) {
-              scheduler.add(to_message(error.to_string()))
+              to_message(error.to_string())
+            } else {
+              @cmd.none
             }
         }
       })
     ClipboardPaste(pasted, failed) =>
-      @js.async_run(() => {
-        try {
-          let text : String = @dom.window()
-            .navigator()
-            .clipboard()
-            .read_text()
-            .wait()
-            |> @js.Value::cast()
-          scheduler.add(pasted(Text(text)))
-        } catch {
-          error =>
-            if failed is Some(to_message) {
-              scheduler.add(to_message(error.to_string()))
-            }
+      Async(() => {
+        try
+          @dom.window().navigator().clipboard().read_text().wait()
+          |> @js.Value::cast()
+        catch {
+          error if failed is Some(to_message) => to_message(error.to_string())
+          _ => @cmd.none
+        } noraise {
+          text => pasted(Text(text))
         }
       })
     _ => raise Unhandled
@@ -69,18 +67,19 @@ fn op_invoke(
 #warnings("-unused_error_type")
 fn op_invoke(
   extension : @cmd.Extension,
-  _ : &@cmd.Scheduler,
-) -> Unit raise @cmd.Unhandled {
+) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   match extension {
     ClipboardCopy(item, copied, failed) => {
       ignore(item)
       ignore(copied)
       ignore(failed)
+      None
     }
     ClipboardPaste(pasted, failed) => {
       ignore(pasted)
       ignore(failed)
+      None
     }
-    _ => ()
+    _ => None
   }
 }

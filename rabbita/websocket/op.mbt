@@ -55,8 +55,7 @@ let connections : Map[String, SocketEntry] = Map([])
 #cfg(target="js")
 fn op_invoke(
   extension : @cmd.Extension,
-  scheduler : &@cmd.Scheduler,
-) -> Unit raise @cmd.Unhandled {
+) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   fn ready_state_from_dom(value : Int) -> ReadyState {
     match value {
       0 => Connecting
@@ -67,62 +66,63 @@ fn op_invoke(
   }
 
   match extension {
-    WebSocketConnect(id, url, protocols, on_event, failed) => {
-      let listeners : Map[String, @dom.Listener] = Map([])
-      match @dom.WebSocket::open(url, protocols~) {
-        Ok(created) => {
-          fn on_open(_) {
-            scheduler.add(on_event(Opened))
-          }
-          listeners["open"] = on_open
-          created.add_event_listener("open", on_open)
-
-          fn on_message(event : @dom.Event) {
-            guard event.to_message_event() is Some(event) else { return }
-            guard event.get_data_string() is Some(text) else { return }
-            scheduler.add(on_event(Message(text)))
-          }
-          listeners["message"] = on_message
-          created.add_event_listener("message", on_message)
-
-          fn on_close(event : @dom.Event) {
-            guard event.to_close_event() is Some(event) else { return }
-            let info : CloseInfo = {
-              code: event.get_code(),
-              reason: event.get_reason(),
-              clean: event.get_was_clean(),
+    WebSocketConnect(id, url, protocols, on_event, failed) =>
+      LegacyEffect(@cmd.immediately, scheduler => {
+        let listeners : Map[String, @dom.Listener] = Map([])
+        match @dom.WebSocket::open(url, protocols~) {
+          Ok(created) => {
+            fn on_open(_) {
+              scheduler.add(on_event(Opened))
             }
-            if connections.get(id) is Some(entry) {
-              for event_name, listener in entry.listeners {
-                entry.socket.remove_event_listener(event_name, listener)
+            listeners["open"] = on_open
+            created.add_event_listener("open", on_open)
+
+            fn on_message(event : @dom.Event) {
+              guard event.to_message_event() is Some(event) else { return }
+              guard event.get_data_string() is Some(text) else { return }
+              scheduler.add(on_event(Message(text)))
+            }
+            listeners["message"] = on_message
+            created.add_event_listener("message", on_message)
+
+            fn on_close(event : @dom.Event) {
+              guard event.to_close_event() is Some(event) else { return }
+              let info : CloseInfo = {
+                code: event.get_code(),
+                reason: event.get_reason(),
+                clean: event.get_was_clean(),
               }
-              connections.remove(id)
+              if connections.get(id) is Some(entry) {
+                for event_name, listener in entry.listeners {
+                  entry.socket.remove_event_listener(event_name, listener)
+                }
+                connections.remove(id)
+              }
+              scheduler.add(on_event(Closed(info)))
             }
-            scheduler.add(on_event(Closed(info)))
-          }
-          listeners["close"] = on_close
-          created.add_event_listener("close", on_close)
+            listeners["close"] = on_close
+            created.add_event_listener("close", on_close)
 
-          fn on_error(_) {
-            scheduler.add(on_event(Errored))
-          }
-          listeners["error"] = on_error
-          created.add_event_listener("error", on_error)
-
-          if connections.get(id) is Some(old_entry) {
-            for event_name, listener in old_entry.listeners {
-              old_entry.socket.remove_event_listener(event_name, listener)
+            fn on_error(_) {
+              scheduler.add(on_event(Errored))
             }
-            old_entry.socket.close_quietly()
+            listeners["error"] = on_error
+            created.add_event_listener("error", on_error)
+
+            if connections.get(id) is Some(old_entry) {
+              for event_name, listener in old_entry.listeners {
+                old_entry.socket.remove_event_listener(event_name, listener)
+              }
+              old_entry.socket.close_quietly()
+            }
+            connections[id] = { socket: created, listeners }
           }
-          connections[id] = { socket: created, listeners }
+          Err(message) =>
+            if failed is Some(failed) {
+              scheduler.add(failed(message))
+            }
         }
-        Err(message) =>
-          if failed is Some(failed) {
-            scheduler.add(failed(message))
-          }
-      }
-    }
+      })
     WebSocketSend(id, payload, failed) =>
       if connections.get(id) is Some(entry) {
         let data = match payload {
@@ -130,16 +130,15 @@ fn op_invoke(
           Json(json) => json.stringify()
         }
         match entry.socket.send_safe(data) {
-          Ok(_) => ()
-          Err(message) =>
-            if failed is Some(failed) {
-              scheduler.add(failed(message))
-            }
+          Err(message) if failed is Some(failed) => Ready(failed(message))
+          Ok(_) | Err(_) => None
         }
       } else {
         let message = "websocket connection not found: \{id}"
         if failed is Some(failed) {
-          scheduler.add(failed(message))
+          Ready(failed(message))
+        } else {
+          None
         }
       }
     WebSocketClose(id, code, reason, failed) =>
@@ -151,16 +150,15 @@ fn op_invoke(
           (None, None) => entry.socket.close_safe()
         }
         match result {
-          Ok(_) => ()
-          Err(message) =>
-            if failed is Some(failed) {
-              scheduler.add(failed(message))
-            }
+          Err(message) if failed is Some(failed) => Ready(failed(message))
+          Err(_) | Ok(_) => None
         }
       } else {
         let message = "websocket connection not found: \{id}"
         if failed is Some(failed) {
-          scheduler.add(failed(message))
+          Ready(failed(message))
+        } else {
+          None
         }
       }
     WebSocketState(id, reply) =>
@@ -173,9 +171,9 @@ fn op_invoke(
           buffered_amount: socket.get_buffered_amount(),
           ready_state: ready_state_from_dom(socket.get_ready_state()),
         }
-        scheduler.add(reply(Ok(snapshot)))
+        Ready(reply(Ok(snapshot)))
       } else {
-        scheduler.add(reply(Err("websocket connection not found: \{id}")))
+        Ready(reply(Err("websocket connection not found: \{id}")))
       }
     _ => raise Unhandled
   }
@@ -186,16 +184,25 @@ fn op_invoke(
 #warnings("-unused_error_type")
 fn op_invoke(
   extension : @cmd.Extension,
-  _ : &@cmd.Scheduler,
-) -> Unit raise @cmd.Unhandled {
+) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   match extension {
     WebSocketConnect(_, _, _, on_event, failed) => {
       ignore(on_event)
       ignore(failed)
+      None
     }
-    WebSocketSend(_, _, failed) => ignore(failed)
-    WebSocketClose(_, _, _, failed) => ignore(failed)
-    WebSocketState(_, reply) => ignore(reply)
-    _ => ()
+    WebSocketSend(_, _, failed) => {
+      ignore(failed)
+      None
+    }
+    WebSocketClose(_, _, _, failed) => {
+      ignore(failed)
+      None
+    }
+    WebSocketState(_, reply) => {
+      ignore(reply)
+      None
+    }
+    _ => None
   }
 }

@@ -62,39 +62,67 @@ let op : @cmd.Op = @cmd.Op()
 #cfg(target="js")
 fn op_invoke(
   extension : @cmd.Extension,
-  scheduler : &@cmd.Scheduler,
-) -> Unit raise @cmd.Unhandled {
+) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   match extension {
-    NavBack => @dom.window().history_go_back()
-    NavForward => @dom.window().history_go_forward()
-    NavLoad(url) => @dom.window().load_url(url)
-    NavReload => @dom.window().reload_url()
-    NavPushUrl(url) => {
-      @dom.window().push_url(url)
-      if scheduler.hooks().url_changed is Some(hook) {
-        let normalized_url = @dom.window().current_url()
-        hook(scheduler, normalized_url)
-      }
+    NavBack => {
+      @dom.window().history_go_back()
+      None
     }
-    NavReplaceUrl(url) => {
-      @dom.window().replace_url(url)
-      if scheduler.hooks().url_changed is Some(hook) {
-        let normalized_url = @dom.window().current_url()
-        hook(scheduler, normalized_url)
-      }
+    NavForward => {
+      @dom.window().history_go_forward()
+      None
     }
+    NavLoad(url) => {
+      @dom.window().load_url(url)
+      None
+    }
+    NavReload => {
+      @dom.window().reload_url()
+      None
+    }
+    NavPushUrl(url) =>
+      LegacyEffect(@cmd.immediately, scheduler => {
+        @dom.window().push_url(url)
+        if scheduler.hooks().url_changed is Some(inject) {
+          let normalized_url = @dom.window().current_url()
+          scheduler.queue_command(inject(normalized_url))
+        }
+      })
+    NavReplaceUrl(url) =>
+      LegacyEffect(@cmd.immediately, scheduler => {
+        @dom.window().replace_url(url)
+        if scheduler.hooks().url_changed is Some(inject) {
+          let normalized_url = @dom.window().current_url()
+          scheduler.queue_command(inject(normalized_url))
+        }
+      })
     NavScrollToPos(x, y, behavior) =>
-      @dom.window().scroll_to(x, y, behavior=behavior.to_string())
+      AfterLayout(() => {
+        @dom.window().scroll_to(x, y, behavior=behavior.to_string())
+        @cmd.none
+      })
     NavScrollByPos(x, y, behavior) =>
-      @dom.window().scroll_by(x, y, behavior=behavior.to_string())
+      AfterLayout(() => {
+        @dom.window().scroll_by(x, y, behavior=behavior.to_string())
+        @cmd.none
+      })
     NavScrollTo(element, behavior) =>
-      if @dom.document().get_element_by_id(element).to_option() is Some(node) {
-        node.scroll_into_view(behavior=behavior.to_string())
-      }
+      AfterLayout(() => {
+        if @dom.document().get_element_by_id(element).to_option() is Some(node) {
+          node.scroll_into_view(behavior=behavior.to_string())
+        }
+        @cmd.none
+      })
     NavScrollToTop(behavior) =>
-      @dom.window().scroll_to_top(behavior=behavior.to_string())
+      AfterLayout(() => {
+        @dom.window().scroll_to_top(behavior=behavior.to_string())
+        @cmd.none
+      })
     NavScrollToBottom(behavior) =>
-      @dom.window().scroll_to_bottom(behavior=behavior.to_string())
+      AfterLayout(() => {
+        @dom.window().scroll_to_bottom(behavior=behavior.to_string())
+        @cmd.none
+      })
     _ => raise Unhandled
   }
 }
@@ -102,9 +130,6 @@ fn op_invoke(
 ///|
 #cfg(not(target="js"))
 #warnings("-unused_error_type")
-fn op_invoke(
-  _ : @cmd.Extension,
-  _ : &@cmd.Scheduler,
-) -> Unit raise @cmd.Unhandled {
-  ()
+fn op_invoke(_ : @cmd.Extension) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
+  None
 }

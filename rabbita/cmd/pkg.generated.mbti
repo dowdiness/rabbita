@@ -2,8 +2,6 @@
 package "moonbit-community/rabbita/cmd"
 
 import {
-  "moonbit-community/rabbita/internal/any",
-  "moonbit-community/rabbita/internal/slotmap",
   "moonbitlang/core/debug",
 }
 
@@ -53,29 +51,43 @@ pub(all) extenum Extension {
 }
 
 pub(all) struct Hooks {
-  mut url_request : ((&Scheduler, String) -> Unit)?
-  mut url_changed : ((&Scheduler, String) -> Unit)?
+  mut url_request : ((String) -> Cmd)?
+  mut url_changed : ((String) -> Cmd)?
 }
 
 type Op
 pub fn Op::Op() -> Self
 pub fn Op::on_debug(Self, (Extension) -> @debug.Repr raise Unhandled) -> Unit
 pub fn Op::on_describe(Self, (Extension) -> Json raise Unhandled) -> Unit
-pub fn Op::on_invoke(Self, (Extension, &Scheduler) -> Unit raise Unhandled) -> Unit
-pub fn Op::on_resume(Self, (Extension, Json, &Scheduler) -> Unit raise HydrateExn) -> Unit
-pub fn Op::on_settle(Self, (Extension, (Json) -> Unit, &Scheduler) -> Unit raise Unhandled) -> Unit
-pub fn Op::request(Self, Extension, kind? : EffectKind) -> Cmd
+pub fn Op::on_invoke(Self, (Extension) -> OpCont[Cmd] raise Unhandled) -> Unit
+pub fn Op::on_resume(Self, (Extension, Json) -> Cmd raise HydrateExn) -> Unit
+pub fn Op::on_settle(Self, (Extension) -> OpCont[(Json, Cmd)] raise Unhandled) -> Unit
+pub fn Op::request(Self, Extension) -> Cmd
+
+pub(all) enum OpCont[T] {
+  None
+  Ready(T)
+  Async(async () -> T)
+  AfterLayout(() -> T)
+  LegacyEffect(EffectKind, (&Scheduler) -> Unit)
+}
+
+// Extensible enum extensions
+pub extenum Extension += {
+  Delay(Cmd, Int)
+  LegacyEffect(EffectKind, (&Scheduler) -> Unit)
+  LegacyMessage((&Scheduler) -> Unit)
+}
 
 // Type aliases
-pub type Hook[Arg] = (&Scheduler, Arg) -> Unit
+pub type Hook[Arg] = (Arg) -> Cmd
 
 pub type Settle = (Json) -> Unit
 
 // Traits
 pub(open) trait Scheduler {
-  fn run_effect(Self, EffectKind, (&Scheduler) -> Unit) -> Unit
-  fn queue_message(Self, @slotmap.Id, @any.Any) -> Unit
-  fn drain_message(Self) -> Unit
   fn add(Self, Cmd) -> Unit = _
+  fn queue_command(Self, Cmd) -> Unit
+  fn current_url(Self) -> String
   fn hooks(Self) -> Hooks
 }

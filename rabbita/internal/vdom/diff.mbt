@@ -249,7 +249,7 @@ pub fn mount(
         .unwrap()
         .get_property("href")
         .unwrap()
-      hook(scheduler, href)
+      scheduler.add(hook(href))
     }
   }
   {

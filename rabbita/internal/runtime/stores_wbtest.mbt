@@ -81,6 +81,9 @@ extern "js" fn with_subscription_test_window(
   #|       if (id !== 17) throw new Error(`unexpected interval id: ${id}`)
   #|       intervalClears += 1
   #|     },
+  #|     queueMicrotask(callback) {
+  #|       callback()
+  #|     },
   #|     addEventListener(type, listener) {
   #|       if (type !== "resize") throw new Error(`unexpected event type: ${type}`)
   #|       resizeListener = listener
@@ -144,6 +147,9 @@ fn exercise_subscription_across_model_update(
   fire : () -> Unit,
 ) -> Unit {
   let sandbox = cleanup_test_sandbox()
+  // A production sandbox enables draining after it has been initialized. These
+  // tests have no mounted view, so use the test window's synchronous microtask.
+  sandbox.drain_scheduled = false
   let mut update_model = () => ()
   let (branch, set_branch) = @duplix.input(CleanupBranch::Active)
   let state = branch.switch(branch => {

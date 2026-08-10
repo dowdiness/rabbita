@@ -196,17 +196,21 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
     }
     UrlChanged(cmd) => {
       let mut tagger = cmd
-      scheduler.hooks().url_changed = Some((scheduler, url) => {
+      scheduler.hooks().url_changed = Some(url => {
         try @url.parse(url) catch {
-          e => println("failed to parse \{url}: \{e}")
+          e => {
+            println("failed to parse \{url}: \{e}")
+            @cmd.none
+          }
         } noraise {
-          url => scheduler.add(tagger(url))
+          url => tagger(url)
         }
       })
 
       let listener : @dom.Listener = _ => {
         if scheduler.hooks().url_changed is Some(hook) {
-          hook(scheduler, @dom.window().current_url())
+          let cmd = hook(@dom.window().current_url())
+          scheduler.add(cmd)
         }
       }
       let unload = _ => {
@@ -224,7 +228,7 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
     }
     UrlRequest(cmd) => {
       let mut tagger = cmd
-      scheduler.hooks().url_request = Some((scheduler, href) => {
+      scheduler.hooks().url_request = Some(href => {
         let curr = try! @url.parse(@dom.window().current_url())
         let next = try! @url.parse(href)
         let request = if curr.protocol == next.protocol &&
@@ -234,7 +238,7 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
         } else {
           External(href)
         }
-        scheduler.add(tagger(request))
+        tagger(request)
       })
 
       fn unload(_) {
@@ -249,7 +253,7 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
     VisibilityChange(cmd) => {
       let mut tagger = cmd
       let listener : @dom.Listener = _ => {
-        scheduler.add(tagger(@dom.document().hidden()))
+        scheduler.queue_command(tagger(@dom.document().hidden()))
       }
       let unload = _ => {
         @dom.document()
@@ -272,8 +276,28 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
 ///|
 #cfg(not(target="js"))
 fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
-  ignore((payload, scheduler))
-  None
+  match payload {
+    UrlChanged(cmd) => {
+      let mut tagger = cmd
+      scheduler.hooks().url_changed = Some(url => {
+        try @url.parse(url) catch {
+          e => {
+            println("failed to parse \{url}: \{e}")
+            @cmd.none
+          }
+        } noraise {
+          url => tagger(url)
+        }
+      })
+      let unload = _ => scheduler.hooks().url_changed = None
+      let update_tagger = self => {
+        guard self is BuiltinSub::UrlChanged(new_cmd) else { return }
+        tagger = new_cmd
+      }
+      Some({ unload, update_tagger })
+    }
+    _ => None
+  }
 }
 
 ///|

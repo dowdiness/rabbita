@@ -28,7 +28,7 @@ pub fn scroll_to_pos(
   y : Int,
   behavior? : ScrollBehavior = Auto,
 ) -> Cmd {
-  op.request(NavScrollToPos(x, y, behavior), kind=@cmd.after_render)
+  op.request(NavScrollToPos(x, y, behavior))
 }
 
 ///|
@@ -38,24 +38,24 @@ pub fn scroll_by_pos(
   y : Int,
   behavior? : ScrollBehavior = Auto,
 ) -> Cmd {
-  op.request(NavScrollByPos(x, y, behavior), kind=@cmd.after_render)
+  op.request(NavScrollByPos(x, y, behavior))
 }
 
 ///|
 /// Create a command to scroll the window to a specific element.
 /// The element is specified by its id.
 pub fn scroll_to(element : String, behavior? : ScrollBehavior = Auto) -> Cmd {
-  op.request(NavScrollTo(element, behavior), kind=@cmd.after_render)
+  op.request(NavScrollTo(element, behavior))
 }
 
 ///|
 /// Create a command to scroll the window to the top.
 pub fn scroll_to_top(behavior? : ScrollBehavior = Auto) -> Cmd {
-  op.request(NavScrollToTop(behavior), kind=@cmd.after_render)
+  op.request(NavScrollToTop(behavior))
 }
 
 ///|
 /// Create a command to scroll the window to the bottom.
 pub fn scroll_to_bottom(behavior? : ScrollBehavior = Auto) -> Cmd {
-  op.request(NavScrollToBottom(behavior), kind=@cmd.after_render)
+  op.request(NavScrollToBottom(behavior))
 }

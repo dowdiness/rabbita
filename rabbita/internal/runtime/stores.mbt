@@ -11,7 +11,7 @@ let global_stores : @slotmap.SlotMap[Store] = SlotMap()
 pub(all) struct Store {
   id : @slotmap.Id
   /// (Msg) -> Cmd
-  on_update : (&Scheduler, @any.Any) -> Unit
+  on_update : (&Scheduler, @any.Any) -> Cmd
 }
 
 ///|
@@ -59,7 +59,7 @@ pub fn[Model : Eq, Msg] Sandbox::create_state_machine(
   subscriptions? : (Model, Emit[Msg]) -> Sub,
 ) -> (@duplix.Node[Model], Emit[Msg]) {
   let id = global_stores.allocate()
-  let emit = @cmd.make_emitter(id)
+  let emit = msg => op.request(Message(id, @any.erase(msg)))
   let mut sub_map : Map[String, @sub.RunningSub] = Map([])
 
   fn handle_subs(scheduler : &Scheduler, model : Model) {
@@ -77,13 +77,13 @@ pub fn[Model : Eq, Msg] Sandbox::create_state_machine(
   let (model_value, init_cmd) = initialize(emit)
   set_model(Some(model_value))
 
-  fn on_update(scheduler : &Scheduler, msg : @any.Any) {
+  fn on_update(scheduler : &Scheduler, msg : @any.Any) -> Cmd {
     let msg : Msg = msg.into()
     let old_model = model.read()
     let (new_model, cmd) = update(old_model.unwrap(), msg, emit)
     handle_subs(scheduler, new_model)
     set_model(Some(new_model))
-    scheduler.add(cmd)
+    cmd
   }
 
   global_stores[id] = { id, on_update }
@@ -103,7 +103,7 @@ pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(
   input : @duplix.Node[Input],
 ) -> (@duplix.Node[Model], Emit[Msg]) {
   let id = global_stores.allocate()
-  let emit = @cmd.make_emitter(id)
+  let emit = (msg : Msg) => op.request(Message(id, @any.erase(msg)))
   let mut sub_map : Map[String, @sub.RunningSub] = Map([])
 
   fn handle_subs(scheduler : &Scheduler, model : Model) {
@@ -122,14 +122,14 @@ pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(
   let (model_value, init_cmd) = initialize(emit, input.read())
   set_model(Some(model_value))
 
-  fn on_update(scheduler : &Scheduler, msg : @any.Any) {
+  fn on_update(scheduler : &Scheduler, msg : @any.Any) -> Cmd {
     let msg : Msg = msg.into()
     let old_model = model.read()
     let input_val = input.read()
     let (new_model, cmd) = update(old_model.unwrap(), input_val, msg, emit)
     handle_subs(scheduler, new_model)
     set_model(Some(new_model))
-    scheduler.add(cmd)
+    cmd
   }
 
   global_stores[id] = { id, on_update }

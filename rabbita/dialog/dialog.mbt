@@ -3,7 +3,7 @@
 /// 
 /// The `modal` argument determines whether the dialog is modal or not.
 pub fn show(id : String, modal? : Bool = true) -> Cmd {
-  op.request(DialogShow(id, modal), kind=@cmd.after_render)
+  op.request(DialogShow(id, modal))
 }
 
 ///|
@@ -11,7 +11,7 @@ pub fn show(id : String, modal? : Bool = true) -> Cmd {
 /// 
 /// The `return_value` argument is the value that will be filled in the `close` message.
 pub fn close(id : String, return_value? : String) -> Cmd {
-  op.request(DialogClose(id, return_value), kind=@cmd.after_render)
+  op.request(DialogClose(id, return_value))
 }
 
 ///|
@@ -22,5 +22,5 @@ pub fn close(id : String, return_value? : String) -> Cmd {
 /// 
 /// The `return_value` argument is the value that will be filled in the `close` message.
 pub fn request_close(id : String, return_value? : String) -> Cmd {
-  op.request(DialogRequestClose(id, return_value), kind=@cmd.after_render)
+  op.request(DialogRequestClose(id, return_value))
 }

@@ -15,3 +15,7 @@ description = "functional Web UI framework for MoonBit"
 preferred_target = "js"
 
 supported_targets = "js+native"
+
+import {
+  "moonbitlang/async@0.19.3",
+}

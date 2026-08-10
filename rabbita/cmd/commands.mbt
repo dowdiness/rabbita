@@ -12,10 +12,16 @@ pub(all) enum EffectKind {
 /// the runtime.
 enum Cmd {
   Batch(Array[Cmd])
-  Effect(EffectKind, OnExecute)
-  Message(@slotmap.Id, @any.Any)
-  LegacyMessage(OnExecute)
-  Invoke(Op, Extension, EffectKind)
+  Invoke(Op, Extension)
+}
+
+///|
+#doc(hidden)
+pub fn flatten(key : @key.Key, cmd : Cmd) -> Array[(Op, Extension)] {
+  match cmd {
+    Batch(cmds) => cmds.map(x => flatten(key, x)).flatten()
+    Invoke(op, extension) => [(op, extension)]
+  }
 }
 
 ///|
@@ -70,7 +76,7 @@ pub fn custom_cmd(
   callback : (&Scheduler) -> Unit,
   kind? : EffectKind = Immediately,
 ) -> Cmd {
-  Effect(kind, callback)
+  op.request(LegacyEffect(kind, callback))
 }
 
 ///|
@@ -81,13 +87,6 @@ pub fn effect(f : async () -> Unit noraise) -> Cmd {
 }
 
 ///|
-#cfg(not(target="js"))
-pub fn effect(f : async () -> Unit noraise) -> Cmd {
-  ignore(f)
-  none
-}
-
-///|
 /// Create a command that runs an async function.
 /// 
 /// The async function `f` is executed, then its result is converted into a new
@@ -95,14 +94,6 @@ pub fn effect(f : async () -> Unit noraise) -> Cmd {
 #cfg(target="js")
 pub fn[A] perform(msg : (A) -> Cmd, f : async () -> A noraise) -> Cmd {
   custom_cmd(scheduler => @js.async_run(() => scheduler.add(msg(f()))))
-}
-
-///|
-#cfg(not(target="js"))
-pub fn[A] perform(msg : (A) -> Cmd, f : async () -> A noraise) -> Cmd {
-  ignore(msg)
-  ignore(f)
-  none
 }
 
 ///|
@@ -125,35 +116,3 @@ pub fn[A, E : Error] attempt(
     })
   })
 }
-
-///|
-#cfg(not(target="js"))
-pub fn[A, E : Error] attempt(
-  msg : (Result[A, E]) -> Cmd,
-  f : async () -> A raise E,
-) -> Cmd {
-  ignore(msg)
-  ignore(f)
-  none
-}
-
-///|
-/// Delay execution of a command by `ms` milliseconds.
-///
-/// The delayed command is added back to the message queue after the timer fires.
-#cfg(target="js")
-pub fn delay(cmd : Cmd, ms : Int) -> Cmd {
-  custom_cmd(scheduler => set_timeout(() => scheduler.add(cmd), ms))
-}
-
-///|
-#cfg(not(target="js"))
-pub fn delay(cmd : Cmd, ms : Int) -> Cmd {
-  ignore(cmd)
-  ignore(ms)
-  none
-}
-
-///|
-#cfg(target="js")
-extern "js" fn set_timeout(f : () -> Unit, ms : Int) = "(f,ms) => setTimeout(f, ms)"

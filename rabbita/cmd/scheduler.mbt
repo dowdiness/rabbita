@@ -1,9 +1,8 @@
 ///|
 pub(open) trait Scheduler {
-  fn run_effect(Self, EffectKind, OnExecute) -> Unit
-  fn queue_message(Self, @slotmap.Id, @any.Any) -> Unit
-  fn drain_message(Self) -> Unit
   fn add(Self, Cmd) -> Unit = _
+  fn queue_command(Self, Cmd) -> Unit
+  fn current_url(Self) -> String
   fn hooks(Self) -> Hooks
 }
 
@@ -14,28 +13,9 @@ pub(all) struct Hooks {
 }
 
 ///|
-pub type Hook[Arg] = (&Scheduler, Arg) -> Unit
+pub type Hook[Arg] = (Arg) -> Cmd
 
 ///|
 impl Scheduler with fn add(self, cmd) {
-  fn go(cmd) {
-    match cmd {
-      Batch(xs) => xs.each(x => go(x))
-      Effect(k, f) => self.run_effect(k, f)
-      Message(id, msg) => self.queue_message(id, msg)
-      LegacyMessage(f) => f(self)
-      Invoke(op, e, Immediately) =>
-        (op.inovke)(e, self) catch {
-          Unhandled => ()
-        }
-      Invoke(op, e, AfterRender) =>
-        self.run_effect(AfterRender, s => {
-          (op.inovke)(e, s) catch {
-            Unhandled => ()
-          }
-        })
-    }
-  }
-  go(cmd)
-  self.drain_message()
+  self.queue_command(cmd)
 }

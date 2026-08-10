@@ -1,5 +1,9 @@
 ///|
-pub using @cmd {perform, attempt, effect, delay}
+#cfg(target="js")
+pub using @cmd {perform, attempt, effect}
+
+///|
+pub using @cmd {delay}
 
 ///|
 pub using @cmd {none, batch}
@@ -49,7 +53,9 @@ pub fn[Model : Eq, Msg] elmish(
 /// This initializes the runtime and schedules the first render flush.
 /// On JavaScript targets, `element_id` identifies the DOM mount point. If
 /// routing is configured, the current URL is also emitted on mount.
+#cfg(target="js")
 pub fn App::mount(self : Self, element_id : String) -> Unit {
+  self.sandbox.spawn_bg = fn(task) { @js_async.Promise::from_async(task) |> ignore }
   let vnode = (self.builder)()
   self.sandbox.initialize(element_id, vnode.0.map(html => html.0))
   self.sandbox.flush()
