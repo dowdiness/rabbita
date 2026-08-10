@@ -80,6 +80,23 @@ pub fn Sandbox::initialize(
 }
 
 ///|
+#cfg(target="js")
+pub fn Sandbox::initialize_with_hydration(
+  self : Self,
+  root : @duplix.Node[VNode],
+  url~ : String,
+) -> Unit {
+  self.current_url = url
+  if self.hooks().url_changed is Some(inject) {
+    self.queue_command(inject(self.current_url()))
+  }
+  self.graph_output = Some(root)
+  let root = self.graph_output.unwrap().read()
+  self.document = Some(@vdom.VDom::initialize_with_hydration(root, self))
+  self.drain_scheduled = false
+}
+
+///|
 pub fn Sandbox::render_hydrate_html(self : Self) -> String? {
   if self.document is Some(document) {
     Some(document.to_string())

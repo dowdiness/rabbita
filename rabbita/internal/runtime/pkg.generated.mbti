@@ -25,6 +25,7 @@ pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(Sel
 pub fn Sandbox::drain_task(Self) -> Unit
 pub fn Sandbox::flush(Self) -> Unit
 pub fn Sandbox::initialize(Self, @duplix.Node[@vdom.VNode], target_element_id? : String, url~ : String) -> Unit
+pub fn Sandbox::initialize_with_hydration(Self, @duplix.Node[@vdom.VNode], url~ : String) -> Unit
 pub fn Sandbox::new() -> Self
 pub fn Sandbox::render_hydrate_html(Self) -> String?
 pub impl @cmd.Scheduler for Sandbox

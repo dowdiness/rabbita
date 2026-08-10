@@ -80,3 +80,16 @@ pub async fn App::render(self : Self, url~ : String) -> String {
   sandbox.render_hydrate_html().unwrap()
 }
 
+///|
+#cfg(target="js")
+pub fn App::hydrate(self : Self) -> Unit {
+  let sandbox = @runtime.Sandbox::new()
+  let output = ambient_graph.protect(Some(Graph(sandbox)), self.builder)
+  sandbox.spawn_bg = fn(task) { @js_async.Promise::from_async(task) |> ignore }
+  sandbox.initialize_with_hydration(
+    output.0.map(x => x.to_virtual_dom()),
+    url="",
+  )
+  sandbox.drain_task()
+  sandbox.flush()
+}

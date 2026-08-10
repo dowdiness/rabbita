@@ -142,7 +142,15 @@ fn vnode_to_string(buf : StringBuilder, vnode : VNode) -> Unit {
       }
     }
     Text(s) => write_escaped_text(buf, s)
-    Frag(c) => children_to_string(buf, Array(c))
+    Frag(c) => {
+      buf.write_string("<!--")
+      buf.write_string(FRAGMENT_START_MARKER)
+      buf.write_string("-->")
+      children_to_string(buf, Array(c))
+      buf.write_string("<!--")
+      buf.write_string(FRAGMENT_END_MARKER)
+      buf.write_string("-->")
+    }
   }
 }
 

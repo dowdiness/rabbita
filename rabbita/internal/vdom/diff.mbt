@@ -209,8 +209,8 @@ fn VNode::insert(
     Frag(children) => {
       let document = @dom.document()
       let fragment = document.create_document_fragment()
-      let start = document.create_comment("start")
-      let end = document.create_comment("end")
+      let start = document.create_comment(FRAGMENT_START_MARKER)
+      let end = document.create_comment(FRAGMENT_END_MARKER)
       fragment.append_child(start.as_node())
       let children = children.map(child => {
         child.insert(
@@ -311,6 +311,16 @@ pub fn VDom::update(self : Self, vnode : VNode, _ : &Scheduler) -> Unit {
   self.vnode = vnode
 }
 
+///|
+#cfg(target="js")
+pub fn VDom::initialize_with_hydration(
+  vnode : VNode,
+  scheduler : &Scheduler,
+) -> VDom {
+  let captured_link_listener = new_captured_link_listener(scheduler)
+  let inode = hydrate_root(vnode, scheduler, captured_link_listener)
+  { inode, captured_link_listener, target_element: None }
+}
 
 ///|
 #cfg(target="js")

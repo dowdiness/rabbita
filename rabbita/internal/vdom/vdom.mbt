@@ -19,6 +19,12 @@ pub impl Eq for VNode with fn equal(a, b) {
 const CAPTURED_LINK_TAG : String = "RABBITA_CAPTURED_LINK"
 
 ///|
+const FRAGMENT_START_MARKER : String = "["
+
+///|
+const FRAGMENT_END_MARKER : String = "]"
+
+///|
 fn rendered_tag(tag : String) -> String {
   if tag == CAPTURED_LINK_TAG {
     "a"
