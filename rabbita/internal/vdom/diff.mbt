@@ -327,7 +327,6 @@ pub fn VDom::initialize_with_hydration(
 fn new_captured_link_listener(scheduler : &Scheduler) -> @dom.Listener {
   event => {
     if event.to_mouse_event() is Some(mouse_event) &&
-      scheduler.hooks().url_request is Some(hook) &&
       !(mouse_event.get_meta_key() || mouse_event.get_ctrl_key()) {
       event.prevent_default()
       let href = event
@@ -337,7 +336,7 @@ fn new_captured_link_listener(scheduler : &Scheduler) -> @dom.Listener {
         .unwrap()
         .get_property("href")
         .unwrap()
-      scheduler.add(hook(href))
+      scheduler.add(scheduler.inject_url_request(href))
     }
   }
 }

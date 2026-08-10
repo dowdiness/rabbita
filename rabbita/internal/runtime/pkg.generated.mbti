@@ -17,7 +17,6 @@ import {
 // Types and methods
 pub(all) struct Sandbox {
   mut spawn_bg : (async () -> Unit) -> Unit
-  hooks : @cmd.Hooks
   // private fields
 }
 pub fn[Model : Eq, Msg] Sandbox::create_state_machine(Self, (@cmd.Emit[Msg]) -> (Model, @cmd.Cmd), (Model, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, @cmd.Emit[Msg]) -> @sub.Sub) -> (@duplix.Node[Model], @cmd.Emit[Msg])
@@ -28,6 +27,7 @@ pub fn Sandbox::initialize(Self, @duplix.Node[@vdom.VNode], target_element_id? :
 pub fn Sandbox::initialize_with_hydration(Self, @duplix.Node[@vdom.VNode], url~ : String) -> Unit
 pub fn Sandbox::new() -> Self
 pub fn Sandbox::render_hydrate_html(Self) -> String?
+pub impl @cmd.Context for Sandbox
 pub impl @cmd.Scheduler for Sandbox
 
 pub(all) struct Store {

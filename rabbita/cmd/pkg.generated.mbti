@@ -50,18 +50,15 @@ pub fn[A, B] Emit::map(Self[A], (B) -> A) -> Self[B]
 pub(all) extenum Extension {
 }
 
-pub(all) struct Hooks {
-  mut url_request : ((String) -> Cmd)?
-  mut url_changed : ((String) -> Cmd)?
-}
+pub(all) struct Injector[Arg]((Arg) -> Cmd)
 
 type Op
 pub fn Op::Op() -> Self
 pub fn Op::on_debug(Self, (Extension) -> @debug.Repr raise Unhandled) -> Unit
 pub fn Op::on_describe(Self, (Extension) -> Json raise Unhandled) -> Unit
-pub fn Op::on_invoke(Self, (Extension) -> OpCont[Cmd] raise Unhandled) -> Unit
-pub fn Op::on_resume(Self, (Extension, Json) -> Cmd raise HydrateExn) -> Unit
-pub fn Op::on_settle(Self, (Extension) -> OpCont[(Json, Cmd)] raise Unhandled) -> Unit
+pub fn Op::on_invoke(Self, (Extension, &Context) -> OpCont[Cmd] raise Unhandled) -> Unit
+pub fn Op::on_resume(Self, (Extension, Json, &Context) -> Cmd raise HydrateExn) -> Unit
+pub fn Op::on_settle(Self, (Extension, &Context) -> OpCont[(Json, Cmd)] raise Unhandled) -> Unit
 pub fn Op::request(Self, Extension) -> Cmd
 
 pub(all) enum OpCont[T] {
@@ -80,14 +77,18 @@ pub extenum Extension += {
 }
 
 // Type aliases
-pub type Hook[Arg] = (Arg) -> Cmd
-
 pub type Settle = (Json) -> Unit
 
 // Traits
-pub(open) trait Scheduler {
+pub(open) trait Context {
+  fn get_current_url(Self) -> String
+  fn inject_url_changed(Self, String) -> Cmd
+  fn inject_url_request(Self, String) -> Cmd
+}
+
+pub(open) trait Scheduler : Context {
   fn add(Self, Cmd) -> Unit = _
   fn queue_command(Self, Cmd) -> Unit
-  fn current_url(Self) -> String
-  fn hooks(Self) -> Hooks
+  fn set_url_changed_injector(Self, Injector[String]) -> Unit
+  fn set_url_request_injector(Self, Injector[String]) -> Unit
 }

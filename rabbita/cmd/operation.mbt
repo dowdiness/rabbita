@@ -1,9 +1,9 @@
 ///|
 struct Op {
-  mut invoke : (Extension) -> OpCont[Cmd] raise Unhandled
-  mut settle : (Extension) -> OpCont[(Json, Cmd)] raise Unhandled
+  mut invoke : (Extension, &Context) -> OpCont[Cmd] raise Unhandled
+  mut settle : (Extension, &Context) -> OpCont[(Json, Cmd)] raise Unhandled
+  mut resume_ : (Extension, Json, &Context) -> Cmd raise HydrateExn
   mut describe : (Extension) -> Json raise Unhandled
-  mut resume_ : (Extension, Json) -> Cmd raise HydrateExn
   mut debug : (Extension) -> Repr raise Unhandled
 }
 
@@ -31,11 +31,11 @@ pub(all) extenum Extension {}
 
 ///|
 let default_handler : Op = {
-  resume_: (_, _) => raise Unhandled,
-  settle: _ => raise Unhandled,
+  resume_: (_, _, _) => raise Unhandled,
+  settle: (_, _) => raise Unhandled,
   describe: _ => raise Unhandled,
   debug: _ => raise Unhandled,
-  invoke: _ => raise Unhandled,
+  invoke: (_, _) => raise Unhandled,
 }
 
 ///|
@@ -69,7 +69,7 @@ pub type Settle = (Json) -> Unit
 ///|
 pub fn Op::on_resume(
   self : Self,
-  f : (Extension, Json) -> Cmd raise HydrateExn,
+  f : (Extension, Json, &Context) -> Cmd raise HydrateExn,
 ) -> Unit {
   self.resume_ = f
 }
@@ -77,7 +77,7 @@ pub fn Op::on_resume(
 ///|
 pub fn Op::on_settle(
   self : Self,
-  f : (Extension) -> OpCont[(Json, Cmd)] raise Unhandled,
+  f : (Extension, &Context) -> OpCont[(Json, Cmd)] raise Unhandled,
 ) -> Unit {
   self.settle = f
 }
@@ -101,10 +101,14 @@ pub fn Op::on_debug(
 ///|
 pub fn Op::on_invoke(
   self : Self,
-  f : (Extension) -> OpCont[Cmd] raise Unhandled,
+  f : (Extension, &Context) -> OpCont[Cmd] raise Unhandled,
 ) -> Unit {
   let g = self.invoke
-  self.invoke = wrap_hook(f, g)
+  self.invoke = (extension, context) => {
+    f(extension, context) catch {
+      Unhandled => g(extension, context)
+    }
+  }
 }
 
 ///|
@@ -118,6 +122,7 @@ pub fn invoke(
   _ : @key.Key,
   op : Op,
   extension : Extension,
+  context : &Context,
 ) -> OpCont[Cmd] raise Unhandled {
-  (op.invoke)(extension)
+  (op.invoke)(extension, context)
 }

@@ -1,21 +1,29 @@
 ///|
-pub(open) trait Scheduler {
+pub(open) trait Scheduler: Context {
   fn add(Self, Cmd) -> Unit = _
   fn queue_command(Self, Cmd) -> Unit
-  fn current_url(Self) -> String
-  fn hooks(Self) -> Hooks
+  fn set_url_changed_injector(Self, Injector[String]) -> Unit
+  fn set_url_request_injector(Self, Injector[String]) -> Unit
 }
 
 ///|
-pub(all) struct Hooks {
-  mut url_request : Hook[String]?
-  mut url_changed : Hook[String]?
+pub extend &Scheduler with Context::{
+  get_current_url,
+  inject_url_changed,
+  inject_url_request,
 }
-
-///|
-pub type Hook[Arg] = (Arg) -> Cmd
 
 ///|
 impl Scheduler with fn add(self, cmd) {
   self.queue_command(cmd)
+}
+
+///|
+pub(all) struct Injector[Arg]((Arg) -> Cmd)
+
+///|
+pub(open) trait Context {
+  fn get_current_url(Self) -> String
+  fn inject_url_changed(Self, String) -> Cmd
+  fn inject_url_request(Self, String) -> Cmd
 }

@@ -196,7 +196,7 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
     }
     UrlChanged(cmd) => {
       let mut tagger = cmd
-      scheduler.hooks().url_changed = Some(url => {
+      scheduler.set_url_changed_injector(url => {
         try @url.parse(url) catch {
           e => {
             println("failed to parse \{url}: \{e}")
@@ -208,13 +208,11 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
       })
 
       let listener : @dom.Listener = _ => {
-        if scheduler.hooks().url_changed is Some(hook) {
-          let cmd = hook(@dom.window().current_url())
-          scheduler.add(cmd)
-        }
+        let cmd = scheduler.inject_url_changed(@dom.window().current_url())
+        scheduler.add(cmd)
       }
       let unload = _ => {
-        scheduler.hooks().url_changed = None
+        scheduler.set_url_changed_injector(_ => @cmd.none)
         @dom.window()
         .to_event_target()
         .remove_event_listener("popstate", listener)
@@ -228,7 +226,7 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
     }
     UrlRequest(cmd) => {
       let mut tagger = cmd
-      scheduler.hooks().url_request = Some(href => {
+      scheduler.set_url_request_injector(href => {
         let curr = try! @url.parse(@dom.window().current_url())
         let next = try! @url.parse(href)
         let request = if curr.protocol == next.protocol &&
@@ -242,7 +240,7 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
       })
 
       fn unload(_) {
-        scheduler.hooks().url_request = None
+        scheduler.set_url_request_injector(_ => @cmd.none)
       }
       fn update_tagger(self) {
         guard self is BuiltinSub::UrlRequest(new_cmd) else { return }
@@ -279,7 +277,7 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
   match payload {
     UrlChanged(cmd) => {
       let mut tagger = cmd
-      scheduler.hooks().url_changed = Some(url => {
+      scheduler.set_url_changed_injector(url => {
         try @url.parse(url) catch {
           e => {
             println("failed to parse \{url}: \{e}")
@@ -289,7 +287,7 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
           url => tagger(url)
         }
       })
-      let unload = _ => scheduler.hooks().url_changed = None
+      let unload = _ => scheduler.set_url_changed_injector(_ => @cmd.none)
       let update_tagger = self => {
         guard self is BuiltinSub::UrlChanged(new_cmd) else { return }
         tagger = new_cmd

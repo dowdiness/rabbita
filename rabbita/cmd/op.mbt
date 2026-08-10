@@ -15,7 +15,10 @@ pub fn delay(cmd : Cmd, ms : Int) -> Cmd {
 
 ///|
 #cfg(target="js")
-fn on_invoke(extension : Extension) -> OpCont[Cmd] raise Unhandled {
+fn on_invoke(
+  extension : Extension,
+  _context : &Context,
+) -> OpCont[Cmd] raise Unhandled {
   match extension {
     LegacyEffect(kind, f) => LegacyEffect(kind, f)
     LegacyMessage(f) => LegacyEffect(Immediately, f)
@@ -35,7 +38,10 @@ extern "js" fn set_timeout(ms : Int) -> @js_async.Promise[Int] =
 
 ///|
 #cfg(not(target="js"))
-fn on_invoke(extension : Extension) -> OpCont[Cmd] raise Unhandled {
+fn on_invoke(
+  extension : Extension,
+  _context : &Context,
+) -> OpCont[Cmd] raise Unhandled {
   match extension {
     LegacyEffect(kind, f) => LegacyEffect(kind, f)
     Delay(cmd, _) => Ready(cmd)

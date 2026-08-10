@@ -55,6 +55,7 @@ let connections : Map[String, SocketEntry] = Map([])
 #cfg(target="js")
 fn op_invoke(
   extension : @cmd.Extension,
+  _context : &@cmd.Context,
 ) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   fn ready_state_from_dom(value : Int) -> ReadyState {
     match value {
@@ -184,6 +185,7 @@ fn op_invoke(
 #warnings("-unused_error_type")
 fn op_invoke(
   extension : @cmd.Extension,
+  _context : &@cmd.Context,
 ) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   match extension {
     WebSocketConnect(_, _, _, on_event, failed) => {

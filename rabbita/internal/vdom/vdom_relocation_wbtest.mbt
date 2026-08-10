@@ -39,14 +39,44 @@ impl @cmd.Scheduler for RelocationTestScheduler with fn queue_command(self, cmd)
 
 ///|
 #cfg(target="js")
-impl @cmd.Scheduler for RelocationTestScheduler with fn current_url(_self) {
+impl @cmd.Scheduler for RelocationTestScheduler with fn set_url_changed_injector(
+  self,
+  injector,
+) {
+  ignore((self, injector))
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Scheduler for RelocationTestScheduler with fn set_url_request_injector(
+  self,
+  injector,
+) {
+  ignore((self, injector))
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Context for RelocationTestScheduler with fn get_current_url(_self) {
   ""
 }
 
 ///|
 #cfg(target="js")
-impl @cmd.Scheduler for RelocationTestScheduler with fn hooks(_self) {
-  { url_request: None, url_changed: None }
+impl @cmd.Context for RelocationTestScheduler with fn inject_url_changed(
+  _self,
+  _url,
+) {
+  @cmd.none
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Context for RelocationTestScheduler with fn inject_url_request(
+  _self,
+  _url,
+) {
+  @cmd.none
 }
 
 ///|

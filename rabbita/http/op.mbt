@@ -49,7 +49,7 @@ let op : @cmd.Op = @cmd.Op()
       _ => raise Unhandled
     }
   })
-  ..on_resume((extension, json) => {
+  ..on_resume((extension, json, _context) => {
     match extension {
       Request(expect=Json(f), ..) =>
         f(@json.from_json(json)) catch {
@@ -92,11 +92,11 @@ let op : @cmd.Op = @cmd.Op()
       _ => raise Unhandled
     }
   })
-  ..on_invoke(_ => None)
+  ..on_invoke((_, _) => None)
 
 ///|
 fn init {
-  op.on_invoke(extension => {
+  op.on_invoke((extension, context) => {
     guard extension is Request(url~, http_method~, body~, expect~) else {
       raise Unhandled
     }
@@ -110,44 +110,42 @@ fn init {
     }
 
     if !url.contains("://") {
-      LegacyEffect(@cmd.immediately, scheduler => {
-        let cmd = try {
-          let current_url = scheduler.current_url()
-          let current = @url.parse(current_url)
-          let protocol = match current.protocol {
-            @url.Http => "http"
-            Https => "https"
-            Other(protocol) => fail("unsupported HTTP protocol: \{protocol}")
-          }
-          let port = if current.port is Some(port) { ":\{port}" } else { "" }
-          let origin = "\{protocol}://\{current.host}\{port}"
-          let resolved_url = if url.is_empty() {
-            current_url
-          } else if url.has_prefix("//") {
-            "\{protocol}:\{url}"
-          } else if url.has_prefix("/") {
-            "\{origin}\{url}"
-          } else if url.has_prefix("?") || url.has_prefix("#") {
-            "\{origin}/\{current.path}\{url}"
-          } else {
-            let directory = if current.path.rev_split_once("/")
-              is Some((directory, _)) {
-              if directory.is_empty() {
-                "/"
-              } else {
-                "/\{directory}/"
-              }
-            } else {
-              "/"
-            }
-            "\{origin}\{directory}\{url}"
-          }
-          op.request(Request(url=resolved_url, http_method~, body~, expect~))
-        } catch {
-          error => fail_request(RequestError(error.to_string()))
+      let cmd = try {
+        let current_url = context.get_current_url()
+        let current = @url.parse(current_url)
+        let protocol = match current.protocol {
+          @url.Http => "http"
+          Https => "https"
+          Other(protocol) => fail("unsupported HTTP protocol: \{protocol}")
         }
-        scheduler.queue_command(cmd)
-      })
+        let port = if current.port is Some(port) { ":\{port}" } else { "" }
+        let origin = "\{protocol}://\{current.host}\{port}"
+        let resolved_url = if url.is_empty() {
+          current_url
+        } else if url.has_prefix("//") {
+          "\{protocol}:\{url}"
+        } else if url.has_prefix("/") {
+          "\{origin}\{url}"
+        } else if url.has_prefix("?") || url.has_prefix("#") {
+          "\{origin}/\{current.path}\{url}"
+        } else {
+          let directory = if current.path.rev_split_once("/")
+            is Some((directory, _)) {
+            if directory.is_empty() {
+              "/"
+            } else {
+              "/\{directory}/"
+            }
+          } else {
+            "/"
+          }
+          "\{origin}\{directory}\{url}"
+        }
+        op.request(Request(url=resolved_url, http_method~, body~, expect~))
+      } catch {
+        error => fail_request(RequestError(error.to_string()))
+      }
+      Ready(cmd)
     } else {
       Async(() => {
         fn request_method() -> @async_http.RequestMethod raise @cmd.Unhandled {

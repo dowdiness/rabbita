@@ -2,7 +2,7 @@
 pub using @vdom {type Children, type Props, type VNode, type VDom}
 
 ///|
-using @cmd {trait Scheduler}
+using @cmd {trait Context, trait Scheduler}
 
 ///|
 using @queue {type Queue}
@@ -24,7 +24,8 @@ pub(all) struct Sandbox {
   priv mut paint_scheduled : Bool
   priv mut document : @vdom.VDom?
   priv mut current_url : String
-  hooks : @cmd.Hooks
+  priv mut url_request : @cmd.Injector[String]
+  priv mut url_changed : @cmd.Injector[String]
 }
 
 ///|
@@ -33,7 +34,7 @@ extenum @cmd.Extension += {
 }
 
 ///|
-let op : @cmd.Op = @cmd.Op()..on_invoke(extension => {
+let op : @cmd.Op = @cmd.Op()..on_invoke((extension, _context) => {
   match extension {
     Message(id, erased_msg) => {
       guard global_stores.get(id) is Some(store) else { None }
@@ -54,7 +55,8 @@ pub fn Sandbox::new() -> Sandbox {
     current_url: "",
     graph_output: None,
     document: None,
-    hooks: { url_request: None, url_changed: None },
+    url_request: _ => @cmd.none,
+    url_changed: _ => @cmd.none,
     paint_scheduled: false,
     drain_scheduled: true,
     after_render_queue: Queue([]),
@@ -68,11 +70,9 @@ pub fn Sandbox::initialize(
   target_element_id? : String,
   url~ : String,
 ) -> Unit {
-  // Trigger a url_changed message after subscriptions have installed hooks.
+  // Trigger a url_changed message after subscriptions install route injectors.
   self.current_url = url
-  if self.hooks().url_changed is Some(inject) {
-    self.queue_command(inject(self.current_url()))
-  }
+  self.queue_command(self.inject_url_changed(self.get_current_url()))
   self.graph_output = Some(root)
   let root = self.graph_output.unwrap().read()
   self.document = Some(@vdom.VDom::initialize(root, self, target_element_id?))
@@ -87,9 +87,7 @@ pub fn Sandbox::initialize_with_hydration(
   url~ : String,
 ) -> Unit {
   self.current_url = url
-  if self.hooks().url_changed is Some(inject) {
-    self.queue_command(inject(self.current_url()))
-  }
+  self.queue_command(self.inject_url_changed(self.get_current_url()))
   self.graph_output = Some(root)
   let root = self.graph_output.unwrap().read()
   self.document = Some(@vdom.VDom::initialize_with_hydration(root, self))
@@ -129,7 +127,7 @@ pub fn Sandbox::drain_task(self : Self) -> Unit {
   self.drain_scheduled = true
   self.request_task(() => {
     while self.task_queue.pop() is Some((op, extension)) {
-      try @cmd.invoke(@key.key, op, extension) catch {
+      try @cmd.invoke(@key.key, op, extension, self) catch {
         Unhandled => ()
       } noraise {
         None => ()
@@ -196,19 +194,34 @@ pub impl Scheduler for Sandbox with fn queue_command(self, cmd) {
 }
 
 ///|
+pub impl Scheduler for Sandbox with fn set_url_changed_injector(self, injector) {
+  self.url_changed = injector
+}
+
+///|
+pub impl Scheduler for Sandbox with fn set_url_request_injector(self, injector) {
+  self.url_request = injector
+}
+
+///|
 #cfg(not(target="js"))
-pub impl Scheduler for Sandbox with fn current_url(self) {
+pub impl Context for Sandbox with fn get_current_url(self) {
   self.current_url
 }
 
 ///|
 #cfg(target="js")
-pub impl Scheduler for Sandbox with fn current_url(self) {
+pub impl Context for Sandbox with fn get_current_url(self) {
   ignore(self.current_url)
   @dom.window().current_url()
 }
 
 ///|
-pub impl Scheduler for Sandbox with fn hooks(self) {
-  self.hooks
+pub impl Context for Sandbox with fn inject_url_changed(self, url) {
+  (self.url_changed)(url)
+}
+
+///|
+pub impl Context for Sandbox with fn inject_url_request(self, url) {
+  (self.url_request)(url)
 }

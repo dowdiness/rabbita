@@ -27,6 +27,7 @@ let op : @cmd.Op = @cmd.Op()
 #cfg(target="js")
 fn op_invoke(
   extension : @cmd.Extension,
+  _context : &@cmd.Context,
 ) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   match extension {
     DialogShow(id, modal) =>
@@ -78,6 +79,9 @@ fn op_invoke(
 ///|
 #cfg(not(target="js"))
 #warnings("-unused_error_type")
-fn op_invoke(_ : @cmd.Extension) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
+fn op_invoke(
+  _ : @cmd.Extension,
+  _context : &@cmd.Context,
+) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   None
 }

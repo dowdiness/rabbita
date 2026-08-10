@@ -61,13 +61,34 @@ impl @cmd.Scheduler for TestScheduler with fn queue_command(self, cmd) {
 }
 
 ///|
-impl @cmd.Scheduler for TestScheduler with fn current_url(self) {
+impl @cmd.Scheduler for TestScheduler with fn set_url_changed_injector(
+  self,
+  injector,
+) {
+  ignore((self, injector))
+}
+
+///|
+impl @cmd.Scheduler for TestScheduler with fn set_url_request_injector(
+  self,
+  injector,
+) {
+  ignore((self, injector))
+}
+
+///|
+impl @cmd.Context for TestScheduler with fn get_current_url(self) {
   self.current_url_value
 }
 
 ///|
-impl @cmd.Scheduler for TestScheduler with fn hooks(_self) {
-  { url_request: None, url_changed: None }
+impl @cmd.Context for TestScheduler with fn inject_url_changed(_self, _url) {
+  @cmd.none
+}
+
+///|
+impl @cmd.Context for TestScheduler with fn inject_url_request(_self, _url) {
+  @cmd.none
 }
 
 ///|
@@ -76,7 +97,7 @@ async fn TestScheduler::run(self : TestScheduler) -> Unit {
     let cmd = self.commands[index]
     for task in @cmd.flatten(@key.key, cmd) {
       let (op, extension) = task
-      match @cmd.invoke(@key.key, op, extension) {
+      match @cmd.invoke(@key.key, op, extension, self) {
         None => ()
         Ready(cmd) => self.commands.push(cmd)
         Async(f) => self.commands.push(f())

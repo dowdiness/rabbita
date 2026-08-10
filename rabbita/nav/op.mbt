@@ -62,6 +62,7 @@ let op : @cmd.Op = @cmd.Op()
 #cfg(target="js")
 fn op_invoke(
   extension : @cmd.Extension,
+  context : &@cmd.Context,
 ) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   match extension {
     NavBack => {
@@ -80,22 +81,16 @@ fn op_invoke(
       @dom.window().reload_url()
       None
     }
-    NavPushUrl(url) =>
-      LegacyEffect(@cmd.immediately, scheduler => {
-        @dom.window().push_url(url)
-        if scheduler.hooks().url_changed is Some(inject) {
-          let normalized_url = @dom.window().current_url()
-          scheduler.queue_command(inject(normalized_url))
-        }
-      })
-    NavReplaceUrl(url) =>
-      LegacyEffect(@cmd.immediately, scheduler => {
-        @dom.window().replace_url(url)
-        if scheduler.hooks().url_changed is Some(inject) {
-          let normalized_url = @dom.window().current_url()
-          scheduler.queue_command(inject(normalized_url))
-        }
-      })
+    NavPushUrl(url) => {
+      @dom.window().push_url(url)
+      let normalized_url = @dom.window().current_url()
+      Ready(context.inject_url_changed(normalized_url))
+    }
+    NavReplaceUrl(url) => {
+      @dom.window().replace_url(url)
+      let normalized_url = @dom.window().current_url()
+      Ready(context.inject_url_changed(normalized_url))
+    }
     NavScrollToPos(x, y, behavior) =>
       AfterLayout(() => {
         @dom.window().scroll_to(x, y, behavior=behavior.to_string())
@@ -130,6 +125,9 @@ fn op_invoke(
 ///|
 #cfg(not(target="js"))
 #warnings("-unused_error_type")
-fn op_invoke(_ : @cmd.Extension) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
+fn op_invoke(
+  _ : @cmd.Extension,
+  _context : &@cmd.Context,
+) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   None
 }

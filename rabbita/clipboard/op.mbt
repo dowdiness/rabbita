@@ -22,6 +22,7 @@ let op : @cmd.Op = @cmd.Op()
 #cfg(target="js")
 fn op_invoke(
   extension : @cmd.Extension,
+  _context : &@cmd.Context,
 ) -> @cmd.OpCont[@cmd.Cmd] raise @cmd.Unhandled {
   match extension {
     ClipboardCopy(item, copied, failed) =>
@@ -67,6 +68,7 @@ fn op_invoke(
 #warnings("-unused_error_type")
 fn op_invoke(
   extension : @cmd.Extension,
+  _context : &@cmd.Context,
 ) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   match extension {
     ClipboardCopy(item, copied, failed) => {
