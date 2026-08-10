@@ -49,8 +49,8 @@ let op : @cmd.Op = @cmd.Op()
       _ => raise Unhandled
     }
   })
-  ..on_resume((extension, json, scheduler) => {
-    let cmd = match extension {
+  ..on_resume((extension, json) => {
+    match extension {
       Request(expect=Json(f), ..) =>
         f(@json.from_json(json)) catch {
           _ => raise Fallback
@@ -65,271 +65,193 @@ let op : @cmd.Op = @cmd.Op()
         }
       _ => raise Fallback
     }
-    scheduler.add(cmd)
   })
-  ..on_invoke((_, _) => ())
-
-///|
-#cfg(target="js")
-fn init {
-  op.on_invoke((extension, scheduler) => {
-    guard extension is Request(url~, http_method~, body~, expect~) else {
-      raise Unhandled
-    }
-    let (content_type, body_kind, text_body, bytes_body, blob_body) = match
-      body {
-      Json(json) =>
-        ("application/json", "text", json.stringify(), Default::default(), None)
-      Text(text) => ("text/plain", "text", text, Default::default(), None)
-      BytesBody(content_type, bytes) => (content_type, "bytes", "", bytes, None)
-      BlobBody(content_type, blob) =>
-        (content_type, "blob", "", Default::default(), Some(blob))
-      Empty => ("", "empty", "", Default::default(), None)
-    }
-    let (response_kind, succeed_text, succeed_blob, succeed_bytes, failed) = match
-      expect {
-      Text(f) =>
-        (
-          "text",
-          text => {
-            let result = Ok(text)
-            scheduler.add(f(result))
-          },
-          ignore,
-          fn(_, _) { () },
-          error => {
-            let result = Err(RequestError(error))
-            scheduler.add(f(result))
-          },
-        )
-      Json(f) =>
-        (
-          "text",
-          text => {
-            let result : Result[Json, HttpError] = try @json.parse(text) catch {
-              error => Err(RequestError("\{error}"))
-            } noraise {
-              json => Ok(json)
-            }
-            scheduler.add(f(result))
-          },
-          ignore,
-          fn(_, _) { () },
-          error => {
-            let result = Err(RequestError(error))
-            scheduler.add(f(result))
-          },
-        )
-      Bytes(f) =>
-        (
-          "bytes",
-          ignore,
-          ignore,
-          fn(content_type, bytes) {
-            let result = Ok((content_type, bytes))
-            scheduler.add(f(result))
-          },
-          error => {
-            let result = Err(RequestError(error))
-            scheduler.add(f(result))
-          },
-        )
-      Blob(f) =>
-        (
-          "blob",
-          ignore,
-          blob => scheduler.add(f(Ok(blob))),
-          fn(_, _) { () },
-          error => scheduler.add(f(Err(RequestError(error)))),
-        )
-    }
-    js_request(
-      url,
-      http_method,
-      content_type~,
-      body_kind~,
-      response_kind~,
-      text_body~,
-      bytes_body~,
-      blob_body=@js.Nullable::from_option(blob_body),
-      succeed_text~,
-      succeed_blob~,
-      succeed_bytes~,
-      failed~,
-    )
-  })
-}
-
-///|
-#cfg(target="js")
-extern "js" fn js_request(
-  url : String,
-  http_method : String,
-  content_type~ : String,
-  body_kind~ : String,
-  response_kind~ : String,
-  text_body~ : String,
-  bytes_body~ : Bytes,
-  blob_body~ : @js.Nullable[Blob],
-  succeed_text~ : (String) -> Unit,
-  succeed_blob~ : (Blob) -> Unit,
-  succeed_bytes~ : (ContentType, Bytes) -> Unit,
-  failed~ : (String) -> Unit,
-) =
-  #| (url, method, contentType, bodyKind, responseKind, textBody, bytesBody, blobBody, succeedText, succeedBlob, succeedBytes, failed) => {
-  #|   const config = { method };
-  #|   if (contentType !== "") {
-  #|     config.headers = { "Content-Type": contentType };
-  #|   }
-  #|   switch (bodyKind) {
-  #|     case "text":
-  #|       config.body = textBody;
-  #|       break;
-  #|     case "bytes":
-  #|       config.body = bytesBody;
-  #|       break;
-  #|     case "blob":
-  #|       config.body = blobBody;
-  #|       break;
-  #|   }
-  #|   fetch(url, config)
-  #|     .then((response) => {
-  #|       if (!response.ok) {
-  #|         const statusText = response.statusText ? ` ${response.statusText}` : "";
-  #|         failed(`HTTP ${response.status}${statusText}`);
-  #|         return;
-  #|       }
-  #|       switch (responseKind) {
-  #|         case "text":
-  #|           return response.text().then((text) => succeedText(text));
-  #|         case "blob":
-  #|           return response.blob().then((blob) => succeedBlob(blob));
-  #|         case "bytes": {
-  #|           const responseContentType = response.headers.get("Content-Type");
-  #|           if (!responseContentType) {
-  #|             throw new Error("Missing Content-Type header");
-  #|           }
-  #|           return response
-  #|             .arrayBuffer()
-  #|             .then((buffer) => succeedBytes(responseContentType, new Uint8Array(buffer)));
-  #|         }
-  #|         default:
-  #|           throw new Error(`Unknown response kind: ${responseKind}`);
-  #|       }
-  #|     })
-  #|     .catch((error) => failed(error.toString()));
-  #| }
-
-///|
-#cfg(not(target="js"))
-fn init {
-  op.on_settle((extension, settle, scheduler) => {
-    guard extension is Request(url~, http_method~, body~, expect~) else {
-      raise Unhandled
-    }
-    let request_method = match http_method {
-      "GET" => GET
-      "DELETE" => DELETE
-      "POST" => POST
-      "PATCH" => PATCH
-      "PUT" => PUT
+  ..on_debug(extension => {
+    match extension {
+      Request(url~, http_method~, body~, expect~) => {
+        let body = match body {
+          Json(_) => Repr::ctor("Json", [])
+          Text(_) => Repr::ctor("Text", [])
+          BytesBody(_, _) => Repr::ctor("Bytes", [])
+          BlobBody(_, _) => Repr::ctor("Blob", [])
+          Empty => Repr::ctor("Empty", [])
+        }
+        let expect = match expect {
+          Json(_) => Repr::ctor("Json", [])
+          Text(_) => Repr::ctor("Text", [])
+          Bytes(_) => Repr::ctor("Bytes", [])
+          Blob(_) => Repr::ctor("Blob", [])
+        }
+        Repr::ctor("Request", [
+          (Some("url"), Repr(url)),
+          (Some("http_method"), Repr(http_method)),
+          (Some("body"), body),
+          (Some("expect"), expect),
+        ])
+      }
       _ => raise Unhandled
     }
-    guard handler.val is Some(request_handler) else { raise Unhandled }
-    if expect is Blob(f) {
-      ignore(f)
+  })
+  ..on_invoke(_ => None)
+
+///|
+fn init {
+  op.on_invoke(extension => {
+    guard extension is Request(url~, http_method~, body~, expect~) else {
       raise Unhandled
     }
-    request_handler(request_method, url, body, response => {
-      match (expect, response) {
-        (Json(f), Json(json)) => {
-          let result = Ok(json)
-          settle(ToJson::to_json(result))
-          scheduler.add(f(result))
-        }
-        (Text(f), Text(text)) => {
-          let result = Ok(text)
-          settle(ToJson::to_json(result))
-          scheduler.add(f(result))
-        }
-        (Text(f), Empty) => {
-          let result = Ok("")
-          settle(ToJson::to_json(result))
-          scheduler.add(f(result))
-        }
-        (Bytes(f), Bytes(content_type, bytes)) => {
-          let result = Ok((content_type, bytes))
-          settle(ToJson::to_json(result))
-          scheduler.add(f(result))
-        }
-        (Json(f), Error(error)) => {
-          let result : Result[Json, HttpError] = Err(error)
-          settle(ToJson::to_json(result))
-          scheduler.add(f(result))
-        }
-        (Text(f), Error(error)) => {
-          let result : Result[String, HttpError] = Err(error)
-          settle(ToJson::to_json(result))
-          scheduler.add(f(result))
-        }
-        (Bytes(f), Error(error)) => {
-          let result : Result[(ContentType, Bytes), HttpError] = Err(error)
-          settle(ToJson::to_json(result))
-          scheduler.add(f(result))
-        }
-        (Json(f), _) => {
-          let result : Result[Json, HttpError] = Err(
-            RequestError("unexpected HTTP response kind"),
-          )
-          settle(ToJson::to_json(result))
-          scheduler.add(f(result))
-        }
-        (Text(f), _) => {
-          let result : Result[String, HttpError] = Err(
-            RequestError("unexpected HTTP response kind"),
-          )
-          settle(ToJson::to_json(result))
-          scheduler.add(f(result))
-        }
-        (Bytes(f), _) => {
-          let result : Result[(ContentType, Bytes), HttpError] = Err(
-            RequestError("unexpected HTTP response kind"),
-          )
-          settle(ToJson::to_json(result))
-          scheduler.add(f(result))
-        }
-        (Blob(_), _) => ()
+    fn fail_request(error : HttpError) -> Cmd {
+      match expect {
+        Json(f) => f(Err(error))
+        Text(f) => f(Err(error))
+        Bytes(f) => f(Err(error))
+        Blob(f) => f(Err(error))
       }
-    })
+    }
+
+    if !url.contains("://") {
+      LegacyEffect(@cmd.immediately, scheduler => {
+        let cmd = try {
+          let current_url = scheduler.current_url()
+          let current = @url.parse(current_url)
+          let protocol = match current.protocol {
+            @url.Http => "http"
+            Https => "https"
+            Other(protocol) => fail("unsupported HTTP protocol: \{protocol}")
+          }
+          let port = if current.port is Some(port) { ":\{port}" } else { "" }
+          let origin = "\{protocol}://\{current.host}\{port}"
+          let resolved_url = if url.is_empty() {
+            current_url
+          } else if url.has_prefix("//") {
+            "\{protocol}:\{url}"
+          } else if url.has_prefix("/") {
+            "\{origin}\{url}"
+          } else if url.has_prefix("?") || url.has_prefix("#") {
+            "\{origin}/\{current.path}\{url}"
+          } else {
+            let directory = if current.path.rev_split_once("/")
+              is Some((directory, _)) {
+              if directory.is_empty() {
+                "/"
+              } else {
+                "/\{directory}/"
+              }
+            } else {
+              "/"
+            }
+            "\{origin}\{directory}\{url}"
+          }
+          op.request(Request(url=resolved_url, http_method~, body~, expect~))
+        } catch {
+          error => fail_request(RequestError(error.to_string()))
+        }
+        scheduler.queue_command(cmd)
+      })
+    } else {
+      Async(() => {
+        fn request_method() -> @async_http.RequestMethod raise @cmd.Unhandled {
+          match http_method {
+            "GET" => @async_http.Get
+            "DELETE" => Delete
+            "POST" => Post
+            "PATCH" => Patch
+            "PUT" => Put
+            _ => raise @cmd.Unhandled
+          }
+        }
+
+        fn request_target() -> (String, String) raise {
+          let parsed = @url.parse(url)
+          let protocol = match parsed.protocol {
+            @url.Http => "http"
+            Https => "https"
+            Other(protocol) => fail("unsupported HTTP protocol: \{protocol}")
+          }
+          let port = if parsed.port is Some(port) { ":\{port}" } else { "" }
+          let query = if parsed.query is Some(query) { "?\{query}" } else { "" }
+          ("\{protocol}://\{parsed.host}\{port}", "/\{parsed.path}\{query}")
+        }
+
+        async fn write_request_body(client : @async_http.Client) -> Unit {
+          match body {
+            Json(json) => client.write(json)
+            Text(text) => client.write(text)
+            BytesBody(_, bytes) => client.write(bytes)
+            BlobBody(_, blob) => client.write(blob.bytes())
+            Empty => ()
+          }
+        }
+
+        async fn read_response(
+          client : @async_http.Client,
+          response : @async_http.Response,
+        ) -> Cmd {
+          match expect {
+            Json(f) => {
+              let text = client.read_all().text()
+              let result : Result[Json, HttpError] = try
+                @json.parse(text)
+              catch {
+                error => Err(RequestError(error.to_string()))
+              } noraise {
+                json => Ok(json)
+              }
+              f(result)
+            }
+            Text(f) => f(Ok(client.read_all().text()))
+            Bytes(f) =>
+              if response.headers.get("content-type") is Some(content_type) {
+                f(Ok((content_type, client.read_all().binary())))
+              } else {
+                f(Err(RequestError("Missing Content-Type header")))
+              }
+            Blob(f) => {
+              let content_type = response.headers
+                .get("content-type")
+                .unwrap_or("")
+              let blob = @dom.Blob::from_bytes(
+                client.read_all().binary(),
+                content_type,
+              )
+              f(Ok(blob))
+            }
+          }
+        }
+
+        try {
+          let (base_url, path) = request_target()
+          let headers : Map[String, String] = Map([])
+          match body {
+            Json(_) => headers["Content-Type"] = "application/json"
+            Text(_) => headers["Content-Type"] = "text/plain"
+            BytesBody(content_type, _) | BlobBody(content_type, _) =>
+              if !content_type.is_empty() {
+                headers["Content-Type"] = content_type
+              }
+            Empty => ()
+          }
+          let client = @async_http.Client(base_url)
+          defer client.close()
+          client.request(request_method(), path, extra_headers=headers)
+          write_request_body(client)
+          let response = client.end_request()
+          if response.code is (200..<300) {
+            read_response(client, response)
+          } else {
+            let reason = if response.reason.is_empty() {
+              ""
+            } else {
+              " \{response.reason}"
+            }
+            fail_request(RequestError("HTTP \{response.code}\{reason}"))
+          }
+        } catch {
+          error if @async.is_cancellation_error(error) => raise error
+          RequestError(_) as error => fail_request(error)
+          error => fail_request(RequestError(error.to_string()))
+        }
+      })
+    }
   })
-}
-
-///|
-pub(all) enum Method {
-  GET
-  DELETE
-  POST
-  PATCH
-  PUT
-}
-
-///|
-pub(all) enum Response {
-  Json(Json)
-  Text(String)
-  Bytes(ContentType, Bytes)
-  Empty
-  Error(HttpError)
-}
-
-///|
-let handler : Ref[((Method, String, Body, (Response) -> Unit) -> Unit)?] = Ref(
-  None,
-)
-
-///|
-pub fn handle(
-  callback : (Method, String, Body, (Response) -> Unit) -> Unit,
-) -> Unit {
-  handler.val = Some(callback)
 }

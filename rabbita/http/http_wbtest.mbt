@@ -26,21 +26,19 @@ extern "js" fn install_mock_fetch() -> Fetch =
   #|         statusText: "OK",
   #|         body: "success",
   #|       },
+  #|       "/app/ok": {
+  #|         ok: true,
+  #|         status: 200,
+  #|         statusText: "OK",
+  #|         body: "relative success",
+  #|       },
   #|     };
-  #|     const response = responses[url];
-  #|     return Promise.resolve({
-  #|       ok: response.ok,
+  #|     const response = responses[new URL(url).pathname];
+  #|     return Promise.resolve(new Response(response.body, {
   #|       status: response.status,
   #|       statusText: response.statusText,
-  #|       text: () => Promise.resolve(response.body),
-  #|       blob: () => Promise.resolve(new Blob([response.body])),
-  #|       headers: {
-  #|         get: (name) => name === "Content-Type" ? "text/plain" : null,
-  #|       },
-  #|       arrayBuffer: () => Promise.resolve(
-  #|         new TextEncoder().encode(response.body).buffer
-  #|       ),
-  #|     });
+  #|       headers: { "Content-Type": "text/plain" },
+  #|     }));
   #|   };
   #|   return originalFetch;
   #| }
@@ -52,53 +50,107 @@ extern "js" fn restore_fetch(fetch : Fetch) -> Unit =
   #| }
 
 ///|
-async fn invoke_js_request(url : String, response_kind : String) -> String {
-  @js.suspend(fn(resolve, reject) {
-    js_request(
-      url,
-      "GET",
-      content_type="",
-      body_kind="empty",
-      response_kind~,
-      text_body="",
-      bytes_body=Default::default(),
-      blob_body=@js.Nullable::from_option(None),
-      succeed_text=text => resolve("text:\{text}"),
-      succeed_blob=_ => resolve("blob"),
-      succeed_bytes=(content_type, bytes) => {
-        resolve("bytes:\{content_type}:\{bytes.length()}")
-      },
-      failed=detail => reject(RequestError(detail)),
-    )
-  })
+struct TestScheduler {
+  current_url_value : String
+  commands : Array[Cmd]
 }
 
 ///|
-test "js_request rejects non-2xx responses before reading the body" {
-  @js.async_test(() => {
-    let original_fetch = install_mock_fetch()
-    try {
-      try invoke_js_request("/not-found", "text") catch {
-        RequestError(detail) => assert_eq(detail, "HTTP 404 Not Found")
-        error => raise error
-      } noraise {
-        _ => fail("expected 404 response to fail")
+impl @cmd.Scheduler for TestScheduler with fn queue_command(self, cmd) {
+  self.commands.push(cmd)
+}
+
+///|
+impl @cmd.Scheduler for TestScheduler with fn current_url(self) {
+  self.current_url_value
+}
+
+///|
+impl @cmd.Scheduler for TestScheduler with fn hooks(_self) {
+  { url_request: None, url_changed: None }
+}
+
+///|
+async fn TestScheduler::run(self : TestScheduler) -> Unit {
+  for index = 0; index < self.commands.length(); index = index + 1 {
+    let cmd = self.commands[index]
+    for task in @cmd.flatten(@key.key, cmd) {
+      let (op, extension) = task
+      match @cmd.invoke(@key.key, op, extension) {
+        None => ()
+        Ready(cmd) => self.commands.push(cmd)
+        Async(f) => self.commands.push(f())
+        AfterLayout(f) => self.commands.push(f())
+        LegacyEffect(_, f) => f(self)
       }
-      try invoke_js_request("/server-error", "bytes") catch {
-        RequestError(detail) =>
-          assert_eq(detail, "HTTP 500 Internal Server Error")
-        error => raise error
-      } noraise {
-        _ => fail("expected 500 response to fail")
-      }
-      assert_eq(invoke_js_request("/ok", "text"), "text:success")
-    } catch {
-      error => {
-        restore_fetch(original_fetch)
-        raise error
-      }
-    } noraise {
-      _ => restore_fetch(original_fetch)
     }
-  })
+  }
+}
+
+///|
+async fn invoke_text_request(
+  url : String,
+  current_url : String,
+) -> Result[String, HttpError] {
+  let mut result : Result[String, HttpError]? = None
+  let cmd = op.request(
+    Request(
+      url~,
+      http_method="GET",
+      body=Empty,
+      expect=Text(value => {
+        result = Some(value)
+        @cmd.none
+      }),
+    ),
+  )
+  let scheduler : TestScheduler = {
+    current_url_value: current_url,
+    commands: [cmd],
+  }
+  scheduler.run()
+  result.unwrap()
+}
+
+///|
+async test "async HTTP rejects non-2xx responses before reading the body" {
+  let original_fetch = install_mock_fetch()
+  defer restore_fetch(original_fetch)
+  guard invoke_text_request(
+      "https://example.test/not-found", "https://example.test/app/page",
+    )
+    is Err(RequestError(not_found)) else {
+    fail("expected 404 response to fail")
+  }
+  assert_eq(not_found, "HTTP 404 Not Found")
+  guard invoke_text_request(
+      "https://example.test/server-error", "https://example.test/app/page",
+    )
+    is Err(RequestError(server_error)) else {
+    fail("expected 500 response to fail")
+  }
+  assert_eq(server_error, "HTTP 500 Internal Server Error")
+  guard invoke_text_request(
+      "https://example.test/ok", "https://example.test/app/page",
+    )
+    is Ok(text) else {
+    fail("expected successful response")
+  }
+  assert_eq(text, "success")
+}
+
+///|
+async test "async HTTP resolves relative request URLs from the scheduler URL" {
+  let original_fetch = install_mock_fetch()
+  defer restore_fetch(original_fetch)
+  guard invoke_text_request("/ok", "https://example.test/app/page")
+    is Ok(root_relative) else {
+    fail("expected root-relative request to succeed")
+  }
+  assert_eq(root_relative, "success")
+  guard invoke_text_request("ok", "https://example.test/app/page")
+    is Ok(path_relative) else {
+    fail("expected path-relative request to succeed")
+  }
+  assert_eq(path_relative, "relative success")
 }

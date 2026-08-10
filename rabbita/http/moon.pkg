@@ -1,9 +1,16 @@
 import {
   "moonbit-community/rabbita/cmd",
   "moonbit-community/rabbita/dom",
-  "moonbit-community/rabbita/js",
+  "moonbit-community/rabbita/url",
+  "moonbitlang/async",
+  "moonbitlang/async/http" @async_http,
+  "moonbitlang/async/io",
   "moonbitlang/core/json",
 }
+
+import {
+  "moonbit-community/rabbita/internal/key",
+} for "wbtest"
 
 warnings = "-unused_package"
 

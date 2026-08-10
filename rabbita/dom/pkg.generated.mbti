@@ -49,6 +49,7 @@ pub impl @js.Cast for BeforeUnloadEvent
 
 type Blob
 pub async fn Blob::bytes(Self) -> Bytes
+pub fn Blob::from_bytes(Bytes, String) -> Self
 pub fn Blob::get_size(Self) -> Int
 pub fn Blob::get_type(Self) -> String
 pub fn Blob::slice(Self, Int, end_? : @js.Optional[Int]) -> Self
