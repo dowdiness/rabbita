@@ -12,7 +12,13 @@ pub using @cmd {none, batch}
 pub type Cmd = @cmd.Cmd
 
 ///|
-pub type Html = @html.Html
+pub using @html {type Html}
+
+///|
+/// A running Rabbita application.
+struct App {
+  builder : () -> Val[Html]
+}
 
 ///|
 /// Creates an application from a root component builder.
@@ -21,9 +27,7 @@ pub type Html = @html.Html
 /// incremental HTML value. Use `Val::map`, `Val::switch`, and `Val::assoc` to
 /// express subsequent changes, then call `App::mount` to start the app.
 pub fn new(builder : () -> Val[Html]) -> App {
-  let sandbox = @runtime.Sandbox::new()
-  ambient_graph.val = Some(Graph(sandbox))
-  { sandbox, builder }
+  { builder, }
 }
 
 ///|
@@ -42,9 +46,7 @@ pub fn[Model : Eq, Msg] elmish(
     let (model, emit) = create_state(model, update~, subscriptions?)
     model.map(model => view(model, emit))
   }
-  let sandbox = @runtime.Sandbox::new()
-  ambient_graph.val = Some(Graph(sandbox))
-  { sandbox, builder }
+  { builder, }
 }
 
 ///|
@@ -55,15 +57,26 @@ pub fn[Model : Eq, Msg] elmish(
 /// routing is configured, the current URL is also emitted on mount.
 #cfg(target="js")
 pub fn App::mount(self : Self, element_id : String) -> Unit {
-  self.sandbox.spawn_bg = fn(task) { @js_async.Promise::from_async(task) |> ignore }
-  let vnode = (self.builder)()
-  self.sandbox.initialize(element_id, vnode.0.map(html => html.0))
-  self.sandbox.flush()
+  let sandbox = @runtime.Sandbox::new()
+  sandbox.spawn_bg = fn(task) { @js_async.Promise::from_async(task) |> ignore }
+
+  let output = ambient_graph.protect(Some(Graph(sandbox)), self.builder)
+  let vnode = output.map(html => html.0)
+  sandbox.initialize(vnode.0, target_element_id=element_id, url="")
+  sandbox.drain_task()
+  sandbox.flush()
 }
 
 ///|
-/// A running Rabbita application.
-struct App {
-  sandbox : @runtime.Sandbox
-  builder : () -> Val[Html]
+#cfg(not(target="js"))
+pub async fn App::render(self : Self, url~ : String) -> String {
+  let sandbox = @runtime.Sandbox::new()
+  let output = ambient_graph.protect(Some(Graph(sandbox)), self.builder)
+  @async.with_task_group(group => {
+    sandbox.spawn_bg = fn(task) { group.spawn_bg(task) }
+    sandbox.initialize(output.0.map(html => html.0), url~)
+    sandbox.drain_task()
+  })
+  sandbox.render_hydrate_html().unwrap()
 }
+

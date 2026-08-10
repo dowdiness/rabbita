@@ -113,7 +113,7 @@ pub fn[C : IsChildren] hgroup(style? : Array[String], id? : String, class? : Str
 
 pub fn hr(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs) -> Html
 
-pub fn[C : IsChildren] html(style? : Array[String], id? : String, class? : String, title? : String, lang? : String, dir? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
+pub fn html(style? : Array[String], id? : String, class? : String, title? : String, lang? : String, dir? : String, hidden? : Bool, attrs? : Attrs, Array[Html]) -> Html
 
 pub fn[C : IsChildren] i(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 

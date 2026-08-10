@@ -85,6 +85,11 @@ pub fn VNode::fragment(childs : Array[VNode]) -> VNode {
 }
 
 ///|
+pub fn VNode::document(props : Props, head : VNode, body : VNode) -> VNode {
+  Elem("html", props, Array([head, body]), namespace_uri=None)
+}
+
+///|
 pub(all) enum Children[T] {
   Array(Array[T])
   Map(Map[String, T])

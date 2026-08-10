@@ -252,6 +252,7 @@ pub fn Document::get_elements_by_class_name(Self, String) -> HTMLCollection
 pub fn Document::get_elements_by_name(Self, String) -> NodeList
 pub fn Document::get_elements_by_tag_name(Self, String) -> HTMLCollection
 pub fn Document::get_elements_by_tag_name_ns(Self, String, String) -> HTMLCollection
+pub fn Document::get_head(Self) -> HTMLElement?
 pub fn Document::hidden(Self) -> Bool
 pub fn Document::query_selector(Self, String) -> @js.Nullable[Element]
 pub fn Document::query_selector_all(Self, String) -> NodeList

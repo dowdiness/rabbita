@@ -1,6 +1,20 @@
 ///|
 #cfg(target="js")
-priv struct MountedProps {
+struct VDom {
+  mut inode : INode
+  target_element : @dom.Element?
+  captured_link_listener : @dom.Listener
+}
+
+///|
+#cfg(not(target="js"))
+struct VDom {
+  mut vnode : VNode
+}
+
+///|
+#cfg(target="js")
+priv struct IProps {
   props : Props
   slots : Map[String, Ref[(@dom.Event, &Scheduler) -> Unit]]
 }
@@ -8,31 +22,10 @@ priv struct MountedProps {
 ///|
 #cfg(target="js")
 priv enum INode {
-  Elem(
-    String,
-    MountedProps,
-    Children[INode],
-    namespace_uri~ : String?,
-    @dom.Element
-  )
+  Elem(String, IProps, Children[INode], namespace_uri~ : String?, @dom.Element)
   Text(String, @dom.Element)
   Frag(Array[INode], @dom.Comment, @dom.Comment)
   Thunk(Int, INode)
-}
-
-///|
-#cfg(target="js")
-struct Mounted {
-  mut root : INode
-  scheduler : &Scheduler
-  captured_link_listener : @dom.Listener
-}
-
-///|
-#cfg(not(target="js"))
-#warnings("-unused_field")
-struct Mounted {
-  mut vnode : VNode
 }
 
 ///|
@@ -122,6 +115,78 @@ fn INode::relocate(
 
 ///|
 #cfg(target="js")
+fn insert_props(
+  element : @dom.Element,
+  tag : String,
+  props : Props,
+  scheduler : &Scheduler,
+  captured_link_listener : @dom.Listener,
+) -> IProps {
+  let { handlers, attrs, props: properties, styles } = props
+  let slots : Map[String, Ref[(@dom.Event, &Scheduler) -> Unit]] = Map([])
+  for event, handler in handlers {
+    let slot = @ref.new(handler)
+    element.add_event_listener(event, event => (slot.val)(event, scheduler))
+    slots[event] = slot
+  }
+  if is_captured_link_tag(tag) {
+    element.add_event_listener("click", captured_link_listener)
+  }
+  for name, value in attrs {
+    element.set_attribute(name, value)
+  }
+  for name, value in properties {
+    element.set_property(name, variant_to_js_value(value))
+  }
+  let sheet = if element.to_html_element() is Some(html) {
+    html.get_style()
+  } else if element.to_svg_element() is Some(svg) {
+    svg.get_style()
+  } else {
+    panic()
+  }
+  for name, value in styles {
+    sheet.set_property(name, value)
+  }
+  { props, slots }
+}
+
+///|
+#cfg(target="js")
+fn insert_children(
+  node : @dom.Node,
+  children : Children[VNode],
+  scheduler : &Scheduler,
+  captured_link_listener : @dom.Listener,
+) -> Children[INode] {
+  match children {
+    RawHtml(html) => {
+      node.to_element().unwrap().set_inner_html(html)
+      RawHtml(html)
+    }
+    Array(children) =>
+      Array(
+        children.map(child => {
+          child.insert(scheduler, captured_link_listener, node, null())
+        }),
+      )
+    Map(children) => {
+      let mounted : Map[String, INode] = Map([])
+      for key, child in children {
+        mounted[key] = child.insert(
+          scheduler,
+          captured_link_listener,
+          node,
+          null(),
+        )
+      }
+      Map(mounted)
+    }
+  }
+}
+
+///|
+#cfg(target="js")
 fn VNode::insert(
   self : Self,
   scheduler : &Scheduler,
@@ -167,77 +232,90 @@ fn VNode::insert(
         Some(namespace_uri) =>
           document.create_element_ns(namespace_uri, rendered_tag)
       }
-      let { handlers, attrs, props: properties, styles } = props
-      let slots : Map[String, Ref[(@dom.Event, &Scheduler) -> Unit]] = Map([])
-      for event, handler in handlers {
-        let slot = @ref.new(handler)
-        element.add_event_listener(event, event => (slot.val)(event, scheduler))
-        slots[event] = slot
-      }
-      if is_captured_link_tag(tag) {
-        element.add_event_listener("click", captured_link_listener)
-      }
-      for name, value in attrs {
-        element.set_attribute(name, value)
-      }
-      for name, value in properties {
-        element.set_property(name, variant_to_js_value(value))
-      }
-      let sheet = if element.to_html_element() is Some(html) {
-        html.get_style()
-      } else if element.to_svg_element() is Some(svg) {
-        svg.get_style()
-      } else {
-        panic()
-      }
-      for name, value in styles {
-        sheet.set_property(name, value)
-      }
+      let props = insert_props(
+        element, tag, props, scheduler, captured_link_listener,
+      )
       let node = element.as_node()
       let children : Children[INode] = if is_html_void_element(tag) {
         Array([])
       } else {
-        match children {
-          RawHtml(html) => {
-            node.to_element().unwrap().set_inner_html(html)
-            RawHtml(html)
-          }
-          Array(children) =>
-            Array(
-              children.map(child => {
-                child.insert(scheduler, captured_link_listener, node, null())
-              }),
-            )
-          Map(children) => {
-            let mounted : Map[String, INode] = Map([])
-            for key, child in children {
-              mounted[key] = child.insert(
-                scheduler,
-                captured_link_listener,
-                node,
-                null(),
-              )
-            }
-            Map(mounted)
-          }
-        }
+        insert_children(node, children, scheduler, captured_link_listener)
       }
       parent.insert_before(node, before)
-      Elem(tag, { props, slots }, children, namespace_uri~, element)
+      Elem(tag, props, children, namespace_uri~, element)
     }
   }
 }
 
 ///|
 #cfg(target="js")
-pub fn mount(
-  element_id : String,
-  vnode : VNode,
-  scheduler : &Scheduler,
-) -> Mounted {
-  let parent = @dom.document().get_element_by_id(element_id).unwrap()
-  parent.set_inner_html("<div></div>")
-  let captured_link_listener : @dom.Listener = event => {
+fn INode::to_vnode(self : Self) -> VNode {
+  match self {
+    Elem(tag, mounted_props, children, namespace_uri~, _) =>
+      Elem(
+        tag,
+        mounted_props.props,
+        children.map(child => child.to_vnode()),
+        namespace_uri~,
+      )
+    Text(text, _) => Text(text)
+    Frag(children, _, _) => Frag(children.map(child => child.to_vnode()))
+    Thunk(_, node) => node.to_vnode()
+  }
+}
+
+///|
+#cfg(target="js")
+fn VDom::to_vnode(self : Self) -> VNode {
+  self.inode.to_vnode()
+}
+
+///|
+#cfg(not(target="js"))
+fn VDom::to_vnode(self : Self) -> VNode {
+  self.vnode
+}
+
+///|
+pub fn VDom::to_string(self : Self) -> String {
+  server_side_render(() => self.to_vnode())
+}
+
+///|
+#cfg(target="js")
+fn[A] nullable(value : A) -> @js.Nullable[A] {
+  @js.Nullable::from_option(Some(value))
+}
+
+///|
+#cfg(target="js")
+fn[A] null() -> @js.Nullable[A] {
+  @js.Nullable::null()
+}
+
+///|
+#cfg(target="js")
+pub fn VDom::update(self : Self, root : VNode, scheduler : &Scheduler) -> Unit {
+  self.inode = diff_document(
+    self.inode,
+    root,
+    scheduler,
+    container?=self.target_element,
+    captured_link_listener=self.captured_link_listener,
+  )
+}
+
+///|
+#cfg(not(target="js"))
+pub fn VDom::update(self : Self, vnode : VNode, _ : &Scheduler) -> Unit {
+  self.vnode = vnode
+}
+
+
+///|
+#cfg(target="js")
+fn new_captured_link_listener(scheduler : &Scheduler) -> @dom.Listener {
+  event => {
     if event.to_mouse_event() is Some(mouse_event) &&
       scheduler.hooks().url_request is Some(hook) &&
       !(mouse_event.get_meta_key() || mouse_event.get_ctrl_key()) {
@@ -252,61 +330,179 @@ pub fn mount(
       scheduler.add(hook(href))
     }
   }
-  {
-    root: vnode.insert(
-      scheduler,
-      captured_link_listener,
-      parent.as_node(),
-      null(),
-    ),
-    scheduler,
-    captured_link_listener,
+}
+
+///|
+#cfg(target="js")
+pub fn VDom::initialize(
+  vnode : VNode,
+  scheduler : &Scheduler,
+  target_element_id? : String,
+) -> VDom {
+  let captured_link_listener = new_captured_link_listener(scheduler)
+  match (target_element_id, vnode) {
+    (Some(id), vnode) => {
+      let container = @dom.document().get_element_by_id(id).unwrap()
+      // Clear any existing DOM so mounting does not append beside stale content.
+      container.set_inner_html("")
+      let inode = vnode.insert(
+        scheduler,
+        captured_link_listener,
+        container.as_node(),
+        null(),
+      )
+      VDom::{ target_element: Some(container), inode, captured_link_listener }
+    }
+    (
+      None,
+      Elem(
+        "html",
+        props,
+        Array(
+          [
+            Elem("head", head_props, head_children, ..),
+            Elem("body", body_props, body_children, ..),
+          ]
+        ),
+        namespace_uri=None
+      ),
+    ) => {
+      let head = {
+        let element = @dom.document().get_head().unwrap().as_element()
+        let props = insert_props(
+          element, "head", head_props, scheduler, captured_link_listener,
+        )
+        let children = insert_children(
+          element.as_node(),
+          head_children,
+          scheduler,
+          captured_link_listener,
+        )
+        INode::Elem("head", props, children, namespace_uri=None, element)
+      }
+      let body = {
+        let element = @dom.document().get_body().unwrap().as_element()
+        let props = insert_props(
+          element, "body", body_props, scheduler, captured_link_listener,
+        )
+        let children = insert_children(
+          element.as_node(),
+          body_children,
+          scheduler,
+          captured_link_listener,
+        )
+        INode::Elem("body", props, children, namespace_uri=None, element)
+      }
+
+      let html = @dom.document().get_document_element().unwrap()
+      let props = insert_props(
+        html, "html", props, scheduler, captured_link_listener,
+      )
+      let inode = INode::Elem(
+        "html",
+        props,
+        Array([head, body]),
+        html,
+        namespace_uri=None,
+      )
+      VDom::{ target_element: None, inode, captured_link_listener }
+    }
+    // VDom root invariant: the root must be either a `(Some(id), _)` or a 
+    // `(None, Elem("html", _, Array([Elem("head", ..), Elem("body", ..)]), ..)`
+    (_, Elem(_) | Text(_) | Frag(_) | Thunk(_)) => panic()
   }
 }
 
 ///|
 #cfg(not(target="js"))
-pub fn mount(
-  element_id : String,
+pub fn VDom::initialize(
   vnode : VNode,
-  scheduler : &Scheduler,
-) -> Mounted {
-  ignore((element_id, scheduler))
+  _ : &Scheduler,
+  target_element_id? : String,
+) -> VDom {
+  ignore(target_element_id)
   { vnode, }
 }
 
 ///|
 #cfg(target="js")
-pub fn Mounted::update(self : Self, vnode : VNode) -> Unit {
-  let end = self.root.end()
-  let parent = end.get_parent_node().unwrap()
-  let next_sibling = end.get_next_sibling()
-  self.root = diff_node(
-    self.root,
-    vnode,
-    self.scheduler,
-    self.captured_link_listener,
-    parent,
-    next_sibling,
-  )
-}
-
-///|
-#cfg(not(target="js"))
-pub fn Mounted::update(self : Self, vnode : VNode) -> Unit {
-  self.vnode = vnode
-}
-
-///|
-#cfg(target="js")
-fn[A] nullable(value : A) -> @js.Nullable[A] {
-  @js.Nullable::from_option(Some(value))
-}
-
-///|
-#cfg(target="js")
-fn[A] null() -> @js.Nullable[A] {
-  @js.Nullable::null()
+fn diff_document(
+  old : INode,
+  new : VNode,
+  scheduler : &Scheduler,
+  container? : @dom.Element,
+  captured_link_listener~ : @dom.Listener,
+) -> INode {
+  match (container, old, new) {
+    (
+      None,
+      Elem(
+        "html",
+        old_props,
+        Array(
+          [
+            Elem("head", old_head_props, old_head_children, head_element, ..),
+            Elem("body", old_body_props, old_body_children, body_element, ..),
+          ]
+        ),
+        html_element,
+        namespace_uri=None
+      ),
+      Elem(
+        "html",
+        new_props,
+        Array(
+          [
+            Elem("head", new_head_props, new_head_children, ..),
+            Elem("body", new_body_props, new_body_children, ..),
+          ]
+        ),
+        namespace_uri=None
+      ),
+    ) => {
+      let props = diff_props(old_props, new_props, scheduler, html_element)
+      let head = {
+        let props = diff_props(
+          old_head_props, new_head_props, scheduler, head_element,
+        )
+        let children = diff_children(
+          old_head_children,
+          new_head_children,
+          scheduler,
+          captured_link_listener,
+          head_element.as_node(),
+          null(),
+        )
+        INode::Elem("head", props, children, namespace_uri=None, head_element)
+      }
+      let body = {
+        let props = diff_props(
+          old_body_props, new_body_props, scheduler, body_element,
+        )
+        let children = diff_children(
+          old_body_children,
+          new_body_children,
+          scheduler,
+          captured_link_listener,
+          body_element.as_node(),
+          null(),
+        )
+        INode::Elem("body", props, children, namespace_uri=None, body_element)
+      }
+      Elem("html", props, Array([head, body]), html_element, namespace_uri=None)
+    }
+    (Some(container), old, new) =>
+      diff_node(
+        old,
+        new,
+        scheduler,
+        captured_link_listener,
+        container.as_node(),
+        null(),
+      )
+    // See VDom root invariant in `VDom::initialize`
+    _ => panic()
+  }
 }
 
 ///|
@@ -377,11 +573,11 @@ fn diff_node(
 ///|
 #cfg(target="js")
 fn diff_props(
-  old : MountedProps,
+  old : IProps,
   new : Props,
   scheduler : &Scheduler,
   parent : @dom.Element,
-) -> MountedProps {
+) -> IProps {
   let slots = old.slots
   for event, slot in slots {
     if !new.handlers.contains(event) {

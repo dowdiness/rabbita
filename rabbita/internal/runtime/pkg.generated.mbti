@@ -24,8 +24,9 @@ pub fn[Model : Eq, Msg] Sandbox::create_state_machine(Self, (@cmd.Emit[Msg]) -> 
 pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(Self, (@cmd.Emit[Msg], Input) -> (Model, @cmd.Cmd), (Model, Input, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, Input, @cmd.Emit[Msg]) -> @sub.Sub, @duplix.Node[Input]) -> (@duplix.Node[Model], @cmd.Emit[Msg])
 pub fn Sandbox::drain_task(Self) -> Unit
 pub fn Sandbox::flush(Self) -> Unit
-pub fn Sandbox::initialize(Self, String, @duplix.Node[@vdom.VNode]) -> Unit
+pub fn Sandbox::initialize(Self, @duplix.Node[@vdom.VNode], target_element_id? : String, url~ : String) -> Unit
 pub fn Sandbox::new() -> Self
+pub fn Sandbox::render_hydrate_html(Self) -> String?
 pub impl @cmd.Scheduler for Sandbox
 
 pub(all) struct Store {
@@ -37,6 +38,8 @@ pub(all) struct Store {
 pub using @vdom {type Children}
 
 pub using @vdom {type Props}
+
+pub using @vdom {type VDom}
 
 pub using @vdom {type VNode}
 

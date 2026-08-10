@@ -1,5 +1,5 @@
 ///|
-pub using @vdom {type Children, type Props, type VNode}
+pub using @vdom {type Children, type Props, type VNode, type VDom}
 
 ///|
 using @cmd {trait Scheduler}
@@ -16,14 +16,14 @@ using @queue {type Queue}
 /// 2. reconcile(oldView, newView)
 ///      update the mounted render state
 pub(all) struct Sandbox {
-  priv mut root_view : @duplix.Node[VNode]?
   priv after_render_queue : Queue[() -> Cmd]
   priv task_queue : Queue[(@cmd.Op, @cmd.Extension)]
   mut spawn_bg : (async () -> Unit) -> Unit
+  priv mut graph_output : @duplix.Node[VNode]?
   priv mut drain_scheduled : Bool
   priv mut paint_scheduled : Bool
-  priv mut mounted : @vdom.Mounted?
-  priv current_url : String
+  priv mut document : @vdom.VDom?
+  priv mut current_url : String
   hooks : @cmd.Hooks
 }
 
@@ -49,11 +49,11 @@ let op : @cmd.Op = @cmd.Op()..on_invoke(extension => {
 ///|
 pub fn Sandbox::new() -> Sandbox {
   {
-    root_view: None,
-    mounted: None,
     task_queue: Queue([]),
     spawn_bg: _ => (),
     current_url: "",
+    graph_output: None,
+    document: None,
     hooks: { url_request: None, url_changed: None },
     paint_scheduled: false,
     drain_scheduled: true,
@@ -64,17 +64,28 @@ pub fn Sandbox::new() -> Sandbox {
 ///|
 pub fn Sandbox::initialize(
   self : Self,
-  element_id : String,
-  vnode : @duplix.Node[VNode],
+  root : @duplix.Node[VNode],
+  target_element_id? : String,
+  url~ : String,
 ) -> Unit {
   // Trigger a url_changed message after subscriptions have installed hooks.
-  self.drain_scheduled = false
+  self.current_url = url
   if self.hooks().url_changed is Some(inject) {
     self.queue_command(inject(self.current_url()))
   }
-  self.root_view = Some(vnode)
-  let vnode = self.root_view.unwrap().read()
-  self.mounted = Some(@vdom.mount(element_id, vnode, self))
+  self.graph_output = Some(root)
+  let root = self.graph_output.unwrap().read()
+  self.document = Some(@vdom.VDom::initialize(root, self, target_element_id?))
+  self.drain_scheduled = false
+}
+
+///|
+pub fn Sandbox::render_hydrate_html(self : Self) -> String? {
+  if self.document is Some(document) {
+    Some(document.to_string())
+  } else {
+    None
+  }
 }
 
 ///|
@@ -83,9 +94,9 @@ pub fn Sandbox::flush(self : Self) -> Unit {
   guard !self.paint_scheduled else { return }
   self.paint_scheduled = true
   request_frame(fn() {
-    if self.mounted is Some(mounted) {
-      let vnode = self.root_view.unwrap().read()
-      mounted.update(vnode)
+    if self.document is Some(document) {
+      let vnode = self.graph_output.unwrap().read()
+      document.update(vnode, self)
     }
     self.paint_scheduled = false
     while self.after_render_queue.pop() is Some(f) {

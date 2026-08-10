@@ -8,8 +8,6 @@ import {
 }
 
 // Values
-pub fn mount(String, VNode, &@cmd.Scheduler) -> Mounted
-
 pub fn server_side_render(() -> VNode) -> String
 
 // Errors
@@ -21,9 +19,6 @@ pub(all) enum Children[T] {
   RawHtml(String)
 }
 
-type Mounted
-pub fn Mounted::update(Self, VNode) -> Unit
-
 pub struct Props {
   handlers : Map[String, (@dom.Event, &@cmd.Scheduler) -> Unit]
   attrs : Map[String, String]
@@ -33,12 +28,18 @@ pub struct Props {
 pub fn Props::copy(Self) -> Self
 pub fn Props::new(Map[String, String], Map[String, @variant.Variant], Map[String, String], Map[String, (@dom.Event, &@cmd.Scheduler) -> Unit]) -> Self
 
+type VDom
+pub fn VDom::initialize(VNode, &@cmd.Scheduler, target_element_id? : String) -> Self
+pub fn VDom::to_string(Self) -> String
+pub fn VDom::update(Self, VNode, &@cmd.Scheduler) -> Unit
+
 pub enum VNode {
   Elem(String, Props, Children[VNode], namespace_uri~ : String?)
   Text(String)
   Frag(Array[VNode])
   Thunk(Int, () -> VNode)
 }
+pub fn VNode::document(Props, Self, Self) -> Self
 pub fn VNode::elem(String, Props, Children[Self], namespace_uri? : String) -> Self
 pub fn VNode::fragment(Array[Self]) -> Self
 pub fn VNode::link(Props, Children[Self], escape? : Bool) -> Self

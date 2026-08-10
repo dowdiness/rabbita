@@ -165,6 +165,7 @@ fn children_to_string(buf : StringBuilder, children : Children[VNode]) -> Unit {
 pub fn server_side_render(render : () -> VNode) -> String {
   let vnode = render()
   let buf = StringBuilder::new()
+  buf.write_string("<!DOCTYPE html>")
   vnode_to_string(buf, vnode)
   buf.to_string()
 }

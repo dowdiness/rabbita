@@ -2074,8 +2074,26 @@ pub fn[C : IsChildren] dialog(
 // ---- document ----
 
 ///|
-/// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/html)
-pub fn[C : IsChildren] html(
+/// Constructs the root of an HTML document.
+///
+/// Use this constructor only with exactly one `head` followed by exactly one
+/// `body`:
+///
+/// ```mbt nocheck
+/// html(...) <| [
+///   head(...),
+///   body(...),
+/// ]
+/// ```
+///
+/// This restriction follows the Web platform's special handling of document
+/// roots: while parsing HTML, browsers may supply missing `<html>`, `<head>`,
+/// and `<body>` elements. Rabbita therefore leaves any other child count,
+/// order, tag, or nesting undefined.
+///
+/// For the Web behavior behind this restriction, see
+/// [MDN: `DOMParser.parseFromString()`](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString#parsing_an_input_using_trusted_types).
+pub fn html(
   style? : Array[String] = [],
   id? : String,
   class? : String,
@@ -2084,7 +2102,7 @@ pub fn[C : IsChildren] html(
   dir? : String,
   hidden? : Bool,
   attrs? : Attrs,
-  children : C,
+  children : Array[Html],
 ) -> Html {
   let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
@@ -2094,7 +2112,47 @@ pub fn[C : IsChildren] html(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  VNode::elem("html", attrs.to_props(), children)
+  let props = attrs.to_props()
+  if children is Array([Elem("head", _, _, ..) as head, Elem("body", _, _, ..) as body]) {
+    VNode::document(props, head, body)
+  } else if children is Array(children) {
+    let mut head : VNode? = None
+    let mut body : VNode? = None
+    let body_children = []
+    for child in children {
+      match child {
+        Elem("head", _, _, ..) if head is None => head = Some(child)
+        Elem("body", _, children, ..) as node => {
+          if body is None {
+            body = Some(node)
+          }
+          match children {
+            Array(children) => body_children.append(children)
+            Map(children) => body_children.push_iter(children.values())
+            RawHtml(_) => ()
+          }
+        }
+        Elem("head", _, children, ..) =>
+          match children {
+            Array(children) => body_children.append(children)
+            Map(children) => body_children.push_iter(children.values())
+            RawHtml(_) => ()
+          }
+        _ => body_children.push(child)
+      }
+    }
+    let head = head.unwrap_or_else(() => {
+      VNode::elem("head", Attrs::build().to_props(), Array([]))
+    })
+    let body = if body is Some(Elem("body", body_props, _, namespace_uri~)) {
+      VNode::elem("body", body_props, Array(body_children), namespace_uri?)
+    } else {
+      VNode::elem("body", Attrs::build().to_props(), Array(body_children))
+    }
+    VNode::document(props, head, body)
+  } else {
+    VNode::elem("html", props, children)
+  }
 }
 
 ///|
