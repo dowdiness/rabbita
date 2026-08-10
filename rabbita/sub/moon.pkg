@@ -9,4 +9,4 @@ import {
 
 warnings = "-unused_package"
 
-supported_targets = "js+native"
+supported_targets = "js+native+wasm"

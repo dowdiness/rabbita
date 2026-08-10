@@ -23,6 +23,6 @@ import {
 
 warnings = "-unused_package-alert_unstable"
 
-supported_targets = "js+native"
+supported_targets = "js+native+wasm"
 
 formatter(ignore: [ "README.mbt.md" ])

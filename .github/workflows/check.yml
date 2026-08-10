@@ -97,6 +97,9 @@ jobs:
           moon version --all
           moonrun --version
 
+      - name: moon update
+        run: moon update
+
       - name: Install plugin dependencies
         working-directory: vite-plugin
         run: npm install
