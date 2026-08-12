@@ -2113,7 +2113,8 @@ pub fn html(
   push_class(class, attrs)
   push_id(id, attrs)
   let props = attrs.to_props()
-  if children is Array([Elem("head", _, _, ..) as head, Elem("body", _, _, ..) as body]) {
+  if children
+    is Array([Elem("head", _, _, ..) as head, Elem("body", _, _, ..) as body]) {
     VNode::document(props, head, body)
   } else if children is Array(children) {
     let mut head : VNode? = None

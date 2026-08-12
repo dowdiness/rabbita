@@ -345,6 +345,10 @@ fn hydrate_children(
 ) -> (Children[INode], @dom.Node?) {
   let mut current = current
   match children {
+    RawHtml(html) => {
+      parent.to_element().unwrap().set_inner_html(html)
+      (RawHtml(html), boundary)
+    }
     Array(children) => {
       let mounted = []
       for child in children {
