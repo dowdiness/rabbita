@@ -170,6 +170,7 @@ fn vnode_to_string(buf : StringBuilder, vnode : VNode) -> Unit {
 ///|
 fn children_to_string(buf : StringBuilder, children : Children[VNode]) -> Unit {
   match children {
+    RawHtml(s) => buf.write_string(s)
     Array(arr) =>
       for child in arr {
         vnode_to_string(buf, child)
