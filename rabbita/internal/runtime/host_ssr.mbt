@@ -10,8 +10,7 @@ struct SSRHost {
 }
 
 ///|
-fn SSRHost::add_transcript(self : Self, key : Json, value : Json) -> Unit {
-  let key = Json::stringify(key)
+fn SSRHost::add_transcript(self : Self, key : String, value : Json) -> Unit {
   match self.transcript.get(key) {
     Some(arr) => arr.push(value)
     None => self.transcript[key] = [value]
@@ -84,7 +83,7 @@ async fn SSRHost::drain_task(host : Self) -> Unit {
       } noraise {
         None => ()
         Ready((value, cmd)) => {
-          try runner.describe(extension) catch {
+          try runner.identify(extension) catch {
             Unhandled => ()
           } noraise {
             key => host.add_transcript(key, value)
@@ -98,7 +97,7 @@ async fn SSRHost::drain_task(host : Self) -> Unit {
               error => raise error
             } noraise {
               (value, cmd) => {
-                try runner.describe(extension) catch {
+                try runner.identify(extension) catch {
                   Unhandled => ()
                 } noraise {
                   key => host.add_transcript(key, value)

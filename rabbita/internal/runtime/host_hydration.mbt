@@ -93,8 +93,7 @@ fn HydrationHost::request_task(host : Self) -> Unit {
       }
       try {
         let runner = @cmd.runner(host, op)
-        let json = runner.describe(extension)
-        let key = json.stringify()
+        let key = runner.identify(extension)
         let values = host.transcript
           .get(key)
           .unwrap_or_error(@cmd.HydrateExn::Fallback)

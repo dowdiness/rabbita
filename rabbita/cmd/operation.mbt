@@ -3,7 +3,7 @@ struct Op {
   mut invoke : (Extension, &Context) -> OpCont[Cmd] raise Unhandled
   mut settle : (Extension, &Context) -> OpCont[(Json, Cmd)] raise Unhandled
   mut resume_ : (Extension, Json, &Context) -> Cmd raise HydrateExn
-  mut describe : (Extension) -> Json raise Unhandled
+  mut identify : (Extension) -> String raise Unhandled
   mut debug : (Extension) -> Repr raise Unhandled
 }
 
@@ -33,7 +33,7 @@ pub(all) extenum Extension {}
 let default_handler : Op = {
   resume_: (_, _, _) => raise Unhandled,
   settle: (_, _) => raise Unhandled,
-  describe: _ => raise Unhandled,
+  identify: _ => raise Unhandled,
   debug: _ => raise Unhandled,
   invoke: (_, _) => raise Unhandled,
 }
@@ -83,11 +83,11 @@ pub fn Op::on_settle(
 }
 
 ///|
-pub fn Op::on_describe(
+pub fn Op::on_identify(
   self : Self,
-  describe : (Extension) -> Json raise Unhandled,
+  identify : (Extension) -> String raise Unhandled,
 ) -> Unit {
-  self.describe = describe
+  self.identify = identify
 }
 
 ///|
@@ -148,11 +148,11 @@ pub fn Runner::resume_(
 }
 
 ///|
-pub fn Runner::describe(
+pub fn Runner::identify(
   runner : Runner,
   extension : Extension,
-) -> Json raise Unhandled {
-  (runner.0.describe)(extension)
+) -> String raise Unhandled {
+  (runner.0.identify)(extension)
 }
 
 ///|

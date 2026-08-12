@@ -57,7 +57,7 @@ pub(all) struct Injector[Arg]((Arg) -> Cmd)
 type Op
 pub fn Op::Op() -> Self
 pub fn Op::on_debug(Self, (Extension) -> @debug.Repr raise Unhandled) -> Unit
-pub fn Op::on_describe(Self, (Extension) -> Json raise Unhandled) -> Unit
+pub fn Op::on_identify(Self, (Extension) -> String raise Unhandled) -> Unit
 pub fn Op::on_invoke(Self, (Extension, &Context) -> OpCont[Cmd] raise Unhandled) -> Unit
 pub fn Op::on_resume(Self, (Extension, Json, &Context) -> Cmd raise HydrateExn) -> Unit
 pub fn Op::on_settle(Self, (Extension, &Context) -> OpCont[(Json, Cmd)] raise Unhandled) -> Unit
@@ -72,7 +72,7 @@ pub(all) enum OpCont[T] {
 }
 
 type Runner
-pub fn Runner::describe(Self, Extension) -> Json raise Unhandled
+pub fn Runner::identify(Self, Extension) -> String raise Unhandled
 pub fn Runner::invoke(Self, Extension, &Context) -> OpCont[Cmd] raise Unhandled
 pub fn Runner::resume_(Self, Extension, Json, &Context) -> Cmd raise HydrateExn
 pub fn Runner::settle(Self, Extension, &Context) -> OpCont[(Json, Cmd)] raise Unhandled

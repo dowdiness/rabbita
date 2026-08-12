@@ -23,57 +23,52 @@ priv enum RequestResult {
 
 ///|
 let op : @cmd.Op = @cmd.Op()
-  ..on_describe(extension => {
-    fn describe_expect(expect : Expecting) -> Json raise @cmd.Unhandled {
+  ..on_identify(extension => {
+    fn identify(
+      http_method : String,
+      url : String,
+      body : Body,
+      expect : Expecting,
+    ) -> String raise @cmd.Unhandled {
+      let hasher = Hasher(seed=0)
+      hasher.combine_string(http_method)
+      hasher.combine_char('\u{0000}')
+      hasher.combine_string(url)
+      hasher.combine_char('\u{0000}')
+      match body {
+        Json(json) => {
+          hasher.combine_int(0)
+          hasher.combine_string(json.stringify())
+        }
+        Text(text) => {
+          hasher.combine_int(1)
+          hasher.combine_string(text)
+        }
+        BytesBody(content_type, bytes) => {
+          hasher.combine_int(2)
+          hasher.combine_string(content_type)
+          hasher.combine_char('\u{0000}')
+          hasher.combine_bytes(bytes)
+        }
+        BlobBody(_, _) => raise Unhandled
+        Empty => hasher.combine_int(3)
+      }
       match expect {
-        Json(_) => "json"
-        Text(_) => "text"
-        Bytes(_) => "bytes"
+        Json(_) => hasher.combine_int(0)
+        Text(_) => hasher.combine_int(1)
+        Bytes(_) => hasher.combine_int(2)
         Blob(_) => raise @cmd.Unhandled::Unhandled
       }
-    }
-
-    fn describe_body(body : Body) -> Json raise @cmd.Unhandled {
-      match body {
-        Json(json) => { "kind": "json", "value": json }
-        Text(text) => { "kind": "text", "value": text }
-        BytesBody(content_type, bytes) =>
-          {
-            "kind": "bytes",
-            "content_type": content_type,
-            "value": ToJson::to_json(bytes),
-          }
-        BlobBody(_, _) => raise Unhandled
-        Empty => { "kind": "empty" }
-      }
+      let hash = hasher.finalize().reinterpret_as_uint().to_string(radix=16)
+      "\{http_method} \{url} \{hash}"
     }
 
     match extension {
-      Get(url, expect) =>
-        { "url": url, "method": "GET", "expect": describe_expect(expect) }
-      Delete(url, expect) =>
-        { "url": url, "method": "DELETE", "expect": describe_expect(expect) }
-      Post(url, body, expect) =>
-        {
-          "url": url,
-          "method": "POST",
-          "body": describe_body(body),
-          "expect": describe_expect(expect),
-        }
-      Put(url, body, expect) =>
-        {
-          "url": url,
-          "method": "PUT",
-          "body": describe_body(body),
-          "expect": describe_expect(expect),
-        }
-      Patch(url, body, expect) =>
-        {
-          "url": url,
-          "method": "PATCH",
-          "body": describe_body(body),
-          "expect": describe_expect(expect),
-        }
+      Get(url, expect) => identify("GET", url, Empty, expect)
+      Delete(url, expect) => identify("DELETE", url, Empty, expect)
+      Post(url, body, expect) => identify("POST", url, body, expect)
+      Put(url, body, expect) => identify("PUT", url, body, expect)
+      Patch(url, body, expect) => identify("PATCH", url, body, expect)
       _ => raise Unhandled
     }
   })
