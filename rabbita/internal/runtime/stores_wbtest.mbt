@@ -132,12 +132,106 @@ fn cleanup_test_sub(on_unload : () -> Unit) -> @sub.Sub {
 
 ///|
 #cfg(target="js")
-fn cleanup_test_sandbox() -> Sandbox {
-  let sandbox = Sandbox::new()
-  // State initialization drains an empty command and would otherwise schedule
-  // a browser paint. These tests only exercise store lifecycle behavior.
-  sandbox.paint_scheduled = true
-  sandbox
+struct StoreTestHost {
+  task_queue : Queue[(@cmd.Op, @cmd.Extension)]
+  mut draining : Bool
+  mut async_tasks : Int
+  mut unhandled_tasks : Int
+}
+
+///|
+#cfg(target="js")
+fn StoreTestHost::new() -> StoreTestHost {
+  { task_queue: Queue([]), draining: false, async_tasks: 0, unhandled_tasks: 0 }
+}
+
+///|
+#cfg(target="js")
+fn StoreTestHost::drain(self : Self) -> Unit {
+  guard !self.draining else { return }
+  self.draining = true
+  while self.task_queue.pop() is Some((op, extension)) {
+    try @cmd.invoke(@key.key, op, extension, self) catch {
+      Unhandled => self.unhandled_tasks += 1
+    } noraise {
+      None => ()
+      Ready(cmd) => @cmd.Scheduler::queue_command(self, cmd)
+      Async(_) => self.async_tasks += 1
+      AfterLayout(f) => @cmd.Scheduler::queue_command(self, f())
+      LegacyEffect(_, f) => f(self)
+    }
+  }
+  self.draining = false
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Context for StoreTestHost with fn get_origin(_self) {
+  "http://localhost"
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Context for StoreTestHost with fn inject_url_changed(_self, _url) {
+  @cmd.none
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Context for StoreTestHost with fn inject_url_request(_self, _url) {
+  @cmd.none
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Scheduler for StoreTestHost with fn queue_command(self, cmd) {
+  for task in @cmd.flatten(@key.key, cmd) {
+    self.task_queue.push(task)
+  }
+  self.drain()
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Scheduler for StoreTestHost with fn set_url_changed_injector(
+  _self,
+  _injector,
+) {
+  ignore((_self, _injector))
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Scheduler for StoreTestHost with fn set_url_request_injector(
+  _self,
+  _injector,
+) {
+  ignore((_self, _injector))
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Host for StoreTestHost with fn flush(_self) {
+  ignore(_self)
+}
+
+///|
+#cfg(target="js")
+impl @cmd.Host for StoreTestHost with fn cleanup(_self) {
+  ignore(_self)
+}
+
+///|
+#cfg(target="js")
+fn with_store_test_host(run : (StoreTestHost) -> Unit raise) -> Unit raise {
+  let host = StoreTestHost::new()
+  ambient_host.protect(Some(host), () => run(host))
+  if host.async_tasks != 0 {
+    fail("store test unexpectedly scheduled an async task")
+  }
+  if host.unhandled_tasks != 0 {
+    fail("store test encountered an unhandled command")
+  }
 }
 
 ///|
@@ -145,136 +239,137 @@ fn cleanup_test_sandbox() -> Sandbox {
 fn exercise_subscription_across_model_update(
   subscription : (Bool) -> @sub.Sub,
   fire : () -> Unit,
-) -> Unit {
-  let sandbox = cleanup_test_sandbox()
-  // A production sandbox enables draining after it has been initialized. These
-  // tests have no mounted view, so use the test window's synchronous microtask.
-  sandbox.drain_scheduled = false
-  let mut update_model = () => ()
-  let (branch, set_branch) = @duplix.input(CleanupBranch::Active)
-  let state = branch.switch(branch => {
-    match branch {
-      Active => {
-        let (model, emit) : (@duplix.Node[Bool], @cmd.Emit[Unit]) = sandbox.create_state_machine(
-          _ => (false, @cmd.none),
-          (_, _, _) => (true, @cmd.none),
-          subscriptions=(model, _) => subscription(model),
-        )
-        update_model = () => sandbox.add(emit(()))
-        model
+) -> Unit raise {
+  with_store_test_host(host => {
+    let mut update_model = () => ()
+    let (branch, set_branch) = @duplix.input(CleanupBranch::Active)
+    let state = branch.switch(branch => {
+      match branch {
+        Active => {
+          let (model, emit) : (@duplix.Node[Bool], @cmd.Emit[Unit]) = create_state_machine(
+            _ => (false, @cmd.none),
+            (_, _, _) => (true, @cmd.none),
+            subscriptions=(model, _) => subscription(model),
+          )
+          update_model = () => @cmd.Scheduler::add(host, emit(()))
+          model
+        }
+        Inactive => @duplix.constant(false)
       }
-      Inactive => @duplix.constant(false)
-    }
-  })
+    })
 
-  // Install the subscription and observe its callback under the initial model.
-  ignore(state.read())
-  fire()
-  // Retain the resource across a model update, then observe the refreshed callback.
-  update_model()
-  fire()
-  // Dispose the component scope so the retained resource is unloaded.
-  set_branch(Inactive)
-  ignore(state.read())
+    // Install the subscription and observe its callback under the initial model.
+    ignore(state.read())
+    fire()
+    // Retain the resource across a model update, then observe the refreshed callback.
+    update_model()
+    fire()
+    // Dispose the component scope so the retained resource is unloaded.
+    set_branch(Inactive)
+    ignore(state.read())
+  })
 }
 
 ///|
 #cfg(target="js")
 test "state machine unloads subscriptions when its component scope is disposed" {
-  let sandbox = cleanup_test_sandbox()
-  let mut unloads = 0
-  let subscription = cleanup_test_sub(() => unloads += 1)
-  let (branch, set_branch) = @duplix.input(CleanupBranch::Active)
-  let state = branch.switch(branch => {
-    match branch {
-      Active => {
-        let (model, _) : (@duplix.Node[Int], @cmd.Emit[Unit]) = sandbox.create_state_machine(
-          _ => (0, @cmd.none),
-          (model, _, _) => (model, @cmd.none),
-          subscriptions=(_, _) => subscription,
-        )
-        model
+  with_store_test_host(_ => {
+    let mut unloads = 0
+    let subscription = cleanup_test_sub(() => unloads += 1)
+    let (branch, set_branch) = @duplix.input(CleanupBranch::Active)
+    let state = branch.switch(branch => {
+      match branch {
+        Active => {
+          let (model, _) : (@duplix.Node[Int], @cmd.Emit[Unit]) = create_state_machine(
+            _ => (0, @cmd.none),
+            (model, _, _) => (model, @cmd.none),
+            subscriptions=(_, _) => subscription,
+          )
+          model
+        }
+        Inactive => @duplix.constant(0)
       }
-      Inactive => @duplix.constant(0)
-    }
-  })
+    })
 
-  inspect(state.read(), content="0")
-  inspect(unloads, content="0")
-  set_branch(Inactive)
-  inspect(state.read(), content="0")
-  inspect(unloads, content="1")
+    inspect(state.read(), content="0")
+    inspect(unloads, content="0")
+    set_branch(Inactive)
+    inspect(state.read(), content="0")
+    inspect(unloads, content="1")
+  })
 }
 
 ///|
 #cfg(target="js")
 test "state machine with input unloads subscriptions when disposed" {
-  let sandbox = cleanup_test_sandbox()
-  let mut unloads = 0
-  let subscription = cleanup_test_sub(() => unloads += 1)
-  let (input, _) = @duplix.input("input")
-  let (branch, set_branch) = @duplix.input(CleanupBranch::Active)
-  let state = branch.switch(branch => {
-    match branch {
-      Active => {
-        let (model, _) : (@duplix.Node[Int], @cmd.Emit[Unit]) = sandbox.create_state_machine_with_input(
-          (_, _) => (0, @cmd.none),
-          (model, _, _, _) => (model, @cmd.none),
-          subscriptions=(_, _, _) => subscription,
-          input,
-        )
-        model
+  with_store_test_host(_ => {
+    let mut unloads = 0
+    let subscription = cleanup_test_sub(() => unloads += 1)
+    let (input, _) = @duplix.input("input")
+    let (branch, set_branch) = @duplix.input(CleanupBranch::Active)
+    let state = branch.switch(branch => {
+      match branch {
+        Active => {
+          let (model, _) : (@duplix.Node[Int], @cmd.Emit[Unit]) = create_state_machine_with_input(
+            (_, _) => (0, @cmd.none),
+            (model, _, _, _) => (model, @cmd.none),
+            subscriptions=(_, _, _) => subscription,
+            input,
+          )
+          model
+        }
+        Inactive => @duplix.constant(0)
       }
-      Inactive => @duplix.constant(0)
-    }
-  })
+    })
 
-  inspect(state.read(), content="0")
-  inspect(unloads, content="0")
-  set_branch(Inactive)
-  inspect(state.read(), content="0")
-  inspect(unloads, content="1")
+    inspect(state.read(), content="0")
+    inspect(unloads, content="0")
+    set_branch(Inactive)
+    inspect(state.read(), content="0")
+    inspect(unloads, content="1")
+  })
 }
 
 ///|
 #cfg(target="js")
 test "diff_subs refreshes a retained subscription without replacing it" {
-  let callbacks : Array[String] = []
-  let mut unloads = 0
-  let mut unexpected_loads = 0
-  let mut current_tagger = () => callbacks.push("old")
-  let running : @sub.RunningSub = {
-    unload: _ => unloads += 1,
-    update_tagger: payload => {
-      guard payload is TaggerRefreshPayload(next_tagger) else { return }
-      current_tagger = next_tagger
-    },
-  }
-  let old_subs = { "tagger-refresh-test": running }
-  let new_subs : Map[String, (Error, @sub.SubLoader)] = {
-    "tagger-refresh-test": (
-      TaggerRefreshPayload(() => callbacks.push("new")),
-      @sub.SubLoader((_, _) => {
-        unexpected_loads += 1
-        None
-      }),
-    ),
-  }
-  let sandbox = cleanup_test_sandbox()
+  with_store_test_host(host => {
+    let callbacks : Array[String] = []
+    let mut unloads = 0
+    let mut unexpected_loads = 0
+    let mut current_tagger = () => callbacks.push("old")
+    let running : @sub.RunningSub = {
+      unload: _ => unloads += 1,
+      update_tagger: payload => {
+        guard payload is TaggerRefreshPayload(next_tagger) else { return }
+        current_tagger = next_tagger
+      },
+    }
+    let old_subs = { "tagger-refresh-test": running }
+    let new_subs : Map[String, (Error, @sub.SubLoader)] = {
+      "tagger-refresh-test": (
+        TaggerRefreshPayload(() => callbacks.push("new")),
+        SubLoader((_, _) => {
+          unexpected_loads += 1
+          None
+        }),
+      ),
+    }
 
-  current_tagger()
-  let retained = diff_subs(old_subs, new_subs, sandbox)
-  current_tagger()
-  assert_eq(callbacks, ["old", "new"])
-  inspect(unexpected_loads, content="0")
-  guard retained.get("tagger-refresh-test") is Some(retained_running) else {
-    fail("expected the subscription with the matching key to be retained")
-  }
-  assert_true(physical_equal(running, retained_running))
-  inspect(unloads, content="0")
+    current_tagger()
+    let retained = diff_subs(old_subs, new_subs, host)
+    current_tagger()
+    assert_eq(callbacks, ["old", "new"])
+    inspect(unexpected_loads, content="0")
+    guard retained.get("tagger-refresh-test") is Some(retained_running) else {
+      fail("expected the subscription with the matching key to be retained")
+    }
+    assert_true(physical_equal(running, retained_running))
+    inspect(unloads, content="0")
 
-  ignore(diff_subs(retained, Map([]), sandbox))
-  inspect(unloads, content="1")
+    ignore(diff_subs(retained, Map([]), host))
+    inspect(unloads, content="1")
+  })
 }
 
 ///|
