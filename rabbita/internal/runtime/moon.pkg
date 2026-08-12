@@ -5,6 +5,9 @@ import {
   "moonbit-community/rabbita/cmd",
   "moonbit-community/rabbita/sub",
   "moonbitlang/core/queue",
+  "moonbitlang/core/json",
+  "moonbitlang/async/js_async",
+  "moonbitlang/async",
   "moonbit-community/rabbita/internal/key",
   "moonbit-community/rabbita/internal/any",
   "moonbit-community/rabbita/internal/slotmap",
@@ -14,3 +17,11 @@ import {
 warnings = "-unused_package"
 
 supported_targets = "js+native+wasm"
+
+options(
+  targets: {
+    "host_browser.mbt": [ "js" ],
+    "host_hydration.mbt": [ "js" ],
+    "host_ssr.mbt": [ "wasm", "native" ],
+  },
+)

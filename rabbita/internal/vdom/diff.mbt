@@ -8,7 +8,7 @@ struct VDom {
 
 ///|
 #cfg(not(target="js"))
-struct VDom {
+pub struct VDom {
   mut vnode : VNode
 }
 

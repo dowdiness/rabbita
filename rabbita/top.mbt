@@ -3,13 +3,10 @@
 pub using @cmd {perform, attempt, effect}
 
 ///|
-pub using @cmd {delay}
+pub using @cmd {none, batch, delay, type Cmd}
 
 ///|
-pub using @cmd {none, batch}
-
-///|
-pub type Cmd = @cmd.Cmd
+using @cmd {trait Host}
 
 ///|
 pub using @html {type Html}
@@ -57,39 +54,31 @@ pub fn[Model : Eq, Msg] elmish(
 /// routing is configured, the current URL is also emitted on mount.
 #cfg(target="js")
 pub fn App::mount(self : Self, element_id : String) -> Unit {
-  let sandbox = @runtime.Sandbox::new()
-  sandbox.spawn_bg = fn(task) { @js_async.Promise::from_async(task) |> ignore }
-
-  let output = ambient_graph.protect(Some(Graph(sandbox)), self.builder)
-  let vnode = output.map(html => html.0)
-  sandbox.initialize(vnode.0, target_element_id=element_id, url="")
-  sandbox.drain_task()
-  sandbox.flush()
+  let host = @runtime.BrowserHost(element_id~, () => {
+    let output = (self.builder)()
+    output.map(html => html.to_virtual_dom()).0
+  })
+  Host::flush(host)
 }
 
 ///|
 #cfg(not(target="js"))
 pub async fn App::render(self : Self, url~ : String) -> String {
-  let sandbox = @runtime.Sandbox::new()
-  let output = ambient_graph.protect(Some(Graph(sandbox)), self.builder)
-  @async.with_task_group(group => {
-    sandbox.spawn_bg = fn(task) { group.spawn_bg(task) }
-    sandbox.initialize(output.0.map(html => html.0), url~)
-    sandbox.drain_task()
+  let host = @runtime.SSRHost(url~, () => {
+    let output = (self.builder)()
+    output.0.map(html => html.0)
   })
-  sandbox.render_hydrate_html().unwrap()
+  let html = host.render_to_string()
+  host.cleanup()
+  html
 }
 
 ///|
 #cfg(target="js")
 pub fn App::hydrate(self : Self) -> Unit {
-  let sandbox = @runtime.Sandbox::new()
-  let output = ambient_graph.protect(Some(Graph(sandbox)), self.builder)
-  sandbox.spawn_bg = fn(task) { @js_async.Promise::from_async(task) |> ignore }
-  sandbox.initialize_with_hydration(
-    output.0.map(x => x.to_virtual_dom()),
-    url="",
-  )
-  sandbox.drain_task()
-  sandbox.flush()
+  let host = @runtime.HydrationHost(() => {
+    let output = (self.builder)()
+    output.0.map(x => x.to_virtual_dom())
+  })
+  Host::flush(host)
 }

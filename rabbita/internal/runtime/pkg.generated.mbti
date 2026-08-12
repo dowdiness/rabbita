@@ -8,27 +8,30 @@ import {
   "moonbit-community/rabbita/internal/slotmap",
   "moonbit-community/rabbita/internal/vdom",
   "moonbit-community/rabbita/sub",
+  "moonbitlang/core/ref",
 }
 
 // Values
+pub let ambient_host : @ref.Ref[&@cmd.Host?]
+
+pub fn[Model : Eq, Msg] create_state_machine((@cmd.Emit[Msg]) -> (Model, @cmd.Cmd), (Model, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, @cmd.Emit[Msg]) -> @sub.Sub) -> (@duplix.Node[Model], @cmd.Emit[Msg])
+
+pub fn[Model : Eq, Msg, Input : Eq] create_state_machine_with_input((@cmd.Emit[Msg], Input) -> (Model, @cmd.Cmd), (Model, Input, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, Input, @cmd.Emit[Msg]) -> @sub.Sub, @duplix.Node[Input]) -> (@duplix.Node[Model], @cmd.Emit[Msg])
 
 // Errors
 
 // Types and methods
-pub(all) struct Sandbox {
-  mut spawn_bg : (async () -> Unit) -> Unit
-  // private fields
-}
-pub fn[Model : Eq, Msg] Sandbox::create_state_machine(Self, (@cmd.Emit[Msg]) -> (Model, @cmd.Cmd), (Model, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, @cmd.Emit[Msg]) -> @sub.Sub) -> (@duplix.Node[Model], @cmd.Emit[Msg])
-pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(Self, (@cmd.Emit[Msg], Input) -> (Model, @cmd.Cmd), (Model, Input, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, Input, @cmd.Emit[Msg]) -> @sub.Sub, @duplix.Node[Input]) -> (@duplix.Node[Model], @cmd.Emit[Msg])
-pub fn Sandbox::drain_task(Self) -> Unit
-pub fn Sandbox::flush(Self) -> Unit
-pub fn Sandbox::initialize(Self, @duplix.Node[@vdom.VNode], target_element_id? : String, url~ : String) -> Unit
-pub fn Sandbox::initialize_with_hydration(Self, @duplix.Node[@vdom.VNode], url~ : String) -> Unit
-pub fn Sandbox::new() -> Self
-pub fn Sandbox::render_hydrate_html(Self) -> String?
-pub impl @cmd.Context for Sandbox
-pub impl @cmd.Scheduler for Sandbox
+type BrowserHost
+pub fn BrowserHost::BrowserHost(element_id? : String, () -> @duplix.Node[@vdom.VNode]) -> Self
+pub impl @cmd.Context for BrowserHost
+pub impl @cmd.Host for BrowserHost
+pub impl @cmd.Scheduler for BrowserHost
+
+type HydrationHost
+pub fn HydrationHost::HydrationHost(() -> @duplix.Node[@vdom.VNode]) -> Self
+pub impl @cmd.Context for HydrationHost
+pub impl @cmd.Host for HydrationHost
+pub impl @cmd.Scheduler for HydrationHost
 
 pub(all) struct Store {
   id : @slotmap.Id

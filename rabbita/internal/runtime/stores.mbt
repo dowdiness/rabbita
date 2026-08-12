@@ -52,12 +52,12 @@ fn cleanup_store(
 }
 
 ///|
-pub fn[Model : Eq, Msg] Sandbox::create_state_machine(
-  scheduler : Sandbox,
+pub fn[Model : Eq, Msg] create_state_machine(
   initialize : (Emit[Msg]) -> (Model, Cmd),
   update : (Model, Msg, Emit[Msg]) -> (Model, Cmd),
   subscriptions? : (Model, Emit[Msg]) -> Sub,
 ) -> (@duplix.Node[Model], Emit[Msg]) {
+  let scheduler : &Scheduler = ambient_host.val.unwrap()
   let id = global_stores.allocate()
   let emit = msg => op.request(Message(id, @any.erase(msg)))
   let mut sub_map : Map[String, @sub.RunningSub] = Map([])
@@ -95,13 +95,13 @@ pub fn[Model : Eq, Msg] Sandbox::create_state_machine(
 }
 
 ///|
-pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(
-  scheduler : Sandbox,
+pub fn[Model : Eq, Msg, Input : Eq] create_state_machine_with_input(
   initialize : (Emit[Msg], Input) -> (Model, Cmd),
   update : (Model, Input, Msg, Emit[Msg]) -> (Model, Cmd),
   subscriptions? : (Model, Input, Emit[Msg]) -> Sub,
   input : @duplix.Node[Input],
 ) -> (@duplix.Node[Model], Emit[Msg]) {
+  let scheduler : &Scheduler = ambient_host.val.unwrap()
   let id = global_stores.allocate()
   let emit = (msg : Msg) => op.request(Message(id, @any.erase(msg)))
   let mut sub_map : Map[String, @sub.RunningSub] = Map([])

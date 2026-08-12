@@ -117,6 +117,45 @@ pub fn Op::request(self : Self, extension : Extension) -> Cmd {
 }
 
 ///|
+struct Runner(Op)
+
+///|
+pub fn Runner::invoke(
+  runner : Self,
+  extension : Extension,
+  context : &Context,
+) -> OpCont[Cmd] raise Unhandled {
+  (runner.0.invoke)(extension, context)
+}
+
+///|
+pub fn Runner::settle(
+  runner : Runner,
+  extension : Extension,
+  context : &Context,
+) -> OpCont[(Json, Cmd)] raise Unhandled {
+  (runner.0.settle)(extension, context)
+}
+
+///|
+pub fn Runner::resume_(
+  runner : Runner,
+  extension : Extension,
+  value : Json,
+  context : &Context,
+) -> Cmd raise HydrateExn {
+  (runner.0.resume_)(extension, value, context)
+}
+
+///|
+pub fn Runner::describe(
+  runner : Runner,
+  extension : Extension,
+) -> Json raise Unhandled {
+  (runner.0.describe)(extension)
+}
+
+///|
 #doc(hidden)
 pub fn invoke(
   _ : @key.Key,

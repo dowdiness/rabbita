@@ -253,3 +253,183 @@ fn init {
     }
   })
 }
+
+///|
+#cfg(not(target="js"))
+fn[T : ToJson] settle_result(
+  result : Result[T, HttpError],
+  on_result : (Result[T, HttpError]) -> Cmd,
+) -> (Json, Cmd) raise @cmd.HydrateExn {
+  match result {
+    Err(_) => raise @cmd.HydrateExn::Fallback
+    Ok(_) => (ToJson::to_json(result), on_result(result))
+  }
+}
+
+///|
+#cfg(not(target="js"))
+fn settle_resolve_request_url(
+  url : String,
+  current_url : String,
+) -> String raise {
+  if url.contains("://") {
+    return url
+  }
+  let current = @url.parse(current_url)
+  let protocol = match current.protocol {
+    Http => "http"
+    Https => "https"
+    Other(protocol) => fail("unsupported HTTP protocol: \{protocol}")
+  }
+  let port = if current.port is Some(port) { ":\{port}" } else { "" }
+  let origin = "\{protocol}://\{current.host}\{port}"
+  if url.is_empty() {
+    current_url
+  } else if url.has_prefix("//") {
+    "\{protocol}:\{url}"
+  } else if url.has_prefix("/") {
+    "\{origin}\{url}"
+  } else if url.has_prefix("?") || url.has_prefix("#") {
+    "\{origin}/\{current.path}\{url}"
+  } else {
+    let directory = if current.path.rev_split_once("/") is Some((directory, _)) {
+      if directory.is_empty() {
+        "/"
+      } else {
+        "/\{directory}/"
+      }
+    } else {
+      "/"
+    }
+    "\{origin}\{directory}\{url}"
+  }
+}
+
+///|
+#cfg(not(target="js"))
+fn settle_request_method(
+  http_method : String,
+) -> @async_http.RequestMethod raise @cmd.HydrateExn {
+  match http_method {
+    "GET" => @async_http.Get
+    "DELETE" => Delete
+    "POST" => Post
+    "PATCH" => Patch
+    "PUT" => Put
+    _ => raise @cmd.HydrateExn::Fallback
+  }
+}
+
+///|
+#cfg(not(target="js"))
+fn settle_request_target(url : String) -> (String, String) raise {
+  let parsed = @url.parse(url)
+  let protocol = match parsed.protocol {
+    Http => "http"
+    Https => "https"
+    Other(protocol) => fail("unsupported HTTP protocol: \{protocol}")
+  }
+  let port = if parsed.port is Some(port) { ":\{port}" } else { "" }
+  let query = if parsed.query is Some(query) { "?\{query}" } else { "" }
+  ("\{protocol}://\{parsed.host}\{port}", "/\{parsed.path}\{query}")
+}
+
+///|
+#cfg(not(target="js"))
+async fn settle_write_request_body(
+  client : @async_http.Client,
+  body : Body,
+) -> Unit {
+  match body {
+    Json(json) => client.write(json)
+    Text(text) => client.write(text)
+    BytesBody(_, bytes) => client.write(bytes)
+    BlobBody(_, blob) => client.write(blob.bytes())
+    Empty => ()
+  }
+}
+
+///|
+#cfg(not(target="js"))
+async fn settle_http_request(
+  url : String,
+  http_method : String,
+  body : Body,
+  expect : Expecting,
+  current_url : String,
+) -> (Json, Cmd) {
+  try {
+    if expect is Blob(_) {
+      raise @cmd.HydrateExn::Fallback
+    }
+    let url = settle_resolve_request_url(url, current_url)
+    let (base_url, path) = settle_request_target(url)
+    let headers : Map[String, String] = Map([])
+    match body {
+      Json(_) => headers["Content-Type"] = "application/json"
+      Text(_) => headers["Content-Type"] = "text/plain"
+      BytesBody(content_type, _) | BlobBody(content_type, _) =>
+        if !content_type.is_empty() {
+          headers["Content-Type"] = content_type
+        }
+      Empty => ()
+    }
+    let client = @async_http.Client(base_url)
+    defer client.close()
+    client.request(
+      settle_request_method(http_method),
+      path,
+      extra_headers=headers,
+    )
+    settle_write_request_body(client, body)
+    let response = client.end_request()
+    if response.code < 200 || response.code >= 300 {
+      raise @cmd.HydrateExn::Fallback
+    }
+    match expect {
+      Json(f) => {
+        let result : Result[Json, HttpError] = Ok(
+          @json.parse(client.read_all().text()),
+        )
+        settle_result(result, f)
+      }
+      Text(f) => {
+        let result : Result[String, HttpError] = Ok(client.read_all().text())
+        settle_result(result, f)
+      }
+      Bytes(f) => {
+        guard response.headers.get("content-type") is Some(content_type) else {
+          raise @cmd.HydrateExn::Fallback
+        }
+        let result : Result[(ContentType, Bytes), HttpError] = Ok(
+          (content_type, client.read_all().binary()),
+        )
+        settle_result(result, f)
+      }
+      Blob(_) => raise @cmd.HydrateExn::Fallback
+    }
+  } catch {
+    error if @async.is_cancellation_error(error) => raise error
+    @cmd.HydrateExn::Fallback => raise @cmd.HydrateExn::Fallback
+    _ => raise @cmd.HydrateExn::Fallback
+  }
+}
+
+///|
+#cfg(not(target="js"))
+fn init {
+  op.on_settle((extension, context) => {
+    guard extension is Request(url~, http_method~, body~, expect~) else {
+      raise Unhandled
+    }
+    Async(() => {
+      settle_http_request(
+        url,
+        http_method,
+        body,
+        expect,
+        context.get_current_url(),
+      )
+    })
+  })
+}

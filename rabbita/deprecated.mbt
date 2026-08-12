@@ -51,9 +51,9 @@ fn[Model, Msg] make_deprecated_cell(
       None => create_state(DeprecatedModel(model), update=compat_update)
     }
     actual_emit.val = Some(new_emit)
-    let scheduler = ambient_graph.val.unwrap().sandbox
+    let scheduler = @runtime.ambient_host.val.unwrap()
     while pending.pop() is Some(msg) {
-      scheduler.add(new_emit(msg))
+      @cmd.Scheduler::queue_command(scheduler, new_emit(msg))
     }
     model.map(model => view(emit, model.0))
   }

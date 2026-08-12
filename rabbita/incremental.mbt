@@ -5,24 +5,11 @@ pub using @common {trait Enumerate}
 using @vector {type Vector}
 
 ///|
-let ambient_graph : Ref[Graph?] = Ref(None)
-
-///|
 /// A lazily evaluated value in Rabbita's incremental graph.
 ///
 /// Derived values are recomputed on demand after one of their dependencies
 /// changes.
 struct Val[A](@duplix.Node[A])
-
-///|
-priv struct Graph {
-  sandbox : @runtime.Sandbox
-}
-
-///|
-fn Graph::Graph(sandbox : @runtime.Sandbox) -> Self {
-  { sandbox, }
-}
 
 ///|
 /// Creates an incremental value by applying `f` to `a`.
@@ -340,8 +327,7 @@ pub fn[Model : Eq, Msg] create_pure_state(
   model : Model,
   update~ : (Model, Msg) -> Model,
 ) -> (Val[Model], Emit[Msg]) {
-  let graph = ambient_graph.val.unwrap()
-  let (node, emit) = graph.sandbox.create_state_machine(_ => (model, none), (
+  let (node, emit) = @runtime.create_state_machine(_ => (model, none), (
     model,
     msg,
     _,
@@ -381,8 +367,7 @@ pub fn[Model : Eq, Msg] create_state(
   update~ : (Model, Msg, Emit[Msg]) -> (Model, Cmd),
   subscriptions? : (Model, Emit[Msg]) -> @sub.Sub,
 ) -> (Val[Model], Emit[Msg]) {
-  let graph = ambient_graph.val.unwrap()
-  let (node, emit) = graph.sandbox.create_state_machine(
+  let (node, emit) = @runtime.create_state_machine(
     _ => (model, none),
     update,
     subscriptions?,
@@ -584,12 +569,7 @@ pub fn[Model : Eq, Msg] create_state_with_init(
   update~ : (Model, Msg, Emit[Msg]) -> (Model, Cmd),
   subscriptions? : (Model, Emit[Msg]) -> @sub.Sub,
 ) -> (Val[Model], Emit[Msg]) {
-  let graph = ambient_graph.val.unwrap()
-  let (node, emit) = graph.sandbox.create_state_machine(
-    init,
-    update,
-    subscriptions?,
-  )
+  let (node, emit) = @runtime.create_state_machine(init, update, subscriptions?)
   (node, emit)
 }
 
@@ -636,8 +616,7 @@ pub fn[Model : Eq, Msg, Input : Eq] create_state_with_input(
   subscriptions? : (Model, Input, Emit[Msg]) -> @sub.Sub,
   input~ : Val[Input],
 ) -> (Val[Model], Emit[Msg]) {
-  let graph = ambient_graph.val.unwrap()
-  let (node, emit) = graph.sandbox.create_state_machine_with_input(
+  let (node, emit) = @runtime.create_state_machine_with_input(
     init,
     update,
     subscriptions?,

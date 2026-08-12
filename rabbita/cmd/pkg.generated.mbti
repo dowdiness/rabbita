@@ -25,6 +25,8 @@ pub let none : Cmd
 
 pub fn[A] perform((A) -> Cmd, async () -> A noraise) -> Cmd
 
+pub fn runner(&Host, Op) -> Runner
+
 // Errors
 pub(all) suberror HydrateExn {
   Unhandled
@@ -69,6 +71,12 @@ pub(all) enum OpCont[T] {
   LegacyEffect(EffectKind, (&Scheduler) -> Unit)
 }
 
+type Runner
+pub fn Runner::describe(Self, Extension) -> Json raise Unhandled
+pub fn Runner::invoke(Self, Extension, &Context) -> OpCont[Cmd] raise Unhandled
+pub fn Runner::resume_(Self, Extension, Json, &Context) -> Cmd raise HydrateExn
+pub fn Runner::settle(Self, Extension, &Context) -> OpCont[(Json, Cmd)] raise Unhandled
+
 // Extensible enum extensions
 pub extenum Extension += {
   Delay(Cmd, Int)
@@ -84,6 +92,11 @@ pub(open) trait Context {
   fn get_current_url(Self) -> String
   fn inject_url_changed(Self, String) -> Cmd
   fn inject_url_request(Self, String) -> Cmd
+}
+
+pub(open) trait Host : Scheduler {
+  fn flush(Self) -> Unit
+  fn cleanup(Self) -> Unit
 }
 
 pub(open) trait Scheduler : Context {
