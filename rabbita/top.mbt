@@ -63,8 +63,26 @@ pub fn App::mount(self : Self, element_id : String) -> Unit {
 
 ///|
 #cfg(not(target="js"))
+fn split_url(url : String) -> (String, String) raise {
+  let { protocol, host, path, port, query, fragment } = @url.parse(url)
+  let protocol = match protocol {
+    Http => "http"
+    Https => "https"
+    Other(p) => p
+  }
+  let port = if port is Some(p) { ":\{p}" } else { "" }
+  let query = if query is Some(q) { "?\{q}" } else { "" }
+  let fragment = if fragment is Some(f) { "#\{f}" } else { "" }
+  let origin = "\{protocol}://\{host}\{port}"
+  let path = "/\{path}\{query}\{fragment}"
+  (origin, path)
+}
+
+///|
+#cfg(not(target="js"))
 pub async fn App::render(self : Self, url~ : String) -> String {
-  let host = @runtime.SSRHost(url~, () => {
+  let (origin, path) = split_url(url)
+  let host = @runtime.SSRHost(origin~, path~, () => {
     let output = (self.builder)()
     output.0.map(html => html.0)
   })

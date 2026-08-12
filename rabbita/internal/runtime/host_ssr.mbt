@@ -5,7 +5,8 @@ struct SSRHost {
   mut document : @vdom.VDom?
   mut url_request : @cmd.Injector[String]
   mut url_changed : @cmd.Injector[String]
-  current_url : String
+  origin : String
+  path : String
 }
 
 ///|
@@ -40,17 +41,22 @@ pub fn SSRHost::render_to_string(self : Self) -> String {
 }
 
 ///|
-pub async fn SSRHost::SSRHost(url~ : String, builder : GraphBuilder) -> Self {
+pub async fn SSRHost::SSRHost(
+  origin~ : String,
+  path~ : String,
+  builder : GraphBuilder,
+) -> Self {
   let host = SSRHost::{
     task_queue: Queue([]),
     document: None,
     url_request: _ => @cmd.none,
     url_changed: _ => @cmd.none,
-    current_url: url,
+    origin: origin.trim_end(chars="/").to_owned(),
+    path,
     transcript: Map([]),
   }
   let output = ambient_host.protect(Some(host), builder)
-  let cmd = Context::inject_url_changed(host, url)
+  let cmd = Context::inject_url_changed(host, host.origin + host.path)
   Scheduler::queue_command(host, cmd)
   while !host.task_queue.is_empty() {
     host.drain_task()
@@ -140,8 +146,8 @@ pub impl Scheduler for SSRHost with fn set_url_request_injector(self, injector) 
 }
 
 ///|
-pub impl Context for SSRHost with fn get_current_url(self) {
-  self.current_url
+pub impl Context for SSRHost with fn get_origin(self) {
+  self.origin
 }
 
 ///|

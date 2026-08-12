@@ -1,6 +1,6 @@
 ///|
 pub(open) trait Context {
-  fn get_current_url(Self) -> String
+  fn get_origin(Self) -> String
   fn inject_url_changed(Self, String) -> Cmd
   fn inject_url_request(Self, String) -> Cmd
 }
@@ -21,7 +21,7 @@ pub(open) trait Host: Scheduler {
 
 ///|
 pub extend &Scheduler with Context::{
-  get_current_url,
+  get_origin,
   inject_url_changed,
   inject_url_request,
 }

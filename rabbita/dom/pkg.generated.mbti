@@ -651,6 +651,7 @@ pub fn Window::inner_width(Self) -> Int
 pub fn Window::load_url(Self, String) -> Unit
 pub fn Window::match_media(Self, String) -> MediaQueryList
 pub fn Window::navigator(Self) -> Navigator
+pub fn Window::origin(Self) -> String
 pub fn Window::push_url(Self, String) -> Unit
 pub fn Window::queue_microtask(Self, () -> Unit) -> Unit
 pub fn Window::reload_url(Self) -> Unit

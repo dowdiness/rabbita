@@ -130,8 +130,8 @@ pub impl Scheduler for BrowserHost with fn set_url_request_injector(
 }
 
 ///|
-pub impl Context for BrowserHost with fn get_current_url(_self) {
-  @dom.window().current_url()
+pub impl Context for BrowserHost with fn get_origin(_self) {
+  @dom.window().origin()
 }
 
 ///|

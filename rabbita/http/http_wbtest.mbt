@@ -51,7 +51,7 @@ extern "js" fn restore_fetch(fetch : Fetch) -> Unit =
 
 ///|
 struct TestScheduler {
-  current_url_value : String
+  origin_value : String
   commands : Array[Cmd]
 }
 
@@ -77,8 +77,8 @@ impl @cmd.Scheduler for TestScheduler with fn set_url_request_injector(
 }
 
 ///|
-impl @cmd.Context for TestScheduler with fn get_current_url(self) {
-  self.current_url_value
+impl @cmd.Context for TestScheduler with fn get_origin(self) {
+  self.origin_value
 }
 
 ///|
@@ -111,7 +111,7 @@ async fn TestScheduler::run(self : TestScheduler) -> Unit {
 ///|
 async fn invoke_text_request(
   url : String,
-  current_url : String,
+  origin : String,
 ) -> Result[String, HttpError] {
   let mut result : Result[String, HttpError]? = None
   let cmd = op.request(
@@ -125,10 +125,7 @@ async fn invoke_text_request(
       }),
     ),
   )
-  let scheduler : TestScheduler = {
-    current_url_value: current_url,
-    commands: [cmd],
-  }
+  let scheduler : TestScheduler = { origin_value: origin, commands: [cmd] }
   scheduler.run()
   result.unwrap()
 }
@@ -138,22 +135,20 @@ async test "async HTTP rejects non-2xx responses before reading the body" {
   let original_fetch = install_mock_fetch()
   defer restore_fetch(original_fetch)
   guard invoke_text_request(
-      "https://example.test/not-found", "https://example.test/app/page",
+      "https://example.test/not-found", "https://example.test",
     )
     is Err(RequestError(not_found)) else {
     fail("expected 404 response to fail")
   }
   assert_eq(not_found, "HTTP 404 Not Found")
   guard invoke_text_request(
-      "https://example.test/server-error", "https://example.test/app/page",
+      "https://example.test/server-error", "https://example.test",
     )
     is Err(RequestError(server_error)) else {
     fail("expected 500 response to fail")
   }
   assert_eq(server_error, "HTTP 500 Internal Server Error")
-  guard invoke_text_request(
-      "https://example.test/ok", "https://example.test/app/page",
-    )
+  guard invoke_text_request("https://example.test/ok", "https://example.test")
     is Ok(text) else {
     fail("expected successful response")
   }
@@ -161,17 +156,15 @@ async test "async HTTP rejects non-2xx responses before reading the body" {
 }
 
 ///|
-async test "async HTTP resolves relative request URLs from the scheduler URL" {
+async test "async HTTP resolves relative request URLs from the origin" {
   let original_fetch = install_mock_fetch()
   defer restore_fetch(original_fetch)
-  guard invoke_text_request("/ok", "https://example.test/app/page")
-    is Ok(root_relative) else {
+  guard invoke_text_request("/ok", "https://example.test") is Ok(root_relative) else {
     fail("expected root-relative request to succeed")
   }
   assert_eq(root_relative, "success")
-  guard invoke_text_request("ok", "https://example.test/app/page")
-    is Ok(path_relative) else {
+  guard invoke_text_request("ok", "https://example.test") is Ok(path_relative) else {
     fail("expected path-relative request to succeed")
   }
-  assert_eq(path_relative, "relative success")
+  assert_eq(path_relative, "success")
 }

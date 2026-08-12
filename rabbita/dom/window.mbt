@@ -120,6 +120,11 @@ pub extern "js" fn Window::current_url(self : Self) -> String =
 
 ///|
 #cfg(target="js")
+pub extern "js" fn Window::origin(self : Self) -> String =
+  #| (self) => { return self.location.origin; }
+
+///|
+#cfg(target="js")
 pub extern "js" fn Window::replace_url(self : Self, url : String) =
   #| (self,url) => { self.history.replaceState(null, '', url); }
 

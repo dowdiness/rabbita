@@ -140,8 +140,8 @@ pub impl Scheduler for HydrationHost with fn set_url_request_injector(
 }
 
 ///|
-pub impl Context for HydrationHost with fn get_current_url(self) {
-  self.browser.get_current_url()
+pub impl Context for HydrationHost with fn get_origin(self) {
+  self.browser.get_origin()
 }
 
 ///|

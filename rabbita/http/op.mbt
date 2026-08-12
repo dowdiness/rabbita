@@ -95,6 +95,18 @@ let op : @cmd.Op = @cmd.Op()
   ..on_invoke((_, _) => None)
 
 ///|
+fn resolve_request_url(url : String, origin : String) -> String {
+  if url.contains("://") {
+    return url
+  }
+  if url.has_prefix("/") {
+    "\{origin}\{url}"
+  } else {
+    "\{origin}/\{url}"
+  }
+}
+
+///|
 fn init {
   op.on_invoke((extension, context) => {
     guard extension is Request(url~, http_method~, body~, expect~) else {
@@ -110,41 +122,14 @@ fn init {
     }
 
     if !url.contains("://") {
-      let cmd = try {
-        let current_url = context.get_current_url()
-        let current = @url.parse(current_url)
-        let protocol = match current.protocol {
-          @url.Http => "http"
-          Https => "https"
-          Other(protocol) => fail("unsupported HTTP protocol: \{protocol}")
-        }
-        let port = if current.port is Some(port) { ":\{port}" } else { "" }
-        let origin = "\{protocol}://\{current.host}\{port}"
-        let resolved_url = if url.is_empty() {
-          current_url
-        } else if url.has_prefix("//") {
-          "\{protocol}:\{url}"
-        } else if url.has_prefix("/") {
-          "\{origin}\{url}"
-        } else if url.has_prefix("?") || url.has_prefix("#") {
-          "\{origin}/\{current.path}\{url}"
-        } else {
-          let directory = if current.path.rev_split_once("/")
-            is Some((directory, _)) {
-            if directory.is_empty() {
-              "/"
-            } else {
-              "/\{directory}/"
-            }
-          } else {
-            "/"
-          }
-          "\{origin}\{directory}\{url}"
-        }
-        op.request(Request(url=resolved_url, http_method~, body~, expect~))
-      } catch {
-        error => fail_request(RequestError(error.to_string()))
-      }
+      let cmd = op.request(
+        Request(
+          url=resolve_request_url(url, context.get_origin()),
+          http_method~,
+          body~,
+          expect~,
+        ),
+      )
       Ready(cmd)
     } else {
       Async(() => {
@@ -268,41 +253,8 @@ fn[T : ToJson] settle_result(
 
 ///|
 #cfg(not(target="js"))
-fn settle_resolve_request_url(
-  url : String,
-  current_url : String,
-) -> String raise {
-  if url.contains("://") {
-    return url
-  }
-  let current = @url.parse(current_url)
-  let protocol = match current.protocol {
-    Http => "http"
-    Https => "https"
-    Other(protocol) => fail("unsupported HTTP protocol: \{protocol}")
-  }
-  let port = if current.port is Some(port) { ":\{port}" } else { "" }
-  let origin = "\{protocol}://\{current.host}\{port}"
-  if url.is_empty() {
-    current_url
-  } else if url.has_prefix("//") {
-    "\{protocol}:\{url}"
-  } else if url.has_prefix("/") {
-    "\{origin}\{url}"
-  } else if url.has_prefix("?") || url.has_prefix("#") {
-    "\{origin}/\{current.path}\{url}"
-  } else {
-    let directory = if current.path.rev_split_once("/") is Some((directory, _)) {
-      if directory.is_empty() {
-        "/"
-      } else {
-        "/\{directory}/"
-      }
-    } else {
-      "/"
-    }
-    "\{origin}\{directory}\{url}"
-  }
+fn settle_resolve_request_url(url : String, origin : String) -> String {
+  resolve_request_url(url, origin)
 }
 
 ///|
@@ -356,13 +308,13 @@ async fn settle_http_request(
   http_method : String,
   body : Body,
   expect : Expecting,
-  current_url : String,
+  origin : String,
 ) -> (Json, Cmd) {
   try {
     if expect is Blob(_) {
       raise @cmd.HydrateExn::Fallback
     }
-    let url = settle_resolve_request_url(url, current_url)
+    let url = settle_resolve_request_url(url, origin)
     let (base_url, path) = settle_request_target(url)
     let headers : Map[String, String] = Map([])
     match body {
@@ -423,13 +375,7 @@ fn init {
       raise Unhandled
     }
     Async(() => {
-      settle_http_request(
-        url,
-        http_method,
-        body,
-        expect,
-        context.get_current_url(),
-      )
+      settle_http_request(url, http_method, body, expect, context.get_origin())
     })
   })
 }
