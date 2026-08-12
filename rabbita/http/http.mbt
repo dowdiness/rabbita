@@ -12,17 +12,10 @@ using @json {trait FromJson}
 pub type ContentType = String
 
 ///|
-struct Request {
-  url : String
-  http_method : String
-  body : Body
-}
+struct Request((Expecting) -> @cmd.Extension)
 
 ///|
-struct RequestWithBody {
-  url : String
-  http_method : String
-}
+struct RequestWithBody((Body, Expecting) -> @cmd.Extension)
 
 ///|
 /// Encode `x` as JSON and attach it to the request body.
@@ -34,7 +27,7 @@ pub fn[T : ToJson] RequestWithBody::with_json(
   self : RequestWithBody,
   x : T,
 ) -> Request {
-  { url: self.url, http_method: self.http_method, body: Json(x.to_json()) }
+  Request(expect => self(Json(x.to_json()), expect))
 }
 
 ///|
@@ -47,7 +40,7 @@ pub fn RequestWithBody::with_text(
   self : RequestWithBody,
   x : String,
 ) -> Request {
-  { url: self.url, http_method: self.http_method, body: Text(x) }
+  Request(expect => self(Text(x), expect))
 }
 
 ///|
@@ -63,11 +56,7 @@ pub fn RequestWithBody::with_bytes(
   content_type : ContentType,
   x : Bytes,
 ) -> Request {
-  {
-    url: self.url,
-    http_method: self.http_method,
-    body: BytesBody(content_type, x),
-  }
+  Request(expect => self(BytesBody(content_type, x), expect))
 }
 
 ///|
@@ -79,11 +68,7 @@ pub fn RequestWithBody::with_bytes(
 /// @http.post("api/file").with_blob(file).expect_empty(x => emit(FileSent(x)))
 /// ```
 pub fn RequestWithBody::with_blob(self : RequestWithBody, x : Blob) -> Request {
-  {
-    url: self.url,
-    http_method: self.http_method,
-    body: BlobBody(x.get_type(), x),
-  }
+  Request(expect => self(BlobBody(x.get_type(), x), expect))
 }
 
 ///|
@@ -118,7 +103,7 @@ pub fn[T : FromJson] RequestWithBody::expect_json(
   self : RequestWithBody,
   msg : Emit[Result[T, Error]],
 ) -> Cmd {
-  { url: self.url, http_method: self.http_method, body: Empty }.expect_json(msg)
+  Request(expect => self(Empty, expect)).expect_json(msg)
 }
 
 ///|
@@ -153,7 +138,7 @@ pub fn RequestWithBody::expect_blob(
   self : RequestWithBody,
   msg : Emit[Result[Blob, Error]],
 ) -> Cmd {
-  { url: self.url, http_method: self.http_method, body: Empty }.expect_blob(msg)
+  Request(expect => self(Empty, expect)).expect_blob(msg)
 }
 
 ///|
@@ -188,9 +173,7 @@ pub fn RequestWithBody::expect_bytes(
   self : RequestWithBody,
   msg : Emit[Result[(ContentType, Bytes), Error]],
 ) -> Cmd {
-  { url: self.url, http_method: self.http_method, body: Empty }.expect_bytes(
-    msg,
-  )
+  Request(expect => self(Empty, expect)).expect_bytes(msg)
 }
 
 ///|
@@ -225,7 +208,7 @@ pub fn RequestWithBody::expect_text(
   self : RequestWithBody,
   msg : Emit[Result[String, Error]],
 ) -> Cmd {
-  { url: self.url, http_method: self.http_method, body: Empty }.expect_text(msg)
+  Request(expect => self(Empty, expect)).expect_text(msg)
 }
 
 ///|
@@ -260,9 +243,7 @@ pub fn RequestWithBody::expect_empty(
   self : RequestWithBody,
   msg : Emit[Error?],
 ) -> Cmd {
-  { url: self.url, http_method: self.http_method, body: Empty }.expect_empty(
-    msg,
-  )
+  Request(expect => self(Empty, expect)).expect_empty(msg)
 }
 
 ///|
@@ -296,11 +277,8 @@ pub fn[T : FromJson] Request::expect_json(
   msg : Emit[Result[T, Error]],
 ) -> Cmd {
   op.request(
-    Request(
-      url=self.url,
-      http_method=self.http_method,
-      body=self.body,
-      expect=Json(result => {
+    self(
+      Json(result => {
         match result {
           Ok(json) =>
             try @json.from_json(json) catch {
@@ -346,11 +324,8 @@ pub fn Request::expect_blob(
   msg : Emit[Result[Blob, Error]],
 ) -> Cmd {
   op.request(
-    Request(
-      url=self.url,
-      http_method=self.http_method,
-      body=self.body,
-      expect=Blob(result => {
+    self(
+      Blob(result => {
         match result {
           Ok(blob) => msg(Ok(blob))
           Err(error) => msg(Err(error))
@@ -391,11 +366,8 @@ pub fn Request::expect_bytes(
   msg : Emit[Result[(ContentType, Bytes), Error]],
 ) -> Cmd {
   op.request(
-    Request(
-      url=self.url,
-      http_method=self.http_method,
-      body=self.body,
-      expect=Bytes(result => {
+    self(
+      Bytes(result => {
         match result {
           Ok(value) => msg(Ok(value))
           Err(error) => msg(Err(error))
@@ -436,11 +408,8 @@ pub fn Request::expect_text(
   msg : Emit[Result[String, Error]],
 ) -> Cmd {
   op.request(
-    Request(
-      url=self.url,
-      http_method=self.http_method,
-      body=self.body,
-      expect=Text(result => {
+    self(
+      Text(result => {
         match result {
           Ok(text) => msg(Ok(text))
           Err(error) => msg(Err(error))
@@ -478,11 +447,8 @@ pub fn Request::expect_text(
 ///     ```
 pub fn Request::expect_empty(self : Request, msg : Emit[Error?]) -> Cmd {
   op.request(
-    Request(
-      url=self.url,
-      http_method=self.http_method,
-      body=self.body,
-      expect=Text(result => {
+    self(
+      Text(result => {
         match result {
           Ok(_) => msg(None)
           Err(error) => msg(Some(error))
@@ -523,7 +489,7 @@ pub fn Request::expect_empty(self : Request, msg : Emit[Error?]) -> Cmd {
 ///     }
 ///     ```
 pub fn get(url : String) -> Request {
-  { url, http_method: "GET", body: Empty }
+  Request(expect => Get(url, expect))
 }
 
 ///|
@@ -557,7 +523,7 @@ pub fn get(url : String) -> Request {
 ///     }
 ///     ```
 pub fn delete(url : String) -> Request {
-  { url, http_method: "DELETE", body: Empty }
+  Request(expect => Delete(url, expect))
 }
 
 ///|
@@ -597,7 +563,7 @@ pub fn delete(url : String) -> Request {
 ///     }
 ///     ```
 pub fn post(url : String) -> RequestWithBody {
-  { url, http_method: "POST" }
+  RequestWithBody((body, expect) => Post(url, body, expect))
 }
 
 ///|
@@ -637,7 +603,7 @@ pub fn post(url : String) -> RequestWithBody {
 ///     }
 ///     ```
 pub fn patch(url : String) -> RequestWithBody {
-  { url, http_method: "PATCH" }
+  RequestWithBody((body, expect) => Patch(url, body, expect))
 }
 
 ///|
@@ -679,7 +645,7 @@ pub fn patch(url : String) -> RequestWithBody {
 ///     }
 ///     ```
 pub fn put(url : String) -> RequestWithBody {
-  { url, http_method: "PUT" }
+  RequestWithBody((body, expect) => Put(url, body, expect))
 }
 
 ///|

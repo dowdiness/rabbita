@@ -26,12 +26,6 @@ extern "js" fn install_mock_fetch() -> Fetch =
   #|         statusText: "OK",
   #|         body: "success",
   #|       },
-  #|       "/app/ok": {
-  #|         ok: true,
-  #|         status: 200,
-  #|         statusText: "OK",
-  #|         body: "relative success",
-  #|       },
   #|     };
   #|     const response = responses[new URL(url).pathname];
   #|     return Promise.resolve(new Response(response.body, {
@@ -115,11 +109,9 @@ async fn invoke_text_request(
 ) -> Result[String, HttpError] {
   let mut result : Result[String, HttpError]? = None
   let cmd = op.request(
-    Request(
-      url~,
-      http_method="GET",
-      body=Empty,
-      expect=Text(value => {
+    Get(
+      url,
+      Text(value => {
         result = Some(value)
         @cmd.none
       }),
@@ -131,7 +123,7 @@ async fn invoke_text_request(
 }
 
 ///|
-async test "async HTTP rejects non-2xx responses before reading the body" {
+async test "async HTTP reports non-2xx responses" {
   let original_fetch = install_mock_fetch()
   defer restore_fetch(original_fetch)
   guard invoke_text_request(
