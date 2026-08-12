@@ -1,5 +1,5 @@
 ///|
-using @runtime {type VNode}
+using @runtime {type Children, type VNode}
 
 ///|
 using @cmd {type Cmd, type Emit}
@@ -22,15 +22,31 @@ pub fn Html::from_vnode(vdom : @runtime.VNode) -> Html {
 ///|
 pub fn[C : IsChildren] node(tag : String, attrs : Attrs, children : C) -> Html {
   let props = attrs.to_props()
-  VNode::elem(tag, props, children.to_children())
+  if props.props.get("innerHTML") is Some(String(raw_html)) {
+    let props = props.copy()
+    props.props.remove("innerHTML")
+    VNode::elem(tag, props, @runtime.RawHtml(raw_html))
+  } else {
+    VNode::elem(tag, props, children.to_children())
+  }
 }
 
 ///|
-fn resolve_attrs(attrs : Attrs?) -> Attrs {
-  match attrs {
+fn[C : IsChildren] resolve_attrs(
+  attrs : Attrs?,
+  children : C,
+) -> (Attrs, Children[VNode]) {
+  let attrs = match attrs {
     Some(a) => a.copy()
     None => Attrs::build()
   }
+  let children = if attrs.0.props.get("innerHTML") is Some(String(raw_html)) {
+    attrs.0.props.remove("innerHTML")
+    @runtime.RawHtml(raw_html)
+  } else {
+    children.to_children()
+  }
+  (attrs, children)
 }
 
 ///|
@@ -59,7 +75,7 @@ pub fn[C : IsChildren] button(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_type(type_, attrs)
@@ -71,7 +87,7 @@ pub fn[C : IsChildren] button(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("button", attrs, children)
+  VNode::elem("button", attrs.to_props(), children)
 }
 
 ///|
@@ -86,14 +102,14 @@ pub fn[C : IsChildren] h1(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_cite(cite, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("h1", attrs, children)
+  VNode::elem("h1", attrs.to_props(), children)
 }
 
 ///|
@@ -107,13 +123,13 @@ pub fn[C : IsChildren] h2(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("h2", attrs, children)
+  VNode::elem("h2", attrs.to_props(), children)
 }
 
 ///|
@@ -127,13 +143,13 @@ pub fn[C : IsChildren] h3(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("h3", attrs, children)
+  VNode::elem("h3", attrs.to_props(), children)
 }
 
 ///|
@@ -147,13 +163,13 @@ pub fn[C : IsChildren] h4(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("h4", attrs, children)
+  VNode::elem("h4", attrs.to_props(), children)
 }
 
 ///|
@@ -167,13 +183,13 @@ pub fn[C : IsChildren] h5(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("h5", attrs, children)
+  VNode::elem("h5", attrs.to_props(), children)
 }
 
 ///|
@@ -187,13 +203,13 @@ pub fn[C : IsChildren] h6(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("h6", attrs, children)
+  VNode::elem("h6", attrs.to_props(), children)
 }
 
 // ------ grouping content ------
@@ -215,7 +231,7 @@ pub fn[C : IsChildren] div(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_click(on_click, attrs)
@@ -227,7 +243,7 @@ pub fn[C : IsChildren] div(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("div", attrs, children)
+  VNode::elem("div", attrs.to_props(), children)
 }
 
 ///|
@@ -241,13 +257,13 @@ pub fn[C : IsChildren] p(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("p", attrs, children)
+  VNode::elem("p", attrs.to_props(), children)
 }
 
 ///|
@@ -260,13 +276,13 @@ pub fn hr(
   hidden? : Bool,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("hr", attrs, ([] : Array[Html]))
+  VNode::elem("hr", attrs.to_props(), children)
 }
 
 ///|
@@ -280,13 +296,13 @@ pub fn[C : IsChildren] pre(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("pre", attrs, children)
+  VNode::elem("pre", attrs.to_props(), children)
 }
 
 ///|
@@ -300,13 +316,13 @@ pub fn[C : IsChildren] blockquote(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("blockquote", attrs, children)
+  VNode::elem("blockquote", attrs.to_props(), children)
 }
 
 ///|
@@ -320,13 +336,13 @@ pub fn[C : IsChildren] section(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("section", attrs, children)
+  VNode::elem("section", attrs.to_props(), children)
 }
 
 ///|
@@ -340,13 +356,13 @@ pub fn[C : IsChildren] header(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("header", attrs, children)
+  VNode::elem("header", attrs.to_props(), children)
 }
 
 ///|
@@ -360,13 +376,13 @@ pub fn[C : IsChildren] footer(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("footer", attrs, children)
+  VNode::elem("footer", attrs.to_props(), children)
 }
 
 ///|
@@ -380,13 +396,13 @@ pub fn[C : IsChildren] nav(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("nav", attrs, children)
+  VNode::elem("nav", attrs.to_props(), children)
 }
 
 ///|
@@ -400,13 +416,13 @@ pub fn[C : IsChildren] main_(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("main", attrs, children)
+  VNode::elem("main", attrs.to_props(), children)
 }
 
 ///|
@@ -420,13 +436,13 @@ pub fn[C : IsChildren] article(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("article", attrs, children)
+  VNode::elem("article", attrs.to_props(), children)
 }
 
 ///|
@@ -440,13 +456,13 @@ pub fn[C : IsChildren] aside(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("aside", attrs, children)
+  VNode::elem("aside", attrs.to_props(), children)
 }
 
 ///|
@@ -460,13 +476,13 @@ pub fn[C : IsChildren] figure(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("figure", attrs, children)
+  VNode::elem("figure", attrs.to_props(), children)
 }
 
 ///|
@@ -480,13 +496,13 @@ pub fn[C : IsChildren] figcaption(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("figcaption", attrs, children)
+  VNode::elem("figcaption", attrs.to_props(), children)
 }
 
 ///|
@@ -501,14 +517,14 @@ pub fn[C : IsChildren] details(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_open(open, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("details", attrs, children)
+  VNode::elem("details", attrs.to_props(), children)
 }
 
 ///|
@@ -522,13 +538,13 @@ pub fn[C : IsChildren] summary(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("summary", attrs, children)
+  VNode::elem("summary", attrs.to_props(), children)
 }
 
 // ---- text ----
@@ -544,13 +560,13 @@ pub fn[C : IsChildren] span(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("span", attrs, children)
+  VNode::elem("span", attrs.to_props(), children)
 }
 
 ///|
@@ -564,13 +580,13 @@ pub fn[C : IsChildren] small(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("small", attrs, children)
+  VNode::elem("small", attrs.to_props(), children)
 }
 
 ///|
@@ -584,13 +600,13 @@ pub fn[C : IsChildren] mark(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("mark", attrs, children)
+  VNode::elem("mark", attrs.to_props(), children)
 }
 
 ///|
@@ -604,13 +620,13 @@ pub fn[C : IsChildren] del(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("del", attrs, children)
+  VNode::elem("del", attrs.to_props(), children)
 }
 
 ///|
@@ -624,13 +640,13 @@ pub fn[C : IsChildren] ins(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("ins", attrs, children)
+  VNode::elem("ins", attrs.to_props(), children)
 }
 
 ///|
@@ -644,13 +660,13 @@ pub fn[C : IsChildren] s(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("s", attrs, children)
+  VNode::elem("s", attrs.to_props(), children)
 }
 
 ///|
@@ -664,13 +680,13 @@ pub fn[C : IsChildren] cite(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("cite", attrs, children)
+  VNode::elem("cite", attrs.to_props(), children)
 }
 
 ///|
@@ -684,13 +700,13 @@ pub fn[C : IsChildren] q(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("q", attrs, children)
+  VNode::elem("q", attrs.to_props(), children)
 }
 
 ///|
@@ -704,13 +720,13 @@ pub fn[C : IsChildren] abbr(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("abbr", attrs, children)
+  VNode::elem("abbr", attrs.to_props(), children)
 }
 
 ///|
@@ -724,13 +740,13 @@ pub fn[C : IsChildren] kbd(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("kbd", attrs, children)
+  VNode::elem("kbd", attrs.to_props(), children)
 }
 
 ///|
@@ -744,13 +760,13 @@ pub fn[C : IsChildren] samp(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("samp", attrs, children)
+  VNode::elem("samp", attrs.to_props(), children)
 }
 
 ///|
@@ -764,13 +780,13 @@ pub fn[C : IsChildren] var_(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("var", attrs, children)
+  VNode::elem("var", attrs.to_props(), children)
 }
 
 ///|
@@ -785,14 +801,14 @@ pub fn[C : IsChildren] time(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_datetime(datetime, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("time", attrs, children)
+  VNode::elem("time", attrs.to_props(), children)
 }
 
 ///|
@@ -806,13 +822,13 @@ pub fn[C : IsChildren] address(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("address", attrs, children)
+  VNode::elem("address", attrs.to_props(), children)
 }
 
 ///|
@@ -849,7 +865,7 @@ pub fn[C : IsChildren] a(
   children : C,
   escape? : Bool = false,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   ignore(attrs.attribute("href", href))
@@ -859,7 +875,7 @@ pub fn[C : IsChildren] a(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  @runtime.VNode::link(attrs.to_props(), children.to_children(), escape~)
+  @runtime.VNode::link(attrs.to_props(), children, escape~)
 }
 
 ///|
@@ -873,13 +889,13 @@ pub fn[C : IsChildren] code(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("code", attrs, children)
+  VNode::elem("code", attrs.to_props(), children)
 }
 
 ///|
@@ -893,13 +909,13 @@ pub fn[C : IsChildren] em(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("em", attrs, children)
+  VNode::elem("em", attrs.to_props(), children)
 }
 
 ///|
@@ -913,13 +929,13 @@ pub fn[C : IsChildren] strong(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("strong", attrs, children)
+  VNode::elem("strong", attrs.to_props(), children)
 }
 
 ///|
@@ -933,13 +949,13 @@ pub fn[C : IsChildren] i(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("i", attrs, children)
+  VNode::elem("i", attrs.to_props(), children)
 }
 
 ///|
@@ -953,13 +969,13 @@ pub fn[C : IsChildren] b(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("b", attrs, children)
+  VNode::elem("b", attrs.to_props(), children)
 }
 
 ///|
@@ -973,13 +989,13 @@ pub fn[C : IsChildren] u(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("u", attrs, children)
+  VNode::elem("u", attrs.to_props(), children)
 }
 
 ///|
@@ -993,13 +1009,13 @@ pub fn[C : IsChildren] sub(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("sub", attrs, children)
+  VNode::elem("sub", attrs.to_props(), children)
 }
 
 ///|
@@ -1013,13 +1029,13 @@ pub fn[C : IsChildren] sup(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("sup", attrs, children)
+  VNode::elem("sup", attrs.to_props(), children)
 }
 
 ///|
@@ -1041,14 +1057,14 @@ pub fn[C : IsChildren] ul(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_click(on_click, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("ul", attrs, children)
+  VNode::elem("ul", attrs.to_props(), children)
 }
 
 ///|
@@ -1066,7 +1082,7 @@ pub fn[C : IsChildren] ol(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_reversed(reversed, attrs)
@@ -1074,7 +1090,7 @@ pub fn[C : IsChildren] ol(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("ol", attrs, children)
+  VNode::elem("ol", attrs.to_props(), children)
 }
 
 ///|
@@ -1090,7 +1106,7 @@ pub fn[C : IsChildren] li(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_click(on_click, attrs)
@@ -1098,7 +1114,7 @@ pub fn[C : IsChildren] li(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("li", attrs, children)
+  VNode::elem("li", attrs.to_props(), children)
 }
 
 ///|
@@ -1112,13 +1128,13 @@ pub fn[C : IsChildren] dl(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("dl", attrs, children)
+  VNode::elem("dl", attrs.to_props(), children)
 }
 
 ///|
@@ -1132,13 +1148,13 @@ pub fn[C : IsChildren] dt(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("dt", attrs, children)
+  VNode::elem("dt", attrs.to_props(), children)
 }
 
 ///|
@@ -1152,13 +1168,13 @@ pub fn[C : IsChildren] dd(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("dd", attrs, children)
+  VNode::elem("dd", attrs.to_props(), children)
 }
 
 // ---- embbded content ----
@@ -1181,7 +1197,7 @@ pub fn img(
   decoding? : String,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_hidden(hidden, attrs)
   push_src(src, attrs)
   push_alt(alt, attrs)
@@ -1195,7 +1211,7 @@ pub fn img(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("img", attrs, ([] : Array[Html]))
+  VNode::elem("img", attrs.to_props(), children)
 }
 
 ///|
@@ -1215,7 +1231,7 @@ pub fn iframe(
   allowfullscreen? : Bool,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_hidden(hidden, attrs)
   push_src(src, attrs)
   push_title(title, attrs)
@@ -1228,7 +1244,7 @@ pub fn iframe(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("iframe", attrs, ([] : Array[Html]))
+  VNode::elem("iframe", attrs.to_props(), children)
 }
 
 ///|
@@ -1248,7 +1264,7 @@ pub fn fencedframe(
   allowfullscreen? : Bool,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_hidden(hidden, attrs)
   push_src(src, attrs)
   push_title(title, attrs)
@@ -1261,7 +1277,7 @@ pub fn fencedframe(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("fencedframe", attrs, ([] : Array[Html]))
+  VNode::elem("fencedframe", attrs.to_props(), children)
 }
 
 // ---- inputs ----
@@ -1276,13 +1292,13 @@ pub fn br(
   hidden? : Bool,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("br", attrs, ([] : Array[Html]))
+  VNode::elem("br", attrs.to_props(), children)
 }
 
 ///|
@@ -1328,7 +1344,7 @@ pub fn[C : IsChildren] form(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_action(action, attrs)
@@ -1337,7 +1353,7 @@ pub fn[C : IsChildren] form(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("form", attrs, children)
+  VNode::elem("form", attrs.to_props(), children)
 }
 
 ///|
@@ -1352,14 +1368,14 @@ pub fn[C : IsChildren] label(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_for(for_, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("label", attrs, children)
+  VNode::elem("label", attrs.to_props(), children)
 }
 
 ///|
@@ -1375,7 +1391,7 @@ pub fn[C : IsChildren] fieldset(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_disabled(disabled, attrs)
@@ -1383,7 +1399,7 @@ pub fn[C : IsChildren] fieldset(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("fieldset", attrs, children)
+  VNode::elem("fieldset", attrs.to_props(), children)
 }
 
 ///|
@@ -1397,13 +1413,13 @@ pub fn[C : IsChildren] legend(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("legend", attrs, children)
+  VNode::elem("legend", attrs.to_props(), children)
 }
 
 ///|
@@ -1464,7 +1480,7 @@ pub fn input(
     Url => "url"
     Week => "week"
   }
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_required(required, attrs)
@@ -1496,7 +1512,7 @@ pub fn input(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("input", attrs, ([] : Array[Html]))
+  VNode::elem("input", attrs.to_props(), children)
 }
 
 ///|
@@ -1524,7 +1540,7 @@ pub fn[C : IsChildren] textarea(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_name(name, attrs)
@@ -1544,7 +1560,7 @@ pub fn[C : IsChildren] textarea(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("textarea", attrs, children)
+  VNode::elem("textarea", attrs.to_props(), children)
 }
 
 ///|
@@ -1566,7 +1582,7 @@ pub fn[C : IsChildren] select(
   children : C,
 ) -> Html {
   // TODO: support more attribute for select tag
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_disabled(disabled, attrs)
@@ -1579,7 +1595,7 @@ pub fn[C : IsChildren] select(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("select", attrs, children)
+  VNode::elem("select", attrs.to_props(), children)
 }
 
 ///|
@@ -1595,7 +1611,7 @@ pub fn[C : IsChildren] optgroup(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_label(label, attrs)
@@ -1603,7 +1619,7 @@ pub fn[C : IsChildren] optgroup(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("optgroup", attrs, children)
+  VNode::elem("optgroup", attrs.to_props(), children)
 }
 
 ///|
@@ -1623,7 +1639,7 @@ pub fn[C : IsChildren] option(
 ) -> Html {
   // TODO: support more attribute for option tag
 
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_label(label, attrs)
@@ -1633,7 +1649,7 @@ pub fn[C : IsChildren] option(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("option", attrs, children)
+  VNode::elem("option", attrs.to_props(), children)
 }
 
 ///|
@@ -1647,13 +1663,13 @@ pub fn[C : IsChildren] datalist(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("datalist", attrs, children)
+  VNode::elem("datalist", attrs.to_props(), children)
 }
 
 ///|
@@ -1669,7 +1685,7 @@ pub fn[C : IsChildren] output(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_name(name, attrs)
@@ -1677,7 +1693,7 @@ pub fn[C : IsChildren] output(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("output", attrs, children)
+  VNode::elem("output", attrs.to_props(), children)
 }
 
 ///|
@@ -1693,7 +1709,7 @@ pub fn[C : IsChildren] progress(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_value_attr_int(value, attrs)
@@ -1701,7 +1717,7 @@ pub fn[C : IsChildren] progress(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("progress", attrs, children)
+  VNode::elem("progress", attrs.to_props(), children)
 }
 
 ///|
@@ -1721,7 +1737,7 @@ pub fn[C : IsChildren] meter(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_value_attr_int(value, attrs)
@@ -1733,7 +1749,7 @@ pub fn[C : IsChildren] meter(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("meter", attrs, children)
+  VNode::elem("meter", attrs.to_props(), children)
 }
 
 // ///|
@@ -1760,13 +1776,13 @@ pub fn[C : IsChildren] table(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("table", attrs, children)
+  VNode::elem("table", attrs.to_props(), children)
 }
 
 ///|
@@ -1780,13 +1796,13 @@ pub fn[C : IsChildren] caption(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("caption", attrs, children)
+  VNode::elem("caption", attrs.to_props(), children)
 }
 
 ///|
@@ -1800,13 +1816,13 @@ pub fn[C : IsChildren] thead(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("thead", attrs, children)
+  VNode::elem("thead", attrs.to_props(), children)
 }
 
 ///|
@@ -1820,13 +1836,13 @@ pub fn[C : IsChildren] tbody(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("tbody", attrs, children)
+  VNode::elem("tbody", attrs.to_props(), children)
 }
 
 ///|
@@ -1840,14 +1856,14 @@ pub fn col(
   hidden? : Bool,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_span(span, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("col", attrs, ([] : Array[Html]))
+  VNode::elem("col", attrs.to_props(), children)
 }
 
 ///|
@@ -1862,14 +1878,14 @@ pub fn[C : IsChildren] colgroup(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_span(span, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("colgroup", attrs, children)
+  VNode::elem("colgroup", attrs.to_props(), children)
 }
 
 ///|
@@ -1883,13 +1899,13 @@ pub fn[C : IsChildren] tr(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("tr", attrs, children)
+  VNode::elem("tr", attrs.to_props(), children)
 }
 
 ///|
@@ -1906,7 +1922,7 @@ pub fn[C : IsChildren] td(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_colspan(colspan, attrs)
@@ -1915,7 +1931,7 @@ pub fn[C : IsChildren] td(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("td", attrs, children)
+  VNode::elem("td", attrs.to_props(), children)
 }
 
 ///|
@@ -1934,7 +1950,7 @@ pub fn[C : IsChildren] th(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_colspan(colspan, attrs)
@@ -1945,7 +1961,7 @@ pub fn[C : IsChildren] th(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("th", attrs, children)
+  VNode::elem("th", attrs.to_props(), children)
 }
 
 ///|
@@ -1959,13 +1975,13 @@ pub fn[C : IsChildren] tfoot(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("tfoot", attrs, children)
+  VNode::elem("tfoot", attrs.to_props(), children)
 }
 
 ///|
@@ -2042,7 +2058,7 @@ pub fn[C : IsChildren] dialog(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_open(open, attrs)
@@ -2052,7 +2068,7 @@ pub fn[C : IsChildren] dialog(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("dialog", attrs, children)
+  VNode::elem("dialog", attrs.to_props(), children)
 }
 
 // ---- document ----
@@ -2070,7 +2086,7 @@ pub fn[C : IsChildren] html(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_lang(lang, attrs)
   push_dir(dir, attrs)
@@ -2078,7 +2094,7 @@ pub fn[C : IsChildren] html(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("html", attrs, children)
+  VNode::elem("html", attrs.to_props(), children)
 }
 
 ///|
@@ -2092,13 +2108,13 @@ pub fn[C : IsChildren] head(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("head", attrs, children)
+  VNode::elem("head", attrs.to_props(), children)
 }
 
 ///|
@@ -2117,7 +2133,7 @@ pub fn[C : IsChildren] body(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_lang(lang, attrs)
   push_dir(dir, attrs)
@@ -2128,7 +2144,7 @@ pub fn[C : IsChildren] body(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("body", attrs, children)
+  VNode::elem("body", attrs.to_props(), children)
 }
 
 ///|
@@ -2142,13 +2158,13 @@ pub fn[C : IsChildren] title(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("title", attrs, children)
+  VNode::elem("title", attrs.to_props(), children)
 }
 
 ///|
@@ -2163,7 +2179,7 @@ pub fn base(
   target? : String,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_href(href, attrs)
@@ -2171,7 +2187,7 @@ pub fn base(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("base", attrs, ([] : Array[Html]))
+  VNode::elem("base", attrs.to_props(), children)
 }
 
 ///|
@@ -2188,7 +2204,7 @@ pub fn meta(
   http_equiv? : String,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_charset(charset, attrs)
@@ -2198,7 +2214,7 @@ pub fn meta(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("meta", attrs, ([] : Array[Html]))
+  VNode::elem("meta", attrs.to_props(), children)
 }
 
 ///|
@@ -2216,7 +2232,7 @@ pub fn link(
   sizes? : String,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_href(href, attrs)
@@ -2227,7 +2243,7 @@ pub fn link(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("link", attrs, ([] : Array[Html]))
+  VNode::elem("link", attrs.to_props(), children)
 }
 
 ///|
@@ -2241,13 +2257,13 @@ pub fn[C : IsChildren] style_tag(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("style", attrs, children)
+  VNode::elem("style", attrs.to_props(), children)
 }
 
 ///|
@@ -2265,7 +2281,7 @@ pub fn[C : IsChildren] script(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_src(src, attrs)
@@ -2275,7 +2291,7 @@ pub fn[C : IsChildren] script(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("script", attrs, children)
+  VNode::elem("script", attrs.to_props(), children)
 }
 
 ///|
@@ -2289,13 +2305,13 @@ pub fn[C : IsChildren] noscript(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("noscript", attrs, children)
+  VNode::elem("noscript", attrs.to_props(), children)
 }
 
 ///|
@@ -2309,13 +2325,13 @@ pub fn[C : IsChildren] template(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("template", attrs, children)
+  VNode::elem("template", attrs.to_props(), children)
 }
 
 ///|
@@ -2329,13 +2345,13 @@ pub fn[C : IsChildren] slot(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("slot", attrs, children)
+  VNode::elem("slot", attrs.to_props(), children)
 }
 
 // ---- inline text (attrs) ----
@@ -2351,13 +2367,13 @@ pub fn[C : IsChildren] data(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("data", attrs, children)
+  VNode::elem("data", attrs.to_props(), children)
 }
 
 ///|
@@ -2371,13 +2387,13 @@ pub fn[C : IsChildren] dfn(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("dfn", attrs, children)
+  VNode::elem("dfn", attrs.to_props(), children)
 }
 
 ///|
@@ -2391,13 +2407,13 @@ pub fn[C : IsChildren] bdi(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("bdi", attrs, children)
+  VNode::elem("bdi", attrs.to_props(), children)
 }
 
 ///|
@@ -2411,13 +2427,13 @@ pub fn[C : IsChildren] bdo(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("bdo", attrs, children)
+  VNode::elem("bdo", attrs.to_props(), children)
 }
 
 ///|
@@ -2431,13 +2447,13 @@ pub fn[C : IsChildren] ruby(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("ruby", attrs, children)
+  VNode::elem("ruby", attrs.to_props(), children)
 }
 
 ///|
@@ -2451,13 +2467,13 @@ pub fn[C : IsChildren] rt(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("rt", attrs, children)
+  VNode::elem("rt", attrs.to_props(), children)
 }
 
 ///|
@@ -2471,13 +2487,13 @@ pub fn[C : IsChildren] rp(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("rp", attrs, children)
+  VNode::elem("rp", attrs.to_props(), children)
 }
 
 ///|
@@ -2490,13 +2506,13 @@ pub fn wbr(
   hidden? : Bool,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("wbr", attrs, ([] : Array[Html]))
+  VNode::elem("wbr", attrs.to_props(), children)
 }
 
 // ---- sectioning (attrs) ----
@@ -2512,13 +2528,13 @@ pub fn[C : IsChildren] hgroup(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("hgroup", attrs, children)
+  VNode::elem("hgroup", attrs.to_props(), children)
 }
 
 ///|
@@ -2532,13 +2548,13 @@ pub fn[C : IsChildren] menu(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("menu", attrs, children)
+  VNode::elem("menu", attrs.to_props(), children)
 }
 
 // ---- embedded content (attrs) ----
@@ -2559,7 +2575,7 @@ pub fn[C : IsChildren] canvas(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_mousedown(on_mousedown, attrs)
@@ -2570,7 +2586,7 @@ pub fn[C : IsChildren] canvas(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("canvas", attrs, children)
+  VNode::elem("canvas", attrs.to_props(), children)
 }
 
 ///|
@@ -2584,13 +2600,13 @@ pub fn[C : IsChildren] svg(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("svg", attrs, children)
+  VNode::elem("svg", attrs.to_props(), children)
 }
 
 ///|
@@ -2604,13 +2620,13 @@ pub fn[C : IsChildren] math(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("math", attrs, children)
+  VNode::elem("math", attrs.to_props(), children)
 }
 
 ///|
@@ -2624,13 +2640,13 @@ pub fn[C : IsChildren] picture(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("picture", attrs, children)
+  VNode::elem("picture", attrs.to_props(), children)
 }
 
 ///|
@@ -2650,7 +2666,7 @@ pub fn[C : IsChildren] audio(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_src(src, attrs)
@@ -2662,7 +2678,7 @@ pub fn[C : IsChildren] audio(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("audio", attrs, children)
+  VNode::elem("audio", attrs.to_props(), children)
 }
 
 ///|
@@ -2683,7 +2699,7 @@ pub fn[C : IsChildren] video(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_src(src, attrs)
@@ -2696,7 +2712,7 @@ pub fn[C : IsChildren] video(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("video", attrs, children)
+  VNode::elem("video", attrs.to_props(), children)
 }
 
 ///|
@@ -2711,14 +2727,14 @@ pub fn[C : IsChildren] map(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_name(name, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("map", attrs, children)
+  VNode::elem("map", attrs.to_props(), children)
 }
 
 ///|
@@ -2736,7 +2752,7 @@ pub fn area(
   target? : String,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_alt(alt, attrs)
@@ -2747,7 +2763,7 @@ pub fn area(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("area", attrs, ([] : Array[Html]))
+  VNode::elem("area", attrs.to_props(), children)
 }
 
 ///|
@@ -2765,7 +2781,7 @@ pub fn source(
   sizes? : String,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_src(src, attrs)
@@ -2776,7 +2792,7 @@ pub fn source(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("source", attrs, ([] : Array[Html]))
+  VNode::elem("source", attrs.to_props(), children)
 }
 
 ///|
@@ -2794,7 +2810,7 @@ pub fn track(
   src? : String,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_kind(kind, attrs)
@@ -2805,7 +2821,7 @@ pub fn track(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("track", attrs, ([] : Array[Html]))
+  VNode::elem("track", attrs.to_props(), children)
 }
 
 ///|
@@ -2819,13 +2835,13 @@ pub fn[C : IsChildren] object(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("object", attrs, children)
+  VNode::elem("object", attrs.to_props(), children)
 }
 
 ///|
@@ -2838,13 +2854,13 @@ pub fn embed(
   hidden? : Bool,
   attrs? : Attrs,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, ([] : Array[Html]))
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("embed", attrs, ([] : Array[Html]))
+  VNode::elem("embed", attrs.to_props(), children)
 }
 
 // ---- additional elements ----
@@ -2860,13 +2876,13 @@ pub fn[C : IsChildren] search(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("search", attrs, children)
+  VNode::elem("search", attrs.to_props(), children)
 }
 
 ///|
@@ -2880,13 +2896,13 @@ pub fn[C : IsChildren] selectedcontent(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("selectedcontent", attrs, children)
+  VNode::elem("selectedcontent", attrs.to_props(), children)
 }
 
 ///|
@@ -2900,11 +2916,11 @@ pub fn[C : IsChildren] geolocation(
   attrs? : Attrs,
   children : C,
 ) -> Html {
-  let attrs = resolve_attrs(attrs)
+  let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
   push_hidden(hidden, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  node("geolocation", attrs, children)
+  VNode::elem("geolocation", attrs.to_props(), children)
 }

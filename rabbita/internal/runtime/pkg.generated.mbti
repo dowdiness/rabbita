@@ -20,6 +20,7 @@ pub fn server_side_render(() -> VNode) -> String
 pub(all) enum Children[T] {
   Array(Array[T])
   Map(Map[String, T])
+  RawHtml(String)
 }
 
 pub struct Props {

@@ -178,6 +178,10 @@ fn VNode::insert(
         Array([])
       } else {
         match childs {
+          RawHtml(s) => {
+            n.to_element().unwrap().set_inner_html(s)
+            RawHtml(s)
+          }
           Array(xs) => Array(xs.map(x => x.insert(sandbox, n, null())))
           Map(mp) => {
             let imp : Map[String, INode] = Map([])
@@ -231,6 +235,7 @@ pub fn VNode::fragment(childs : Array[VNode]) -> VNode {
 pub(all) enum Children[T] {
   Array(Array[T])
   Map(Map[String, T])
+  RawHtml(String)
 }
 
 ///|
@@ -507,11 +512,19 @@ fn diff_children(
       }
       Map(Map::from_array(reversed))
     }
-    (_, _) => {
-      match old {
-        Map(xs) => xs.each((_, x) => x.remove(sandbox, parent))
-        Array(xs) => xs.each(x => x.remove(sandbox, parent))
+    (RawHtml(old), RawHtml(new)) => {
+      if old != new {
+        parent.to_element().unwrap().set_inner_html(new)
       }
+      RawHtml(new)
+    }
+    (_, RawHtml(new)) => {
+      parent.to_element().unwrap().set_inner_html(new)
+      RawHtml(new)
+    }
+    (_, _) => {
+      // quick reset
+      parent.to_element().unwrap().set_inner_html("")
       new.map(y => y.insert(sandbox, parent, null()))
     }
   }
@@ -523,6 +536,7 @@ fn[A, B] Children::map(c : Children[A], f : (A) -> B) -> Children[B] {
   match c {
     Array(arr) => Array(arr.map(f))
     Map(mp) => Map(mp.map((_, v) => f(v)))
+    RawHtml(s) => RawHtml(s)
   }
 }
 
