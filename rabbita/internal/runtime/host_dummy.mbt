@@ -1,5 +1,12 @@
 ///|
-priv struct DummyHost {}
+priv struct DummyHost {
+  stores : @slotmap.SlotMap[Store]
+}
+
+///|
+impl Host for DummyHost with fn get_stores(self) {
+  self.stores
+}
 
 ///|
 impl Context for DummyHost with fn get_origin(_self) {

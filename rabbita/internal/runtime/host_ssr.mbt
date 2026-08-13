@@ -7,6 +7,7 @@ struct SSRHost {
   mut url_changed : @cmd.Injector[String]
   origin : String
   path : String
+  stores : @slotmap.SlotMap[Store]
 }
 
 ///|
@@ -41,6 +42,7 @@ pub async fn SSRHost::SSRHost(
     origin: origin.trim_end(chars="/").to_owned(),
     path,
     transcript: Map([]),
+    stores: SlotMap(),
   }
   let output = ambient_host.protect(host, builder)
   let cmd = Context::inject_url_changed(host, host.origin + host.path)
@@ -62,7 +64,7 @@ pub async fn SSRHost::SSRHost(
 async fn SSRHost::drain_task(host : Self) -> Unit {
   @async.with_task_group(group => {
     fn run(op, extension) {
-      let runner = @cmd.runner(host, op)
+      let runner = @cmd.runner(@key.key, op)
       try runner.settle(extension, host) catch {
         Unhandled =>
           try runner.invoke(extension, host) catch {
@@ -105,6 +107,9 @@ async fn SSRHost::drain_task(host : Self) -> Unit {
       }
     }
     while host.task_queue.pop() is Some((op, extension)) {
+      if handle_message(host, extension) {
+        continue
+      }
       run(op, extension)
     }
   })
@@ -113,6 +118,11 @@ async fn SSRHost::drain_task(host : Self) -> Unit {
 ///|
 pub impl Host for SSRHost with fn flush(self) {
   ignore(self)
+}
+
+///|
+pub impl Host for SSRHost with fn get_stores(self) {
+  self.stores
 }
 
 ///|

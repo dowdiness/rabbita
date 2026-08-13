@@ -6,9 +6,6 @@ pub using @cmd {perform, attempt, effect}
 pub using @cmd {none, batch, delay, type Cmd}
 
 ///|
-using @cmd {trait Host}
-
-///|
 pub using @html {type Html}
 
 ///|
@@ -58,7 +55,7 @@ pub fn App::mount(self : Self, element_id : String) -> Unit {
     let output = (self.builder)()
     output.map(html => html.to_virtual_dom()).0
   })
-  Host::flush(host)
+  @runtime.Host::flush(host)
 }
 
 ///|
@@ -108,5 +105,5 @@ pub fn App::hydrate(self : Self) -> Unit {
     let output = (self.builder)()
     output.0.map(x => x.to_virtual_dom())
   })
-  Host::flush(host)
+  @runtime.Host::flush(host)
 }

@@ -25,8 +25,6 @@ pub let none : Cmd
 
 pub fn[A] perform((A) -> Cmd, async () -> A noraise) -> Cmd
 
-pub fn runner(&Host, Op) -> Runner
-
 // Errors
 pub(all) suberror HydrateExn {
   Unhandled
@@ -92,11 +90,6 @@ pub(open) trait Context {
   fn get_origin(Self) -> String
   fn inject_url_changed(Self, String) -> Cmd
   fn inject_url_request(Self, String) -> Cmd
-}
-
-pub(open) trait Host : Scheduler {
-  fn flush(Self) -> Unit
-  fn cleanup(Self) -> Unit
 }
 
 pub(open) trait Scheduler : Context {

@@ -4,15 +4,18 @@ extenum @cmd.Extension += {
 }
 
 ///|
-let op : @cmd.Op = @cmd.Op()..on_invoke((extension, _context) => {
+let op : @cmd.Op = Op()
+
+///|
+fn handle_message(host : &Host, extension : @cmd.Extension) -> Bool {
   match extension {
     Message(id, erased_msg) => {
-      guard global_stores.get(id) is Some(store) else { None }
-      LegacyEffect(Immediately, scheduler => {
-        let cmd = (store.on_update)(scheduler, erased_msg)
-        scheduler.queue_command(cmd)
-      })
+      if Host::get_stores(host).get(id) is Some(store) {
+        let cmd = (store.on_update)(host, erased_msg)
+        Scheduler::queue_command(host, cmd)
+      }
+      true
     }
-    _ => raise Unhandled
+    _ => false
   }
-})
+}

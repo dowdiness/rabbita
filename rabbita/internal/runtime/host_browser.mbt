@@ -9,6 +9,7 @@
 struct BrowserHost {
   after_render_queue : Queue[() -> Cmd]
   task_queue : Queue[(@cmd.Op, @cmd.Extension)]
+  stores : @slotmap.SlotMap[Store]
   mut graph_output : @duplix.Node[VNode]?
   mut drain_scheduled : Bool
   mut paint_scheduled : Bool
@@ -23,6 +24,7 @@ pub fn BrowserHost::BrowserHost(
   builder : GraphBuilder,
 ) -> Self {
   let host = BrowserHost::{
+    stores: SlotMap(),
     task_queue: Queue([]),
     graph_output: None,
     document: None,
@@ -51,6 +53,11 @@ pub impl Host for BrowserHost with fn flush(self) {
 }
 
 ///|
+pub impl Host for BrowserHost with fn get_stores(self) {
+  self.stores
+}
+
+///|
 /// Schedules a drawing frame to be rendered on the next animation frame.
 fn BrowserHost::request_frame(self : Self) -> Unit {
   guard !self.paint_scheduled else { return }
@@ -76,6 +83,9 @@ fn BrowserHost::request_task(self : Self) -> Unit {
   self.drain_scheduled = true
   @dom.window().queue_microtask(() => {
     while self.task_queue.pop() is Some((op, extension)) {
+      if handle_message(self, extension) {
+        continue
+      }
       try @cmd.invoke(@key.key, op, extension, self) catch {
         Unhandled => ()
       } noraise {

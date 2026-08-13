@@ -14,12 +14,6 @@ pub(open) trait Scheduler: Context {
 }
 
 ///|
-pub(open) trait Host: Scheduler {
-  fn flush(Self) -> Unit
-  fn cleanup(Self) -> Unit
-}
-
-///|
 pub extend &Scheduler with Context::{
   get_origin,
   inject_url_changed,
@@ -32,7 +26,8 @@ impl Scheduler with fn add(self, cmd) {
 }
 
 ///|
-pub fn runner(_ : &Host, op : Op) -> Runner {
+#doc(hidden)
+pub fn runner(_ : @key.Key, op : Op) -> Runner {
   Runner(op)
 }
 

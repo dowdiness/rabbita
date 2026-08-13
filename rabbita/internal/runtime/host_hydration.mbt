@@ -26,6 +26,7 @@ pub fn HydrationHost::HydrationHost(builder : GraphBuilder) -> HydrationHost {
 
   let host = HydrationHost::{
     browser: {
+      stores: SlotMap(),
       task_queue: Queue([]),
       graph_output: None,
       document: None,
@@ -64,9 +65,17 @@ pub impl Host for HydrationHost with fn flush(self) {
 }
 
 ///|
+pub impl Host for HydrationHost with fn get_stores(self) {
+  self.browser.stores
+}
+
+///|
 fn HydrationHost::drain_task_with_transcript(host : Self) -> Unit {
   let self = host.browser
   while self.task_queue.pop() is Some((op, extension)) {
+    if handle_message(host, extension) {
+      continue
+    }
     fn fallback() {
       try @cmd.invoke(@key.key, op, extension, self) catch {
         Unhandled => ()
@@ -88,7 +97,7 @@ fn HydrationHost::drain_task_with_transcript(host : Self) -> Unit {
       }
     }
     try {
-      let runner = @cmd.runner(host, op)
+      let runner = @cmd.runner(@key.key, op)
       let key = runner.identify(extension)
       let json = host.transcript
         .get(key)

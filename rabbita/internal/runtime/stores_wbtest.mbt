@@ -134,6 +134,7 @@ fn cleanup_test_sub(on_unload : () -> Unit) -> @sub.Sub {
 #cfg(target="js")
 struct StoreTestHost {
   task_queue : Queue[(@cmd.Op, @cmd.Extension)]
+  stores : @slotmap.SlotMap[Store]
   mut draining : Bool
   mut async_tasks : Int
   mut unhandled_tasks : Int
@@ -142,7 +143,13 @@ struct StoreTestHost {
 ///|
 #cfg(target="js")
 fn StoreTestHost::new() -> StoreTestHost {
-  { task_queue: Queue([]), draining: false, async_tasks: 0, unhandled_tasks: 0 }
+  {
+    task_queue: Queue([]),
+    stores: SlotMap(),
+    draining: false,
+    async_tasks: 0,
+    unhandled_tasks: 0,
+  }
 }
 
 ///|
@@ -151,6 +158,9 @@ fn StoreTestHost::drain(self : Self) -> Unit {
   guard !self.draining else { return }
   self.draining = true
   while self.task_queue.pop() is Some((op, extension)) {
+    if handle_message(self, extension) {
+      continue
+    }
     try @cmd.invoke(@key.key, op, extension, self) catch {
       Unhandled => self.unhandled_tasks += 1
     } noraise {
@@ -211,14 +221,20 @@ impl @cmd.Scheduler for StoreTestHost with fn set_url_request_injector(
 
 ///|
 #cfg(target="js")
-impl @cmd.Host for StoreTestHost with fn flush(_self) {
+impl Host for StoreTestHost with fn flush(_self) {
   ignore(_self)
 }
 
 ///|
 #cfg(target="js")
-impl @cmd.Host for StoreTestHost with fn cleanup(_self) {
+impl Host for StoreTestHost with fn cleanup(_self) {
   ignore(_self)
+}
+
+///|
+#cfg(target="js")
+impl Host for StoreTestHost with fn get_stores(self) {
+  self.stores
 }
 
 ///|

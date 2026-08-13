@@ -5,11 +5,7 @@ using @cmd {type Cmd, type Emit}
 using @sub {type Sub}
 
 ///|
-let global_stores : @slotmap.SlotMap[Store] = SlotMap()
-
-///|
-pub(all) struct Store {
-  id : @slotmap.Id
+struct Store {
   /// (Msg) -> Cmd
   on_update : (&Scheduler, @any.Any) -> Cmd
 }
@@ -41,11 +37,12 @@ fn diff_subs(
 
 ///|
 fn cleanup_store(
+  stores : @slotmap.SlotMap[Store],
   id : @slotmap.Id,
   sub_map : Map[String, @sub.RunningSub],
   scheduler : &@cmd.Scheduler,
 ) -> Unit {
-  global_stores.free(id)
+  stores.free(id)
   for _, sub in sub_map {
     (sub.unload)(scheduler)
   }
@@ -57,8 +54,9 @@ pub fn[Model : Eq, Msg] create_state_machine(
   update : (Model, Msg, Emit[Msg]) -> (Model, Cmd),
   subscriptions? : (Model, Emit[Msg]) -> Sub,
 ) -> (@duplix.Node[Model], Emit[Msg]) {
-  let scheduler : &Scheduler = ambient_host.val
-  let id = global_stores.allocate()
+  let host = ambient_host.val
+  let stores = Host::get_stores(host)
+  let id = stores.allocate()
   let emit = msg => op.request(Message(id, @any.erase(msg)))
   let mut sub_map : Map[String, @sub.RunningSub] = Map([])
 
@@ -86,11 +84,11 @@ pub fn[Model : Eq, Msg] create_state_machine(
     cmd
   }
 
-  global_stores[id] = { id, on_update }
-  @duplix.on_cleanup(() => cleanup_store(id, sub_map, scheduler))
+  stores[id] = { on_update, }
+  @duplix.on_cleanup(() => cleanup_store(stores, id, sub_map, host))
 
-  scheduler.add(init_cmd)
-  handle_subs(scheduler, model.read().unwrap())
+  Scheduler::add(host, init_cmd)
+  handle_subs(host, model.read().unwrap())
   (model.map(x => x.unwrap()), emit)
 }
 
@@ -101,8 +99,9 @@ pub fn[Model : Eq, Msg, Input : Eq] create_state_machine_with_input(
   subscriptions? : (Model, Input, Emit[Msg]) -> Sub,
   input : @duplix.Node[Input],
 ) -> (@duplix.Node[Model], Emit[Msg]) {
-  let scheduler : &Scheduler = ambient_host.val
-  let id = global_stores.allocate()
+  let host = ambient_host.val
+  let stores = Host::get_stores(host)
+  let id = stores.allocate()
   let emit = (msg : Msg) => op.request(Message(id, @any.erase(msg)))
   let mut sub_map : Map[String, @sub.RunningSub] = Map([])
 
@@ -132,10 +131,10 @@ pub fn[Model : Eq, Msg, Input : Eq] create_state_machine_with_input(
     cmd
   }
 
-  global_stores[id] = { id, on_update }
-  @duplix.on_cleanup(() => cleanup_store(id, sub_map, scheduler))
+  stores[id] = { on_update, }
+  @duplix.on_cleanup(() => cleanup_store(stores, id, sub_map, host))
 
-  scheduler.add(init_cmd)
-  handle_subs(scheduler, model.read().unwrap())
+  Scheduler::add(host, init_cmd)
+  handle_subs(host, model.read().unwrap())
   (model.map(x => x.unwrap()), emit)
 }
