@@ -1,7 +1,7 @@
 ///|
 struct HydrationHost {
   browser : BrowserHost
-  transcript : Map[String, Array[Json]]
+  transcript : Map[String, Json]
 }
 
 ///|
@@ -18,16 +18,8 @@ pub fn HydrationHost::HydrationHost(builder : GraphBuilder) -> HydrationHost {
       .get_property("textContent")
       .to_option()
       .unwrap_or_error(UnwrapNone)
-    let json = @json.parse(text)
-    guard json is Array(jsons) else { fail("") }
-    let dict = Map([])
-    for x in jsons {
-      guard x is { "key": String(key), "value": Array(values), .. } else {
-        fail("")
-      }
-      dict[key] = values.rev()
-    }
-    dict
+    guard @json.parse(text) is Object(transcript) else { fail("") }
+    transcript
   } catch {
     _ => Map([])
   }
@@ -98,10 +90,9 @@ fn HydrationHost::drain_task_with_transcript(host : Self) -> Unit {
     try {
       let runner = @cmd.runner(host, op)
       let key = runner.identify(extension)
-      let values = host.transcript
+      let json = host.transcript
         .get(key)
         .unwrap_or_error(@cmd.HydrateExn::Fallback)
-      let json = values.pop().unwrap_or_error(@cmd.HydrateExn::Fallback)
       let cmd = runner.resume_(extension, json, host)
       self.queue_command(cmd)
     } catch {

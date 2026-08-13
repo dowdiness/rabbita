@@ -83,6 +83,9 @@ pub fn Op::on_settle(
 }
 
 ///|
+/// Registers the identity used to store and resume this command's SSR
+/// transcript value. Authors must return different keys for commands that may
+/// need different transcript values during hydration.
 pub fn Op::on_identify(
   self : Self,
   identify : (Extension) -> String raise Unhandled,

@@ -1,7 +1,7 @@
 ///|
 struct SSRHost {
   task_queue : Queue[(@cmd.Op, @cmd.Extension)]
-  transcript : Map[String, Array[Json]]
+  transcript : Map[String, Json]
   mut document : @vdom.VDom?
   mut url_request : @cmd.Injector[String]
   mut url_changed : @cmd.Injector[String]
@@ -10,23 +10,11 @@ struct SSRHost {
 }
 
 ///|
-fn SSRHost::add_transcript(self : Self, key : String, value : Json) -> Unit {
-  match self.transcript.get(key) {
-    Some(arr) => arr.push(value)
-    None => self.transcript[key] = [value]
-  }
-}
-
-///|
 pub fn SSRHost::render_to_string(self : Self) -> String {
   let document = self.document.unwrap()
   guard! document.vnode
     is Elem("html", _, Array([Elem("head", _, Array(metadata), ..), ..]), ..)
-  let jsons : Array[Json] = []
-  for key, value in self.transcript {
-    jsons.push({ "key": key, "value": value })
-  }
-  let transcript = Json::array(jsons).stringify(escape_slash=true)
+  let transcript = Json::object(self.transcript).stringify(escape_slash=true)
   let props = @vdom.Props::new(
     { "id": RABBITA_TRANSCRIPT_ID, "type": "application/json" },
     {},
@@ -92,7 +80,7 @@ async fn SSRHost::drain_task(host : Self) -> Unit {
           try runner.identify(extension) catch {
             Unhandled => ()
           } noraise {
-            key => host.add_transcript(key, value)
+            key => host.transcript[key] = value
           }
           host.queue_command(cmd)
         }
@@ -106,7 +94,7 @@ async fn SSRHost::drain_task(host : Self) -> Unit {
                 try runner.identify(extension) catch {
                   Unhandled => ()
                 } noraise {
-                  key => host.add_transcript(key, value)
+                  key => host.transcript[key] = value
                 }
                 Scheduler::queue_command(host, cmd)
               }
