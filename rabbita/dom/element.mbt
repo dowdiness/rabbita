@@ -29,9 +29,9 @@ pub trait IsElement: IsNode {
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/getClientRects
   fn get_client_rects(Self) -> Array[DOMRect] = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/setPointerCapture
-  fn set_pointer_capture(Self, Int) -> Unit = _
+  fn set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/releasePointerCapture
-  fn release_pointer_capture(Self, Int) -> Unit = _
+  fn release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/hasPointerCapture
   fn has_pointer_capture(Self, Int) -> Bool = _
   fn set_attribute(Self, String, String) -> Unit = _
@@ -166,14 +166,28 @@ impl IsElement with fn get_client_rects(s) {
 
 ///|
 #cfg(target="js")
-impl IsElement with fn set_pointer_capture(s, pointer_id) {
-  s |> js_identity |> ffi_element_set_pointer_capture(pointer_id)
+impl IsElement with fn set_pointer_capture(s, pointer_id) -> Unit raise DOMExceptionError {
+  try {
+    let _ : @js.Value = @js.Error_::wrap(fn() -> @js.Value {
+      s |> js_identity |> ffi_element_set_pointer_capture(pointer_id)
+      @js.Value::cast_from(())
+    })
+  } catch {
+    error => raise dom_exception_error(error)
+  }
 }
 
 ///|
 #cfg(target="js")
-impl IsElement with fn release_pointer_capture(s, pointer_id) {
-  s |> js_identity |> ffi_element_release_pointer_capture(pointer_id)
+impl IsElement with fn release_pointer_capture(s, pointer_id) -> Unit raise DOMExceptionError {
+  try {
+    let _ : @js.Value = @js.Error_::wrap(fn() -> @js.Value {
+      s |> js_identity |> ffi_element_release_pointer_capture(pointer_id)
+      @js.Value::cast_from(())
+    })
+  } catch {
+    error => raise dom_exception_error(error)
+  }
 }
 
 ///|

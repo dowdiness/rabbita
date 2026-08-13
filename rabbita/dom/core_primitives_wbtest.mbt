@@ -23,11 +23,11 @@ extern "js" fn core_primitives_test_element() -> Element =
   #|     clientTop: 3,
   #|     getClientRects: () => [{}, {}],
   #|     setPointerCapture: id => {
-  #|       if (id < 0) throw new Error("invalid pointer")
+  #|       if (id < 0) throw new DOMException("invalid pointer", "NotFoundError")
   #|       captured.add(id)
   #|     },
   #|     releasePointerCapture: id => {
-  #|       if (!captured.has(id)) throw new Error("missing pointer")
+  #|       if (!captured.has(id)) throw new DOMException("missing pointer", "NotFoundError")
   #|       captured.delete(id)
   #|     },
   #|     hasPointerCapture: id => captured.has(id),
@@ -358,6 +358,26 @@ test "element and document core primitives expose browser values" {
   assert_true(document.get_active_element() is Some(_))
   assert_true(document.get_body() is Some(_))
   assert_true(document.get_document_element() is Some(_))
+}
+
+///|
+#cfg(target="js")
+test "pointer capture failures preserve DOMException details" {
+  let element = core_primitives_test_element()
+  let set_error = try {
+    element.set_pointer_capture(-1)
+    None
+  } catch {
+    DOMExceptionError(name~, message~) => Some((name, message))
+  }
+  assert_eq(set_error, Some(("NotFoundError", "invalid pointer")))
+  let release_error = try {
+    element.release_pointer_capture(8)
+    None
+  } catch {
+    DOMExceptionError(name~, message~) => Some((name, message))
+  }
+  assert_eq(release_error, Some(("NotFoundError", "missing pointer")))
 }
 
 ///|

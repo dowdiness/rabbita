@@ -10,10 +10,12 @@ test "pointer event helpers install generic runtime handlers" {
     .on_pointerup(_ => @cmd.none)
     .on_pointercancel(_ => @cmd.none)
     .on_pointercancel(_ => @cmd.none)
+    .on_lostpointercapture(_ => @cmd.none)
   assert_true(attrs.0.handlers.contains("pointerdown"))
   assert_true(attrs.0.handlers.contains("pointermove"))
   assert_true(attrs.0.handlers.contains("pointerup"))
   assert_true(attrs.0.handlers.contains("pointercancel"))
+  assert_true(attrs.0.handlers.contains("lostpointercapture"))
 }
 
 ///|
@@ -28,6 +30,7 @@ test "pointer event helpers remain SSR safe" {
     .on_pointerup(_ => @cmd.none)
     .on_pointercancel(_ => @cmd.none)
     .on_pointercancel(_ => @cmd.none)
+    .on_lostpointercapture(_ => @cmd.none)
   let html = div(attrs~, nothing)
   assert_true(html.to_virtual_dom() is Elem(_, _, _, namespace_uri=None))
 }
