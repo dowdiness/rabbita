@@ -51,6 +51,7 @@ pub fn HydrationHost::HydrationHost(builder : GraphBuilder) -> HydrationHost {
   let url = @dom.window().current_url()
   let cmd = Context::inject_url_changed(host, url)
   Scheduler::queue_command(host, cmd)
+  host.drain_task()
   let root = output.read()
   host.browser.document = Some(
     @vdom.VDom::initialize_with_hydration(root, host),
@@ -65,48 +66,54 @@ pub impl Host for HydrationHost with fn flush(self) {
 }
 
 ///|
+fn HydrationHost::drain_task(host : Self) -> Unit {
+  let self = host.browser
+  while self.task_queue.pop() is Some((op, extension)) {
+    fn fallback() {
+      try @cmd.invoke(@key.key, op, extension, self) catch {
+        Unhandled => ()
+      } noraise {
+        None => ()
+        Ready(cmd) => self.queue_command(cmd)
+        Async(f) =>
+          @js_async.Promise::from_async(() => {
+            Scheduler::queue_command(self, f())
+          })
+          |> ignore
+        AfterLayout(f) => self.after_render_queue.push(f)
+        LegacyEffect(Immediately, f) => f(self)
+        LegacyEffect(AfterRender, f) =>
+          self.after_render_queue.push(() => {
+            f(self)
+            @cmd.none
+          })
+      }
+    }
+    try {
+      let runner = @cmd.runner(host, op)
+      let key = runner.identify(extension)
+      let values = host.transcript
+        .get(key)
+        .unwrap_or_error(@cmd.HydrateExn::Fallback)
+      let json = values.pop().unwrap_or_error(@cmd.HydrateExn::Fallback)
+      let cmd = runner.resume_(extension, json, host)
+      self.queue_command(cmd)
+    } catch {
+      @cmd.Unhandled::Unhandled
+      | @cmd.HydrateExn::Unhandled
+      | @cmd.HydrateExn::Fallback => fallback()
+      @cmd.HydrateExn::Skip | _ => ()
+    }
+  }
+}
+
+///|
 fn HydrationHost::request_task(host : Self) -> Unit {
   let self = host.browser
   guard !self.drain_scheduled else { return }
   self.drain_scheduled = true
   @dom.window().queue_microtask(() => {
-    while self.task_queue.pop() is Some((op, extension)) {
-      fn fallback() {
-        try @cmd.invoke(@key.key, op, extension, self) catch {
-          Unhandled => ()
-        } noraise {
-          None => ()
-          Ready(cmd) => self.queue_command(cmd)
-          Async(f) =>
-            @js_async.Promise::from_async(() => {
-              Scheduler::queue_command(self, f())
-            })
-            |> ignore
-          AfterLayout(f) => self.after_render_queue.push(f)
-          LegacyEffect(Immediately, f) => f(self)
-          LegacyEffect(AfterRender, f) =>
-            self.after_render_queue.push(() => {
-              f(self)
-              @cmd.none
-            })
-        }
-      }
-      try {
-        let runner = @cmd.runner(host, op)
-        let key = runner.identify(extension)
-        let values = host.transcript
-          .get(key)
-          .unwrap_or_error(@cmd.HydrateExn::Fallback)
-        let json = values.pop().unwrap_or_error(@cmd.HydrateExn::Fallback)
-        let cmd = runner.resume_(extension, json, host)
-        self.queue_command(cmd)
-      } catch {
-        @cmd.Unhandled::Unhandled
-        | @cmd.HydrateExn::Unhandled
-        | @cmd.HydrateExn::Fallback => fallback()
-        @cmd.HydrateExn::Skip | _ => ()
-      }
-    }
+    host.drain_task()
     self.drain_scheduled = false
     self.request_frame()
   })
