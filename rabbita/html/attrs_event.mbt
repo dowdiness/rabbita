@@ -4,6 +4,10 @@ type MouseEvent = @dom.MouseEvent
 
 ///|
 #cfg(target="js")
+type PointerEvent = @dom.PointerEvent
+
+///|
+#cfg(target="js")
 type KeyboardEvent = @dom.KeyboardEvent
 
 ///|
@@ -41,6 +45,10 @@ type DomEvent = @dom.Event
 ///|
 #cfg(not(target="js"))
 type MouseEvent = Unit
+
+///|
+#cfg(not(target="js"))
+type PointerEvent = Unit
 
 ///|
 #cfg(not(target="js"))
@@ -104,6 +112,29 @@ fn Attrs::on_mouse_event(
   self : Attrs,
   event : String,
   msg : (MouseEvent) -> Cmd,
+) -> Attrs {
+  ignore((event, msg))
+  self
+}
+
+///|
+#cfg(target="js")
+fn Attrs::on_pointer_event(
+  self : Attrs,
+  event : String,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.handler(event, (event, scheduler) => {
+    scheduler.add(msg(event.to_pointer_event().unwrap()))
+  })
+}
+
+///|
+#cfg(not(target="js"))
+fn Attrs::on_pointer_event(
+  self : Attrs,
+  event : String,
+  msg : (PointerEvent) -> Cmd,
 ) -> Attrs {
   ignore((event, msg))
   self
@@ -326,6 +357,15 @@ pub fn Attrs::on_pointercancel(
   msg : (MouseEvent) -> Cmd,
 ) -> Attrs {
   self.on_mouse_event("pointercancel", msg)
+}
+
+///|
+/// Handle the loss of pointer capture for a specific pointer.
+pub fn Attrs::on_lostpointercapture(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("lostpointercapture", msg)
 }
 
 ///|

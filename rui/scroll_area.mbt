@@ -282,7 +282,9 @@ fn scroll_area_finish_pointer(
   guard drag.pointer_id == pointer.get_pointer_id() else { return }
   binding.drag = None
   if binding.track.has_pointer_capture(drag.pointer_id) {
-    binding.track.release_pointer_capture(drag.pointer_id)
+    binding.track.release_pointer_capture(drag.pointer_id) catch {
+      @dom.DOMExceptionError(..) => ()
+    }
   }
 }
 
@@ -328,7 +330,12 @@ fn scroll_area_bind_pointer_listeners(
         thumb_size / 2.0
       },
     })
-    binding.track.set_pointer_capture(pointer.get_pointer_id())
+    binding.track.set_pointer_capture(pointer.get_pointer_id()) catch {
+      @dom.DOMExceptionError(..) => {
+        binding.drag = None
+        return
+      }
+    }
     scroll_area_move_pointer(binding, pointer)
   })
   binding.track.add_event_listener("pointermove", event => {

@@ -86,6 +86,7 @@ fn drawer_pointer_start(
     return
   }
   guard pointer.current_target().to_option() is Some(current_target) else {
+
     return
   }
   guard current_target.to_element() is Some(surface) else { return }
@@ -141,7 +142,9 @@ fn drawer_pointer_start(
       style, "--rui-drawer-backdrop-opacity", original_opacity,
     )
     if swipe_area.has_pointer_capture(pointer_id) {
-      swipe_area.release_pointer_capture(pointer_id)
+      swipe_area.release_pointer_capture(pointer_id) catch {
+        @dom.DOMExceptionError(..) => ()
+      }
     }
   }
   fn on_move(event : @dom.Event) -> Unit {
@@ -217,7 +220,9 @@ fn drawer_pointer_start(
   for (name, listener) in listeners {
     surface.add_event_listener(name, listener)
   }
-  swipe_area.set_pointer_capture(pointer_id)
+  swipe_area.set_pointer_capture(pointer_id) catch {
+    @dom.DOMExceptionError(..) => cleanup(pointer.as_event())
+  }
 }
 
 ///|
