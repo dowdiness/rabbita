@@ -51,22 +51,28 @@ pub fn HydrationHost::HydrationHost(builder : GraphBuilder) -> HydrationHost {
   let url = @dom.window().current_url()
   let cmd = Context::inject_url_changed(host, url)
   Scheduler::queue_command(host, cmd)
-  host.drain_task()
-  let root = ambient_host.protect(host, () => output.read())
-  host.browser.document = Some(
-    @vdom.VDom::initialize_with_hydration(root, host),
-  )
+
+  let vnode = for ;; {
+    host.drain_task_with_transcript()
+    let tmp = ambient_host.protect(host, () => output.read())
+    if host.browser.task_queue.is_empty() {
+      break tmp
+    }
+  }
+
+  let vdom = @vdom.VDom::initialize_with_hydration(vnode, host)
+  host.browser.document = Some(vdom)
   host.browser.drain_scheduled = false
   host
 }
 
 ///|
 pub impl Host for HydrationHost with fn flush(self) {
-  self.request_task()
+  Host::flush(self.browser)
 }
 
 ///|
-fn HydrationHost::drain_task(host : Self) -> Unit {
+fn HydrationHost::drain_task_with_transcript(host : Self) -> Unit {
   let self = host.browser
   while self.task_queue.pop() is Some((op, extension)) {
     fn fallback() {
@@ -105,18 +111,6 @@ fn HydrationHost::drain_task(host : Self) -> Unit {
       @cmd.HydrateExn::Skip | _ => ()
     }
   }
-}
-
-///|
-fn HydrationHost::request_task(host : Self) -> Unit {
-  let self = host.browser
-  guard !self.drain_scheduled else { return }
-  self.drain_scheduled = true
-  @dom.window().queue_microtask(() => {
-    host.drain_task()
-    self.drain_scheduled = false
-    self.request_frame()
-  })
 }
 
 ///|
