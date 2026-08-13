@@ -79,16 +79,26 @@ fn split_url(url : String) -> (String, String) raise {
 }
 
 ///|
+/// Renders the application to an HTML string for the given URL.
+///
+/// Throws `@async.TimeoutError` if rendering does not complete within `timeout`
+/// milliseconds.
 #cfg(not(target="js"))
-pub async fn App::render(self : Self, url~ : String) -> String {
-  let (origin, path) = split_url(url)
-  let host = @runtime.SSRHost(origin~, path~, () => {
-    let output = (self.builder)()
-    output.0.map(html => html.0)
+pub async fn App::render(
+  self : Self,
+  url~ : String,
+  timeout? : Int = 10_000,
+) -> String {
+  @async.with_timeout(timeout, () => {
+    let (origin, path) = split_url(url)
+    let host = @runtime.SSRHost(origin~, path~, () => {
+      let output = (self.builder)()
+      output.0.map(html => html.0)
+    })
+    let html = host.render_to_string()
+    host.cleanup()
+    html
   })
-  let html = host.render_to_string()
-  host.cleanup()
-  html
 }
 
 ///|
