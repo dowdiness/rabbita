@@ -38,6 +38,20 @@ extern "js" fn core_primitives_test_element() -> Element =
 
 ///|
 #cfg(target="js")
+extern "js" fn core_primitives_test_malformed_capture_element(
+  kind : String,
+) -> Element =
+  #| kind => ({
+  #|   setPointerCapture() {
+  #|     throw kind === "null" ? null : "invalid pointer"
+  #|   },
+  #|   releasePointerCapture() {
+  #|     throw kind === "null" ? null : "missing pointer"
+  #|   },
+  #| })
+
+///|
+#cfg(target="js")
 extern "js" fn core_primitives_test_scroll_options(element : Element) -> String =
   #| element => {
   #|   const options = element.__scrollOptions
@@ -392,6 +406,30 @@ test "pointer capture failures preserve DOMException details" {
     DOMExceptionError(name~, message~) => Some((name, message))
   }
   assert_eq(release_error, Some(("NotFoundError", "missing pointer")))
+}
+
+///|
+#cfg(target="js")
+test "pointer capture maps malformed throws to typed errors" {
+  let null_element = core_primitives_test_malformed_capture_element("null")
+  let null_error = try {
+    null_element.set_pointer_capture(1)
+    None
+  } catch {
+    DOMExceptionError(name~, message~) => Some((name, message))
+  }
+  assert_eq(null_error, Some(("UnknownError", "")))
+
+  let primitive_element = core_primitives_test_malformed_capture_element(
+    "primitive",
+  )
+  let primitive_error = try {
+    primitive_element.release_pointer_capture(1)
+    None
+  } catch {
+    DOMExceptionError(name~, message~) => Some((name, message))
+  }
+  assert_eq(primitive_error, Some(("UnknownError", "")))
 }
 
 ///|
