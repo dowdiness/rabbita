@@ -57,7 +57,7 @@ pub fn[Model : Eq, Msg] create_state_machine(
   update : (Model, Msg, Emit[Msg]) -> (Model, Cmd),
   subscriptions? : (Model, Emit[Msg]) -> Sub,
 ) -> (@duplix.Node[Model], Emit[Msg]) {
-  let scheduler : &Scheduler = ambient_host.val.unwrap()
+  let scheduler : &Scheduler = ambient_host.val
   let id = global_stores.allocate()
   let emit = msg => op.request(Message(id, @any.erase(msg)))
   let mut sub_map : Map[String, @sub.RunningSub] = Map([])
@@ -101,7 +101,7 @@ pub fn[Model : Eq, Msg, Input : Eq] create_state_machine_with_input(
   subscriptions? : (Model, Input, Emit[Msg]) -> Sub,
   input : @duplix.Node[Input],
 ) -> (@duplix.Node[Model], Emit[Msg]) {
-  let scheduler : &Scheduler = ambient_host.val.unwrap()
+  let scheduler : &Scheduler = ambient_host.val
   let id = global_stores.allocate()
   let emit = (msg : Msg) => op.request(Message(id, @any.erase(msg)))
   let mut sub_map : Map[String, @sub.RunningSub] = Map([])

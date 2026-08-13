@@ -46,13 +46,13 @@ pub fn HydrationHost::HydrationHost(builder : GraphBuilder) -> HydrationHost {
     transcript,
   }
 
-  let output = ambient_host.protect(Some(host), builder)
+  let output = ambient_host.protect(host, builder)
   host.browser.graph_output = Some(output)
   let url = @dom.window().current_url()
   let cmd = Context::inject_url_changed(host, url)
   Scheduler::queue_command(host, cmd)
   host.drain_task()
-  let root = output.read()
+  let root = ambient_host.protect(host, () => output.read())
   host.browser.document = Some(
     @vdom.VDom::initialize_with_hydration(root, host),
   )

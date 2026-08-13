@@ -12,7 +12,7 @@ import {
 }
 
 // Values
-pub let ambient_host : @ref.Ref[&@cmd.Host?]
+pub let ambient_host : @ref.Ref[&@cmd.Host]
 
 pub fn[Model : Eq, Msg] create_state_machine((@cmd.Emit[Msg]) -> (Model, @cmd.Cmd), (Model, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, @cmd.Emit[Msg]) -> @sub.Sub) -> (@duplix.Node[Model], @cmd.Emit[Msg])
 

@@ -54,13 +54,14 @@ pub async fn SSRHost::SSRHost(
     path,
     transcript: Map([]),
   }
-  let output = ambient_host.protect(Some(host), builder)
+  let output = ambient_host.protect(host, builder)
   let cmd = Context::inject_url_changed(host, host.origin + host.path)
   Scheduler::queue_command(host, cmd)
   while !host.task_queue.is_empty() {
     host.drain_task()
   }
-  host.document = Some(@vdom.VDom::initialize(output.read(), host))
+  let vnode = ambient_host.protect(host, () => output.read())
+  host.document = Some(@vdom.VDom::initialize(vnode, host))
   host
 }
 

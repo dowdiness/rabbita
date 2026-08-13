@@ -51,7 +51,7 @@ fn[Model, Msg] make_deprecated_cell(
       None => create_state(DeprecatedModel(model), update=compat_update)
     }
     actual_emit.val = Some(new_emit)
-    let scheduler = @runtime.ambient_host.val.unwrap()
+    let scheduler = @runtime.ambient_host.val
     while pending.pop() is Some(msg) {
       @cmd.Scheduler::queue_command(scheduler, new_emit(msg))
     }

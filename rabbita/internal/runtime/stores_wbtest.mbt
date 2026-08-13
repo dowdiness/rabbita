@@ -225,7 +225,7 @@ impl @cmd.Host for StoreTestHost with fn cleanup(_self) {
 #cfg(target="js")
 fn with_store_test_host(run : (StoreTestHost) -> Unit raise) -> Unit raise {
   let host = StoreTestHost::new()
-  ambient_host.protect(Some(host), () => run(host))
+  ambient_host.protect(host, () => run(host))
   if host.async_tasks != 0 {
     fail("store test unexpectedly scheduled an async task")
   }

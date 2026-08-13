@@ -32,12 +32,12 @@ pub fn BrowserHost::BrowserHost(
     drain_scheduled: true,
     after_render_queue: Queue([]),
   }
-  let output = ambient_host.protect(Some(host), builder)
+  let output = ambient_host.protect(host, builder)
   host.graph_output = Some(output)
   let url = @dom.window().current_url()
   let cmd = Context::inject_url_changed(host, url)
   Scheduler::queue_command(host, cmd)
-  let root = output.read()
+  let root = ambient_host.protect(host, () => output.read())
   host.document = Some(
     @vdom.VDom::initialize(root, host, target_element_id?=element_id),
   )
@@ -57,7 +57,8 @@ fn BrowserHost::request_frame(self : Self) -> Unit {
   self.paint_scheduled = true
   @dom.window().request_animation_frame(fn(_) {
     if self.document is Some(document) {
-      let vnode = self.graph_output.unwrap().read()
+      let output = self.graph_output.unwrap()
+      let vnode = ambient_host.protect(self, () => output.read())
       document.update(vnode, self)
     }
     self.paint_scheduled = false
