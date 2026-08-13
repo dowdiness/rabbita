@@ -12,27 +12,17 @@ pub fn[E, R] default_exception_handler(exception : E) -> R {
 extern "js" fn console_log(x : @js.Value) = "(x) => console.log(x)"
 
 ///|
-// pub suberror DOMExceptionError DOMException
-// 
-// ///|
-// #external
-// priv type HasException[A, B]
-// 
-// ///|
-// extern "js" fn ffi_result_unwrap_err(s : @js.Value) -> @js.Value = "(s) => s._moonbit_err"
-// 
-// ///|
-// extern "js" fn ffi_result_has_err(s : @js.Value) -> Bool = "(s) => s._moonbit_err !== undefined"
-// 
-// ///|
-// fn[A, B, E : Error] HasException::convert(
-//   self : HasException[A, B],
-//   handler : (B) -> A raise E
-// ) -> A raise E {
-//   if ffi_result_has_err(js_identity(self)) {
-//     let err : B = self |> js_identity |> ffi_result_unwrap_err |> js_identity
-//     handler(err)
-//   } else {
-//     js_identity(self)
-//   }
-// }
+#cfg(target="js")
+pub(all) suberror DOMExceptionError {
+  DOMExceptionError(name~ : String, message~ : String)
+}
+
+///|
+#cfg(target="js")
+fn dom_exception_error(error : @js.Error_) -> DOMExceptionError {
+  let @js.Error_::Error_(value) = error
+  let exception : DOMException = value.cast()
+  let name = exception.get_name()
+  let message = exception.get_message()
+  DOMExceptionError(name~, message~)
+}

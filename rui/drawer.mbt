@@ -173,7 +173,9 @@ fn drawer_release_pointer_state(
   }
   state.surface.remove_attribute("data-dragging")
   if state.surface.has_pointer_capture(state.pointer_id) {
-    state.surface.release_pointer_capture(state.pointer_id)
+    state.surface.release_pointer_capture(state.pointer_id) catch {
+      @dom.DOMExceptionError(..) => ()
+    }
   }
   drawer_remove_pointer_state(state.surface)
 }
@@ -240,7 +242,12 @@ fn drawer_pointer_start(event : @dom.MouseEvent, direction : String) -> Bool {
     original_overlay_opacity,
   }
   drawer_pointer_states.push(state)
-  surface.set_pointer_capture(state.pointer_id)
+  surface.set_pointer_capture(state.pointer_id) catch {
+    @dom.DOMExceptionError(..) => {
+      drawer_remove_pointer_state(surface)
+      return false
+    }
+  }
   true
 }
 

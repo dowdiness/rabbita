@@ -27,6 +27,9 @@ pub let namespace_svg : String
 pub fn window() -> Window
 
 // Errors
+pub(all) suberror DOMExceptionError {
+  DOMExceptionError(name~ : String, message~ : String)
+}
 
 // Types and methods
 type Animation
@@ -690,8 +693,8 @@ pub trait IsElement : IsNode {
   fn get_client_left(Self) -> Double
   fn get_client_top(Self) -> Double
   fn get_client_rects(Self) -> Array[DOMRect]
-  fn set_pointer_capture(Self, Int) -> Unit
-  fn release_pointer_capture(Self, Int) -> Unit
+  fn set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
+  fn release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
   fn has_pointer_capture(Self, Int) -> Bool
   fn set_attribute(Self, String, String) -> Unit
   fn get_attribute(Self, String) -> String?

@@ -371,7 +371,9 @@ fn toast_restore_pointer_state(state : ToastPointerState) -> Unit {
   }
   state.surface.remove_attribute("data-swipe")
   if state.surface.has_pointer_capture(state.pointer_id) {
-    state.surface.release_pointer_capture(state.pointer_id)
+    state.surface.release_pointer_capture(state.pointer_id) catch {
+      @dom.DOMExceptionError(..) => ()
+    }
   }
   toast_remove_pointer_state(state.surface)
 }
@@ -411,7 +413,12 @@ fn toast_pointer_start(event : @dom.MouseEvent) -> Bool {
     transition: surface_html.get_style().get_property_value("transition"),
   }
   toast_pointer_states.push(state)
-  surface.set_pointer_capture(state.pointer_id)
+  surface.set_pointer_capture(state.pointer_id) catch {
+    @dom.DOMExceptionError(..) => {
+      toast_restore_pointer_state(state)
+      return false
+    }
+  }
   true
 }
 
