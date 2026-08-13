@@ -383,7 +383,9 @@ fn sidebar_release_pointer_state(
   if state.captured {
     state.captured = false
     if state.rail.has_pointer_capture(state.pointer_id) {
-      state.rail.release_pointer_capture(state.pointer_id)
+      state.rail.release_pointer_capture(state.pointer_id) catch {
+        @dom.DOMExceptionError(..) => ()
+      }
     }
   }
   if committed && dragged {
@@ -488,7 +490,12 @@ fn sidebar_pointer_start(
   state.lost_pointer_capture = Some(lost_pointer_capture)
   rail.add_event_listener("lostpointercapture", lost_pointer_capture)
   sidebar_pointer_states.push(state)
-  rail.set_pointer_capture(state.pointer_id)
+  rail.set_pointer_capture(state.pointer_id) catch {
+    @dom.DOMExceptionError(..) => {
+      sidebar_release_pointer_state(state, false)
+      return false
+    }
+  }
   if rail.has_pointer_capture(state.pointer_id) {
     state.captured = true
     true
