@@ -460,7 +460,9 @@ fn slider_pointer_finish(
     slider_pointer_update(binding, pointer, true)
   }
   if binding.root.has_pointer_capture(pointer_id) {
-    binding.root.release_pointer_capture(pointer_id)
+    binding.root.release_pointer_capture(pointer_id) catch {
+      @dom.DOMExceptionError(..) => ()
+    }
   }
   binding.active_index = -1
   binding.active_pointer_id = None
@@ -489,7 +491,12 @@ fn slider_bind_pointer_listeners(binding : SliderPointerBinding) -> Unit {
     }
     binding.active_pointer_id = Some(pointer.get_pointer_id())
     pointer.prevent_default()
-    binding.root.set_pointer_capture(pointer.get_pointer_id())
+    binding.root.set_pointer_capture(pointer.get_pointer_id()) catch {
+      @dom.DOMExceptionError(..) => {
+        slider_pointer_finish(binding, pointer, false)
+        return
+      }
+    }
     slider_pointer_update(binding, pointer, false)
   })
   binding.root.add_event_listener("pointermove", event => {

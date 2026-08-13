@@ -828,7 +828,9 @@ fn carousel_release_pointer_state(
   }
   state.viewport.remove_attribute("data-dragging")
   if state.viewport.has_pointer_capture(state.pointer_id) {
-    state.viewport.release_pointer_capture(state.pointer_id)
+    state.viewport.release_pointer_capture(state.pointer_id) catch {
+      @dom.DOMExceptionError(..) => ()
+    }
   }
   carousel_remove_pointer_state(state.viewport)
   if keep_click_suppression && state.suppress_click is Some(_) {
@@ -923,7 +925,12 @@ fn carousel_pointer_start(
     suppress_click: None,
   }
   carousel_pointer_states.push(state)
-  viewport.set_pointer_capture(state.pointer_id)
+  viewport.set_pointer_capture(state.pointer_id) catch {
+    @dom.DOMExceptionError(..) => {
+      carousel_remove_pointer_state(viewport)
+      return false
+    }
+  }
   true
 }
 

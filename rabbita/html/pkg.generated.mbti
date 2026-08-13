@@ -432,6 +432,7 @@ pub fn Attrs::on_focus(Self, (@dom.FocusEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_input(Self, (@dom.InputEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_keydown(Self, (@dom.KeyboardEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_keyup(Self, (@dom.KeyboardEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_lostpointercapture(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mousedown(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mouseenter(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mouseleave(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
