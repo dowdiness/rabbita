@@ -243,6 +243,7 @@ pub fn Document::create_document_fragment(Self) -> DocumentFragment
 pub fn Document::create_element(Self, String) -> Element
 pub fn Document::create_element_ns(Self, String, String, on_namespace_error? : (DOMException) -> Element, on_invalid_character_error? : (DOMException) -> Element) -> Element
 pub fn Document::create_text_node(Self, String) -> Element
+pub fn Document::element_from_point(Self, Double, Double) -> Element?
 pub fn Document::get_active_element(Self) -> Element?
 pub fn Document::get_body(Self) -> HTMLElement?
 pub fn Document::get_document_element(Self) -> Element?
