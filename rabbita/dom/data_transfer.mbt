@@ -34,8 +34,8 @@ type DataTransferItemList
 pub extern "js" fn DataTransferItemList::length(self : Self) -> Int = "(l) => l.length"
 
 ///|
-#cfg(target="js")
 #alias("_[_]")
+#cfg(target="js")
 pub extern "js" fn DataTransferItemList::get(self : Self, index : Int) = "(l, i) => l[i]"
 
 ///|

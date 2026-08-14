@@ -61,15 +61,15 @@ pub fn[K, V] Object::from_iter2(it : Iter2[K, V]) -> Object {
 }
 
 ///|
-#cfg(target="js")
 #alias("_[_]")
+#cfg(target="js")
 pub fn[K, V] Object::get(self : Object, key : K) -> V {
   self.0.get_ffi(Value::cast_from(key)).cast()
 }
 
 ///|
-#cfg(target="js")
 #alias("_[_]=_")
+#cfg(target="js")
 pub fn[K, V] Object::set(self : Object, key : K, value : V) -> Unit {
   self.0.set_ffi(Value::cast_from(key), Value::cast_from(value))
 }
