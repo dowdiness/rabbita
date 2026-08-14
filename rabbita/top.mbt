@@ -86,16 +86,19 @@ pub async fn App::render(
   url~ : String,
   timeout? : Int = 10_000,
 ) -> String {
-  @async.with_timeout(timeout, () => {
-    let (origin, path) = split_url(url)
-    let host = @runtime.SSRHost(origin~, path~, () => {
-      let output = (self.builder)()
-      output.0.map(html => html.0)
-    })
-    let html = host.render_to_string()
-    host.cleanup()
-    html
+  let (origin, path) = split_url(url)
+  let host = @runtime.SSRHost(origin~, path~, () => {
+    let output = (self.builder)()
+    output.0.map(html => html.0)
   })
+  let html = @async.with_timeout(timeout, () => host.render_to_string()) catch {
+    error => {
+      host.cleanup()
+      raise error
+    }
+  }
+  host.cleanup()
+  html
 }
 
 ///|
