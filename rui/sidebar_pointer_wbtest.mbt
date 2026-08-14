@@ -139,7 +139,7 @@ extern "js" fn ffi_install_sidebar_pointer_fixture(
 extern "js" fn ffi_sidebar_pointer_fixture_event(
   client_x : Int,
   pointer_id : Int,
-) -> @dom.MouseEvent =
+) -> @dom.PointerEvent =
   #| (clientX, pointerId) => {
   #|   const fixture = globalThis.__ruiSidebarPointerFixture
   #|   return new PointerEvent({
