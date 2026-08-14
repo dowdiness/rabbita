@@ -1,5 +1,5 @@
 ///|
-using @runtime {type Children, type VNode}
+using @vdom {type Children, type VNode}
 
 ///|
 using @cmd {type Cmd, type Emit}
@@ -7,15 +7,15 @@ using @cmd {type Cmd, type Emit}
 ///|
 /// An HTML value produced by the constructors in this package.
 #alias(T)
-pub(all) struct Html(@runtime.VNode) derive(Eq)
+pub(all) struct Html(@vdom.VNode) derive(Eq)
 
 ///|
-pub fn Html::to_virtual_dom(self : Html) -> @runtime.VNode {
+pub fn Html::to_virtual_dom(self : Html) -> @vdom.VNode {
   self.0
 }
 
 ///|
-pub fn Html::from_vnode(vdom : @runtime.VNode) -> Html {
+pub fn Html::from_vnode(vdom : @vdom.VNode) -> Html {
   Html(vdom)
 }
 
@@ -25,7 +25,7 @@ pub fn[C : IsChildren] node(tag : String, attrs : Attrs, children : C) -> Html {
   if props.props.get("innerHTML") is Some(String(raw_html)) {
     let props = props.copy()
     props.props.remove("innerHTML")
-    VNode::elem(tag, props, @runtime.RawHtml(raw_html))
+    VNode::elem(tag, props, @vdom.RawHtml(raw_html))
   } else {
     VNode::elem(tag, props, children.to_children())
   }
@@ -42,7 +42,7 @@ fn[C : IsChildren] resolve_attrs(
   }
   let children = if attrs.0.props.get("innerHTML") is Some(String(raw_html)) {
     attrs.0.props.remove("innerHTML")
-    @runtime.RawHtml(raw_html)
+    @vdom.RawHtml(raw_html)
   } else {
     children.to_children()
   }
@@ -55,7 +55,7 @@ pub let nothing : Html = VNode::fragment([])
 
 ///|
 pub fn fragment(children : Array[Html]) -> Html {
-  @runtime.VNode::fragment(children.map(x => x.0))
+  @vdom.VNode::fragment(children.map(x => x.0))
 }
 
 ///|
@@ -875,7 +875,7 @@ pub fn[C : IsChildren] a(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  @runtime.VNode::link(attrs.to_props(), children, escape~)
+  @vdom.VNode::link(attrs.to_props(), children, escape~)
 }
 
 ///|
@@ -2074,8 +2074,26 @@ pub fn[C : IsChildren] dialog(
 // ---- document ----
 
 ///|
-/// [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/html)
-pub fn[C : IsChildren] html(
+/// Constructs the root of an HTML document.
+///
+/// Use this constructor only with exactly one `head` followed by exactly one
+/// `body`:
+///
+/// ```mbt nocheck
+/// html(...) <| [
+///   head(...),
+///   body(...),
+/// ]
+/// ```
+///
+/// This restriction follows the Web platform's special handling of document
+/// roots: while parsing HTML, browsers may supply missing `<html>`, `<head>`,
+/// and `<body>` elements. Rabbita therefore leaves any other child count,
+/// order, tag, or nesting undefined.
+///
+/// For the Web behavior behind this restriction, see
+/// [MDN: `DOMParser.parseFromString()`](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString#parsing_an_input_using_trusted_types).
+pub fn html(
   style? : Array[String] = [],
   id? : String,
   class? : String,
@@ -2084,7 +2102,7 @@ pub fn[C : IsChildren] html(
   dir? : String,
   hidden? : Bool,
   attrs? : Attrs,
-  children : C,
+  children : Array[Html],
 ) -> Html {
   let (attrs, children) = resolve_attrs(attrs, children)
   push_title(title, attrs)
@@ -2094,7 +2112,48 @@ pub fn[C : IsChildren] html(
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)
-  VNode::elem("html", attrs.to_props(), children)
+  let props = attrs.to_props()
+  if children
+    is Array([Elem("head", _, _, ..) as head, Elem("body", _, _, ..) as body]) {
+    VNode::document(props, head, body)
+  } else if children is Array(children) {
+    let mut head : VNode? = None
+    let mut body : VNode? = None
+    let body_children = []
+    for child in children {
+      match child {
+        Elem("head", _, _, ..) if head is None => head = Some(child)
+        Elem("body", _, children, ..) as node => {
+          if body is None {
+            body = Some(node)
+          }
+          match children {
+            Array(children) => body_children.append(children)
+            Map(children) => body_children.push_iter(children.values())
+            RawHtml(_) => ()
+          }
+        }
+        Elem("head", _, children, ..) =>
+          match children {
+            Array(children) => body_children.append(children)
+            Map(children) => body_children.push_iter(children.values())
+            RawHtml(_) => ()
+          }
+        _ => body_children.push(child)
+      }
+    }
+    let head = head.unwrap_or_else(() => {
+      VNode::elem("head", Attrs::build().to_props(), Array([]))
+    })
+    let body = if body is Some(Elem("body", body_props, _, namespace_uri~)) {
+      VNode::elem("body", body_props, Array(body_children), namespace_uri?)
+    } else {
+      VNode::elem("body", Attrs::build().to_props(), Array(body_children))
+    }
+    VNode::document(props, head, body)
+  } else {
+    VNode::elem("html", props, children)
+  }
 }
 
 ///|

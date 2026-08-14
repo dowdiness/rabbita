@@ -19,9 +19,9 @@ pub fn post(String) -> RequestWithBody
 pub fn put(String) -> RequestWithBody
 
 // Errors
-pub(all) suberror RequestError {
+pub(all) suberror HttpError {
   RequestError(String)
-}
+} derive(ToJson, @json.FromJson)
 
 // Types and methods
 pub(all) enum Body {

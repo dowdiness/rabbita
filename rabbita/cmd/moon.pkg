@@ -5,8 +5,11 @@ import {
   "moonbit-community/rabbita/internal/any",
   "moonbit-community/rabbita/internal/slotmap",
   "moonbitlang/core/queue",
+  "moonbitlang/core/json",
+  "moonbitlang/async",
+  "moonbitlang/async/js_async",
 }
 
 warnings = "-unused_package"
 
-supported_targets = "js+native"
+supported_targets = "js+native+wasm"

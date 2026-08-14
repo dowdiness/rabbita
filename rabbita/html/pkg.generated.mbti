@@ -5,7 +5,7 @@ import {
   "moonbit-community/rabbita/cmd",
   "moonbit-community/rabbita/common",
   "moonbit-community/rabbita/dom",
-  "moonbit-community/rabbita/internal/runtime",
+  "moonbit-community/rabbita/internal/vdom",
   "moonbitlang/core/immut/vector",
   "moonbitlang/core/list",
 }
@@ -113,7 +113,7 @@ pub fn[C : IsChildren] hgroup(style? : Array[String], id? : String, class? : Str
 
 pub fn hr(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs) -> Html
 
-pub fn[C : IsChildren] html(style? : Array[String], id? : String, class? : String, title? : String, lang? : String, dir? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
+pub fn html(style? : Array[String], id? : String, class? : String, title? : String, lang? : String, dir? : String, hidden? : Bool, attrs? : Attrs, Array[Html]) -> Html
 
 pub fn[C : IsChildren] i(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
@@ -501,9 +501,9 @@ pub(all) enum AutoComplete {
 }
 
 #alias(T)
-pub(all) struct Html(@runtime.VNode) derive(Eq)
-pub fn Html::from_vnode(@runtime.VNode) -> Self
-pub fn Html::to_virtual_dom(Self) -> @runtime.VNode
+pub(all) struct Html(@vdom.VNode) derive(Eq)
+pub fn Html::from_vnode(@vdom.VNode) -> Self
+pub fn Html::to_virtual_dom(Self) -> @vdom.VNode
 pub impl IsChildren for Html
 
 pub(all) enum InputType {
@@ -552,10 +552,10 @@ pub using @common {type Scroll}
 
 // Traits
 pub trait IsChildren {
-  fn to_children(Self) -> @runtime.Children[@runtime.VNode]
+  fn to_children(Self) -> @vdom.Children[@vdom.VNode]
 }
 pub impl IsChildren for String
-pub impl IsChildren for @runtime.Children[@runtime.VNode]
+pub impl IsChildren for @vdom.Children[@vdom.VNode]
 pub impl IsChildren for Array[Html]
 pub impl IsChildren for Map[String, Html]
 pub impl IsChildren for @vector.Vector[Html]

@@ -1,9 +1,9 @@
 ///|
 #alias(T)
-pub(all) struct Svg(@runtime.VNode)
+pub(all) struct Svg(@vdom.VNode)
 
 ///|
-pub fn Svg::to_virtual_dom(self : Svg) -> @runtime.VNode {
+pub fn Svg::to_virtual_dom(self : Svg) -> @vdom.VNode {
   self.0
 }
 
@@ -13,7 +13,7 @@ pub fn Svg::to_html(self : Svg) -> @html.Html {
 }
 
 ///|
-pub fn Svg::from_vnode(vdom : @runtime.VNode) -> Svg {
+pub fn Svg::from_vnode(vdom : @vdom.VNode) -> Svg {
   Svg(vdom)
 }
 
@@ -24,7 +24,7 @@ pub fn node(
   children : Array[Svg],
   ns? : String = @dom.namespace_svg,
 ) -> Svg {
-  let vnode = @runtime.VNode::elem(
+  let vnode = @vdom.VNode::elem(
     tag,
     attrs.to_props(),
     Array(children.map(x => x.0)),
@@ -43,7 +43,7 @@ fn resolve_attrs(attrs : Attrs?) -> Attrs {
 
 ///|
 pub fn text(value : String) -> Svg {
-  Svg(@runtime.VNode::text(value))
+  Svg(@vdom.VNode::text(value))
 }
 
 ///|

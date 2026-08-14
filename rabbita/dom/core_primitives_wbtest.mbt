@@ -49,6 +49,7 @@ extern "js" fn core_primitives_test_scroll_options(element : Element) -> String 
 extern "js" fn core_primitives_test_document() -> Document =
   #| () => ({
   #|   activeElement: { nodeType: 1, id: "active" },
+  #|   head: { nodeType: 1, id: "head" },
   #|   body: { nodeType: 1, id: "body" },
   #|   documentElement: { nodeType: 1, id: "document-element" },
   #| })
@@ -356,6 +357,7 @@ test "element and document core primitives expose browser values" {
   )
   let document = core_primitives_test_document()
   assert_true(document.get_active_element() is Some(_))
+  assert_true(document.get_head() is Some(_))
   assert_true(document.get_body() is Some(_))
   assert_true(document.get_document_element() is Some(_))
 }

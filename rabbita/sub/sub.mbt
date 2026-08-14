@@ -1,12 +1,10 @@
 ///|
-#cfg(target="js")
 using @common {type Keyboard, type Mouse, type Scroll, type Viewport}
 
 ///|
 using @cmd {trait Scheduler}
 
 ///|
-#cfg(target="js")
 using @cmd {type Cmd, type Emit}
 
 ///|
@@ -14,6 +12,7 @@ using @cmd {type Cmd, type Emit}
 ///
 /// Use subscriptions to listen to external signals such as timers, window
 /// resize, scrolling, keyboard input, visibility changes, or WebSocket events.
+/// Browser event sources are inert on native targets.
 enum Sub {
   Custom(String, Scope, Error, SubLoader)
   Batch(Array[Sub])
@@ -41,7 +40,6 @@ pub fn custom_sub(
 }
 
 ///|
-#cfg(target="js")
 priv suberror BuiltinSub {
   Every(Int, Cmd)
   AnimationFrame(Emit[Double])
@@ -198,21 +196,23 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
     }
     UrlChanged(cmd) => {
       let mut tagger = cmd
-      scheduler.hooks().url_changed = Some((scheduler, url) => {
+      scheduler.set_url_changed_injector(url => {
         try @url.parse(url) catch {
-          e => println("failed to parse \{url}: \{e}")
+          e => {
+            println("failed to parse \{url}: \{e}")
+            @cmd.none
+          }
         } noraise {
-          url => scheduler.add(tagger(url))
+          url => tagger(url)
         }
       })
 
       let listener : @dom.Listener = _ => {
-        if scheduler.hooks().url_changed is Some(hook) {
-          hook(scheduler, @dom.window().current_url())
-        }
+        let cmd = scheduler.inject_url_changed(@dom.window().current_url())
+        scheduler.add(cmd)
       }
       let unload = _ => {
-        scheduler.hooks().url_changed = None
+        scheduler.set_url_changed_injector(_ => @cmd.none)
         @dom.window()
         .to_event_target()
         .remove_event_listener("popstate", listener)
@@ -226,7 +226,7 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
     }
     UrlRequest(cmd) => {
       let mut tagger = cmd
-      scheduler.hooks().url_request = Some((scheduler, href) => {
+      scheduler.set_url_request_injector(href => {
         let curr = try! @url.parse(@dom.window().current_url())
         let next = try! @url.parse(href)
         let request = if curr.protocol == next.protocol &&
@@ -236,11 +236,11 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
         } else {
           External(href)
         }
-        scheduler.add(tagger(request))
+        tagger(request)
       })
 
       fn unload(_) {
-        scheduler.hooks().url_request = None
+        scheduler.set_url_request_injector(_ => @cmd.none)
       }
       fn update_tagger(self) {
         guard self is BuiltinSub::UrlRequest(new_cmd) else { return }
@@ -251,7 +251,7 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
     VisibilityChange(cmd) => {
       let mut tagger = cmd
       let listener : @dom.Listener = _ => {
-        scheduler.add(tagger(@dom.document().hidden()))
+        scheduler.queue_command(tagger(@dom.document().hidden()))
       }
       let unload = _ => {
         @dom.document()
@@ -265,6 +265,33 @@ fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
       @dom.document()
       .as_event_target()
       .add_event_listener("visibilitychange", listener)
+      Some({ unload, update_tagger })
+    }
+    _ => None
+  }
+}
+
+///|
+#cfg(not(target="js"))
+fn builtin_sub_loader(payload : Error, scheduler : &Scheduler) -> RunningSub? {
+  match payload {
+    UrlChanged(cmd) => {
+      let mut tagger = cmd
+      scheduler.set_url_changed_injector(url => {
+        try @url.parse(url) catch {
+          e => {
+            println("failed to parse \{url}: \{e}")
+            @cmd.none
+          }
+        } noraise {
+          url => tagger(url)
+        }
+      })
+      let unload = _ => scheduler.set_url_changed_injector(_ => @cmd.none)
+      let update_tagger = self => {
+        guard self is BuiltinSub::UrlChanged(new_cmd) else { return }
+        tagger = new_cmd
+      }
       Some({ unload, update_tagger })
     }
     _ => None
@@ -335,7 +362,6 @@ fn window_scroll() -> Scroll {
 
 ///|
 /// Repeatedly enqueue `cmd` every `ms` milliseconds.
-#cfg(target="js")
 pub fn every(ms : Int, cmd : @cmd.Cmd) -> Sub {
   custom_sub("every(\{ms})", Local, Every(ms, cmd), builtin_sub_loader)
 }
@@ -344,7 +370,6 @@ pub fn every(ms : Int, cmd : @cmd.Cmd) -> Sub {
 /// Subscribe to window resize events.
 ///
 /// The handler receives the latest viewport width and height.
-#cfg(target="js")
 pub fn on_resize(msg : @cmd.Emit[Viewport]) -> Sub {
   custom_sub("on_resize", Local, Resize(msg), builtin_sub_loader)
 }
@@ -354,7 +379,6 @@ pub fn on_resize(msg : @cmd.Emit[Viewport]) -> Sub {
 ///
 /// The handler receives the browser timestamp for each frame while the
 /// subscription is active.
-#cfg(target="js")
 pub fn on_animation_frame(msg : @cmd.Emit[Double]) -> Sub {
   custom_sub(
     "on_animation_frame",
@@ -368,7 +392,6 @@ pub fn on_animation_frame(msg : @cmd.Emit[Double]) -> Sub {
 /// Subscribe to document `keydown` events.
 ///
 /// The handler receives a normalized `Keyboard` value from `@common`.
-#cfg(target="js")
 pub fn on_key_down(msg : @cmd.Emit[Keyboard]) -> Sub {
   custom_sub("on_key_down", Local, Keydown(msg), builtin_sub_loader)
 }
@@ -377,7 +400,6 @@ pub fn on_key_down(msg : @cmd.Emit[Keyboard]) -> Sub {
 /// Subscribe to document `keyup` events.
 ///
 /// The handler receives a normalized `Keyboard` value from `@common`.
-#cfg(target="js")
 pub fn on_key_up(msg : @cmd.Emit[Keyboard]) -> Sub {
   custom_sub("on_key_up", Local, Keyup(msg), builtin_sub_loader)
 }
@@ -387,7 +409,6 @@ pub fn on_key_up(msg : @cmd.Emit[Keyboard]) -> Sub {
 ///
 /// The handler receives `true` when the document is hidden, and `false`
 /// when it becomes visible again.
-#cfg(target="js")
 pub fn on_visibility_change(msg : @cmd.Emit[Bool]) -> Sub {
   custom_sub(
     "on_visibility_change",
@@ -401,7 +422,6 @@ pub fn on_visibility_change(msg : @cmd.Emit[Bool]) -> Sub {
 /// Subscribe to document `mousemove` events.
 ///
 /// The handler receives a normalized `Mouse` value from `@common`.
-#cfg(target="js")
 pub fn on_mouse_move(msg : @cmd.Emit[Mouse]) -> Sub {
   custom_sub("on_mouse_move", Local, MouseMove(msg), builtin_sub_loader)
 }
@@ -412,7 +432,6 @@ pub fn on_mouse_move(msg : @cmd.Emit[Mouse]) -> Sub {
 /// This reports page-level scrolling on `window`, not scrolling of an inner
 /// element. The handler receives the current scroll offset and document scroll
 /// size as a `Scroll` value.
-#cfg(target="js")
 pub fn on_scroll(msg : @cmd.Emit[Scroll]) -> Sub {
   custom_sub("on_scroll", Local, Scroll(msg), builtin_sub_loader)
 }
@@ -423,7 +442,6 @@ pub fn on_scroll(msg : @cmd.Emit[Scroll]) -> Sub {
 /// This is an app-scoped subscription. It is only active when returned from
 /// the root cell's `subscriptions` callback; if a non-root cell returns it,
 /// the subscription is ignored.
-#cfg(target="js")
 pub fn on_url_changed(msg : @cmd.Emit[@url.Url]) -> Sub {
   custom_sub("on_url_changed", Global, UrlChanged(msg), builtin_sub_loader)
 }
@@ -434,7 +452,6 @@ pub fn on_url_changed(msg : @cmd.Emit[@url.Url]) -> Sub {
 /// This is an app-scoped subscription. It is only active when returned from
 /// the root cell's `subscriptions` callback; if a non-root cell returns it,
 /// the subscription is ignored.
-#cfg(target="js")
 pub fn on_url_request(msg : @cmd.Emit[@url.UrlRequest]) -> Sub {
   custom_sub("on_url_request", Global, UrlRequest(msg), builtin_sub_loader)
 }

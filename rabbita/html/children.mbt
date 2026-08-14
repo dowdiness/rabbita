@@ -1,6 +1,6 @@
 ///|
 pub trait IsChildren {
-  fn to_children(Self) -> @runtime.Children[VNode]
+  fn to_children(Self) -> @vdom.Children[VNode]
 }
 
 ///|
@@ -39,6 +39,6 @@ pub impl IsChildren for @list.List[Html] with fn to_children(self) {
 // }
 
 ///|
-pub impl IsChildren for @runtime.Children[VNode] with fn to_children(children) {
+pub impl IsChildren for @vdom.Children[VNode] with fn to_children(children) {
   children
 }

@@ -3,65 +3,49 @@ package "moonbit-community/rabbita/internal/runtime"
 
 import {
   "moonbit-community/rabbita/cmd",
-  "moonbit-community/rabbita/dom",
-  "moonbit-community/rabbita/internal/any",
   "moonbit-community/rabbita/internal/duplix",
   "moonbit-community/rabbita/internal/slotmap",
+  "moonbit-community/rabbita/internal/vdom",
   "moonbit-community/rabbita/sub",
-  "moonbit-community/rabbita/variant",
+  "moonbitlang/core/ref",
 }
 
 // Values
-pub fn server_side_render(() -> VNode) -> String
+pub let ambient_host : @ref.Ref[&Host]
+
+pub fn[Model : Eq, Msg] create_state_machine((@cmd.Emit[Msg]) -> (Model, @cmd.Cmd), (Model, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, @cmd.Emit[Msg]) -> @sub.Sub) -> (@duplix.Node[Model], @cmd.Emit[Msg])
+
+pub fn[Model : Eq, Msg, Input : Eq] create_state_machine_with_input((@cmd.Emit[Msg], Input) -> (Model, @cmd.Cmd), (Model, Input, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, Input, @cmd.Emit[Msg]) -> @sub.Sub, @duplix.Node[Input]) -> (@duplix.Node[Model], @cmd.Emit[Msg])
 
 // Errors
 
 // Types and methods
-pub(all) enum Children[T] {
-  Array(Array[T])
-  Map(Map[String, T])
-  RawHtml(String)
-}
+type BrowserHost
+pub fn BrowserHost::BrowserHost(element_id? : String, () -> @duplix.Node[@vdom.VNode]) -> Self
+pub impl @cmd.Context for BrowserHost
+pub impl @cmd.Scheduler for BrowserHost
+pub impl Host for BrowserHost
 
-pub struct Props {
-  handlers : Map[String, (@dom.Event, &@cmd.Scheduler) -> Unit]
-  attrs : Map[String, String]
-  props : Map[String, @variant.Variant]
-  styles : Map[String, String]
-  // private fields
-}
-pub fn Props::copy(Self) -> Self
-pub fn Props::new(Map[String, String], Map[String, @variant.Variant], Map[String, String], Map[String, (@dom.Event, &@cmd.Scheduler) -> Unit]) -> Self
+type HydrationHost
+pub fn HydrationHost::HydrationHost(() -> @duplix.Node[@vdom.VNode]) -> Self
+pub impl @cmd.Context for HydrationHost
+pub impl @cmd.Scheduler for HydrationHost
+pub impl Host for HydrationHost
 
-pub(all) struct Sandbox {
-  mut mount : String
-  hooks : @cmd.Hooks
-  // private fields
-}
-pub fn[Model : Eq, Msg] Sandbox::create_state_machine(Self, (@cmd.Emit[Msg]) -> (Model, @cmd.Cmd), (Model, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, @cmd.Emit[Msg]) -> @sub.Sub) -> (@duplix.Node[Model], @cmd.Emit[Msg])
-pub fn[Model : Eq, Msg, Input : Eq] Sandbox::create_state_machine_with_input(Self, (@cmd.Emit[Msg], Input) -> (Model, @cmd.Cmd), (Model, Input, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, Input, @cmd.Emit[Msg]) -> @sub.Sub, @duplix.Node[Input]) -> (@duplix.Node[Model], @cmd.Emit[Msg])
-pub fn Sandbox::flush(Self) -> Unit
-pub fn Sandbox::initialize(Self, @duplix.Node[VNode]) -> Unit
-pub fn Sandbox::new() -> Self
-pub impl @cmd.Scheduler for Sandbox
-
-pub(all) struct Store {
-  id : @slotmap.Id
-  on_update : (&@cmd.Scheduler, @any.Any) -> Unit
-}
-
-pub enum VNode {
-  Elem(String, Props, Children[VNode], namespace_uri~ : String?)
-  Text(String)
-  Frag(Array[VNode])
-  Thunk(Int, () -> VNode)
-}
-pub fn VNode::elem(String, Props, Children[Self], namespace_uri? : String) -> Self
-pub fn VNode::fragment(Array[Self]) -> Self
-pub fn VNode::link(Props, Children[Self], escape? : Bool) -> Self
-pub fn VNode::text(String) -> Self
-pub impl Eq for VNode
+type Store
 
 // Type aliases
+pub using @vdom {type Children}
+
+pub using @vdom {type Props}
+
+pub using @vdom {type VDom}
+
+pub using @vdom {type VNode}
 
 // Traits
+pub trait Host : @cmd.Scheduler {
+  fn flush(Self) -> Unit
+  fn cleanup(Self) -> Unit
+  fn get_stores(Self) -> @slotmap.SlotMap[Store]
+}

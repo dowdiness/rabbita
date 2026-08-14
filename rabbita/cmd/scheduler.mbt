@@ -1,39 +1,35 @@
 ///|
-pub(open) trait Scheduler {
-  fn run_effect(Self, EffectKind, OnExecute) -> Unit
-  fn queue_message(Self, @slotmap.Id, @any.Any) -> Unit
-  fn drain_message(Self) -> Unit
+pub(open) trait Context {
+  fn get_origin(Self) -> String
+  fn inject_url_changed(Self, String) -> Cmd
+  fn inject_url_request(Self, String) -> Cmd
+}
+
+///|
+pub(open) trait Scheduler: Context {
   fn add(Self, Cmd) -> Unit = _
-  fn hooks(Self) -> Hooks
+  fn queue_command(Self, Cmd) -> Unit
+  fn set_url_changed_injector(Self, Injector[String]) -> Unit
+  fn set_url_request_injector(Self, Injector[String]) -> Unit
 }
 
 ///|
-/// A position in an indexed or keyed runtime tree.
-pub(all) enum Path {
-  Index(Int, Path)
-  Keyed(String, Path)
-  Root
-} derive(Eq, Compare, Hash)
-
-///|
-pub(all) struct Hooks {
-  mut url_request : Hook[String]?
-  mut url_changed : Hook[String]?
+pub extend &Scheduler with Context::{
+  get_origin,
+  inject_url_changed,
+  inject_url_request,
 }
-
-///|
-pub type Hook[Arg] = (&Scheduler, Arg) -> Unit
 
 ///|
 impl Scheduler with fn add(self, cmd) {
-  fn go(cmd) {
-    match cmd {
-      Batch(xs) => xs.each(x => go(x))
-      Effect(k, f) => self.run_effect(k, f)
-      Message(id, msg) => self.queue_message(id, msg)
-      LegacyMessage(f) => f(self)
-    }
-  }
-  go(cmd)
-  self.drain_message()
+  self.queue_command(cmd)
 }
+
+///|
+#doc(hidden)
+pub fn runner(_ : @key.Key, op : Op) -> Runner {
+  Runner(op)
+}
+
+///|
+pub(all) struct Injector[Arg]((Arg) -> Cmd)

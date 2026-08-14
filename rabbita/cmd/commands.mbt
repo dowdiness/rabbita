@@ -12,9 +12,16 @@ pub(all) enum EffectKind {
 /// the runtime.
 enum Cmd {
   Batch(Array[Cmd])
-  Effect(EffectKind, OnExecute)
-  Message(@slotmap.Id, @any.Any)
-  LegacyMessage(OnExecute)
+  Invoke(Op, Extension)
+}
+
+///|
+#doc(hidden)
+pub fn flatten(key : @key.Key, cmd : Cmd) -> Array[(Op, Extension)] {
+  match cmd {
+    Batch(cmds) => cmds.map(x => flatten(key, x)).flatten()
+    Invoke(op, extension) => [(op, extension)]
+  }
 }
 
 ///|
@@ -69,7 +76,7 @@ pub fn custom_cmd(
   callback : (&Scheduler) -> Unit,
   kind? : EffectKind = Immediately,
 ) -> Cmd {
-  Effect(kind, callback)
+  op.request(LegacyEffect(kind, callback))
 }
 
 ///|
@@ -109,16 +116,3 @@ pub fn[A, E : Error] attempt(
     })
   })
 }
-
-///|
-/// Delay execution of a command by `ms` milliseconds.
-///
-/// The delayed command is added back to the message queue after the timer fires.
-#cfg(target="js")
-pub fn delay(cmd : Cmd, ms : Int) -> Cmd {
-  custom_cmd(scheduler => set_timeout(() => scheduler.add(cmd), ms))
-}
-
-///|
-#cfg(target="js")
-extern "js" fn set_timeout(f : () -> Unit, ms : Int) = "(f,ms) => setTimeout(f, ms)"

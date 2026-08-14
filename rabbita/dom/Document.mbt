@@ -134,6 +134,13 @@ pub fn Document::get_active_element(self : Self) -> Element? {
 }
 
 ///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/Document/head
+#cfg(target="js")
+pub fn Document::get_head(self : Self) -> HTMLElement? {
+  ffi_document_get_head(self).to_option()
+}
+
+///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/Document/body
 #cfg(target="js")
 pub fn Document::get_body(self : Self) -> HTMLElement? {
@@ -161,6 +168,12 @@ pub extern "js" fn Document::to_node(self : Self) -> Node = "(x) => x"
 extern "js" fn ffi_document_get_active_element(
   doc : Document,
 ) -> @js.Nullable[Element] = "(doc) => doc.activeElement"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_document_get_head(
+  doc : Document,
+) -> @js.Nullable[HTMLElement] = "(doc) => doc.head"
 
 ///|
 #cfg(target="js")

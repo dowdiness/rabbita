@@ -1,12 +1,12 @@
 members = [
   "./doc",
   "./examples/counter",
+  "./examples/document",
   "./examples/grocery",
   "./examples/todo",
   "./examples/shiki_editor",
   "./examples/animation",
   "./examples/sokoban",
-  "./examples/SSR",
   "./examples/subscriptions",
   "./examples/websocket",
   "./warren",

@@ -49,6 +49,7 @@ pub impl @js.Cast for BeforeUnloadEvent
 
 type Blob
 pub async fn Blob::bytes(Self) -> Bytes
+pub fn Blob::from_bytes(Bytes, String) -> Self
 pub fn Blob::get_size(Self) -> Int
 pub fn Blob::get_type(Self) -> String
 pub fn Blob::slice(Self, Int, end_? : @js.Optional[Int]) -> Self
@@ -251,6 +252,7 @@ pub fn Document::get_elements_by_class_name(Self, String) -> HTMLCollection
 pub fn Document::get_elements_by_name(Self, String) -> NodeList
 pub fn Document::get_elements_by_tag_name(Self, String) -> HTMLCollection
 pub fn Document::get_elements_by_tag_name_ns(Self, String, String) -> HTMLCollection
+pub fn Document::get_head(Self) -> HTMLElement?
 pub fn Document::hidden(Self) -> Bool
 pub fn Document::query_selector(Self, String) -> @js.Nullable[Element]
 pub fn Document::query_selector_all(Self, String) -> NodeList
@@ -649,6 +651,7 @@ pub fn Window::inner_width(Self) -> Int
 pub fn Window::load_url(Self, String) -> Unit
 pub fn Window::match_media(Self, String) -> MediaQueryList
 pub fn Window::navigator(Self) -> Navigator
+pub fn Window::origin(Self) -> String
 pub fn Window::push_url(Self, String) -> Unit
 pub fn Window::queue_microtask(Self, () -> Unit) -> Unit
 pub fn Window::reload_url(Self) -> Unit

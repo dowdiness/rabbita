@@ -51,9 +51,9 @@ fn[Model, Msg] make_deprecated_cell(
       None => create_state(DeprecatedModel(model), update=compat_update)
     }
     actual_emit.val = Some(new_emit)
-    let scheduler = ambient_graph.val.unwrap().sandbox
+    let scheduler = @runtime.ambient_host.val
     while pending.pop() is Some(msg) {
-      scheduler.add(new_emit(msg))
+      @cmd.Scheduler::queue_command(scheduler, new_emit(msg))
     }
     model.map(model => view(emit, model.0))
   }
@@ -141,21 +141,4 @@ pub fn[Model, Msg] simple_cell_with_emit(
 #deprecated("Use a component returning `Val::constant(html)` instead.", skip_current_package=true)
 pub fn static_cell(html : Html) -> Cell {
   () => Val::constant(html)
-}
-
-///|
-test "deprecated static cell renders on the server" {
-  let root : Cell = static_cell(@html.div("static"))
-  inspect(render_to_string(root), content="<div>static</div>")
-}
-
-///|
-#cfg(not(target="js"))
-test "deprecated stateful cell renders its initial model on the server" {
-  let root : Cell = cell(
-    model=7,
-    update=(_, _ : Unit, model) => (none, model + 1),
-    view=(_, model) => @html.div("\{model}"),
-  )
-  inspect(render_to_string(root), content="<div>7</div>")
 }

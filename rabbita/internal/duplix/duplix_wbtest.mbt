@@ -172,21 +172,21 @@ test "switch removes disposed branch scope from owner scope" {
     (owner, selected, set_route)
   })
 
-  inspect(global_scopes[owner].sub_scopes.length(), content="0")
+  inspect(global_scopes[owner.0].sub_scopes.length(), content="0")
   inspect(selected.read(), content="1")
-  inspect(global_scopes[owner].sub_scopes.length(), content="1")
+  inspect(global_scopes[owner.0].sub_scopes.length(), content="1")
 
   set_route(WbDetail)
   inspect(selected.read(), content="10")
   inspect(home_disposes, content="1")
   inspect(detail_disposes, content="0")
-  inspect(global_scopes[owner].sub_scopes.length(), content="1")
+  inspect(global_scopes[owner.0].sub_scopes.length(), content="1")
 
   set_route(WbHome)
   inspect(selected.read(), content="1")
   inspect(home_disposes, content="1")
   inspect(detail_disposes, content="1")
-  inspect(global_scopes[owner].sub_scopes.length(), content="1")
+  inspect(global_scopes[owner.0].sub_scopes.length(), content="1")
 }
 
 ///|
@@ -201,19 +201,19 @@ test "assoc removes disposed entry scopes from owner scope" {
     (owner, values, set_source)
   })
 
-  inspect(global_scopes[owner].sub_scopes.length(), content="0")
+  inspect(global_scopes[owner.0].sub_scopes.length(), content="0")
   debug_inspect(values.read(), content="<Vector: [110, 220]>")
-  inspect(global_scopes[owner].sub_scopes.length(), content="2")
+  inspect(global_scopes[owner.0].sub_scopes.length(), content="2")
 
   set_source(@vector.from_array([(2, 20)]))
   debug_inspect(values.read(), content="<Vector: [220]>")
   inspect(dispose_runs, content="1")
-  inspect(global_scopes[owner].sub_scopes.length(), content="1")
+  inspect(global_scopes[owner.0].sub_scopes.length(), content="1")
 
   set_source(@vector.from_array([]))
   debug_inspect(values.read(), content="<Vector: []>")
   inspect(dispose_runs, content="2")
-  inspect(global_scopes[owner].sub_scopes.length(), content="0")
+  inspect(global_scopes[owner.0].sub_scopes.length(), content="0")
 }
 
 ///|
@@ -225,9 +225,9 @@ test "scope dispose runs registered cleanup" {
   })
 
   inspect(cleanup_runs, content="0")
-  global_scopes[scope].dispose()
+  scope.cleanup()
   inspect(cleanup_runs, content="1")
-  assert_true(global_scopes.get(scope) is None)
+  assert_true(global_scopes.get(scope.0) is None)
 }
 
 ///|
@@ -245,14 +245,14 @@ test "scope dispose keeps unrelated sibling scope alive" {
     (left, right)
   })
 
-  global_scopes[left].dispose()
+  left.cleanup()
   inspect(cleanup_runs, content="1")
-  assert_true(global_scopes.get(left) is None)
-  assert_true(global_scopes.get(right) is Some(_))
+  assert_true(global_scopes.get(left.0) is None)
+  assert_true(global_scopes.get(right.0) is Some(_))
 
-  global_scopes[right].dispose()
+  right.cleanup()
   inspect(cleanup_runs, content="11")
-  assert_true(global_scopes.get(right) is None)
+  assert_true(global_scopes.get(right.0) is None)
 }
 
 ///|
@@ -269,7 +269,7 @@ test "scope dispose recurses into sub scopes and runs cleanups" {
     parent
   })
 
-  global_scopes[parent].dispose()
+  parent.cleanup()
   debug_inspect(cleanup_log, content="[\"child\", \"parent\"]")
-  assert_true(global_scopes.get(parent) is None)
+  assert_true(global_scopes.get(parent.0) is None)
 }

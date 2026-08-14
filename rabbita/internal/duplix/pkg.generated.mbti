@@ -7,13 +7,13 @@ import {
 }
 
 // Values
-pub fn cleanup() -> Unit
-
 pub fn[T] constant(T) -> Node[T]
 
 pub fn[T : Eq] input(T) -> (Node[T], (T) -> Unit)
 
 pub fn on_cleanup(() -> Unit) -> Unit
+
+pub fn[A] with_scope((ScopeId) -> A) -> A
 
 // Errors
 
@@ -57,6 +57,9 @@ pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq] Node::zip
 pub fn[A : Eq, B : Eq, C : Eq, D : Eq, E : Eq, F : Eq, G : Eq, H : Eq, I : Eq] Node::zip9(Self[A], Self[B], Self[C], Self[D], Self[E], Self[F], Self[G], Self[H], Self[I]) -> Self[(A, B, C, D, E, F, G, H, I)]
 pub impl[T] Compare for Node[T]
 pub impl[T] Eq for Node[T]
+
+type ScopeId derive(Eq, Hash)
+pub fn ScopeId::cleanup(Self) -> Unit
 
 // Type aliases
 

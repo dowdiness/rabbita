@@ -1,7 +1,9 @@
 ///|
+#cfg(target="js")
 using @cmd {type Emit}
 
 ///|
+#cfg(target="js")
 priv suberror WebsocketSubscription {
   Listen(
     String,
@@ -14,6 +16,7 @@ priv suberror WebsocketSubscription {
 }
 
 ///|
+#cfg(target="js")
 fn websocket_sub_loader(
   payload : Error,
   scheduler : &Scheduler,
