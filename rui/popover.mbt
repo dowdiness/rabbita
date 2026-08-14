@@ -568,8 +568,8 @@ fn bind_floating_sync(id : String, sync : (Bool) -> Unit) -> Unit {
       }
       guard event.to_mouse_event() is Some(mouse) else { return }
       let rect = layer.element.get_bounding_client_rect()
-      let x = mouse.get_client_x().to_double()
-      let y = mouse.get_client_y().to_double()
+      let x = mouse.get_client_x()
+      let y = mouse.get_client_y()
       let outside = x < rect.get_left() ||
         x > rect.get_right() ||
         y < rect.get_top() ||

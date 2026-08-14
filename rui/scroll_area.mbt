@@ -255,9 +255,9 @@ fn scroll_area_move_pointer(
   }
   let travel = (track_size - thumb_size).max(0.0)
   let pointer_position = if dimensions.vertical {
-    pointer.get_client_y().to_double() - rect.get_top()
+    pointer.get_client_y() - rect.get_top()
   } else {
-    pointer.get_client_x().to_double() - rect.get_left()
+    pointer.get_client_x() - rect.get_left()
   }
   let start = (pointer_position - drag.grab).clamp(min=0.0, max=travel)
   scroll_area_set_physical_offset(
@@ -316,9 +316,9 @@ fn scroll_area_bind_pointer_listeners(
       dimensions.max *
       travel
     let pointer_position = if dimensions.vertical {
-      pointer.get_client_y().to_double() - rect.get_top()
+      pointer.get_client_y() - rect.get_top()
     } else {
-      pointer.get_client_x().to_double() - rect.get_left()
+      pointer.get_client_x() - rect.get_left()
     }
     let on_thumb = pointer.target().to_element() is Some(target) &&
       target.is_same_node(binding.thumb.as_node())

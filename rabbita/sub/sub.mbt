@@ -343,9 +343,18 @@ fn keyboard_from_dom(event : @dom.KeyboardEvent) -> Keyboard {
 #cfg(target="js")
 fn mouse_from_dom(event : @dom.MouseEvent) -> Mouse {
   Mouse::new(
-    screen={ x: event.get_screen_x(), y: event.get_screen_y() },
-    offset={ x: event.get_offset_x(), y: event.get_offset_y() },
-    client={ x: event.get_client_x(), y: event.get_client_y() },
+    screen={
+      x: event.get_screen_x().to_int(),
+      y: event.get_screen_y().to_int(),
+    },
+    offset={
+      x: event.get_offset_x().to_int(),
+      y: event.get_offset_y().to_int(),
+    },
+    client={
+      x: event.get_client_x().to_int(),
+      y: event.get_client_y().to_int(),
+    },
   )
 }
 
