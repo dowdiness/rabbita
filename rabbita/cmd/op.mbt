@@ -1,4 +1,5 @@
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub extenum Extension += {
   LegacyEffect(EffectKind, (&Scheduler) -> Unit)
   LegacyMessage(OnExecute)

@@ -8,7 +8,7 @@ import {
   "oboard/mocket/static_file",
 }
 
-warnings = "-unused_package"
+warnings = "-unused_package-alert_experimental"
 
 supported_targets = "js+native+wasm"
 

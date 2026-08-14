@@ -81,6 +81,7 @@ fn split_url(url : String) -> (String, String) raise {
 /// Throws `@async.TimeoutError` if rendering does not complete within `timeout`
 /// milliseconds.
 #cfg(not(target="js"))
+#internal(experimental, "This API is unstable and may change in the future.")
 pub async fn App::render(
   self : Self,
   url~ : String,
@@ -103,6 +104,7 @@ pub async fn App::render(
 
 ///|
 #cfg(target="js")
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn App::hydrate(self : Self) -> Unit {
   let host = @runtime.HydrationHost(() => {
     let output = (self.builder)()

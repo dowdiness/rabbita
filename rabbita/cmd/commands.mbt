@@ -17,6 +17,7 @@ enum Cmd {
 
 ///|
 #doc(hidden)
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn flatten(key : @key.Key, cmd : Cmd) -> Array[(Op, Extension)] {
   match cmd {
     Batch(cmds) => cmds.map(x => flatten(key, x)).flatten()

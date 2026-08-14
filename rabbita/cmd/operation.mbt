@@ -1,4 +1,5 @@
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 struct Op {
   mut invoke : (Extension, &Context) -> OpCont[Cmd] raise Unhandled
   mut settle : (Extension, &Context) -> OpCont[(Json, Cmd)] raise Unhandled
@@ -8,6 +9,7 @@ struct Op {
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub(all) enum OpCont[T] {
   None
   Ready(T)
@@ -17,9 +19,11 @@ pub(all) enum OpCont[T] {
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub(all) suberror Unhandled
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub(all) suberror HydrateExn {
   Unhandled
   Fallback
@@ -27,6 +31,7 @@ pub(all) suberror HydrateExn {
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub(all) extenum Extension {}
 
 ///|
@@ -39,12 +44,14 @@ let default_handler : Op = {
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn Op::Op() -> Self {
   // copy the handler
   { ..default_handler }
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub impl Debug for Cmd with fn to_repr(cmd) {
   match cmd {
     Batch(cmds) => Repr::array(cmds.map(Debug::to_repr))
@@ -64,9 +71,11 @@ fn[A, B] wrap_hook(
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub type Settle = (Json) -> Unit
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn Op::on_resume(
   self : Self,
   f : (Extension, Json, &Context) -> Cmd raise HydrateExn,
@@ -75,6 +84,7 @@ pub fn Op::on_resume(
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn Op::on_settle(
   self : Self,
   f : (Extension, &Context) -> OpCont[(Json, Cmd)] raise Unhandled,
@@ -86,6 +96,7 @@ pub fn Op::on_settle(
 /// Registers the identity used to store and resume this command's SSR
 /// transcript value. Authors must return different keys for commands that may
 /// need different transcript values during hydration.
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn Op::on_identify(
   self : Self,
   identify : (Extension) -> String raise Unhandled,
@@ -94,6 +105,7 @@ pub fn Op::on_identify(
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn Op::on_debug(
   self : Self,
   f : (Extension) -> Repr raise Unhandled,
@@ -102,6 +114,7 @@ pub fn Op::on_debug(
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn Op::on_invoke(
   self : Self,
   f : (Extension, &Context) -> OpCont[Cmd] raise Unhandled,
@@ -115,14 +128,17 @@ pub fn Op::on_invoke(
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn Op::request(self : Self, extension : Extension) -> Cmd {
   Invoke(self, extension)
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 struct Runner(Op)
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn Runner::invoke(
   runner : Self,
   extension : Extension,
@@ -132,6 +148,7 @@ pub fn Runner::invoke(
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn Runner::settle(
   runner : Runner,
   extension : Extension,
@@ -141,6 +158,7 @@ pub fn Runner::settle(
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn Runner::resume_(
   runner : Runner,
   extension : Extension,
@@ -151,6 +169,7 @@ pub fn Runner::resume_(
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn Runner::identify(
   runner : Runner,
   extension : Extension,
@@ -160,6 +179,7 @@ pub fn Runner::identify(
 
 ///|
 #doc(hidden)
+#internal(experimental, "This API is unstable and may change in the future.")
 pub fn invoke(
   _ : @key.Key,
   op : Op,
