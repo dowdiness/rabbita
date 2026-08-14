@@ -441,10 +441,10 @@ pub fn Attrs::on_mouseout(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mouseover(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_mouseup(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_paste(Self, (@dom.ClipboardEvent) -> @cmd.Cmd) -> Self
-pub fn Attrs::on_pointercancel(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
-pub fn Attrs::on_pointerdown(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
-pub fn Attrs::on_pointermove(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
-pub fn Attrs::on_pointerup(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointercancel(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointerdown(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointermove(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
+pub fn Attrs::on_pointerup(Self, (@dom.PointerEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_reset(Self, (@dom.Event) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_scroll(Self, (@dom.UIEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_submit(Self, (@dom.Event) -> @cmd.Cmd) -> Self

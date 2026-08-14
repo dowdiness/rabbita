@@ -88,7 +88,7 @@ extern "js" fn ffi_toast_pointer_fixture_event(
   y : Int,
   time : Int,
   interactive : Bool,
-) -> @dom.MouseEvent =
+) -> @dom.PointerEvent =
   #| (x, y, time, interactive) => {
   #|   const fixture = globalThis.__ruiToastPointerFixture
   #|   return new PointerEvent({

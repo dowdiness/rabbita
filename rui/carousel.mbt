@@ -848,13 +848,12 @@ fn carousel_release_pointer_state(
 ///|
 #cfg(target="js")
 fn carousel_pointer_start(
-  event : @dom.MouseEvent,
+  pointer : @dom.PointerEvent,
   orientation : String,
   index : Int,
   can_previous : Bool,
   can_next : Bool,
 ) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
   if pointer.get_default_prevented() ||
     !pointer.get_is_primary() ||
     (pointer.get_pointer_type() == "mouse" && pointer.get_button() != 0) ||
@@ -936,8 +935,7 @@ fn carousel_pointer_start(
 
 ///|
 #cfg(target="js")
-fn carousel_pointer_move(event : @dom.MouseEvent) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
+fn carousel_pointer_move(pointer : @dom.PointerEvent) -> Bool {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return false
   }
@@ -1006,8 +1004,7 @@ fn carousel_pointer_move(event : @dom.MouseEvent) -> Bool {
 
 ///|
 #cfg(target="js")
-fn carousel_pointer_end(event : @dom.MouseEvent) -> Int {
-  guard event.to_pointer_event() is Some(pointer) else { return 0 }
+fn carousel_pointer_end(pointer : @dom.PointerEvent) -> Int {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return 0
   }
@@ -1052,8 +1049,7 @@ fn carousel_pointer_end(event : @dom.MouseEvent) -> Int {
 
 ///|
 #cfg(target="js")
-fn carousel_pointer_cancel(event : @dom.MouseEvent) -> Unit {
-  guard event.to_pointer_event() is Some(pointer) else { return }
+fn carousel_pointer_cancel(pointer : @dom.PointerEvent) -> Unit {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return
   }
