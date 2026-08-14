@@ -66,6 +66,9 @@ extern "js" fn core_primitives_test_document() -> Document =
   #|   head: { nodeType: 1, id: "head" },
   #|   body: { nodeType: 1, id: "body" },
   #|   documentElement: { nodeType: 1, id: "document-element" },
+  #|   elementFromPoint: (x, y) => (
+  #|     x === 12.5 && y === 24.75 ? { nodeType: 1, id: "point" } : null
+  #|   ),
   #| })
 
 ///|
@@ -426,6 +429,8 @@ test "element and document core primitives expose browser values" {
   assert_true(document.get_head() is Some(_))
   assert_true(document.get_body() is Some(_))
   assert_true(document.get_document_element() is Some(_))
+  assert_true(document.element_from_point(12.5, 24.75) is Some(_))
+  assert_true(document.element_from_point(12.5, 25.0) is None)
 }
 
 ///|
