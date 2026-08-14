@@ -76,10 +76,9 @@ fn drawer_restore_style_property(
 // Gesture data lives only for this pointer capture; native HTML owns open/close.
 #cfg(target="js")
 fn drawer_pointer_start(
-  event : @dom.MouseEvent,
+  pointer : @dom.PointerEvent,
   direction : DrawerDirection,
 ) -> Unit {
-  guard event.to_pointer_event() is Some(pointer) else { return }
   if pointer.get_default_prevented() ||
     !pointer.get_is_primary() ||
     (pointer.get_pointer_type() == "mouse" && pointer.get_button() != 0) {
