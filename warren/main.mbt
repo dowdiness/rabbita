@@ -88,6 +88,11 @@ async fn main {
             about="Static files directory. Defaults to ./public when present.",
           ),
           OptionArg("port", about="Local preview server port. Default: 4300."),
+          OptionArg(
+            "entry",
+            about="Auxiliary entry in NAME=PACKAGE form. May be repeated.",
+            action=Append,
+          ),
         ],
         flags=[
           FlagArg(
@@ -107,6 +112,11 @@ async fn main {
         ],
         options=[
           OptionArg("dist", about="Build output directory. Default: ./dist."),
+          OptionArg(
+            "entry",
+            about="Auxiliary entry in NAME=PACKAGE form. May be repeated.",
+            action=Append,
+          ),
         ],
         about="Build a release static site into ./dist by default.",
       ),
@@ -139,6 +149,14 @@ async fn main {
         _ if @fs.exists(cwd_main) => cwd_main
         _ => cwd
       }
+      let auxiliary_entries = match submatches.values.get("entry") {
+        Some(values) =>
+          match parse_named_entries(values, SourcePath::new(cwd)) {
+            Ok(entries) => entries
+            Err(message) => abort("Invalid --entry value: \{message}")
+          }
+        None => []
+      }
       let cwd_public = Path::join(cwd, "public").to_string()
       let public_dir = match submatches.values.get("public-dir") {
         Some([path]) => Some(Path::resolve(path).to_string())
@@ -166,7 +184,15 @@ async fn main {
       }
       let direct = submatches.flags.get("direct") is Some(true)
       let target_dir = @fs.tmpdir(prefix="warren")
-      dev_server(main_pkg_dir~, target_dir~, public_dir~, port~, direct~)
+      dev_server(
+        main_pkg_dir~,
+        target_dir~,
+        public_dir~,
+        auxiliary_entries~,
+        watch_root=cwd,
+        port~,
+        direct~,
+      )
     }
     "build" => {
       let cwd_main = Path::join(cwd, "main").to_string()
@@ -175,12 +201,21 @@ async fn main {
         _ if @fs.exists(cwd_main) => cwd_main
         _ => cwd
       }
+      let auxiliary_entries = match submatches.values.get("entry") {
+        Some(values) =>
+          match parse_named_entries(values, SourcePath::new(cwd)) {
+            Ok(entries) => entries
+            Err(message) => abort("Invalid --entry value: \{message}")
+          }
+        None => []
+      }
       let dist_dir = match submatches.values.get("dist") {
         Some([path]) => Path::resolve(path).to_string()
         _ => Path::join(cwd, "dist").to_string()
       }
-      build_project(
+      build_project_with_entries(
         SourcePath::new(main_pkg_dir),
+        auxiliary_entries,
         dist_dir=SourcePath::new(dist_dir),
       )
     }
@@ -306,14 +341,68 @@ fn build_failure_diagnostics(output : String, code : Int) -> String {
 }
 
 ///|
+async fn mount_dev_entry(
+  vfs : @vfs.VirtualFileSystem,
+  root_target_dir : SourcePath,
+  entry : BuildEntry,
+  has_auxiliary_entries : Bool,
+) -> Bool {
+  let target_dir = entry_target_dir(
+    root_target_dir, entry, has_auxiliary_entries,
+  )
+  let build_dir = target_dir.join("js/debug/build")
+  let js_paths = find_js_in(source_path_to_string(build_dir))
+  match js_paths {
+    [js_path] => {
+      let output_filename = entry_output_filename(entry.name)
+      let basename = Path::basename(js_path)
+      let js_map_path = Path::dirname(js_path)
+        .join("\{basename}.map")
+        .to_string()
+      let map_filename = output_filename + ".map"
+      if @fs.exists(js_map_path) {
+        vfs.mount(map_filename, FileMapping(SourcePath::new(js_map_path)))
+      } else {
+        vfs.unmount(map_filename)
+      }
+      vfs.mount(output_filename, FileMapping(SourcePath::new(js_path)))
+      true
+    }
+    _ => {
+      match entry.name {
+        None => {
+          log("error", "found multiple entries: \{to_repr(js_paths)}")
+          log(
+            "info", "Use `warren dev path/to/main/package/dir` to choose one entry.",
+          )
+        }
+        Some(name) =>
+          log(
+            "error",
+            "found multiple JS artifacts for `\{name}`: \{to_repr(js_paths)}",
+          )
+      }
+      false
+    }
+  }
+}
+
+///|
 async fn dev_server(
   main_pkg_dir~ : String,
   target_dir~ : String,
   public_dir~ : String?,
+  auxiliary_entries~ : Array[NamedEntry],
+  watch_root~ : String,
   port~ : UInt,
   direct~ : Bool,
 ) -> Unit {
-  let watcher = @fs.Watcher(main_pkg_dir, ignored_paths=path => {
+  let watch_path = if auxiliary_entries.is_empty() {
+    main_pkg_dir
+  } else {
+    watch_root
+  }
+  let watcher = @fs.Watcher(watch_path, ignored_paths=path => {
     path.contains(".mooncakes") ||
     path.contains("node_modules") ||
     path.contains("_build")
@@ -344,6 +433,12 @@ async fn dev_server(
     vfs.mount("/warren_devtool.js", FileContent(embbed_devtool_js))
     vfs.mount("/warren_devtool.css", FileContent(embbed_devtool_css))
   }
+  let root_target_dir = SourcePath::new(target_dir)
+  let entries = all_build_entries(
+    SourcePath::new(main_pkg_dir),
+    auxiliary_entries,
+  )
+  let has_auxiliary_entries = !auxiliary_entries.is_empty()
 
   @async.with_task_group <| group => {
     let html_fallback_path = if direct { Some("/index.html") } else { None }
@@ -352,65 +447,76 @@ async fn dev_server(
     log("info", "Running server on http://127.0.0.1:\{hub.port()}")
 
     while true {
-      let (reader, out) = @process.read_from_process()
-      let (stdin, close_stdin) = @process.write_to_process()
-      close_stdin.close()
       @fs.rmdir(target_dir, recursive=true)
       hub.broadcast(Building)
       log("warren", "Building...")
 
-      defer reader.close()
       let diagnostics = StringBuilder::new()
       let code = @async.with_task_group <| build_group => {
-        let exit_code = build_group.spawn(() => {
-          @process.run(
-            "moon",
-            [
-              "build", main_pkg_dir, "--target", "js", "--target-dir", target_dir,
-            ],
-            stdin~,
-            stdout=out,
-            stderr=out,
-          )
-        })
+        let mut code = 0
+        for entry in entries {
+          if code == 0 {
+            let entry_target_dir = entry_target_dir(
+              root_target_dir, entry, has_auxiliary_entries,
+            )
+            let entry_target_dir_str = source_path_to_string(entry_target_dir)
+            let (reader, out) = @process.read_from_process()
+            let (stdin, close_stdin) = @process.write_to_process()
+            close_stdin.close()
+            let exit_code = build_group.spawn(() => {
+              @process.run(
+                "moon",
+                [
+                  "build",
+                  source_path_to_string(entry.package_dir),
+                  "--target",
+                  "js",
+                  "--target-dir",
+                  entry_target_dir_str,
+                ],
+                stdin~,
+                stdout=out,
+                stderr=out,
+              )
+            })
 
-        while reader.read_until("\n") is Some(line) {
-          if line != "" {
-            diagnostics.write_string(line)
-            diagnostics.write_string("\n")
-            log("moon", line)
+            while reader.read_until("\n") is Some(line) {
+              if line != "" {
+                diagnostics.write_string(line)
+                diagnostics.write_string("\n")
+                log("moon", line)
+              }
+            }
+            reader.close()
+            code = exit_code.wait()
           }
         }
-        exit_code.wait()
+        code
       }
 
       if code == 0 {
         log("warren", "moon build succeed at \{main_pkg_dir}.")
-        let js_paths = find_js_in(
-          Path::join(target_dir, "js/debug/build").to_string(),
-        )
-        guard js_paths is [js_path] else {
-          log("error", "found multiple entries: \{to_repr(js_paths)}")
+        let mut mount_ok = true
+        for entry in entries {
+          if !mount_dev_entry(
+              vfs, root_target_dir, entry, has_auxiliary_entries,
+            ) {
+            mount_ok = false
+          }
+        }
+        if mount_ok {
+          hub.broadcast(Reload)
+          log("warren", "Changes detected. Reloading...")
+        } else {
+          hub.broadcast(
+            BuildFailed(
+              "Warren expected exactly one JS artifact for every entry.",
+            ),
+          )
           log(
-            "info", "Use `warren dev path/to/main/package/dir` to choose one entry.",
+            "error", "Warren expected exactly one JS artifact for every entry.",
           )
         }
-
-        let basename = Path::basename(js_path)
-        let js_map_path = Path::dirname(js_path)
-          .join("\{basename}.map")
-          .to_string()
-
-        if @fs.exists(js_map_path) {
-          vfs.mount("index.js.map", FileMapping(SourcePath::new(js_map_path)))
-        } else {
-          vfs.unmount("index.js.map")
-        }
-
-        vfs.mount("index.js", FileMapping(SourcePath::new(js_path)))
-        // debug(vfs)
-        hub.broadcast(Reload)
-        log("warren", "Changes detected. Reloading...")
       } else {
         hub.broadcast(
           BuildFailed(build_failure_diagnostics(diagnostics.to_string(), code)),

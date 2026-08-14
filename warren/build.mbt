@@ -1,4 +1,113 @@
 ///|
+priv struct NamedEntry {
+  name : String
+  package_dir : SourcePath
+}
+
+///|
+priv struct BuildEntry {
+  name : String?
+  package_dir : SourcePath
+}
+
+///|
+fn entry_output_filename(name : String?) -> String {
+  match name {
+    None => "index.js"
+    Some(name) => name + ".js"
+  }
+}
+
+///|
+fn is_safe_entry_name(name : String) -> Bool {
+  name != "" &&
+  name != "index" &&
+  name.all(c => {
+    c.is_ascii_alphabetic() || c.is_ascii_digit() || c == '-' || c == '_'
+  })
+}
+
+///|
+fn parse_named_entries(
+  values : ArrayView[String],
+  cwd : SourcePath,
+) -> Result[Array[NamedEntry], String] {
+  let entries : Array[NamedEntry] = []
+  for raw in values {
+    let separator = raw.find("=")
+    guard separator is Some(separator) else {
+      return Err("expected NAME=PACKAGE")
+    }
+    guard separator > 0 && separator + 1 < raw.length() else {
+      return Err("expected non-empty NAME and PACKAGE")
+    }
+    let name = raw[:separator].to_owned()
+    let package_dir = raw[separator + 1:].to_owned()
+    guard is_safe_entry_name(name) else {
+      return Err("unsafe entry name `\{name}`")
+    }
+    guard !entries.any(entry => entry.name == name) else {
+      return Err("duplicate entry name `\{name}`")
+    }
+    let resolved_package_dir = Path::join(
+      source_path_to_string(cwd),
+      package_dir,
+    ).to_string()
+    entries.push({ name, package_dir: SourcePath::new(resolved_package_dir) })
+  }
+  Ok(entries)
+}
+
+///|
+fn build_entry_for_page(package_dir : SourcePath) -> BuildEntry {
+  { name: None, package_dir }
+}
+
+///|
+fn build_entry_for_named(entry : NamedEntry) -> BuildEntry {
+  { name: Some(entry.name), package_dir: entry.package_dir }
+}
+
+///|
+fn all_build_entries(
+  main_pkg_dir : SourcePath,
+  auxiliary_entries : ArrayView[NamedEntry],
+) -> Array[BuildEntry] {
+  let entries = [build_entry_for_page(main_pkg_dir)]
+  for entry in auxiliary_entries {
+    entries.push(build_entry_for_named(entry))
+  }
+  entries
+}
+
+///|
+fn entry_target_dir(
+  root : SourcePath,
+  entry : BuildEntry,
+  has_auxiliary_entries : Bool,
+) -> SourcePath {
+  match entry.name {
+    None => if has_auxiliary_entries { root.join("__page") } else { root }
+    Some(name) => root.join("__aux-\{name}")
+  }
+}
+
+///|
+fn release_js_artifact(
+  js_paths : Array[String],
+  build_dir : String,
+) -> SourcePath {
+  match js_paths {
+    [js_path] => SourcePath::new(js_path)
+    [] => abort("Release JS artifact not found under \{build_dir}")
+    _ =>
+      abort(
+        "Found multiple release JS artifacts: \{to_repr(js_paths)}. Use `warren build path/to/main/package/dir` to choose one entry.",
+      )
+  }
+}
+
+///|
 let build_entry_script =
   #|    <script src="./index.js" type="module"></script>
 
@@ -213,8 +322,27 @@ async fn minify_or_copy_js(
 }
 
 ///|
-pub async fn build_project(
+async fn build_release_entry(
+  root_target_dir : SourcePath,
+  entry : BuildEntry,
+  has_auxiliary_entries : Bool,
+) -> SourcePath {
+  let target_dir = entry_target_dir(
+    root_target_dir, entry, has_auxiliary_entries,
+  )
+  ensure_clean_dir(target_dir)
+  run_release_build(entry.package_dir, target_dir)
+  let build_dir = target_dir.join("js/release/build")
+  release_js_artifact(
+    find_js_in(source_path_to_string(build_dir)),
+    source_path_to_string(build_dir),
+  )
+}
+
+///|
+async fn build_project_with_entries(
   main_pkg_dir : SourcePath,
+  auxiliary_entries : ArrayView[NamedEntry],
   dist_dir? : SourcePath,
 ) -> Unit {
   let main_pkg_dir_str = source_path_to_string(main_pkg_dir)
@@ -226,20 +354,14 @@ pub async fn build_project(
   let target_dir = SourcePath::new(@fs.tmpdir(prefix="warren"))
   let dist_dir = dist_dir.unwrap_or(mod_root.join("dist"))
   let public_dir = mod_root.join("public")
-
-  run_release_build(main_pkg_dir, target_dir)
-  let build_dir = Path::join(
-    source_path_to_string(target_dir),
-    "js/release/build",
-  ).to_string()
-  let js_paths = find_js_in(build_dir)
-  let release_js = match js_paths {
-    [js_path] => SourcePath::new(js_path)
-    [] => abort("Release JS artifact not found under \{build_dir}")
-    _ =>
-      abort(
-        "Found multiple release JS artifacts: \{to_repr(js_paths)}. Use `warren build path/to/main/package/dir` to choose one entry.",
-      )
+  let has_auxiliary_entries = !auxiliary_entries.is_empty()
+  let entries = all_build_entries(main_pkg_dir, auxiliary_entries)
+  let release_entries : Array[(String?, SourcePath)] = []
+  for entry in entries {
+    let release_js = build_release_entry(
+      target_dir, entry, has_auxiliary_entries,
+    )
+    release_entries.push((entry.name, release_js))
   }
 
   ensure_clean_dir(dist_dir)
@@ -250,10 +372,24 @@ pub async fn build_project(
     copy_dir_contents(public_dir, dist_dir)
   }
 
-  minify_or_copy_js(release_js, dist_dir.join("index.js"), mod_root)
+  for release_entry in release_entries {
+    minify_or_copy_js(
+      release_entry.1,
+      dist_dir.join(entry_output_filename(release_entry.0)),
+      mod_root,
+    )
+  }
   write_index_html(dist_dir)
 
   log("build", "Build output written to \{dist_dir}")
+}
+
+///|
+pub async fn build_project(
+  main_pkg_dir : SourcePath,
+  dist_dir? : SourcePath,
+) -> Unit {
+  build_project_with_entries(main_pkg_dir, [], dist_dir?)
 }
 
 ///|
