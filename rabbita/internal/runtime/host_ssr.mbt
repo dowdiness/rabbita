@@ -2,6 +2,7 @@
 struct SSRHost {
   task_queue : Queue[(@cmd.Op, @cmd.Extension)]
   transcript : Map[String, Json]
+  scope : @duplix.ScopeId
   mut document : @vdom.VDom?
   mut url_request : @cmd.Injector[String]
   mut url_changed : @cmd.Injector[String]
@@ -34,30 +35,40 @@ pub async fn SSRHost::SSRHost(
   path~ : String,
   builder : GraphBuilder,
 ) -> Self {
-  let host = SSRHost::{
-    task_queue: Queue([]),
-    document: None,
-    url_request: _ => @cmd.none,
-    url_changed: _ => @cmd.none,
-    origin: origin.trim_end(chars="/").to_owned(),
-    path,
-    transcript: Map([]),
-    stores: SlotMap(),
-  }
-  let output = ambient_host.protect(host, builder)
-  let cmd = Context::inject_url_changed(host, host.origin + host.path)
-  Scheduler::queue_command(host, cmd)
+  let (host, output) = @duplix.with_scope(scope => {
+    let host = SSRHost::{
+      task_queue: Queue([]),
+      document: None,
+      url_request: _ => @cmd.none,
+      url_changed: _ => @cmd.none,
+      origin: origin.trim_end(chars="/").to_owned(),
+      path,
+      transcript: Map([]),
+      stores: SlotMap(),
+      scope,
+    }
+    (host, ambient_host.protect(host, builder))
+  })
+  try {
+    let cmd = Context::inject_url_changed(host, host.origin + host.path)
+    Scheduler::queue_command(host, cmd)
 
-  let vnode = for ;; {
-    host.drain_task()
-    let tmp = ambient_host.protect(host, () => output.read())
-    if host.task_queue.is_empty() {
-      break tmp
+    let vnode = for ;; {
+      host.drain_task()
+      let tmp = ambient_host.protect(host, () => output.read())
+      if host.task_queue.is_empty() {
+        break tmp
+      }
+    }
+
+    host.document = Some(@vdom.VDom::initialize(vnode, host))
+    host
+  } catch {
+    error => {
+      host.cleanup()
+      raise error
     }
   }
-
-  host.document = Some(@vdom.VDom::initialize(vnode, host))
-  host
 }
 
 ///|
@@ -127,7 +138,7 @@ pub impl Host for SSRHost with fn get_stores(self) {
 
 ///|
 pub impl Host for SSRHost with fn cleanup(self) {
-  ignore(self) // TODO
+  self.scope.cleanup()
 }
 
 ///|

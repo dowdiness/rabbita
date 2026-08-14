@@ -24,22 +24,24 @@ pub fn HydrationHost::HydrationHost(builder : GraphBuilder) -> HydrationHost {
     _ => Map([])
   }
 
-  let host = HydrationHost::{
-    browser: {
-      stores: SlotMap(),
-      task_queue: Queue([]),
-      graph_output: None,
-      document: None,
-      url_request: _ => @cmd.none,
-      url_changed: _ => @cmd.none,
-      paint_scheduled: false,
-      drain_scheduled: true,
-      after_render_queue: Queue([]),
-    },
-    transcript,
-  }
-
-  let output = ambient_host.protect(host, builder)
+  let (host, output) = @duplix.with_scope(scope => {
+    let host = HydrationHost::{
+      browser: {
+        stores: SlotMap(),
+        scope,
+        task_queue: Queue([]),
+        graph_output: None,
+        document: None,
+        url_request: _ => @cmd.none,
+        url_changed: _ => @cmd.none,
+        paint_scheduled: false,
+        drain_scheduled: true,
+        after_render_queue: Queue([]),
+      },
+      transcript,
+    }
+    (host, ambient_host.protect(host, builder))
+  })
   host.browser.graph_output = Some(output)
   let url = @dom.window().current_url()
   let cmd = Context::inject_url_changed(host, url)

@@ -10,6 +10,7 @@ struct BrowserHost {
   after_render_queue : Queue[() -> Cmd]
   task_queue : Queue[(@cmd.Op, @cmd.Extension)]
   stores : @slotmap.SlotMap[Store]
+  scope : @duplix.ScopeId
   mut graph_output : @duplix.Node[VNode]?
   mut drain_scheduled : Bool
   mut paint_scheduled : Bool
@@ -23,18 +24,21 @@ pub fn BrowserHost::BrowserHost(
   element_id? : String,
   builder : GraphBuilder,
 ) -> Self {
-  let host = BrowserHost::{
-    stores: SlotMap(),
-    task_queue: Queue([]),
-    graph_output: None,
-    document: None,
-    url_request: _ => @cmd.none,
-    url_changed: _ => @cmd.none,
-    paint_scheduled: false,
-    drain_scheduled: true,
-    after_render_queue: Queue([]),
-  }
-  let output = ambient_host.protect(host, builder)
+  let (host, output) = @duplix.with_scope(scope => {
+    let host = BrowserHost::{
+      stores: SlotMap(),
+      scope,
+      task_queue: Queue([]),
+      graph_output: None,
+      document: None,
+      url_request: _ => @cmd.none,
+      url_changed: _ => @cmd.none,
+      paint_scheduled: false,
+      drain_scheduled: true,
+      after_render_queue: Queue([]),
+    }
+    (host, ambient_host.protect(host, builder))
+  })
   host.graph_output = Some(output)
   let url = @dom.window().current_url()
   let cmd = Context::inject_url_changed(host, url)
@@ -112,7 +116,7 @@ fn BrowserHost::request_task(self : Self) -> Unit {
 
 ///|
 pub impl Host for BrowserHost with fn cleanup(self) {
-  ignore(self) // TODO
+  self.scope.cleanup()
 }
 
 ///|

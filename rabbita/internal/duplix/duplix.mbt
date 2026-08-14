@@ -45,7 +45,7 @@ struct Node[T] {
   // to exhaust that range, so wraparound is not a practical concern here.
   mut changed_at : Double
   mut recomputed_at : Double
-  scope : @slotmap.Id
+  scope : ScopeId
   childs : Array[&ErasedNode]
   dirty_flag : DirtyFlag
 }
@@ -247,7 +247,7 @@ pub fn[E : Eq, A : Eq] Node::switch_by(
   f : (E) -> Node[A],
   by~ : (E) -> String,
 ) -> Node[A] {
-  let mut active : (String, Node[A], @slotmap.Id)? = None
+  let mut active : (String, Node[A], ScopeId)? = None
   a.bind(value => {
     let tag = by(value)
     fn update_active(value) {
@@ -263,7 +263,7 @@ pub fn[E : Eq, A : Eq] Node::switch_by(
         if tag == old_tag {
           node
         } else {
-          if global_scopes.get(scope) is Some(scope) {
+          if global_scopes.get(scope.0) is Some(scope) {
             scope.dispose()
           }
           update_active(value)
@@ -304,7 +304,7 @@ priv struct AssocEntry[V, C] {
   mut value : V
   set_value : (V) -> Unit
   result : Node[C]
-  scope : @slotmap.Id
+  scope : ScopeId
   mut epoch : Int
 }
 
@@ -363,7 +363,7 @@ fn[K : Hash + Eq, I : Eq, V : Eq, C : Eq] Node::assoc_projected(
         if entry.result.dirty_flag.parents.search(output_dirty_flag) is Some(i) {
           ignore(entry.result.dirty_flag.parents.remove(i))
         }
-        if global_scopes.get(entry.scope) is Some(scope) {
+        if global_scopes.get(entry.scope.0) is Some(scope) {
           scope.dispose()
         }
       }
