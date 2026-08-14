@@ -124,7 +124,22 @@ extern "js" fn core_primitives_test_focus_event() -> FocusEvent = "() => ({ rela
 
 ///|
 #cfg(target="js")
-extern "js" fn core_primitives_test_mouse_event() -> MouseEvent = "() => ({ relatedTarget: null })"
+extern "js" fn core_primitives_test_mouse_event() -> MouseEvent =
+  #| () => ({
+  #|   relatedTarget: null,
+  #|   screenX: 1.25,
+  #|   screenY: 2.75,
+  #|   pageX: 3.5,
+  #|   pageY: 4.875,
+  #|   clientX: 10.25,
+  #|   clientY: 20.75,
+  #|   offsetX: 30.125,
+  #|   offsetY: 40.625,
+  #|   movementX: 0.5,
+  #|   movementY: -0.75,
+  #|   x: 11.5,
+  #|   y: 21.875,
+  #| })
 
 ///|
 #cfg(target="js")
@@ -182,6 +197,7 @@ extern "js" fn core_primitives_test_restore_image_type() -> Unit =
 extern "js" fn core_primitives_test_subtype_events() -> Array[Event] =
   #| () => {
   #|   globalThis.__domTestPointerEvent = globalThis.PointerEvent
+  #|   globalThis.__domTestWheelEvent = globalThis.WheelEvent
   #|   globalThis.__domTestTransitionEvent = globalThis.TransitionEvent
   #|   globalThis.__domTestToggleEvent = globalThis.ToggleEvent
   #|   globalThis.PointerEvent = class PointerEvent {
@@ -198,6 +214,34 @@ extern "js" fn core_primitives_test_subtype_events() -> Array[Event] =
   #|       this.azimuthAngle = 1.5
   #|       this.pointerType = "pen"
   #|       this.isPrimary = true
+  #|       this.screenX = 1.25
+  #|       this.screenY = 2.75
+  #|       this.pageX = 3.5
+  #|       this.pageY = 4.875
+  #|       this.clientX = 10.25
+  #|       this.clientY = 20.75
+  #|       this.offsetX = 30.125
+  #|       this.offsetY = 40.625
+  #|       this.movementX = 0.5
+  #|       this.movementY = -0.75
+  #|       this.x = 11.5
+  #|       this.y = 21.875
+  #|     }
+  #|   }
+  #|   globalThis.WheelEvent = class WheelEvent {
+  #|     constructor() {
+  #|       this.clientX = 50.25
+  #|       this.clientY = 60.75
+  #|       this.offsetX = 70.125
+  #|       this.offsetY = 80.625
+  #|       this.screenX = 90.5
+  #|       this.screenY = 100.875
+  #|       this.pageX = 110.25
+  #|       this.pageY = 120.75
+  #|       this.movementX = 1.5
+  #|       this.movementY = -1.75
+  #|       this.x = 51.5
+  #|       this.y = 61.875
   #|     }
   #|   }
   #|   globalThis.TransitionEvent = class TransitionEvent {
@@ -213,7 +257,12 @@ extern "js" fn core_primitives_test_subtype_events() -> Array[Event] =
   #|       this.newState = "open"
   #|     }
   #|   }
-  #|   return [new PointerEvent(), new TransitionEvent(), new ToggleEvent()]
+  #|   return [
+  #|     new PointerEvent(),
+  #|     new TransitionEvent(),
+  #|     new ToggleEvent(),
+  #|     new WheelEvent(),
+  #|   ]
   #| }
 
 ///|
@@ -222,11 +271,14 @@ extern "js" fn core_primitives_test_restore_event_types() -> Unit =
   #| () => {
   #|   if (globalThis.__domTestPointerEvent === undefined) delete globalThis.PointerEvent
   #|   else globalThis.PointerEvent = globalThis.__domTestPointerEvent
+  #|   if (globalThis.__domTestWheelEvent === undefined) delete globalThis.WheelEvent
+  #|   else globalThis.WheelEvent = globalThis.__domTestWheelEvent
   #|   if (globalThis.__domTestTransitionEvent === undefined) delete globalThis.TransitionEvent
   #|   else globalThis.TransitionEvent = globalThis.__domTestTransitionEvent
   #|   if (globalThis.__domTestToggleEvent === undefined) delete globalThis.ToggleEvent
   #|   else globalThis.ToggleEvent = globalThis.__domTestToggleEvent
   #|   delete globalThis.__domTestPointerEvent
+  #|   delete globalThis.__domTestWheelEvent
   #|   delete globalThis.__domTestTransitionEvent
   #|   delete globalThis.__domTestToggleEvent
   #| }
@@ -478,6 +530,19 @@ test "event, listener, focus, and input primitives preserve optional values" {
 ///|
 #cfg(target="js")
 test "pointer, transition, and toggle event conversions expose subtype fields" {
+  let mouse = core_primitives_test_mouse_event()
+  assert_eq(mouse.get_screen_x(), 1.25)
+  assert_eq(mouse.get_screen_y(), 2.75)
+  assert_eq(mouse.get_page_x(), 3.5)
+  assert_eq(mouse.get_page_y(), 4.875)
+  assert_eq(mouse.get_client_x(), 10.25)
+  assert_eq(mouse.get_client_y(), 20.75)
+  assert_eq(mouse.get_offset_x(), 30.125)
+  assert_eq(mouse.get_offset_y(), 40.625)
+  assert_eq(mouse.get_movement_x(), 0.5)
+  assert_eq(mouse.get_movement_y(), -0.75)
+  assert_eq(mouse.get_x(), 11.5)
+  assert_eq(mouse.get_y(), 21.875)
   let events = core_primitives_test_subtype_events()
   guard events[0].to_pointer_event() is Some(pointer) else {
     fail("expected PointerEvent conversion")
@@ -486,6 +551,8 @@ test "pointer, transition, and toggle event conversions expose subtype fields" {
   assert_eq(pointer.get_width(), 8.5)
   assert_eq(pointer.get_pressure(), 0.75)
   assert_eq(pointer.get_pointer_type(), "pen")
+  assert_eq(pointer.get_client_x(), 10.25)
+  assert_eq(pointer.get_client_y(), 20.75)
   assert_true(pointer.get_is_primary())
   let transition_event : TransitionEvent? = @js.Cast::into(
     @js.Value::cast_from(events[1]),
@@ -504,6 +571,13 @@ test "pointer, transition, and toggle event conversions expose subtype fields" {
   }
   assert_eq(toggle.get_old_state(), "closed")
   assert_eq(toggle.get_new_state(), "open")
+  guard events[3].to_wheel_event() is Some(wheel) else {
+    fail("expected WheelEvent conversion")
+  }
+  assert_eq(wheel.get_client_x(), 50.25)
+  assert_eq(wheel.get_client_y(), 60.75)
+  assert_eq(wheel.get_offset_x(), 70.125)
+  assert_eq(wheel.get_offset_y(), 80.625)
   core_primitives_test_restore_event_types()
 }
 

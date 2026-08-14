@@ -117,8 +117,8 @@ fn bind_context_menu_trigger(
     event.prevent_default()
     context_menu_open_from_point(
       binding,
-      mouse.get_client_x().to_double(),
-      mouse.get_client_y().to_double(),
+      mouse.get_client_x(),
+      mouse.get_client_y(),
     )
   })
   trigger.add_event_listener("keydown", event => {

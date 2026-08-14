@@ -899,22 +899,22 @@ pub trait IsMouseEvent : IsUIEvent {
   fn get_alt_key(Self) -> Bool
   fn get_button(Self) -> Int
   fn get_buttons(Self) -> Int
-  fn get_client_x(Self) -> Int
-  fn get_client_y(Self) -> Int
+  fn get_client_x(Self) -> Double
+  fn get_client_y(Self) -> Double
   fn get_ctrl_key(Self) -> Bool
   fn get_meta_key(Self) -> Bool
-  fn get_movement_x(Self) -> Int
-  fn get_movement_y(Self) -> Int
-  fn get_offset_x(Self) -> Int
-  fn get_offset_y(Self) -> Int
-  fn get_page_x(Self) -> Int
-  fn get_page_y(Self) -> Int
+  fn get_movement_x(Self) -> Double
+  fn get_movement_y(Self) -> Double
+  fn get_offset_x(Self) -> Double
+  fn get_offset_y(Self) -> Double
+  fn get_page_x(Self) -> Double
+  fn get_page_y(Self) -> Double
   fn get_related_target(Self) -> EventTarget?
-  fn get_screen_x(Self) -> Int
-  fn get_screen_y(Self) -> Int
+  fn get_screen_x(Self) -> Double
+  fn get_screen_y(Self) -> Double
   fn get_shift_key(Self) -> Bool
-  fn get_x(Self) -> Int
-  fn get_y(Self) -> Int
+  fn get_x(Self) -> Double
+  fn get_y(Self) -> Double
   fn get_modifier_state(Self) -> Int
 }
 

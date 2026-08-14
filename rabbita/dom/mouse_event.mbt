@@ -10,23 +10,23 @@ pub trait IsMouseEvent: IsUIEvent {
   fn get_alt_key(Self) -> Bool = _
   fn get_button(Self) -> Int = _
   fn get_buttons(Self) -> Int = _
-  fn get_client_x(Self) -> Int = _
-  fn get_client_y(Self) -> Int = _
+  fn get_client_x(Self) -> Double = _
+  fn get_client_y(Self) -> Double = _
   fn get_ctrl_key(Self) -> Bool = _
   fn get_meta_key(Self) -> Bool = _
-  fn get_movement_x(Self) -> Int = _
-  fn get_movement_y(Self) -> Int = _
-  fn get_offset_x(Self) -> Int = _
-  fn get_offset_y(Self) -> Int = _
-  fn get_page_x(Self) -> Int = _
-  fn get_page_y(Self) -> Int = _
+  fn get_movement_x(Self) -> Double = _
+  fn get_movement_y(Self) -> Double = _
+  fn get_offset_x(Self) -> Double = _
+  fn get_offset_y(Self) -> Double = _
+  fn get_page_x(Self) -> Double = _
+  fn get_page_y(Self) -> Double = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/relatedTarget
   fn get_related_target(Self) -> EventTarget? = _
-  fn get_screen_x(Self) -> Int = _
-  fn get_screen_y(Self) -> Int = _
+  fn get_screen_x(Self) -> Double = _
+  fn get_screen_y(Self) -> Double = _
   fn get_shift_key(Self) -> Bool = _
-  fn get_x(Self) -> Int = _
-  fn get_y(Self) -> Int = _
+  fn get_x(Self) -> Double = _
+  fn get_y(Self) -> Double = _
   fn get_modifier_state(Self) -> Int = _
 }
 
@@ -185,27 +185,27 @@ impl IsMouseEvent with fn get_modifier_state(s) {
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_screen_x(e : @js.Value) -> Int = "(e) => e.screenX"
+extern "js" fn ffi_mouse_event_screen_x(e : @js.Value) -> Double = "(e) => e.screenX"
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_screen_y(e : @js.Value) -> Int = "(e) => e.screenY"
+extern "js" fn ffi_mouse_event_screen_y(e : @js.Value) -> Double = "(e) => e.screenY"
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_client_x(e : @js.Value) -> Int = "(e) => e.clientX"
+extern "js" fn ffi_mouse_event_client_x(e : @js.Value) -> Double = "(e) => e.clientX"
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_client_y(e : @js.Value) -> Int = "(e) => e.clientY"
+extern "js" fn ffi_mouse_event_client_y(e : @js.Value) -> Double = "(e) => e.clientY"
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_offset_x(e : @js.Value) -> Int = "(e) => e.offsetX"
+extern "js" fn ffi_mouse_event_offset_x(e : @js.Value) -> Double = "(e) => e.offsetX"
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_offset_y(e : @js.Value) -> Int = "(e) => e.offsetY"
+extern "js" fn ffi_mouse_event_offset_y(e : @js.Value) -> Double = "(e) => e.offsetY"
 
 ///|
 #cfg(target="js")
@@ -233,19 +233,19 @@ extern "js" fn ffi_mouse_event_buttons(e : @js.Value) -> Int = "(e) => e.buttons
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_movement_x(e : @js.Value) -> Int = "(e) => e.movementX"
+extern "js" fn ffi_mouse_event_movement_x(e : @js.Value) -> Double = "(e) => e.movementX"
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_movement_y(e : @js.Value) -> Int = "(e) => e.movementY"
+extern "js" fn ffi_mouse_event_movement_y(e : @js.Value) -> Double = "(e) => e.movementY"
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_page_x(e : @js.Value) -> Int = "(e) => e.pageX"
+extern "js" fn ffi_mouse_event_page_x(e : @js.Value) -> Double = "(e) => e.pageX"
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_page_y(e : @js.Value) -> Int = "(e) => e.pageY"
+extern "js" fn ffi_mouse_event_page_y(e : @js.Value) -> Double = "(e) => e.pageY"
 
 ///|
 #cfg(target="js")
@@ -255,11 +255,11 @@ extern "js" fn ffi_mouse_event_related_target(
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_x(e : @js.Value) -> Int = "(e) => e.x"
+extern "js" fn ffi_mouse_event_x(e : @js.Value) -> Double = "(e) => e.x"
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_y(e : @js.Value) -> Int = "(e) => e.y"
+extern "js" fn ffi_mouse_event_y(e : @js.Value) -> Double = "(e) => e.y"
 
 ///|
 #cfg(target="js")
