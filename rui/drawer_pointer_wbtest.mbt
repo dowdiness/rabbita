@@ -95,7 +95,7 @@ extern "js" fn ffi_drawer_pointer_fixture_event(
   y : Int,
   time : Int,
   outside : Bool,
-) -> @dom.MouseEvent =
+) -> @dom.PointerEvent =
   #| (x, y, time, outside) => {
   #|   const fixture = globalThis.__ruiDrawerPointerFixture
   #|   return new PointerEvent({

@@ -403,11 +403,10 @@ fn sidebar_release_pointer_state(
 ///|
 #cfg(target="js")
 fn sidebar_pointer_start(
-  event : @dom.MouseEvent,
+  pointer : @dom.PointerEvent,
   min_width : Int,
   max_width : Int,
 ) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
   if pointer.get_default_prevented() ||
     !pointer.get_is_primary() ||
     (pointer.get_pointer_type() == "mouse" && pointer.get_button() != 0) {
@@ -507,8 +506,7 @@ fn sidebar_pointer_start(
 
 ///|
 #cfg(target="js")
-fn sidebar_pointer_move(event : @dom.MouseEvent) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
+fn sidebar_pointer_move(pointer : @dom.PointerEvent) -> Bool {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return false
   }
@@ -551,8 +549,7 @@ fn sidebar_pointer_move(event : @dom.MouseEvent) -> Bool {
 
 ///|
 #cfg(target="js")
-fn sidebar_pointer_end(event : @dom.MouseEvent) -> Int {
-  guard event.to_pointer_event() is Some(pointer) else { return 0 }
+fn sidebar_pointer_end(pointer : @dom.PointerEvent) -> Int {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return 0
   }
@@ -566,8 +563,7 @@ fn sidebar_pointer_end(event : @dom.MouseEvent) -> Int {
 
 ///|
 #cfg(target="js")
-fn sidebar_pointer_cancel(event : @dom.MouseEvent) -> Unit {
-  guard event.to_pointer_event() is Some(pointer) else { return }
+fn sidebar_pointer_cancel(pointer : @dom.PointerEvent) -> Unit {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return
   }

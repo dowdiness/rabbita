@@ -123,7 +123,7 @@ extern "js" fn ffi_carousel_pointer_fixture_event(
   time : Int,
   button : Int,
   interactive : Bool,
-) -> @dom.MouseEvent =
+) -> @dom.PointerEvent =
   #| (x, y, time, button, interactive) => {
   #|   const fixture = globalThis.__ruiCarouselPointerFixture
   #|   const target = new HTMLElement()
