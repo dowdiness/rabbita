@@ -149,11 +149,21 @@ fn request_target(url : String, origin : String) -> (String, String) raise {
 }
 
 ///|
-fn content_type_headers(content_type : String) -> Map[String, String] {
-  let headers : Map[String, String] = Map([])
+fn content_type_headers(
+  content_type : String,
+  headers? : Map[String, String] = Map([]),
+) -> Map[String, String] {
   if !content_type.is_empty() {
     headers["Content-Type"] = content_type
   }
+  headers
+}
+
+///|
+#cfg(not(target="js"))
+fn settle_request_headers() -> Map[String, String] {
+  let headers : Map[String, String] = Map([])
+  headers["User-Agent"] = "MoonBit"
   headers
 }
 
@@ -239,6 +249,7 @@ fn RequestResult::settle(
 async fn execute_request(
   extension : @cmd.Extension,
   origin : String,
+  headers : Map[String, String],
 ) -> RequestResult {
   async fn run(
     expect : Expecting,
@@ -267,13 +278,13 @@ async fn execute_request(
     Get(url, expect) =>
       run(expect, () => {
         let url = resolve_request_url(url, origin)
-        let (response, response_body) = @async_http.get(url)
+        let (response, response_body) = @async_http.get(url, headers~)
         (response, response_body.binary())
       })
     Delete(url, expect) =>
       run(expect, () => {
         let (request_origin, path) = request_target(url, origin)
-        let client = @async_http.Client(request_origin)
+        let client = @async_http.Client(request_origin, headers~)
         defer client.close()
         client.request(Delete, path)
         let response = client.end_request()
@@ -284,22 +295,22 @@ async fn execute_request(
         let url = resolve_request_url(url, origin)
         let (response, response_body) = match body {
           Json(json) => {
-            let headers = content_type_headers("application/json")
+            let headers = content_type_headers("application/json", headers~)
             @async_http.post(url, json, headers~)
           }
           Text(text) => {
-            let headers = content_type_headers("text/plain")
+            let headers = content_type_headers("text/plain", headers~)
             @async_http.post(url, text, headers~)
           }
           BytesBody(content_type, bytes) => {
-            let headers = content_type_headers(content_type)
+            let headers = content_type_headers(content_type, headers~)
             @async_http.post(url, bytes, headers~)
           }
           BlobBody(content_type, blob) => {
-            let headers = content_type_headers(content_type)
+            let headers = content_type_headers(content_type, headers~)
             @async_http.post(url, blob.bytes(), headers~)
           }
-          Empty => @async_http.post(url, b"")
+          Empty => @async_http.post(url, b"", headers~)
         }
         (response, response_body.binary())
       })
@@ -308,29 +319,29 @@ async fn execute_request(
         let url = resolve_request_url(url, origin)
         let (response, response_body) = match body {
           Json(json) => {
-            let headers = content_type_headers("application/json")
+            let headers = content_type_headers("application/json", headers~)
             @async_http.put(url, json, headers~)
           }
           Text(text) => {
-            let headers = content_type_headers("text/plain")
+            let headers = content_type_headers("text/plain", headers~)
             @async_http.put(url, text, headers~)
           }
           BytesBody(content_type, bytes) => {
-            let headers = content_type_headers(content_type)
+            let headers = content_type_headers(content_type, headers~)
             @async_http.put(url, bytes, headers~)
           }
           BlobBody(content_type, blob) => {
-            let headers = content_type_headers(content_type)
+            let headers = content_type_headers(content_type, headers~)
             @async_http.put(url, blob.bytes(), headers~)
           }
-          Empty => @async_http.put(url, b"")
+          Empty => @async_http.put(url, b"", headers~)
         }
         (response, response_body.binary())
       })
     Patch(url, body, expect) =>
       run(expect, () => {
         let (request_origin, path) = request_target(url, origin)
-        let client = @async_http.Client(request_origin)
+        let client = @async_http.Client(request_origin, headers~)
         defer client.close()
         match body {
           Json(json) => {
@@ -366,7 +377,9 @@ async fn execute_request(
 #cfg(not(target="js"))
 fn init {
   op.on_settle((extension, context) => {
-    Async(() => execute_request(extension, context.get_origin()).settle())
+    Async(() => {
+      execute_request(extension, context.get_origin(), settle_request_headers()).settle()
+    })
   })
 }
 
@@ -399,6 +412,8 @@ fn init {
 ///|
 fn init {
   op.on_invoke((extension, context) => {
-    Async(() => execute_request(extension, context.get_origin()).to_cmd())
+    Async(() => {
+      execute_request(extension, context.get_origin(), Map([])).to_cmd()
+    })
   })
 }

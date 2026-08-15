@@ -9,3 +9,10 @@ test "failed HTTP results request hydration fallback" {
     _ => fail("expected hydration fallback")
   }
 }
+
+///|
+#cfg(not(target="js"))
+test "settle HTTP requests include a user agent" {
+  let headers = settle_request_headers()
+  assert_eq(headers.get("User-Agent"), Some("MoonBit"))
+}
