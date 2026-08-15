@@ -12,10 +12,14 @@ struct SSRHost {
 }
 
 ///|
-pub fn SSRHost::render_to_string(self : Self) -> String {
+pub fn SSRHost::render_to_string(
+  self : Self,
+  head : Array[@vdom.VNode],
+) -> String {
   let document = self.document.unwrap()
   guard! document.vnode
     is Elem("html", _, Array([Elem("head", _, Array(metadata), ..), ..]), ..)
+  metadata.append(head)
   let transcript = Json::object(self.transcript).stringify(escape_slash=true)
   let props = @vdom.Props::new(
     { "id": RABBITA_TRANSCRIPT_ID, "type": "application/json" },

@@ -78,6 +78,9 @@ fn split_url(url : String) -> (String, String) raise {
 ///|
 /// Renders the application to an HTML string for the given URL.
 ///
+/// The nodes in `head` are appended to the application's existing `<head>`
+/// before the hydration transcript.
+///
 /// Throws `@async.TimeoutError` if rendering does not complete within `timeout`
 /// milliseconds.
 #cfg(not(target="js"))
@@ -85,6 +88,7 @@ fn split_url(url : String) -> (String, String) raise {
 pub async fn App::render(
   self : Self,
   url~ : String,
+  head? : Array[Html] = [],
   timeout? : Int = 10_000,
 ) -> String {
   let (origin, path) = split_url(url)
@@ -92,7 +96,9 @@ pub async fn App::render(
     let output = (self.builder)()
     output.0.map(html => html.0)
   })
-  let html = @async.with_timeout(timeout, () => host.render_to_string()) catch {
+  let html = @async.with_timeout(timeout, () => {
+    host.render_to_string(head.map(html => html.to_virtual_dom()))
+  }) catch {
     error => {
       host.cleanup()
       raise error
