@@ -386,14 +386,14 @@ fn resizable_update_pointer(
     ui_element_is_rtl(binding.root) {
     rect.get_left() +
     rect.get_width() -
-    (pointer.get_client_x().to_double() - rect.get_left())
+    (pointer.get_client_x() - rect.get_left())
   } else {
-    pointer.get_client_x().to_double()
+    pointer.get_client_x()
   }
   (binding.resize)(
     active.between,
     client_x.round().to_int(),
-    pointer.get_client_y(),
+    pointer.get_client_y().round().to_int(),
     rect.get_left().round().to_int(),
     rect.get_top().round().to_int(),
     rect.get_width().round().to_int(),
@@ -412,7 +412,9 @@ fn resizable_finish_pointer(
   active.handle.remove_attribute("data-resizing")
   binding.active = None
   if binding.root.has_pointer_capture(active.pointer_id) {
-    binding.root.release_pointer_capture(active.pointer_id)
+    binding.root.release_pointer_capture(active.pointer_id) catch {
+      @dom.DOMExceptionError(..) => ()
+    }
   }
 }
 
@@ -456,7 +458,13 @@ fn resizable_bind_pointer_listeners(binding : ResizablePointerBinding) -> Unit {
     handle.set_attribute("data-resizing", "true")
     ui_focus_element_without_scroll(control)
     pointer.prevent_default()
-    binding.root.set_pointer_capture(pointer.get_pointer_id())
+    binding.root.set_pointer_capture(pointer.get_pointer_id()) catch {
+      @dom.DOMExceptionError(..) => {
+        binding.active = None
+        handle.remove_attribute("data-resizing")
+        return
+      }
+    }
     resizable_update_pointer(binding, pointer)
   })
   binding.root.add_event_listener("pointermove", event => {

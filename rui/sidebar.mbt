@@ -200,7 +200,7 @@ priv struct SidebarPointerState {
   pointer_id : Int
   right : Bool
   gutter : Int
-  start_x : Int
+  start_x : Double
   start_width : Double
   min : Double
   max : Double
@@ -383,7 +383,9 @@ fn sidebar_release_pointer_state(
   if state.captured {
     state.captured = false
     if state.rail.has_pointer_capture(state.pointer_id) {
-      state.rail.release_pointer_capture(state.pointer_id)
+      state.rail.release_pointer_capture(state.pointer_id) catch {
+        @dom.DOMExceptionError(..) => ()
+      }
     }
   }
   if committed && dragged {
@@ -401,11 +403,10 @@ fn sidebar_release_pointer_state(
 ///|
 #cfg(target="js")
 fn sidebar_pointer_start(
-  event : @dom.MouseEvent,
+  pointer : @dom.PointerEvent,
   min_width : Int,
   max_width : Int,
 ) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
   if pointer.get_default_prevented() ||
     !pointer.get_is_primary() ||
     (pointer.get_pointer_type() == "mouse" && pointer.get_button() != 0) {
@@ -488,7 +489,12 @@ fn sidebar_pointer_start(
   state.lost_pointer_capture = Some(lost_pointer_capture)
   rail.add_event_listener("lostpointercapture", lost_pointer_capture)
   sidebar_pointer_states.push(state)
-  rail.set_pointer_capture(state.pointer_id)
+  rail.set_pointer_capture(state.pointer_id) catch {
+    @dom.DOMExceptionError(..) => {
+      sidebar_release_pointer_state(state, false)
+      return false
+    }
+  }
   if rail.has_pointer_capture(state.pointer_id) {
     state.captured = true
     true
@@ -500,8 +506,7 @@ fn sidebar_pointer_start(
 
 ///|
 #cfg(target="js")
-fn sidebar_pointer_move(event : @dom.MouseEvent) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
+fn sidebar_pointer_move(pointer : @dom.PointerEvent) -> Bool {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return false
   }
@@ -525,10 +530,7 @@ fn sidebar_pointer_move(event : @dom.MouseEvent) -> Bool {
     root.get_style().set_property("cursor", "col-resize")
   }
   let delta = if state.right { -physical_delta } else { physical_delta }
-  state.width = (state.start_width + delta.to_double()).clamp(
-    min=state.min,
-    max=state.max,
-  )
+  state.width = (state.start_width + delta).clamp(min=state.min, max=state.max)
   let rounded_width = state.width.round().to_int().max(1)
   root
   .get_style()
@@ -544,8 +546,7 @@ fn sidebar_pointer_move(event : @dom.MouseEvent) -> Bool {
 
 ///|
 #cfg(target="js")
-fn sidebar_pointer_end(event : @dom.MouseEvent) -> Int {
-  guard event.to_pointer_event() is Some(pointer) else { return 0 }
+fn sidebar_pointer_end(pointer : @dom.PointerEvent) -> Int {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return 0
   }
@@ -559,8 +560,7 @@ fn sidebar_pointer_end(event : @dom.MouseEvent) -> Int {
 
 ///|
 #cfg(target="js")
-fn sidebar_pointer_cancel(event : @dom.MouseEvent) -> Unit {
-  guard event.to_pointer_event() is Some(pointer) else { return }
+fn sidebar_pointer_cancel(pointer : @dom.PointerEvent) -> Unit {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return
   }

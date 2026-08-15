@@ -255,9 +255,9 @@ fn scroll_area_move_pointer(
   }
   let travel = (track_size - thumb_size).max(0.0)
   let pointer_position = if dimensions.vertical {
-    pointer.get_client_y().to_double() - rect.get_top()
+    pointer.get_client_y() - rect.get_top()
   } else {
-    pointer.get_client_x().to_double() - rect.get_left()
+    pointer.get_client_x() - rect.get_left()
   }
   let start = (pointer_position - drag.grab).clamp(min=0.0, max=travel)
   scroll_area_set_physical_offset(
@@ -282,7 +282,9 @@ fn scroll_area_finish_pointer(
   guard drag.pointer_id == pointer.get_pointer_id() else { return }
   binding.drag = None
   if binding.track.has_pointer_capture(drag.pointer_id) {
-    binding.track.release_pointer_capture(drag.pointer_id)
+    binding.track.release_pointer_capture(drag.pointer_id) catch {
+      @dom.DOMExceptionError(..) => ()
+    }
   }
 }
 
@@ -314,9 +316,9 @@ fn scroll_area_bind_pointer_listeners(
       dimensions.max *
       travel
     let pointer_position = if dimensions.vertical {
-      pointer.get_client_y().to_double() - rect.get_top()
+      pointer.get_client_y() - rect.get_top()
     } else {
-      pointer.get_client_x().to_double() - rect.get_left()
+      pointer.get_client_x() - rect.get_left()
     }
     let on_thumb = pointer.target().to_element() is Some(target) &&
       target.is_same_node(binding.thumb.as_node())
@@ -328,7 +330,12 @@ fn scroll_area_bind_pointer_listeners(
         thumb_size / 2.0
       },
     })
-    binding.track.set_pointer_capture(pointer.get_pointer_id())
+    binding.track.set_pointer_capture(pointer.get_pointer_id()) catch {
+      @dom.DOMExceptionError(..) => {
+        binding.drag = None
+        return
+      }
+    }
     scroll_area_move_pointer(binding, pointer)
   })
   binding.track.add_event_listener("pointermove", event => {

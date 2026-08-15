@@ -323,8 +323,8 @@ fn toast_mark_all_closing(
 priv struct ToastPointerState {
   surface : @dom.Element
   pointer_id : Int
-  start_x : Int
-  start_y : Int
+  start_x : Double
+  start_y : Double
   start_time : Double
   direction : Int
   mut active : Bool
@@ -371,15 +371,16 @@ fn toast_restore_pointer_state(state : ToastPointerState) -> Unit {
   }
   state.surface.remove_attribute("data-swipe")
   if state.surface.has_pointer_capture(state.pointer_id) {
-    state.surface.release_pointer_capture(state.pointer_id)
+    state.surface.release_pointer_capture(state.pointer_id) catch {
+      @dom.DOMExceptionError(..) => ()
+    }
   }
   toast_remove_pointer_state(state.surface)
 }
 
 ///|
 #cfg(target="js")
-fn toast_pointer_start(event : @dom.MouseEvent) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
+fn toast_pointer_start(pointer : @dom.PointerEvent) -> Bool {
   if !pointer.get_is_primary() || pointer.get_button() != 0 {
     return false
   }
@@ -411,14 +412,18 @@ fn toast_pointer_start(event : @dom.MouseEvent) -> Bool {
     transition: surface_html.get_style().get_property_value("transition"),
   }
   toast_pointer_states.push(state)
-  surface.set_pointer_capture(state.pointer_id)
+  surface.set_pointer_capture(state.pointer_id) catch {
+    @dom.DOMExceptionError(..) => {
+      toast_restore_pointer_state(state)
+      return false
+    }
+  }
   true
 }
 
 ///|
 #cfg(target="js")
-fn toast_pointer_move(event : @dom.MouseEvent) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
+fn toast_pointer_move(pointer : @dom.PointerEvent) -> Bool {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return false
   }
@@ -439,12 +444,8 @@ fn toast_pointer_move(event : @dom.MouseEvent) -> Bool {
     state.active = true
     surface.set_attribute("data-swipe", "move")
   }
-  let progress = delta_x * state.direction
-  let visual = if progress < 0 {
-    delta_x.to_double() * 0.2
-  } else {
-    delta_x.to_double()
-  }
+  let progress = delta_x * state.direction.to_double()
+  let visual = if progress < 0 { delta_x * 0.2 } else { delta_x }
   let style = surface_html.get_style()
   style.set_property("transition", "none")
   style.set_property("--rui-toast-swipe-x", "\{visual}px")
@@ -453,8 +454,7 @@ fn toast_pointer_move(event : @dom.MouseEvent) -> Bool {
 
 ///|
 #cfg(target="js")
-fn toast_pointer_end(event : @dom.MouseEvent) -> Int {
-  guard event.to_pointer_event() is Some(pointer) else { return 0 }
+fn toast_pointer_end(pointer : @dom.PointerEvent) -> Int {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return 0
   }
@@ -462,15 +462,12 @@ fn toast_pointer_end(event : @dom.MouseEvent) -> Int {
   guard toast_pointer_state(surface) is Some(state) else { return 0 }
   guard state.pointer_id == pointer.get_pointer_id() else { return 0 }
   let delta_x = pointer.get_client_x() - state.start_x
-  let progress = delta_x * state.direction
+  let progress = delta_x * state.direction.to_double()
   let elapsed = (pointer.get_time_stamp() - state.start_time).max(1.0)
   let threshold = (surface.get_client_width() * 0.35).max(48.0).min(160.0)
   let dismiss = state.active &&
     progress > 0 &&
-    (
-      progress.to_double() >= threshold ||
-      (progress >= 16 && progress.to_double() / elapsed >= 0.5)
-    )
+    (progress >= threshold || (progress >= 16 && progress / elapsed >= 0.5))
   let active = state.active
   toast_restore_pointer_state(state)
   if dismiss {
@@ -484,8 +481,7 @@ fn toast_pointer_end(event : @dom.MouseEvent) -> Int {
 
 ///|
 #cfg(target="js")
-fn toast_pointer_cancel(event : @dom.MouseEvent) -> Unit {
-  guard event.to_pointer_event() is Some(pointer) else { return }
+fn toast_pointer_cancel(pointer : @dom.PointerEvent) -> Unit {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return
   }

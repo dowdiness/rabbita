@@ -343,11 +343,11 @@ fn slider_pointer_value_at(
       ui_element_is_rtl(binding.root)
     )
   let offset = if vertical {
-    rect.get_bottom() - pointer.get_client_y().to_double()
+    rect.get_bottom() - pointer.get_client_y()
   } else if rtl {
-    rect.get_right() - pointer.get_client_x().to_double()
+    rect.get_right() - pointer.get_client_x()
   } else {
-    pointer.get_client_x().to_double() - rect.get_left()
+    pointer.get_client_x() - rect.get_left()
   }
   let percent = (offset / size).clamp(min=0.0, max=1.0)
   let config = slider_pointer_config(binding, 1)
@@ -460,7 +460,9 @@ fn slider_pointer_finish(
     slider_pointer_update(binding, pointer, true)
   }
   if binding.root.has_pointer_capture(pointer_id) {
-    binding.root.release_pointer_capture(pointer_id)
+    binding.root.release_pointer_capture(pointer_id) catch {
+      @dom.DOMExceptionError(..) => ()
+    }
   }
   binding.active_index = -1
   binding.active_pointer_id = None
@@ -489,7 +491,12 @@ fn slider_bind_pointer_listeners(binding : SliderPointerBinding) -> Unit {
     }
     binding.active_pointer_id = Some(pointer.get_pointer_id())
     pointer.prevent_default()
-    binding.root.set_pointer_capture(pointer.get_pointer_id())
+    binding.root.set_pointer_capture(pointer.get_pointer_id()) catch {
+      @dom.DOMExceptionError(..) => {
+        slider_pointer_finish(binding, pointer, false)
+        return
+      }
+    }
     slider_pointer_update(binding, pointer, false)
   })
   binding.root.add_event_listener("pointermove", event => {

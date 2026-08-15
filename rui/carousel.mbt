@@ -708,8 +708,8 @@ priv struct CarouselPointerState {
   can_next : Bool
   resist_previous : Bool
   resist_next : Bool
-  start_x : Int
-  start_y : Int
+  start_x : Double
+  start_y : Double
   start_time : Double
   size : Double
   base_offset : Double?
@@ -828,7 +828,9 @@ fn carousel_release_pointer_state(
   }
   state.viewport.remove_attribute("data-dragging")
   if state.viewport.has_pointer_capture(state.pointer_id) {
-    state.viewport.release_pointer_capture(state.pointer_id)
+    state.viewport.release_pointer_capture(state.pointer_id) catch {
+      @dom.DOMExceptionError(..) => ()
+    }
   }
   carousel_remove_pointer_state(state.viewport)
   if keep_click_suppression && state.suppress_click is Some(_) {
@@ -846,13 +848,12 @@ fn carousel_release_pointer_state(
 ///|
 #cfg(target="js")
 fn carousel_pointer_start(
-  event : @dom.MouseEvent,
+  pointer : @dom.PointerEvent,
   orientation : String,
   index : Int,
   can_previous : Bool,
   can_next : Bool,
 ) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
   if pointer.get_default_prevented() ||
     !pointer.get_is_primary() ||
     (pointer.get_pointer_type() == "mouse" && pointer.get_button() != 0) ||
@@ -923,14 +924,18 @@ fn carousel_pointer_start(
     suppress_click: None,
   }
   carousel_pointer_states.push(state)
-  viewport.set_pointer_capture(state.pointer_id)
+  viewport.set_pointer_capture(state.pointer_id) catch {
+    @dom.DOMExceptionError(..) => {
+      carousel_remove_pointer_state(viewport)
+      return false
+    }
+  }
   true
 }
 
 ///|
 #cfg(target="js")
-fn carousel_pointer_move(event : @dom.MouseEvent) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
+fn carousel_pointer_move(pointer : @dom.PointerEvent) -> Bool {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return false
   }
@@ -976,11 +981,7 @@ fn carousel_pointer_move(event : @dom.MouseEvent) -> Bool {
   } else {
     !state.can_previous || state.resist_previous
   }
-  let visual = if blocked {
-    primary.to_double() * 0.35
-  } else {
-    primary.to_double()
-  }
+  let visual = if blocked { primary * 0.35 } else { primary }
   let base = if state.base_offset is Some(offset) {
     "\{offset}px"
   } else {
@@ -999,8 +1000,7 @@ fn carousel_pointer_move(event : @dom.MouseEvent) -> Bool {
 
 ///|
 #cfg(target="js")
-fn carousel_pointer_end(event : @dom.MouseEvent) -> Int {
-  guard event.to_pointer_event() is Some(pointer) else { return 0 }
+fn carousel_pointer_end(pointer : @dom.PointerEvent) -> Int {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return 0
   }
@@ -1016,8 +1016,8 @@ fn carousel_pointer_end(event : @dom.MouseEvent) -> Int {
   let threshold = (state.size * 0.12).max(24.0).min(64.0)
   let qualifies = state.active &&
     (
-      primary.abs().to_double() >= threshold ||
-      (primary.abs() >= 12 && primary.abs().to_double() / elapsed >= 0.45)
+      primary.abs() >= threshold ||
+      (primary.abs() >= 12 && primary.abs() / elapsed >= 0.45)
     )
   let toward_next = if state.horizontal {
     if state.rtl {
@@ -1045,8 +1045,7 @@ fn carousel_pointer_end(event : @dom.MouseEvent) -> Int {
 
 ///|
 #cfg(target="js")
-fn carousel_pointer_cancel(event : @dom.MouseEvent) -> Unit {
-  guard event.to_pointer_event() is Some(pointer) else { return }
+fn carousel_pointer_cancel(pointer : @dom.PointerEvent) -> Unit {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return
   }

@@ -90,8 +90,8 @@ priv struct DrawerPointerState {
   pointer_id : Int
   horizontal : Bool
   sign : Int
-  start_x : Int
-  start_y : Int
+  start_x : Double
+  start_y : Double
   start_time : Double
   size : Double
   mut active : Bool
@@ -173,15 +173,19 @@ fn drawer_release_pointer_state(
   }
   state.surface.remove_attribute("data-dragging")
   if state.surface.has_pointer_capture(state.pointer_id) {
-    state.surface.release_pointer_capture(state.pointer_id)
+    state.surface.release_pointer_capture(state.pointer_id) catch {
+      @dom.DOMExceptionError(..) => ()
+    }
   }
   drawer_remove_pointer_state(state.surface)
 }
 
 ///|
 #cfg(target="js")
-fn drawer_pointer_start(event : @dom.MouseEvent, direction : String) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
+fn drawer_pointer_start(
+  pointer : @dom.PointerEvent,
+  direction : String,
+) -> Bool {
   if pointer.get_default_prevented() ||
     !pointer.get_is_primary() ||
     (pointer.get_pointer_type() == "mouse" && pointer.get_button() != 0) {
@@ -240,14 +244,18 @@ fn drawer_pointer_start(event : @dom.MouseEvent, direction : String) -> Bool {
     original_overlay_opacity,
   }
   drawer_pointer_states.push(state)
-  surface.set_pointer_capture(state.pointer_id)
+  surface.set_pointer_capture(state.pointer_id) catch {
+    @dom.DOMExceptionError(..) => {
+      drawer_remove_pointer_state(surface)
+      return false
+    }
+  }
   true
 }
 
 ///|
 #cfg(target="js")
-fn drawer_pointer_move(event : @dom.MouseEvent) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
+fn drawer_pointer_move(pointer : @dom.PointerEvent) -> Bool {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return false
   }
@@ -265,7 +273,7 @@ fn drawer_pointer_move(event : @dom.MouseEvent) -> Bool {
   } else {
     pointer.get_client_x() - state.start_x
   }
-  let progress = delta * state.sign
+  let progress = delta * state.sign.to_double()
   if !state.active {
     if delta.abs() < 6 || delta.abs() <= cross.abs() {
       return false
@@ -273,11 +281,7 @@ fn drawer_pointer_move(event : @dom.MouseEvent) -> Bool {
     state.active = true
     surface.set_attribute("data-dragging", "true")
   }
-  let visual = if progress < 0 {
-    delta.to_double() * 0.2
-  } else {
-    delta.to_double()
-  }
+  let visual = if progress < 0 { delta * 0.2 } else { delta }
   let style = surface_html.get_style()
   style.set_property("transition", "none")
   style.set_property(
@@ -290,10 +294,7 @@ fn drawer_pointer_move(event : @dom.MouseEvent) -> Bool {
   )
   if state.overlay is Some(overlay) &&
     overlay.to_html_element() is Some(overlay_html) {
-    let ratio = (progress.to_double() / state.size.max(1.0)).clamp(
-      min=0.0,
-      max=1.0,
-    )
+    let ratio = (progress / state.size.max(1.0)).clamp(min=0.0, max=1.0)
     overlay_html
     .get_style()
     .set_property("--rui-dialog-overlay-opacity", "\{1.0 - ratio}")
@@ -303,8 +304,7 @@ fn drawer_pointer_move(event : @dom.MouseEvent) -> Bool {
 
 ///|
 #cfg(target="js")
-fn drawer_pointer_end(event : @dom.MouseEvent) -> Bool {
-  guard event.to_pointer_event() is Some(pointer) else { return false }
+fn drawer_pointer_end(pointer : @dom.PointerEvent) -> Bool {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return false
   }
@@ -316,23 +316,19 @@ fn drawer_pointer_end(event : @dom.MouseEvent) -> Bool {
   } else {
     pointer.get_client_y() - state.start_y
   }
-  let progress = delta * state.sign
+  let progress = delta * state.sign.to_double()
   let elapsed = (pointer.get_time_stamp() - state.start_time).max(1.0)
   let threshold = (state.size * 0.25).max(48.0).min(160.0)
   let dismiss = state.active &&
     progress > 0 &&
-    (
-      progress.to_double() >= threshold ||
-      (progress >= 16 && progress.to_double() / elapsed >= 0.5)
-    )
+    (progress >= threshold || (progress >= 16 && progress / elapsed >= 0.5))
   drawer_release_pointer_state(state, !dismiss)
   dismiss
 }
 
 ///|
 #cfg(target="js")
-fn drawer_pointer_cancel(event : @dom.MouseEvent) -> Unit {
-  guard event.to_pointer_event() is Some(pointer) else { return }
+fn drawer_pointer_cancel(pointer : @dom.PointerEvent) -> Unit {
   guard pointer.current_target().to_option() is Some(current_target) else {
     return
   }

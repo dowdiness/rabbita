@@ -4,6 +4,10 @@ type MouseEvent = @dom.MouseEvent
 
 ///|
 #cfg(target="js")
+type PointerEvent = @dom.PointerEvent
+
+///|
+#cfg(target="js")
 type KeyboardEvent = @dom.KeyboardEvent
 
 ///|
@@ -41,6 +45,10 @@ type DomEvent = @dom.Event
 ///|
 #cfg(not(target="js"))
 type MouseEvent = Unit
+
+///|
+#cfg(not(target="js"))
+type PointerEvent = Unit
 
 ///|
 #cfg(not(target="js"))
@@ -104,6 +112,29 @@ fn Attrs::on_mouse_event(
   self : Attrs,
   event : String,
   msg : (MouseEvent) -> Cmd,
+) -> Attrs {
+  ignore((event, msg))
+  self
+}
+
+///|
+#cfg(target="js")
+fn Attrs::on_pointer_event(
+  self : Attrs,
+  event : String,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.handler(event, (event, scheduler) => {
+    scheduler.add(msg(event.to_pointer_event().unwrap()))
+  })
+}
+
+///|
+#cfg(not(target="js"))
+fn Attrs::on_pointer_event(
+  self : Attrs,
+  event : String,
+  msg : (PointerEvent) -> Cmd,
 ) -> Attrs {
   ignore((event, msg))
   self
@@ -299,33 +330,44 @@ pub fn Attrs::on_mouseout(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
 
 ///|
 /// Handle a primary or auxiliary pointer starting contact with the element.
-///
-/// `PointerEvent` extends the browser's mouse-event surface, so the callback
-/// uses Rabbita's existing `MouseEvent` wrapper while preserving pointer-only
-/// fields for JavaScript FFI helpers.
-pub fn Attrs::on_pointerdown(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
-  self.on_mouse_event("pointerdown", msg)
+pub fn Attrs::on_pointerdown(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("pointerdown", msg)
 }
 
 ///|
 /// Handle movement from a captured mouse, pen, or touch pointer.
-pub fn Attrs::on_pointermove(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
-  self.on_mouse_event("pointermove", msg)
+pub fn Attrs::on_pointermove(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("pointermove", msg)
 }
 
 ///|
 /// Handle the end of a mouse, pen, or touch pointer interaction.
-pub fn Attrs::on_pointerup(self : Attrs, msg : (MouseEvent) -> Cmd) -> Attrs {
-  self.on_mouse_event("pointerup", msg)
+pub fn Attrs::on_pointerup(self : Attrs, msg : (PointerEvent) -> Cmd) -> Attrs {
+  self.on_pointer_event("pointerup", msg)
 }
 
 ///|
 /// Handle browser cancellation of an active pointer interaction.
 pub fn Attrs::on_pointercancel(
   self : Attrs,
-  msg : (MouseEvent) -> Cmd,
+  msg : (PointerEvent) -> Cmd,
 ) -> Attrs {
-  self.on_mouse_event("pointercancel", msg)
+  self.on_pointer_event("pointercancel", msg)
+}
+
+///|
+/// Handle the loss of pointer capture for a specific pointer.
+pub fn Attrs::on_lostpointercapture(
+  self : Attrs,
+  msg : (PointerEvent) -> Cmd,
+) -> Attrs {
+  self.on_pointer_event("lostpointercapture", msg)
 }
 
 ///|
