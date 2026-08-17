@@ -34,6 +34,26 @@ pub fn node(
 }
 
 ///|
+/// Build an SVG node with stable keyed children.
+///
+/// Keys are passed through to Rabbita's keyed VDOM children so reordering
+/// children can preserve their DOM identity and focus state.
+pub fn keyed_node(
+  tag : String,
+  attrs : Attrs,
+  children : Map[String, Svg],
+  ns? : String = @dom.namespace_svg,
+) -> Svg {
+  let vnode = @runtime.VNode::elem(
+    tag,
+    attrs.to_props(),
+    Map(children.map((_, child) => child.0)),
+    namespace_uri=ns,
+  )
+  Svg(vnode)
+}
+
+///|
 fn resolve_attrs(attrs : Attrs?) -> Attrs {
   match attrs {
     Some(a) => a
