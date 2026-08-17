@@ -1218,6 +1218,20 @@ pub fn Attrs::system_language(self : Attrs, value : String) -> Attrs {
 }
 
 ///|
+/// [MDN](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/role)
+pub fn Attrs::role(self : Attrs, value : String) -> Attrs {
+  self.0.attrs["role"] = value
+  self
+}
+
+///|
+/// [MDN](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-label)
+pub fn Attrs::aria_label(self : Attrs, value : String) -> Attrs {
+  self.0.attrs["aria-label"] = value
+  self
+}
+
+///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/tabindex)
 pub fn Attrs::tabindex(self : Attrs, value : String) -> Attrs {
   self.0.attrs["tabindex"] = value

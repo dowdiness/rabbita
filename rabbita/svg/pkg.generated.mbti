@@ -83,6 +83,8 @@ pub fn g(id? : String, class? : String, style? : Array[String], fill? : String, 
 
 pub fn image(id? : String, class? : String, style? : Array[String], href~ : String, x~ : Int, y~ : Int, width? : Int, height? : Int, preserve_aspect_ratio? : String, transform? : String, opacity? : String, attrs? : Attrs) -> Svg
 
+pub fn keyed_node(String, Attrs, Map[String, Svg], ns? : String) -> Svg
+
 pub fn line(id? : String, class? : String, style? : Array[String], x1~ : Int, y1~ : Int, x2~ : Int, y2~ : Int, fill? : String, stroke? : String, stroke_width? : Int, stroke_linecap? : String, transform? : String, opacity? : String, attrs? : Attrs) -> Svg
 
 pub fn linear_gradient(id? : String, class? : String, style? : Array[String], attrs? : Attrs, Array[Svg]) -> Svg
@@ -145,6 +147,7 @@ pub fn Attrs::accumulate(Self, String) -> Self
 pub fn Attrs::additive(Self, String) -> Self
 pub fn Attrs::alignment_baseline(Self, String) -> Self
 pub fn Attrs::amplitude(Self, String) -> Self
+pub fn Attrs::aria_label(Self, String) -> Self
 pub fn Attrs::attribute_name(Self, String) -> Self
 pub fn Attrs::attribute_type(Self, String) -> Self
 pub fn Attrs::autofocus(Self, String) -> Self
@@ -279,6 +282,7 @@ pub fn Attrs::required_extensions(Self, String) -> Self
 pub fn Attrs::required_features(Self, String) -> Self
 pub fn Attrs::restart(Self, String) -> Self
 pub fn Attrs::result(Self, String) -> Self
+pub fn Attrs::role(Self, String) -> Self
 pub fn Attrs::rotate(Self, String) -> Self
 pub fn Attrs::rx(Self, String) -> Self
 pub fn Attrs::ry(Self, String) -> Self
