@@ -8,8 +8,8 @@ using @html {button, div, h1, p}
 priv struct Model {
   active : Bool
   resize_count : Int
-  width : Int
-  height : Int
+  width : Double
+  height : Double
   key_count : Int
   last_key : String
   use_new_tagger : Bool
@@ -94,8 +94,8 @@ fn app() -> Val[Html] {
   let initial : Model = {
     active: true,
     resize_count: 0,
-    width: 0,
-    height: 0,
+    width: 0.0,
+    height: 0.0,
     key_count: 0,
     last_key: "",
     use_new_tagger: false,

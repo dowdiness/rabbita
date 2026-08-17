@@ -27,8 +27,8 @@ pub fn Mouse::client_pos(self : Mouse) -> Pos {
 
 ///|
 pub(all) struct Pos {
-  x : Int
-  y : Int
+  x : Double
+  y : Double
 } derive(Debug)
 
 ///|
@@ -122,12 +122,12 @@ pub fn Keyboard::location(self : Keyboard) -> Int {
 ///|
 struct Scroll {
   scroll_offset : Pos
-  scroll_width : Int
-  scroll_height : Int
+  scroll_width : Double
+  scroll_height : Double
 } derive(Debug)
 
 ///|
-pub fn Scroll::new(offset~ : Pos, width~ : Int, height~ : Int) -> Self {
+pub fn Scroll::new(offset~ : Pos, width~ : Double, height~ : Double) -> Self {
   { scroll_offset: offset, scroll_width: width, scroll_height: height }
 }
 
@@ -137,19 +137,19 @@ pub fn Scroll::offset_pos(self : Self) -> Pos {
 }
 
 ///|
-pub fn Scroll::width(self : Self) -> Int {
+pub fn Scroll::width(self : Self) -> Double {
   self.scroll_width
 }
 
 ///|
-pub fn Scroll::height(self : Self) -> Int {
+pub fn Scroll::height(self : Self) -> Double {
   self.scroll_height
 }
 
 ///|
 pub(all) struct Viewport {
-  width : Int
-  height : Int
+  width : Double
+  height : Double
 } derive(Debug)
 
 ///|

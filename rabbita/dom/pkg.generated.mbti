@@ -658,8 +658,8 @@ pub fn Window::get_performance(Self) -> Performance
 pub fn Window::get_visual_viewport(Self) -> VisualViewport?
 pub fn Window::history_go_back(Self) -> Unit
 pub fn Window::history_go_forward(Self) -> Unit
-pub fn Window::inner_height(Self) -> Int
-pub fn Window::inner_width(Self) -> Int
+pub fn Window::inner_height(Self) -> Double
+pub fn Window::inner_width(Self) -> Double
 pub fn Window::load_url(Self, String) -> Unit
 pub fn Window::match_media(Self, String) -> MediaQueryList
 pub fn Window::navigator(Self) -> Navigator
@@ -669,12 +669,12 @@ pub fn Window::queue_microtask(Self, () -> Unit) -> Unit
 pub fn Window::reload_url(Self) -> Unit
 pub fn Window::replace_url(Self, String) -> Unit
 pub fn Window::request_animation_frame(Self, (Double) -> Unit) -> Double
-pub fn Window::scroll_by(Self, Int, Int, behavior? : String) -> Unit
-pub fn Window::scroll_to(Self, Int, Int, behavior? : String) -> Unit
+pub fn Window::scroll_by(Self, Double, Double, behavior? : String) -> Unit
+pub fn Window::scroll_to(Self, Double, Double, behavior? : String) -> Unit
 pub fn Window::scroll_to_bottom(Self, behavior? : String) -> Unit
 pub fn Window::scroll_to_top(Self, behavior? : String) -> Unit
-pub fn Window::scroll_x(Self) -> Int
-pub fn Window::scroll_y(Self) -> Int
+pub fn Window::scroll_x(Self) -> Double
+pub fn Window::scroll_y(Self) -> Double
 pub fn Window::set_interval(Self, () -> Unit, Int) -> Int
 pub fn Window::set_timeout(Self, () -> Unit, Int) -> Int
 pub fn Window::to_event_target(Self) -> EventTarget
@@ -914,22 +914,22 @@ pub trait IsMouseEvent : IsUIEvent {
   fn get_alt_key(Self) -> Bool
   fn get_button(Self) -> Int
   fn get_buttons(Self) -> Int
-  fn get_client_x(Self) -> Int
-  fn get_client_y(Self) -> Int
+  fn get_client_x(Self) -> Double
+  fn get_client_y(Self) -> Double
   fn get_ctrl_key(Self) -> Bool
   fn get_meta_key(Self) -> Bool
-  fn get_movement_x(Self) -> Int
-  fn get_movement_y(Self) -> Int
-  fn get_offset_x(Self) -> Int
-  fn get_offset_y(Self) -> Int
-  fn get_page_x(Self) -> Int
-  fn get_page_y(Self) -> Int
+  fn get_movement_x(Self) -> Double
+  fn get_movement_y(Self) -> Double
+  fn get_offset_x(Self) -> Double
+  fn get_offset_y(Self) -> Double
+  fn get_page_x(Self) -> Double
+  fn get_page_y(Self) -> Double
   fn get_related_target(Self) -> EventTarget?
-  fn get_screen_x(Self) -> Int
-  fn get_screen_y(Self) -> Int
+  fn get_screen_x(Self) -> Double
+  fn get_screen_y(Self) -> Double
   fn get_shift_key(Self) -> Bool
-  fn get_x(Self) -> Int
-  fn get_y(Self) -> Int
+  fn get_x(Self) -> Double
+  fn get_y(Self) -> Double
   fn get_modifier_state(Self, String) -> Bool
 }
 

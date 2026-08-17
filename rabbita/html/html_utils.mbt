@@ -56,12 +56,9 @@ fn keyboard_from_dom(event : @dom.KeyboardEvent) -> Keyboard {
 #cfg(target="js")
 fn scroll_from_dom(element : @dom.Element) -> Scroll {
   Scroll::new(
-    offset={
-      x: element.get_scroll_left().to_int(),
-      y: element.get_scroll_top().to_int(),
-    },
-    width=element.get_scroll_width().to_int(),
-    height=element.get_scroll_height().to_int(),
+    offset={ x: element.get_scroll_left(), y: element.get_scroll_top() },
+    width=element.get_scroll_width(),
+    height=element.get_scroll_height(),
   )
 }
 
