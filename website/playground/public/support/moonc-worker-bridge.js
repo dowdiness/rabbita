@@ -1,7 +1,12 @@
 const mooncModule = { exports: {} };
 self.module = mooncModule;
 self.exports = mooncModule.exports;
-importScripts("../vendor/moonc-worker.js");
+const workerUrl = new URL("../vendor/moonc-worker.js", self.location.href);
+const revision = new URL(self.location.href).searchParams.get("v");
+if (revision) {
+  workerUrl.searchParams.set("v", revision);
+}
+importScripts(workerUrl.href);
 
 const moonc = mooncModule.exports;
 

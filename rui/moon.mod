@@ -3,7 +3,7 @@ name = "Yoorkin/rui"
 version = "0.1.1"
 
 import {
-  "moonbit-community/rabbita@0.14.0",
+  "moonbit-community/rabbita@0.15.2",
   "Yoorkin/shiki@0.1.0",
   "moonbitlang/async@0.19.3",
 }

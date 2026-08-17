@@ -5,7 +5,7 @@ let new_project_name_placeholder = "__WARREN_PROJECT_NAME__"
 let rabbita_version_placeholder = "__RABBITA_VERSION__"
 
 ///|
-let rabbita_version = "0.13.1"
+let rabbita_version = "0.15.2"
 
 ///|
 let default_new_project_template = "default"

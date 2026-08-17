@@ -3,7 +3,7 @@ name = "example/sokoban"
 version = "0.2.0"
 
 import {
-  "moonbit-community/rabbita@0.12.2",
+  "moonbit-community/rabbita@0.15.2",
 }
 
 readme = "README.md"

@@ -21,8 +21,12 @@ function deserialize(message) {
   throw new Error(`Unsupported worker response: ${message.type}`);
 }
 
-export function createMooncWorker() {
-  const worker = new Worker(new URL("./moonc-worker-bridge.js", import.meta.url), {
+export function createMooncWorker(revision = "") {
+  const workerUrl = new URL("./moonc-worker-bridge.js", import.meta.url);
+  if (revision) {
+    workerUrl.searchParams.set("v", String(revision));
+  }
+  const worker = new Worker(workerUrl, {
     name: "moonc-worker",
   });
   const pending = new Map();

@@ -1,7 +1,7 @@
-using @rabbita { new, create_variable }
-using @html {div, h1, li, ul}
+using @rabbita { type Val, new }
+using @html { type Html, div, h1, li, ul}
 
-fn main {
+fn app() -> Val[Html] {
   let items = [
     "Black Beans", "Limes", "Greek Yogurt", "Cilantro", "Honey", "Sweet Potatoes",
     "Cumin", "Chili Powder", "Quinoa",
@@ -12,9 +12,9 @@ fn main {
     ul(class="items", [for item in items => li(item)]),
   ]
 
-  fn app() {
-    let (page, _) = create_variable(html)
-    page
-  }
+  Val::constant(html)
+}
+
+fn main {
   new(app).mount("app")
 }

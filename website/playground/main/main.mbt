@@ -201,7 +201,7 @@ fn load_assets_cmd(emit : Emit[Msg]) -> Cmd {
 
 ///|
 fn example_asset_url(path : String) -> String {
-  "repo-examples/" + path + "?v=examples-2"
+  resolve_asset_url("repo-examples/" + path + "?v=examples-3")
 }
 
 ///|
@@ -1176,7 +1176,7 @@ fn view(emit : Emit[Msg], model : Val[Model]) -> Val[Html] {
 fn initial_cmd(emit : Emit[Msg], model : Model) -> Cmd {
   let cmds = [
     load_assets_cmd(emit),
-    @http.get("examples.json?v=examples-2").expect_json(result => {
+    @http.get(resolve_asset_url("examples.json?v=examples-3")).expect_json(result => {
       emit(ExamplesReady(result))
     }),
     editor_sync_cmd(emit, model),

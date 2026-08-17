@@ -1,6 +1,6 @@
-import { createMooncWorker } from "./rpc.js";
+import { createMooncWorker } from "./rpc.js?v=assets-4";
 
-const manifestUrl = new URL("../moonbit-assets/manifest.json?v=assets-2", import.meta.url).href;
+const manifestUrl = new URL("../moonbit-assets/manifest.json?v=assets-4", import.meta.url).href;
 const textDecoder = new TextDecoder("utf-8");
 let manifestPromise;
 let stdMiFilesPromise;
@@ -8,6 +8,7 @@ const bytesCache = new Map();
 const textCache = new Map();
 const packageBuildCache = new Map();
 let manifestBaseUrl = "";
+let manifestRevision = "";
 
 export async function loadManifest() {
   if (!manifestPromise) {
@@ -18,14 +19,20 @@ export async function loadManifest() {
         );
       }
       manifestBaseUrl = new URL(".", response.url).href;
-      return response.json();
+      const manifest = await response.json();
+      manifestRevision = String(manifest.generatedAt || "");
+      return manifest;
     });
   }
   return manifestPromise;
 }
 
 function assetUrl(url) {
-  return new URL(url, manifestBaseUrl).href;
+  const resolved = new URL(url, manifestBaseUrl);
+  if (manifestRevision) {
+    resolved.searchParams.set("v", manifestRevision);
+  }
+  return resolved.href;
 }
 
 async function fetchBytes(url) {
@@ -310,7 +317,7 @@ export async function compileMbtToJs(mbtSource, moonPkgSource = "") {
   const manifest = await loadManifest();
   const mainImports = parseMoonPkgImports(moonPkgSource);
   const reachableOrder = collectReachablePackages(manifest, mainImports);
-  const worker = createMooncWorker();
+  const worker = createMooncWorker(manifest.generatedAt);
 
   try {
     const stdMiFiles = await stdMiFilesForManifest(manifest);

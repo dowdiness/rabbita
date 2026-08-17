@@ -169,7 +169,7 @@ async fn first_existing(candidates : Array[String]) -> String? {
 
 ///|
 async fn package_graph_path() -> String? {
-  first_existing(["_build/packages.json", "../../_build/packages.json"])
+  first_existing(["../../_build/packages.json", "_build/packages.json"])
 }
 
 ///|
@@ -267,6 +267,17 @@ fn field(obj : Map[String, Json], name : String) -> Json {
 ///|
 fn string_field(obj : Map[String, Json], name : String) -> String {
   json_string(field(obj, name))
+}
+
+///|
+fn supports_js(file_config : Json) -> Bool {
+  let config = json_object(file_config)
+  for backend in json_array(field(config, "backend")) {
+    if json_string(backend) == "Js" {
+      return true
+    }
+  }
+  false
 }
 
 ///|
@@ -430,21 +441,60 @@ async fn collect_core_interfaces(core_bundle_root : String) -> Array[CoreInterfa
 }
 
 ///|
-async fn collect_rabbita_packages(package_graph : String) -> Array[PackageAsset] raise {
+async fn collect_playground_packages(
+  package_graph : String,
+) -> Array[PackageAsset] raise {
   let parsed = @json.parse(@fs.read_file(package_graph).text())
   let root = json_object(parsed)
   let package_values = json_array(field(root, "packages"))
-  let packages : Array[PackageAsset] = []
+  let selected_ids : Array[String] = []
+  let pending_ids : Array[String] = []
 
   for pkg_value in package_values {
     let pkg = json_object(pkg_value)
     if string_field(pkg, "root") == "moonbit-community/rabbita" {
       let id = package_id(pkg)
+      selected_ids.push(id)
+      pending_ids.push(id)
+    }
+  }
+
+  let mut pending_index = 0
+  while pending_index < pending_ids.length() {
+    let id = pending_ids[pending_index]
+    pending_index = pending_index + 1
+    let mut found = false
+    for pkg_value in package_values {
+      let pkg = json_object(pkg_value)
+      if package_id(pkg) == id {
+        found = true
+        for dep_value in json_array(field(pkg, "deps")) {
+          let dep = json_object(dep_value)
+          let dep_id = string_field(dep, "path")
+          if !dep_id.has_prefix("moonbitlang/core/") &&
+            !selected_ids.contains(dep_id) {
+            selected_ids.push(dep_id)
+            pending_ids.push(dep_id)
+          }
+        }
+      }
+    }
+    if !found {
+      fail("Moon package graph does not contain dependency \{id}.")
+    }
+  }
+
+  let packages : Array[PackageAsset] = []
+
+  for pkg_value in package_values {
+    let pkg = json_object(pkg_value)
+    if selected_ids.contains(package_id(pkg)) {
+      let id = package_id(pkg)
       let root_path = string_field(pkg, "root-path")
       let files = json_object(field(pkg, "files"))
       let source_paths : Array[String] = []
-      for file, _ in files {
-        if file.has_suffix(".mbt") {
+      for file, file_config in files {
+        if file.has_suffix(".mbt") && supports_js(file_config) {
           source_paths.push(file)
         }
       }
@@ -549,7 +599,7 @@ async fn main raise {
   }
 
   let core_interfaces = collect_core_interfaces(core_bundle_root)
-  let packages = collect_rabbita_packages(package_graph)
+  let packages = collect_playground_packages(package_graph)
   copy_repo_examples()
   let manifest = render_manifest(
     public_url("public/moonbit-assets/core/core.core"),
@@ -564,7 +614,7 @@ async fn main raise {
     permission=0o644,
   )
 
-  println("Generated \{packages.length()} Rabbita package source assets.")
+  println("Generated \{packages.length()} package source assets.")
   println("Generated \{core_interfaces.length()} core interface assets.")
   println("Generated repo example assets.")
 }

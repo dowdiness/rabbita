@@ -5,7 +5,7 @@ extern "js" fn compile_mbt_promise(
 ) -> @js.Promise =
   #| (source, moonPkg) => {
   #|   const started = performance.now()
-  #|   return import('./support/compiler.js?v=diag-1')
+  #|   return import('./support/compiler.js?v=assets-4')
   #|     .then(async ({ compileMbtToJs }) => {
   #|       const result = await compileMbtToJs(source, moonPkg)
   #|       const elapsed = Math.round(performance.now() - started)
@@ -34,7 +34,7 @@ extern "js" fn compile_mbt_promise(
 ///|
 extern "js" fn load_assets_promise() -> @js.Promise =
   #| () => {
-  #|   return import('./support/compiler.js?v=diag-1')
+  #|   return import('./support/compiler.js?v=assets-4')
   #|     .then(async ({ loadManifest }) => {
   #|       const manifest = await loadManifest()
   #|       const packages = Object.keys(manifest.packages).sort()
@@ -45,6 +45,10 @@ extern "js" fn load_assets_promise() -> @js.Promise =
   #|       error: error?.message || String(error),
   #|     }))
   #| }
+
+///|
+extern "js" fn resolve_asset_url(path : String) -> String =
+  #| (path) => new URL(path, document.baseURI).href
 
 ///|
 extern "js" fn js_result_ok(value : @js.Value) -> Bool =
