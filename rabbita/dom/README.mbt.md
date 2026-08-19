@@ -78,13 +78,14 @@ Event <- AnimationEvent
       <- BeforeUnloadEvent
       <- ClipboardEvent
       <- CloseEvent
-      <- CompositionEvent
       <- CustomEvent
-      <- UIEvent <- MouseEvent <- DragEvent
+      <- UIEvent <- CompositionEvent
                  <- FocusEvent
                  <- InputEvent
                  <- KeyboardEvent
-                 <- WheelEvent
+                 <- MouseEvent <- DragEvent
+                               <- WheelEvent
+                               <- PointerEvent
 
 EventTarget <- Window
             <- Node <- Document
