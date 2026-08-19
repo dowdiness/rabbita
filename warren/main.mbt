@@ -1,13 +1,4 @@
 ///|
-using @path {type SourcePath, type Path}
-
-///|
-using @devhub {type Devhub}
-
-///|
-using @string {parse_int}
-
-///|
 let shell_html_template =
   $|<!DOCTYPE html>
   $|<html lang="en">
@@ -70,19 +61,57 @@ let direct_client_js =
   #|connect();
 
 ///|
-async fn main {
-  let cli = @argparse.Command(
+let fullstack_client_js =
+  #|(function () {
+  #|  const script = document.currentScript;
+  #|  if (!script) {
+  #|    return;
+  #|  }
+  #|  const clientUrl = new URL(script.src);
+  #|  const protocol = clientUrl.protocol === "https:" ? "wss:" : "ws:";
+  #|  const eventsUrl = `${protocol}//${clientUrl.host}/__warren/events`;
+  #|  function connect() {
+  #|    const socket = new WebSocket(eventsUrl);
+  #|    socket.addEventListener("message", event => {
+  #|      if (event.data === "reload") {
+  #|        location.reload();
+  #|      }
+  #|    });
+  #|    socket.addEventListener("close", () => {
+  #|      setTimeout(connect, 1000);
+  #|    });
+  #|  }
+  #|  connect();
+  #|})();
+
+///|
+fn warren_cli() -> @argparse.Command {
+  Command(
     "warren",
+    options=[
+      OptionArg(
+        "directory",
+        short='C',
+        global=true,
+        about="Run as if Warren was started in this directory.",
+      ),
+    ],
     subcommands=[
       Command(
         "dev",
-        positionals=[
-          PositionArg(
-            "main-package-dir",
-            about="Main package directory. Defaults to ./main when present, otherwise the current directory.",
-          ),
-        ],
         options=[
+          OptionArg(
+            "browser-entry",
+            about="Browser entry package directory. Default: ./cmd/browser.",
+          ),
+          OptionArg(
+            "server-entry",
+            about="Server entry package directory. Default: ./cmd/server when present.",
+          ),
+          OptionArg(
+            "server-target",
+            about="Server target: wasm (default) or native.",
+          ),
           OptionArg(
             "public-dir",
             about="Static files directory. Defaults to ./public when present.",
@@ -99,16 +128,26 @@ async fn main {
       ),
       Command(
         "build",
-        positionals=[
-          PositionArg(
-            "main-package-dir",
-            about="Main package directory to build. Defaults to ./main when present, otherwise the current directory.",
-          ),
-        ],
         options=[
+          OptionArg(
+            "browser-entry",
+            about="Browser entry package directory. Default: ./cmd/browser.",
+          ),
+          OptionArg(
+            "server-entry",
+            about="Server entry package directory. Default: ./cmd/server when present.",
+          ),
+          OptionArg(
+            "server-target",
+            about="Server target: wasm (default) or native.",
+          ),
+          OptionArg(
+            "public-dir",
+            about="Static files directory. Defaults to ./public when present.",
+          ),
           OptionArg("dist", about="Build output directory. Default: ./dist."),
         ],
-        about="Build a release static site into ./dist by default.",
+        about="Build browser and optional server release artifacts.",
       ),
       Command(
         "new",
@@ -127,62 +166,71 @@ async fn main {
         about="Create a minimal Rabbita project.",
       ),
     ],
-    about="Preview and build MoonBit web applications.",
-  ).parse()
-  let cwd = @env.current_dir().unwrap()
+    about="Preview and build full-stack MoonBit applications.",
+  )
+}
+
+///|
+fn option_value(matches : @argparse.Matches, name : String) -> String? {
+  match matches.values.get(name) {
+    Some([value]) => Some(value)
+    _ => None
+  }
+}
+
+///|
+async fn run_cli() -> Unit {
+  let cli = warren_cli().parse()
   guard cli.subcommand is Some((subcmd, submatches)) else { return }
+  let directory = match option_value(submatches, "directory") {
+    Some(path) => Some(path)
+    None => option_value(cli, "directory")
+  }
+  let root = effective_root(directory)
   match subcmd {
     "dev" => {
-      let cwd_main = Path::join(cwd, "main").to_string()
-      let main_pkg_dir = match submatches.values.get("main-package-dir") {
-        Some([path]) => Path::resolve(path).to_string()
-        _ if @fs.exists(cwd_main) => cwd_main
-        _ => cwd
+      let layout = resolve_project_layout(
+        root,
+        option_value(submatches, "browser-entry"),
+        option_value(submatches, "server-entry"),
+        option_value(submatches, "public-dir"),
+      )
+      let target_raw = option_value(submatches, "server-target")
+      let server_target = parse_server_target(target_raw)
+      if target_raw is Some(_) && layout.server_entry is None {
+        fail("--server-target requires a server entry.")
       }
-      let cwd_public = Path::join(cwd, "public").to_string()
-      let public_dir = match submatches.values.get("public-dir") {
-        Some([path]) => Some(Path::resolve(path).to_string())
-        _ if @fs.exists(cwd_public) => Some(cwd_public)
-        _ => None
-      }
-      let port = match submatches.values.get("port") {
-        Some([raw]) => {
-          let port = parse_int(raw) catch {
-            _ =>
-              abort(
-                "Invalid --port value `\{raw}`. Expected a number from 1 to 65535.",
-              )
-          }
-
-          guard port > 0 && port <= 65535 else {
-            abort(
-              "Invalid --port value `\{raw}`. Expected a number from 1 to 65535.",
-            )
-          }
-
-          port.reinterpret_as_uint()
-        }
-        _ => 4300U
-      }
+      let port = parse_port(option_value(submatches, "port"))
       let direct = submatches.flags.get("direct") is Some(true)
-      let target_dir = @fs.tmpdir(prefix="warren")
-      dev_server(main_pkg_dir~, target_dir~, public_dir~, port~, direct~)
+      if direct && layout.server_entry is Some(_) {
+        fail("--direct is only available when no server entry exists.")
+      }
+      dev_project(layout, server_target, port, direct)
     }
     "build" => {
-      let cwd_main = Path::join(cwd, "main").to_string()
-      let main_pkg_dir = match submatches.values.get("main-package-dir") {
-        Some([path]) => Path::resolve(path).to_string()
-        _ if @fs.exists(cwd_main) => cwd_main
-        _ => cwd
-      }
-      let dist_dir = match submatches.values.get("dist") {
-        Some([path]) => Path::resolve(path).to_string()
-        _ => Path::join(cwd, "dist").to_string()
-      }
-      build_project(
-        SourcePath::new(main_pkg_dir),
-        dist_dir=SourcePath::new(dist_dir),
+      let layout = resolve_project_layout(
+        root,
+        option_value(submatches, "browser-entry"),
+        option_value(submatches, "server-entry"),
+        option_value(submatches, "public-dir"),
       )
+      let target_raw = option_value(submatches, "server-target")
+      let server_target = parse_server_target(target_raw)
+      if target_raw is Some(_) && layout.server_entry is None {
+        fail("--server-target requires a server entry.")
+      }
+      let dist = resolve_dist_dir(
+        root,
+        option_value(submatches, "dist").unwrap_or("dist"),
+      )
+      validate_dist_inputs(
+        root,
+        dist,
+        layout.browser_entry,
+        layout.server_entry,
+        layout.public_dir,
+      )
+      build_project(layout, server_target, dist)
     }
     "new" =>
       match submatches.values.get("dir_name") {
@@ -191,12 +239,17 @@ async fn main {
             Some([name]) => name
             _ => default_new_project_template
           }
-          new_project(dir, template)
+          new_project(root, dir, template)
         }
         _ => println("Usage: warren new <dir_name> [--template <template>]")
       }
     _ => ()
   }
+}
+
+///|
+async fn main {
+  run_cli()
 }
 
 ///|
@@ -296,157 +349,35 @@ test "inject_preview_assets puts base before relative assets" {
 }
 
 ///|
-fn build_failure_diagnostics(output : String, code : Int) -> String {
-  let output = output.trim().to_owned()
-  if output == "" {
-    "moon build exited with code \{code}."
-  } else {
-    output + "\n\nmoon build exited with code \{code}."
+test "CLI accepts global -C and full-stack entry options" {
+  let matches = warren_cli().parse(
+    argv=[
+      "-C", "project", "dev", "--browser-entry", "frontend", "--server-entry", "backend",
+      "--server-target", "wasm",
+    ],
+    env={},
+  )
+  assert_eq(option_value(matches, "directory"), Some("project"))
+  let entries = match matches.subcommand {
+    Some(("dev", submatches)) =>
+      (
+        option_value(submatches, "browser-entry"),
+        option_value(submatches, "server-entry"),
+        option_value(submatches, "server-target"),
+      )
+    _ => (None, None, None)
   }
+  assert_eq(entries.0, Some("frontend"))
+  assert_eq(entries.1, Some("backend"))
+  assert_eq(entries.2, Some("wasm"))
 }
 
 ///|
-async fn dev_server(
-  main_pkg_dir~ : String,
-  target_dir~ : String,
-  public_dir~ : String?,
-  port~ : UInt,
-  direct~ : Bool,
-) -> Unit {
-  let watcher = @fs.Watcher(main_pkg_dir, ignored_paths=path => {
-    path.contains(".mooncakes") ||
-    path.contains("node_modules") ||
-    path.contains("_build")
-  })
-
-  let vfs = @vfs.new(Map([]))
-  let app_html = match public_dir {
-    Some(dir) => {
-      vfs.mount("/", DirectoryMapping(SourcePath::new(dir)))
-      let files = @fs.readdir(dir)
-      if files.contains("index.html") {
-        @fs.read_file(Path::join(dir, "index.html").to_string()).text()
-      } else {
-        app_html_template
-      }
-    }
-    None => app_html_template
+test "CLI rejects the removed positional build entry" {
+  let rejected = try warren_cli().parse(argv=["build", "main"], env={}) catch {
+    _ => true
+  } noraise {
+    _ => false
   }
-  if direct {
-    vfs.mount("/index.html", FileContent(inject_direct_assets(app_html)))
-    vfs.mount("/__warren/direct.js", FileContent(direct_client_js))
-  } else {
-    vfs.mount(
-      "/__warren/preview/index.html",
-      FileContent(inject_preview_assets(app_html)),
-    )
-    vfs.mount("/index.html", FileContent(shell_html_template))
-    vfs.mount("/warren_devtool.js", FileContent(embbed_devtool_js))
-    vfs.mount("/warren_devtool.css", FileContent(embbed_devtool_css))
-  }
-
-  @async.with_task_group <| group => {
-    let html_fallback_path = if direct { Some("/index.html") } else { None }
-    let hub = Devhub(port, vfs, html_fallback_path?)
-    group.spawn_bg(no_wait=true, allow_failure=true, () => hub.run_forever())
-    log("info", "Running server on http://127.0.0.1:\{hub.port()}")
-
-    while true {
-      let (reader, out) = @process.read_from_process()
-      let (stdin, close_stdin) = @process.write_to_process()
-      close_stdin.close()
-      @fs.rmdir(target_dir, recursive=true)
-      hub.broadcast(Building)
-      log("warren", "Building...")
-
-      defer reader.close()
-      let diagnostics = StringBuilder::new()
-      let code = @async.with_task_group <| build_group => {
-        let exit_code = build_group.spawn(() => {
-          @process.run(
-            "moon",
-            [
-              "build", main_pkg_dir, "--target", "js", "--target-dir", target_dir,
-            ],
-            stdin~,
-            stdout=out,
-            stderr=out,
-          )
-        })
-
-        while reader.read_until("\n") is Some(line) {
-          if line != "" {
-            diagnostics.write_string(line)
-            diagnostics.write_string("\n")
-            log("moon", line)
-          }
-        }
-        exit_code.wait()
-      }
-
-      if code == 0 {
-        log("warren", "moon build succeed at \{main_pkg_dir}.")
-        let js_paths = find_js_in(
-          Path::join(target_dir, "js/debug/build").to_string(),
-        )
-        guard js_paths is [js_path] else {
-          log("error", "found multiple entries: \{Repr(js_paths)}")
-          log(
-            "info", "Use `warren dev path/to/main/package/dir` to choose one entry.",
-          )
-        }
-
-        let basename = Path::basename(js_path)
-        let js_map_path = Path::dirname(js_path)
-          .join("\{basename}.map")
-          .to_string()
-
-        if @fs.exists(js_map_path) {
-          vfs.mount("index.js.map", FileMapping(SourcePath::new(js_map_path)))
-        } else {
-          vfs.unmount("index.js.map")
-        }
-
-        vfs.mount("index.js", FileMapping(SourcePath::new(js_path)))
-        // debug(vfs)
-        hub.broadcast(Reload)
-        log("warren", "Changes detected. Reloading...")
-      } else {
-        hub.broadcast(
-          BuildFailed(build_failure_diagnostics(diagnostics.to_string(), code)),
-        )
-        log("error", "moon exited with code \{code}.")
-      }
-
-      watcher.wait_any()
-    }
-  }
-}
-
-///|
-async fn find_js_in(dir : String) -> Array[String] {
-  async fn collect_js_in(dir : String, js_paths : Array[String]) -> Unit {
-    guard @fs.kind(dir) is Directory else { return }
-    let handle = @fs.opendir(dir)
-    defer handle.close()
-    while handle.next() is Some(entry) {
-      let path = Path::join(dir, entry.name).to_string()
-      if entry.is_dir {
-        collect_js_in(path, js_paths)
-      } else if entry.name.has_suffix(".js") {
-        js_paths.push(path)
-      }
-    }
-  }
-
-  let js_paths = []
-  guard @fs.exists(dir) else { js_paths }
-  collect_js_in(dir, js_paths)
-  js_paths
-}
-
-///|
-fn[A] abort(s : String) -> A {
-  println(s)
-  panic()
+  inspect(rejected, content="true")
 }

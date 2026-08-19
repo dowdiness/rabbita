@@ -106,26 +106,55 @@ async fn write_template_entry(
 }
 
 ///|
-async fn new_project(dir : String, template_name : String) -> Unit {
-  let target_dir = Path::resolve(dir).to_string()
-  let project_name = Path::basename(target_dir).to_owned()
+async fn new_project(
+  project_root : SourcePath,
+  dir : String,
+  template_name : String,
+) -> Unit {
+  let project_root_string = source_path_to_string(project_root)
+  let requested_target = resolve_from(project_root_string, dir)
+  let requested_relative = Path::relative(
+    requested_target,
+    base=project_root_string,
+  ).to_string()
+  let project_name = Path::basename(requested_target).to_owned()
   let template_dir = match template_name {
     "default" => default_template_dir
     "minimized" => minimized_template_dir
-    _ => {
-      println(
+    _ =>
+      fail(
         "Unknown template `\{template_name}`. Available templates: default, minimized.",
       )
-      return
-    }
   }
   guard is_valid_project_name(project_name) else {
-    abort(
+    fail(
       "Invalid project directory name `\{project_name}`. Avoid spaces, path separators, and quotes.",
     )
   }
-  guard !@fs.exists(target_dir) else {
-    abort("Target path already exists: \{target_dir}")
+  guard path_is_inside(requested_target, project_root_string, allow_equal=false) else {
+    fail("New project directory must stay inside -C `\{project_root_string}`.")
+  }
+  guard !protected_output_path(requested_relative) else {
+    fail("Refusing dangerous new project path: \{requested_target}")
+  }
+  guard !@fs.exists(requested_target) else {
+    fail("Target path already exists: \{requested_target}")
+  }
+  let (lexical_parent, canonical_parent) = nearest_existing_parent(
+    requested_target,
+  )
+  guard @fs.kind(canonical_parent) is Directory else {
+    fail("New project parent is not a directory: \{lexical_parent}")
+  }
+  let target_dir = rebuild_from_canonical_parent(
+    requested_target, lexical_parent, canonical_parent,
+  )
+  guard path_is_inside(target_dir, project_root_string, allow_equal=false) else {
+    fail("New project directory resolves outside -C: \{requested_target}")
+  }
+  let target_relative = Path::relative(target_dir, base=project_root_string).to_string()
+  guard !protected_output_path(target_relative) else {
+    fail("Refusing dangerous new project path: \{requested_target}")
   }
 
   @fs.mkdir(target_dir, permission=0o755, recursive=true)
@@ -135,7 +164,8 @@ async fn new_project(dir : String, template_name : String) -> Unit {
   println("")
   println("Next steps:")
   println("  cd \{target_dir}")
-  println("  warren dev")
+  let browser_entry = if template_name == "default" { "main" } else { "." }
+  println("  warren dev --browser-entry \{browser_entry}")
 }
 
 ///|

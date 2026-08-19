@@ -1,113 +1,110 @@
 # warren
 
-`warren` helps you preview and build MoonBit web applications.
-
-Use it during development for a local browser preview with live reload, and use it before publishing to create a static output directory.
+`warren` previews and builds browser-only or full-stack MoonBit applications.
 
 ## Install
-
-Install with Moon:
 
 ```sh
 moon install moonbit-community/warren
 ```
 
-This gives you the `warren` command.
+## Project entries
 
-## New Project
+Warren uses package directories as entries and does not inspect `moon.mod`,
+`moon.pkg`, or `moon.work` contents:
 
-Create a Rabbita app:
+- `cmd/browser` is the default browser entry and is always built for `js`.
+- `cmd/server` is the optional server entry and is built for `wasm` by default,
+  or `native` with `--server-target native`.
+
+Override either convention when needed:
+
+```sh
+warren dev --browser-entry frontend --server-entry backend
+warren build --browser-entry frontend --server-entry backend
+```
+
+The browser entry is required. If no server entry exists, `warren dev` starts
+the built-in development server with its diagnostics, live reload, and optional
+`--direct` mode. If a server entry exists, Warren starts that program instead,
+sets `WARREN_DIST` to the absolute static directory and `WARREN_PORT` to the
+selected port, and leaves HTTP/static serving to the program. `--direct` is not
+available with a custom server. Warren also sets `WARREN_CLIENT` to an
+external reload script served by its development hub. Rabbita SSR applications
+can inject this script through `moonbit-community/rabbita/server/plugin`,
+without depending on a particular HTTP server library. `WARREN_MODE` is set to
+`DEV`.
+Successful browser rebuilds replace the assets in `WARREN_DIST` and reload
+connected pages without modifying `index.js` or restarting an unchanged server.
+
+Use `-C` (or `--directory`) with every subcommand to choose the project root:
+
+```sh
+warren -C path/to/project dev
+warren build -C path/to/project
+warren -C path/to/parent new my-app
+```
+
+Entry, public, and output paths must stay inside that project root. Build output
+must be a safe child directory and cannot overlap an entry or the public
+directory. The minimized template's root browser entry is the one exception:
+its `dist/` child is safe because Warren deletes only that child.
+
+## Development
+
+```sh
+warren dev
+warren dev --public-dir shared/public --port 4301
+warren dev --server-target native
+```
+
+`public/` is used automatically when it exists. Warren watches the whole
+project root and ignores `.git`, `_build`, `.mooncakes`, every directory named
+`dist`, and its own temporary build directory.
+
+Browser-only build failures are reported in the development UI while the last
+successful static output remains available. In full-stack mode, a build failure
+stops the server and exits Warren. A native server is restarted only when its
+artifact changes or the previous process has exited.
+
+## Release build
+
+```sh
+warren build
+warren build --public-dir shared/public --dist output
+warren build --server-target native
+```
+
+The default output directory is `dist/`. Warren clears it at the start, copies
+public files, writes the browser artifact as `index.js`, creates or updates
+`index.html`, and copies an optional server artifact under its original
+basename. Browser and server builds run serially in release mode, reuse Moon's
+default build cache, and locate artifacts only from the `--build-only` JSON
+result without inspecting `_build`. After a wasm server build, Warren prints the
+command for starting the copied artifact, for example:
+
+```sh
+cd /absolute/path/to/dist && moon run server.wasm
+```
+
+## New project
+
+The bundled templates predate the `cmd/browser` convention, so their entry is
+explicit:
 
 ```sh
 warren new my-app
 cd my-app
-warren dev
+warren dev --browser-entry main
 ```
 
-Choose the smaller bundled template when needed:
+For the minimized root-package template:
 
 ```sh
-warren new my-app --template minimized
+warren new tiny-app --template minimized
+cd tiny-app
+warren dev --browser-entry .
 ```
-
-## Development Preview
-
-Run inside your app directory:
-
-```sh
-warren dev
-```
-
-Then open the printed local URL in your browser.
-
-By default, `warren dev` uses:
-
-- `./main` as the main package directory when it exists
-- the current directory otherwise
-- `./public` for static files when it exists
-- port `4300`
-
-You can also choose the main package, static files directory, or port:
-
-```sh
-warren dev path/to/main --public-dir path/to/public --port 4301
-```
-
-To serve the application directly as the top-level page instead, use:
-
-```sh
-warren dev --direct
-```
-
-Direct mode keeps live reload but does not load the Warren development UI. It is useful for applications that depend on top-level navigation, browser APIs, or end-to-end tests without an iframe.
-
-If the port is already used by a previous `warren` preview, `warren` will stop it and continue. If another program is using the port, stop that program manually or choose a different port.
-
-## Release Build
-
-```sh
-warren build
-```
-
-By default, `warren build` builds:
-
-- `./main` when it exists
-- the current directory otherwise
-
-You can also pass the main package directory explicitly:
-
-```sh
-warren build path/to/main
-```
-
-The build output is written to `./dist` by default. You can choose another output path:
-
-```sh
-warren build --dist path/to/dist
-warren build path/to/main --dist path/to/dist
-```
-
-If `public/` exists next to the app directory, its contents are copied into the output directory.
-
-`warren build` tries to compress the generated JavaScript with `terser`.
-If `terser` is not available, it falls back to the uncompressed release JS.
-
-## `public/` Directory
-
-`public/` is optional.
-
-If you want to customize the page, create `public/` next to your app's main package and add:
-
-- `public/index.html`
-- `public/styles.css`
-
-Common usage:
-
-- Add `public/index.html` if you want to control the page structure
-- Add `public/styles.css` if you want custom styles
-- Both files are optional
-
-When `public/index.html` is present, `warren` keeps your page and adds the app entry script when needed. When it is not present, `warren` creates a default page.
 
 ## Help
 

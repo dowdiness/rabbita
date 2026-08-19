@@ -72,7 +72,7 @@ let _embed_index_html : String =
   #|    <meta name="viewport" content="width=device-width, initial-scale=1.0">
   #|    <title>__WARREN_PROJECT_NAME__</title>
   #|    <link rel="stylesheet" type="text/css" href="./styles.css"></link>
-  #|    <script src="./index.js" type="module"></script>
+  #|    <script src="/index.js" type="module"></script>
   #|</head>
   #|<body>
   #|    <div id="app"></div>
@@ -205,7 +205,7 @@ let _embed_readme_md : String =
   #|In this directory:
   #|
   #|```sh
-  #|warren dev
+  #|warren dev --browser-entry main
   #|```
   #|
   #|Then open the local URL shown by warren.
