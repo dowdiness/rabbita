@@ -57,7 +57,7 @@ jobs:
         run: |
           moon check --target js
           moon run --target native scripts/assets.mbtx
-          warren build main --dist dist
+          warren build --browser-entry main --dist dist
 
       - name: Build playground
         working-directory: website/playground
@@ -65,7 +65,7 @@ jobs:
           moon check --target js
           MOONBIT_PLAYGROUND_CORE_BUNDLE="$HOME/.moon/lib/core/_build/js/release/bundle" \
           moon run --target native scripts/assets.mbtx
-          warren build main --dist dist
+          warren build --browser-entry main --dist dist
 
       - name: Assemble Pages artifact
         run: |
