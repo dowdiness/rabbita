@@ -151,8 +151,8 @@ fn request_target(url : String, origin : String) -> (String, String) raise {
 ///|
 fn content_type_headers(
   content_type : String,
-  headers? : Map[String, String] = Map([]),
-) -> Map[String, String] {
+  headers? : @async_http.Headers = Map([]),
+) -> @async_http.Headers {
   if !content_type.is_empty() {
     headers["Content-Type"] = content_type
   }
@@ -161,8 +161,8 @@ fn content_type_headers(
 
 ///|
 #cfg(not(target="js"))
-fn settle_request_headers() -> Map[String, String] {
-  let headers : Map[String, String] = Map([])
+fn settle_request_headers() -> @async_http.Headers {
+  let headers : @async_http.Headers = Map([])
   headers["User-Agent"] = "MoonBit"
   headers
 }
@@ -249,7 +249,7 @@ fn RequestResult::settle(
 async fn execute_request(
   extension : @cmd.Extension,
   origin : String,
-  headers : Map[String, String],
+  headers : @async_http.Headers,
 ) -> RequestResult {
   async fn run(
     expect : Expecting,

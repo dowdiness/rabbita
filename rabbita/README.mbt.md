@@ -35,7 +35,7 @@ Make sure you have installed [`moon`](https://www.moonbitlang.com/download/) fir
 moon install moonbit-community/warren
 warren new my-project
 cd my-project
-warren dev
+warren dev --browser-entry main
 ```
 
 See [Warren](./warren/README.md) for more information.

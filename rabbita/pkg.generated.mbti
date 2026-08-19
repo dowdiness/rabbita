@@ -65,6 +65,7 @@ pub enum Status[T] {
   Loaded(T)
   Failed(Error)
 }
+pub impl[T] @common.Enumerate for Status[T]
 pub impl[T : Eq] Eq for Status[T]
 
 type Val[A]
