@@ -9,5 +9,5 @@ Moving after rewinding truncates future states and appends a new immutable snaps
 
 ```bash
 moon install moonbit-community/warren
-warren dev
+warren dev --browser-entry main
 ```

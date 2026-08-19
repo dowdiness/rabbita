@@ -16,7 +16,7 @@ In this directory:
 
 ```bash
 moon install moonbit-community/warren
-warren dev
+warren dev --browser-entry main
 ```
 
 Then open the local URL shown by warren.

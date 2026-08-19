@@ -13,7 +13,7 @@ moon install moonbit-community/warren
 
 ```sh
 moon run --target native scripts/assets.mbtx
-warren dev main --public-dir public
+warren dev --browser-entry main --public-dir public
 ```
 
 The component showcase is served by the same application at `/components/`.
@@ -22,5 +22,5 @@ The component showcase is served by the same application at `/components/`.
 
 ```sh
 moon run --target native scripts/assets.mbtx
-warren build main --dist dist
+warren build --browser-entry main --dist dist
 ```

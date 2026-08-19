@@ -4,6 +4,7 @@ import {
   "moonbitlang/async",
   "moonbitlang/core/argparse",
   "moonbitlang/core/env",
+  "moonbitlang/core/json",
   "moonbitlang/core/string",
   "moonbit-community/warren/log",
   "moonbit-community/warren/path",

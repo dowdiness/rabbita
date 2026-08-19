@@ -60,15 +60,29 @@ async fn find_warren_root() -> String {
 ///|
 async fn run_warren_build(root : String) -> Unit {
   let moon_bin = env_or("MOON_BIN", "moon")
-  let devtool_dir = join_path(root, "devtool")
   let code = @process.run(
     moon_bin,
-    ["run", "--target", "native", root, "--", "build", ".", "--dist", "./dist"],
-    cwd=devtool_dir,
+    [
+      "run",
+      "--target",
+      "native",
+      root,
+      "--",
+      "-C",
+      "devtool",
+      "build",
+      "--browser-entry",
+      ".",
+      "--public-dir",
+      "public",
+      "--dist",
+      "dist",
+    ],
+    cwd=root,
     inherit_env=true,
   )
   guard code == 0 else {
-    abort("`warren build ./devtool` failed with exit code \{code}")
+    abort("`warren -C devtool build --browser-entry .` failed with exit code \{code}")
   }
 }
 

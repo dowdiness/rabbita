@@ -680,6 +680,15 @@ pub impl[T : Eq] Eq for Status[T] with fn equal(a, b) {
 }
 
 ///|
+pub impl[T] Enumerate for Status[T] with fn tag(self) {
+  match self {
+    Pending => "pending"
+    Loaded(_) => "loaded"
+    Failed(_) => "failed"
+  }
+}
+
+///|
 /// An incremental asynchronous resource state.
 pub type Resource[T] = Val[Status[T]]
 

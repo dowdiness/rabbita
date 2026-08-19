@@ -6,8 +6,6 @@ import {
 }
 
 // Values
-pub async fn build_project(@path.SourcePath, dist_dir? : @path.SourcePath) -> Unit
-
 pub async fn copy(src~ : @path.SourcePath, dst~ : @path.SourcePath) -> Unit
 
 pub fn debug_log(String, String) -> Unit
@@ -17,6 +15,8 @@ pub let templates : TemplatesFixture
 // Errors
 
 // Types and methods
+type ArtifactDigest derive(Eq)
+
 pub struct DefaultFixture {
   main : MainFixture
   public : PublicFixture
@@ -35,10 +35,16 @@ pub struct MinimizedFixture {
   moon_pkg : String
 }
 
+type ProjectLayout
+
 pub struct PublicFixture {
   index_html : String
   styles_css : String
 }
+
+type RunningServer
+
+type ServerTarget
 
 type TemplateEntry
 

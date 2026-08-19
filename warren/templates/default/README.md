@@ -5,7 +5,7 @@
 In this directory:
 
 ```sh
-warren dev
+warren dev --browser-entry main
 ```
 
 Then open the local URL shown by warren.

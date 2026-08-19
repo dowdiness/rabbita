@@ -4,7 +4,7 @@ version = "0.2.0"
 
 import {
   "moonbit-community/rabbita@0.12.2",
-  "moonbitlang/async@0.20.3",
+  "moonbitlang/async@0.21.0",
   "oboard/mocket@0.7.7",
 }
 

@@ -98,13 +98,8 @@ pub async fn App::render(
   })
   let html = @async.with_timeout(timeout, () => {
     host.render_to_string(head.map(html => html.to_virtual_dom()))
-  }) catch {
-    error => {
-      host.cleanup()
-      raise error
-    }
-  }
-  host.cleanup()
+  })
+  defer host.cleanup()
   html
 }
 

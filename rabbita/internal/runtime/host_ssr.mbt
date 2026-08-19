@@ -53,26 +53,20 @@ pub async fn SSRHost::SSRHost(
     }
     (host, ambient_host.protect(host, builder))
   })
-  try {
-    let cmd = Context::inject_url_changed(host, host.origin + host.path)
-    Scheduler::queue_command(host, cmd)
+  let cmd = Context::inject_url_changed(host, host.origin + host.path)
+  Scheduler::queue_command(host, cmd)
 
-    let vnode = for ;; {
-      host.drain_task()
-      let tmp = ambient_host.protect(host, () => output.read())
-      if host.task_queue.is_empty() {
-        break tmp
-      }
-    }
-
-    host.document = Some(@vdom.VDom::initialize(vnode, host))
-    host
-  } catch {
-    error => {
-      host.cleanup()
-      raise error
+  let vnode = for ;; {
+    host.drain_task()
+    let tmp = ambient_host.protect(host, () => output.read())
+    if host.task_queue.is_empty() {
+      break tmp
     }
   }
+
+  host.document = Some(@vdom.VDom::initialize(vnode, host))
+  errdefer host.cleanup()
+  host
 }
 
 ///|
