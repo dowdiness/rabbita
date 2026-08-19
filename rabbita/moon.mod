@@ -19,5 +19,5 @@ supported_targets = "js+native+wasm"
 import {
   "moonbitlang/async@0.21.0",
   "hackwaly/moonback@0.8.1",
-  "moonbitlang/x@0.5.0",
+  "moonbitlang/x@0.5.1",
 }
