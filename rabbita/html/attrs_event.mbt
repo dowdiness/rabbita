@@ -355,6 +355,21 @@ pub fn Attrs::on_wheel(self : Attrs, msg : (WheelEvent) -> Cmd) -> Attrs {
 
 ///|
 #cfg(target="js")
+pub fn Attrs::on_beforeinput(self : Attrs, msg : (InputEvent) -> Cmd) -> Attrs {
+  self.handler("beforeinput", (event, scheduler) => {
+    scheduler.add(msg(event.to_input_event().unwrap()))
+  })
+}
+
+///|
+#cfg(not(target="js"))
+pub fn Attrs::on_beforeinput(self : Attrs, msg : (InputEvent) -> Cmd) -> Attrs {
+  ignore(msg)
+  self
+}
+
+///|
+#cfg(target="js")
 pub fn Attrs::on_input(self : Attrs, msg : (InputEvent) -> Cmd) -> Attrs {
   self.handler("input", (event, scheduler) => {
     scheduler.add(msg(event.to_input_event().unwrap()))

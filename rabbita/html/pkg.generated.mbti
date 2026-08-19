@@ -410,6 +410,7 @@ pub fn Attrs::muted(Self, Bool) -> Self
 pub fn Attrs::name(Self, String) -> Self
 pub fn Attrs::nonce(Self, String) -> Self
 pub fn Attrs::novalidate(Self, Bool) -> Self
+pub fn Attrs::on_beforeinput(Self, (@dom.InputEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_blur(Self, (@dom.FocusEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_change(Self, (@dom.InputEvent) -> @cmd.Cmd) -> Self
 pub fn Attrs::on_click(Self, (@dom.MouseEvent) -> @cmd.Cmd) -> Self
