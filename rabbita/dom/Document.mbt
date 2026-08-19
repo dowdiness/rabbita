@@ -155,6 +155,28 @@ pub fn Document::get_document_element(self : Self) -> Element? {
 }
 
 ///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/Document/elementFromPoint
+#cfg(target="js")
+pub fn Document::element_from_point(
+  self : Self,
+  x : Double,
+  y : Double,
+) -> Element? {
+  ffi_document_element_from_point(self, x, y).to_option()
+}
+
+///|
+/// https://developer.mozilla.org/en-US/docs/Web/API/Document/elementsFromPoint
+#cfg(target="js")
+pub fn Document::elements_from_point(
+  self : Self,
+  x : Double,
+  y : Double,
+) -> Array[Element] {
+  ffi_document_elements_from_point(self, x, y)
+}
+
+///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/Document/hidden
 #cfg(target="js")
 pub extern "js" fn Document::hidden(self : Self) -> Bool = "(doc) => doc.hidden"
@@ -186,3 +208,19 @@ extern "js" fn ffi_document_get_body(
 extern "js" fn ffi_document_get_document_element(
   doc : Document,
 ) -> @js.Nullable[Element] = "(doc) => doc.documentElement"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_document_element_from_point(
+  doc : Document,
+  x : Double,
+  y : Double,
+) -> @js.Nullable[Element] = "(doc, x, y) => doc.elementFromPoint(x, y)"
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_document_elements_from_point(
+  doc : Document,
+  x : Double,
+  y : Double,
+) -> Array[Element] = "(doc, x, y) => Array.from(doc.elementsFromPoint(x, y))"
