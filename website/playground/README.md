@@ -15,7 +15,7 @@ cd website/playground
 export MOONBIT_PLAYGROUND_CORE_BUNDLE="$HOME/.moon/lib/core/_build/js/release/bundle"
 
 moon run --target native scripts/assets.mbtx
-warren dev main --public-dir public --port 4300
+warren dev --browser-entry main --public-dir public --port 4300
 ```
 
 Open: `http://127.0.0.1:4300`
@@ -27,7 +27,7 @@ cd website/playground
 export MOONBIT_PLAYGROUND_CORE_BUNDLE="$HOME/.moon/lib/core/_build/js/release/bundle"
 
 moon run --target native scripts/assets.mbtx
-warren build main --dist dist
+warren build --browser-entry main --dist dist
 ```
 
 Only CI/release build writes `dist/`. `MOON_BIN` can override `moon`.

@@ -3,3 +3,5 @@ _test
 **/_build
 **/node_modules
 **/dist
+.tmp
+**/.DS_Store

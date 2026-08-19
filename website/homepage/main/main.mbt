@@ -903,7 +903,9 @@ fn quickstart() -> Val[Html] {
     "1", "Install Warren", "moon install moonbit-community/warren",
   )
   let create = qs_step("2", "Create the app", "warren new my-app\ncd my-app")
-  let run = qs_step("3", "Start the dev server", "warren dev")
+  let run = qs_step(
+    "3", "Start the dev server", "warren dev --browser-entry main",
+  )
   install.map3(create, run, (install, create, run) => {
     section(class="quickstart", [
       div(class="quickstart-inner", [
