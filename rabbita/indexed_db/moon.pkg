@@ -1,0 +1,10 @@
+import {
+  "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita/dom",
+  "moonbitlang/core/debug",
+  "moonbitlang/core/ref",
+}
+
+warnings = "-unused_package"
+
+supported_targets = "js"

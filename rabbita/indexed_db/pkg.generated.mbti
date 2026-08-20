@@ -1,0 +1,43 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/rabbita/indexed_db"
+
+import {
+  "moonbit-community/rabbita/cmd",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn get(Config, String, migrate_legacy? : Bool, result~ : @cmd.Emit[ReadResult]) -> @cmd.Cmd
+
+pub fn put(Config, String, String, result~ : @cmd.Emit[WriteResult]) -> @cmd.Cmd
+
+// Errors
+
+// Types and methods
+pub struct Config {
+  name : String
+  version : Int
+  store_name : String
+} derive(Eq, @debug.Debug)
+pub fn Config::Config(String, Int, String) -> Self
+pub fn Config::name(Self) -> String
+pub fn Config::store_name(Self) -> String
+pub fn Config::version(Self) -> Int
+
+pub(all) enum ReadResult {
+  Missing
+  Loaded(String)
+  Unavailable
+  Failed
+} derive(Eq, @debug.Debug)
+
+pub(all) enum WriteResult {
+  Stored
+  Unavailable
+  QuotaExceeded
+  Failed
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
