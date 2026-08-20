@@ -1,0 +1,8 @@
+import {
+  "moonbit-community/rabbita/html",
+  "moonbit-community/rabbita/internal/vdom",
+}
+
+warnings = "-unused_package"
+
+supported_targets = "js+native+wasm"
