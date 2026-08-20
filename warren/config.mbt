@@ -206,20 +206,24 @@ async fn resolve_project_layout(
   server_entry_raw : String?,
   public_dir_raw : String?,
 ) -> ProjectLayout {
-  let browser_entry = resolve_input_dir(
-    root,
-    browser_entry_raw.unwrap_or("cmd/browser"),
-    "Browser entry",
-  )
-  let server_entry = match server_entry_raw {
-    Some(raw) => Some(resolve_input_dir(root, raw, "Server entry"))
-    None => {
-      let conventional = resolve_from(source_path_to_string(root), "cmd/server")
-      if @fs.exists(conventional) {
-        Some(resolve_input_dir(root, "cmd/server", "Server entry"))
-      } else {
-        None
-      }
+  let browser_entry = if browser_entry_raw is Some(raw) {
+    guard raw != "" else { fail("Browser entry is required.") }
+    resolve_input_dir(root, raw, "Browser entry")
+  } else {
+    resolve_input_dir(root, "cmd/browser", "Browser entry")
+  }
+  let server_entry = if server_entry_raw is Some(raw) {
+    if raw == "" {
+      None
+    } else {
+      Some(resolve_input_dir(root, raw, "Server entry"))
+    }
+  } else {
+    let conventional = resolve_from(source_path_to_string(root), "cmd/server")
+    if @fs.exists(conventional) {
+      Some(resolve_input_dir(root, "cmd/server", "Server entry"))
+    } else {
+      None
     }
   }
   let public_dir = match public_dir_raw {
@@ -307,6 +311,34 @@ test "server target defaults to wasm" {
   assert_true(parse_server_target(None) is Wasm)
   assert_true(parse_server_target(Some("wasm")) is Wasm)
   assert_true(parse_server_target(Some("native")) is Native)
+}
+
+///|
+async test "empty entry options clear their defaults" {
+  let root_string = @fs.tmpdir(prefix="warren-entry-options")
+  let root = SourcePath::new(@fs.realpath(root_string))
+  @fs.mkdir(
+    source_path_to_string(root.join("cmd/browser")),
+    permission=0o755,
+    recursive=true,
+  )
+  @fs.mkdir(
+    source_path_to_string(root.join("cmd/server")),
+    permission=0o755,
+    recursive=true,
+  )
+  let browser_only = resolve_project_layout(root, None, Some(""), None)
+  assert_true(browser_only.server_entry is None)
+  let missing_browser = try
+    resolve_project_layout(root, Some(""), None, None)
+  catch {
+    Failure(_) => true
+    _ => false
+  } noraise {
+    _ => false
+  }
+  assert_true(missing_browser)
+  @fs.rmdir(root_string, recursive=true)
 }
 
 ///|

@@ -102,11 +102,11 @@ fn warren_cli() -> @argparse.Command {
         options=[
           OptionArg(
             "browser-entry",
-            about="Browser entry package directory. Default: ./cmd/browser.",
+            about="Browser entry package directory. Default: ./cmd/browser; an empty value is invalid.",
           ),
           OptionArg(
             "server-entry",
-            about="Server entry package directory. Default: ./cmd/server when present.",
+            about="Server entry package directory. Default: ./cmd/server when present; pass an empty value to disable it.",
           ),
           OptionArg(
             "server-target",
@@ -121,7 +121,7 @@ fn warren_cli() -> @argparse.Command {
         flags=[
           FlagArg(
             "direct",
-            about="Serve the application as the top-level page without the Warren devtool iframe.",
+            about="Serve the application as the top-level page and disable the server entry. Implies --server-entry \"\".",
           ),
         ],
         about="Start a local preview server with live reload.",
@@ -131,11 +131,11 @@ fn warren_cli() -> @argparse.Command {
         options=[
           OptionArg(
             "browser-entry",
-            about="Browser entry package directory. Default: ./cmd/browser.",
+            about="Browser entry package directory. Default: ./cmd/browser; an empty value is invalid.",
           ),
           OptionArg(
             "server-entry",
-            about="Server entry package directory. Default: ./cmd/server when present.",
+            about="Server entry package directory. Default: ./cmd/server when present; pass an empty value to disable it.",
           ),
           OptionArg(
             "server-target",
@@ -179,6 +179,19 @@ fn option_value(matches : @argparse.Matches, name : String) -> String? {
 }
 
 ///|
+fn dev_server_entry_value(matches : @argparse.Matches) -> String? raise {
+  let value = option_value(matches, "server-entry")
+  if matches.flags.get("direct") is Some(true) {
+    if value is Some(raw) && raw != "" {
+      fail("--direct cannot be used with a non-empty --server-entry.")
+    }
+    Some("")
+  } else {
+    value
+  }
+}
+
+///|
 async fn run_cli() -> Unit {
   let cli = warren_cli().parse()
   guard cli.subcommand is Some((subcmd, submatches)) else { return }
@@ -189,10 +202,11 @@ async fn run_cli() -> Unit {
   let root = effective_root(directory)
   match subcmd {
     "dev" => {
+      let direct = submatches.flags.get("direct") is Some(true)
       let layout = resolve_project_layout(
         root,
         option_value(submatches, "browser-entry"),
-        option_value(submatches, "server-entry"),
+        dev_server_entry_value(submatches),
         option_value(submatches, "public-dir"),
       )
       let target_raw = option_value(submatches, "server-target")
@@ -201,10 +215,6 @@ async fn run_cli() -> Unit {
         fail("--server-target requires a server entry.")
       }
       let port = parse_port(option_value(submatches, "port"))
-      let direct = submatches.flags.get("direct") is Some(true)
-      if direct && layout.server_entry is Some(_) {
-        fail("--direct is only available when no server entry exists.")
-      }
       dev_project(layout, server_target, port, direct)
     }
     "build" => {
@@ -370,6 +380,55 @@ test "CLI accepts global -C and full-stack entry options" {
   assert_eq(entries.0, Some("frontend"))
   assert_eq(entries.1, Some("backend"))
   assert_eq(entries.2, Some("wasm"))
+}
+
+///|
+test "CLI preserves explicitly empty entry options" {
+  let matches = warren_cli().parse(
+    argv=["dev", "--browser-entry", "", "--server-entry", ""],
+    env={},
+  )
+  let entries = if matches.subcommand is Some(("dev", submatches)) {
+    (
+      option_value(submatches, "browser-entry"),
+      option_value(submatches, "server-entry"),
+    )
+  } else {
+    (None, None)
+  }
+  assert_eq(entries.0, Some(""))
+  assert_eq(entries.1, Some(""))
+}
+
+///|
+test "--direct implies an empty server entry" {
+  let matches = warren_cli().parse(argv=["dev", "--direct"], env={})
+  let value = if matches.subcommand is Some(("dev", submatches)) {
+    dev_server_entry_value(submatches)
+  } else {
+    None
+  }
+  assert_eq(value, Some(""))
+}
+
+///|
+test "--direct conflicts with a non-empty server entry" {
+  let matches = warren_cli().parse(
+    argv=["dev", "--direct", "--server-entry", "backend"],
+    env={},
+  )
+  let rejected = try {
+    if matches.subcommand is Some(("dev", submatches)) {
+      ignore(dev_server_entry_value(submatches))
+    }
+    false
+  } catch {
+    Failure(_) => true
+    _ => false
+  } noraise {
+    _ => false
+  }
+  assert_true(rejected)
 }
 
 ///|

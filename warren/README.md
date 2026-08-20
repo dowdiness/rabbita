@@ -24,16 +24,24 @@ warren dev --browser-entry frontend --server-entry backend
 warren build --browser-entry frontend --server-entry backend
 ```
 
+Pass an empty server entry to ignore an existing `cmd/server` and select the
+browser-only workflow. The browser entry cannot be empty.
+
+```sh
+warren dev --server-entry ""
+warren build --server-entry ""
+```
+
 The browser entry is required. If no server entry exists, `warren dev` starts
 the built-in development server with its diagnostics, live reload, and optional
 `--direct` mode. If a server entry exists, Warren starts that program instead,
 sets `WARREN_DIST` to the absolute static directory and `WARREN_PORT` to the
-selected port, and leaves HTTP/static serving to the program. `--direct` is not
-available with a custom server. Warren also sets `WARREN_CLIENT` to an
-external reload script served by its development hub. Rabbita SSR applications
-can inject this script through `moonbit-community/rabbita/server/plugin`,
-without depending on a particular HTTP server library. `WARREN_MODE` is set to
-`DEV`.
+selected port, and leaves HTTP/static serving to the program. In `warren dev`,
+`--direct` implies `--server-entry ""` and therefore uses the built-in server.
+Warren also sets `WARREN_CLIENT` to an external reload script served by its
+development hub. Rabbita SSR applications can inject this script through
+`moonbit-community/rabbita/server/plugin`, without depending on a particular
+HTTP server library. `WARREN_MODE` is set to `DEV`.
 Successful browser rebuilds replace the assets in `WARREN_DIST` and reload
 connected pages without modifying `index.js` or restarting an unchanged server.
 
