@@ -1,0 +1,76 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/rabbita/service_worker"
+
+import {
+  "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita/sub",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn get_registration(String, reply? : @cmd.Emit[Registration?], failed? : @cmd.Emit[String]) -> @cmd.Cmd
+
+pub fn get_registrations(reply? : @cmd.Emit[Array[Registration]], failed? : @cmd.Emit[String]) -> @cmd.Cmd
+
+pub fn listen(controller_changed? : @cmd.Cmd, message? : @cmd.Emit[Message], message_error? : @cmd.Cmd) -> @sub.Sub
+
+pub fn post_message(RegistrationId, Message, failed? : @cmd.Emit[String]) -> @cmd.Cmd
+
+pub fn register(String, scope? : String, registered? : @cmd.Emit[Registration], failed? : @cmd.Emit[String]) -> @cmd.Cmd
+
+pub fn unregister(RegistrationId, reply? : @cmd.Emit[Bool], failed? : @cmd.Emit[String]) -> @cmd.Cmd
+
+pub fn update(RegistrationId, done? : @cmd.Emit[Unit], failed? : @cmd.Emit[String]) -> @cmd.Cmd
+
+pub fn watch_registration(String, changed? : @cmd.Emit[Registration], failed? : @cmd.Emit[String]) -> @sub.Sub
+
+// Errors
+
+// Types and methods
+pub(all) enum Message {
+  Text(String)
+  Json(Json)
+} derive(@debug.Debug)
+pub impl Show for Message
+
+pub struct Registration {
+  id : RegistrationId
+  installing : WorkerInfo?
+  waiting : WorkerInfo?
+  active : WorkerInfo?
+} derive(Eq, @debug.Debug)
+pub fn Registration::has_activation_started(Self) -> Bool
+pub fn Registration::has_installing(Self) -> Bool
+pub fn Registration::has_pending_update(Self) -> Bool
+pub fn Registration::has_waiting(Self) -> Bool
+pub impl Show for Registration
+
+pub(all) struct RegistrationId {
+  scope : String
+} derive(Eq, Hash, @debug.Debug)
+pub impl Show for RegistrationId
+
+pub struct WorkerInfo {
+  script_url : String
+  state : WorkerState
+} derive(Eq, @debug.Debug)
+pub impl Show for WorkerInfo
+
+pub(all) enum WorkerState {
+  Parsed
+  Installing
+  Installed
+  Activating
+  Activated
+  Redundant
+} derive(Eq, @debug.Debug)
+pub fn WorkerState::can_transition_to(Self, Self) -> Bool
+pub fn WorkerState::id(Self) -> String
+pub fn WorkerState::is_active(Self) -> Bool
+pub fn WorkerState::is_settling(Self) -> Bool
+pub fn WorkerState::is_terminal(Self) -> Bool
+pub impl Show for WorkerState
+
+// Type aliases
+
+// Traits
