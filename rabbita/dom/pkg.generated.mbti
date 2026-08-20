@@ -486,6 +486,7 @@ pub fn MutationRecord::get_attribute_name(Self) -> String?
 #external
 pub type Navigator
 pub fn Navigator::clipboard(Self) -> Clipboard
+pub fn Navigator::service_worker(Self) -> ServiceWorkerContainer
 
 type Node
 pub impl IsEventTarget for Node
@@ -558,6 +559,37 @@ pub impl IsSVGElement for SVGImageElement
 pub impl @js.Cast for SVGImageElement
 
 type SVGStringList
+
+#external
+pub type ServiceWorker
+pub fn ServiceWorker::post_message(Self, @js.Value, transfer? : @js.Optional[@js.Value]) -> Unit
+pub fn ServiceWorker::script_url(Self) -> String
+pub fn ServiceWorker::state(Self) -> String
+pub impl IsEventTarget for ServiceWorker
+pub impl @js.Cast for ServiceWorker
+
+#external
+pub type ServiceWorkerContainer
+pub fn ServiceWorkerContainer::controller(Self) -> @js.Nullable[ServiceWorker]
+pub fn ServiceWorkerContainer::get_registration(Self, client_url? : @js.Optional[String]) -> @js.Promise
+pub fn ServiceWorkerContainer::get_registrations(Self) -> @js.Promise
+pub fn ServiceWorkerContainer::ready(Self) -> @js.Promise
+pub fn ServiceWorkerContainer::register(Self, String, options? : @js.Optional[@js.Value]) -> @js.Promise
+pub fn ServiceWorkerContainer::start_messages(Self) -> Unit
+pub impl IsEventTarget for ServiceWorkerContainer
+pub impl @js.Cast for ServiceWorkerContainer
+
+#external
+pub type ServiceWorkerRegistration
+pub fn ServiceWorkerRegistration::active(Self) -> @js.Nullable[ServiceWorker]
+pub fn ServiceWorkerRegistration::installing(Self) -> @js.Nullable[ServiceWorker]
+pub fn ServiceWorkerRegistration::scope(Self) -> String
+pub fn ServiceWorkerRegistration::unregister(Self) -> @js.Promise
+pub fn ServiceWorkerRegistration::update(Self) -> @js.Promise
+pub fn ServiceWorkerRegistration::update_via_cache(Self) -> String
+pub fn ServiceWorkerRegistration::waiting(Self) -> @js.Nullable[ServiceWorker]
+pub impl IsEventTarget for ServiceWorkerRegistration
+pub impl @js.Cast for ServiceWorkerRegistration
 
 type StylePropertyMap
 
