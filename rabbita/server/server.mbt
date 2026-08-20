@@ -13,6 +13,7 @@ priv enum RunningMode {
 ///|
 struct Server {
   app : @moonback.App
+  port : UInt16
 }
 
 ///|
@@ -64,12 +65,16 @@ pub async fn Server::Server(
     ctx.use_(page_service(port~, warren_client?, dist?, component?))
     api(ctx)
   })
-  let listener = @moonback.listen(reuse_addr=true, port~)
   if !silent {
     println("Server is running on http://127.0.0.1:\{port}")
   }
-  app.serve(listener)
-  { app, }
+  { app, port }
+}
+
+///|
+pub async fn Server::run_forever(self : Self) -> Unit {
+  let listener = @moonback.listen(reuse_addr=true, port=self.port)
+  self.app.serve(listener)
 }
 
 ///|
