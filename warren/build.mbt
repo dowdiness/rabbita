@@ -17,41 +17,31 @@ fn source_path_to_string(path : SourcePath) -> String {
 
 ///|
 fn has_build_entry_script(html : String) -> Bool {
-  html.contains("src=\"/index.js") || html.contains("src='/index.js")
-}
-
-///|
-fn normalize_build_entry_script(html : String) -> String {
-  html
-  .split("src=\"./index.js\"")
-  .join("src=\"/index.js\"")
-  .split("src='./index.js'")
-  .join("src='/index.js'")
-  .split("src=\"index.js\"")
-  .join("src=\"/index.js\"")
-  .split("src='index.js'")
-  .join("src='/index.js'")
+  html.contains("src=\"/index.js") ||
+  html.contains("src='/index.js") ||
+  html.contains("src=\"./index.js") ||
+  html.contains("src='./index.js") ||
+  html.contains("src=\"index.js") ||
+  html.contains("src='index.js")
 }
 
 ///|
 fn inject_build_entry_script(html : String) -> String {
-  let html = normalize_build_entry_script(html)
   guard !has_build_entry_script(html) else { html }
-  let patch = build_entry_script + "\n"
+  let patch = "\{build_entry_script}\n"
   match html.rev_find("</head>") {
-    Some(index) => html[:index].to_owned() + patch + html[index:].to_owned()
+    Some(index) => "\{html[:index]}\{patch}\{html[index:]}"
     None =>
       match html.rev_find("</body>") {
-        Some(index) => html[:index].to_owned() + patch + html[index:].to_owned()
+        Some(index) => "\{html[:index]}\{patch}\{html[index:]}"
         None =>
           match html.rev_find("</html>") {
-            Some(index) =>
-              html[:index].to_owned() + patch + html[index:].to_owned()
+            Some(index) => "\{html[:index]}\{patch}\{html[index:]}"
             None =>
               if html.has_suffix("\n") {
-                html + patch
+                "\{html}\{patch}"
               } else {
-                html + "\n" + patch
+                "\{html}\n\{patch}"
               }
           }
       }
@@ -434,6 +424,27 @@ async test "inject_build_entry_script inserts before head" {
 }
 
 ///|
+test "inject_build_entry_script uses fallback insertion points" {
+  let patch = "\{build_entry_script}\n"
+  inspect(
+    inject_build_entry_script("<html><body></body></html>"),
+    content="<html><body>\{patch}</body></html>",
+  )
+  inspect(
+    inject_build_entry_script("<html></html>"),
+    content="<html>\{patch}</html>",
+  )
+  inspect(
+    inject_build_entry_script("plain text"),
+    content="plain text\n\{patch}",
+  )
+  inspect(
+    inject_build_entry_script("plain text\n"),
+    content="plain text\n\{patch}",
+  )
+}
+
+///|
 test "build-only JSON requires exactly one artifact" {
   inspect(
     parse_build_only_artifact("{\"artifacts_path\":[\"/tmp/server.exe\"]}"),
@@ -469,12 +480,22 @@ test "build-only JSON requires exactly one artifact" {
 }
 
 ///|
-test "build HTML normalizes a relative browser entry" {
+test "build HTML preserves a relative browser entry" {
   inspect(
     inject_build_entry_script(
       "<html><head><script src=\"./index.js\"></script></head></html>",
     ),
-    content="<html><head><script src=\"/index.js\"></script></head></html>",
+    content="<html><head><script src=\"./index.js\"></script></head></html>",
+  )
+}
+
+///|
+test "build HTML preserves a relative browser entry with a query" {
+  inspect(
+    inject_build_entry_script(
+      "<html><head><script src=\"./index.js?v=1\"></script></head></html>",
+    ),
+    content="<html><head><script src=\"./index.js?v=1\"></script></head></html>",
   )
 }
 

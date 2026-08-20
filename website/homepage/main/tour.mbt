@@ -43,6 +43,19 @@ pub(all) struct TourChapter {
 ///|
 let tour_chapters : Array[TourChapter] = [
   { title: "Introduction", path: "001_intro", section: "Rabbita Basic" },
+  { title: "Writing HTML", path: "002_writing_html", section: "Rabbita Basic" },
+  { title: "Command", path: "004_using_command", section: "Rabbita Basic" },
+  { title: "HTTP Request", path: "005_http", section: "Rabbita Basic" },
+  {
+    title: "Components & Incremental Graph",
+    path: "component_and_incremental",
+    section: "Rabbita Basic",
+  },
+  {
+    title: "Subscriptions",
+    path: "using_subscriptions",
+    section: "Rabbita Basic",
+  },
   { title: "Router", path: "003_router", section: "Rabbita Basic" },
 ]
 

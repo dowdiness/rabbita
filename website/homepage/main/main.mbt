@@ -800,14 +800,22 @@ fn showcase() -> Html {
       ),
       div(class="showcase-grid", [
         showcase_card(
-          "https://moonbit-community.github.io/rabbita/", "rabbita.jpeg", "rabbita",
+          "https://moonbit-community.github.io/rabbita/",
+          "\{site_base_url()}rabbita.jpeg",
+          "rabbita",
           "The official Rabbita framework site — this page.",
         ),
         showcase_card(
-          "https://mooncakes.io", "mooncakesio.jpeg", "mooncakes.io", "The MoonBit package registry and documentation hub.",
+          "https://mooncakes.io",
+          "\{site_base_url()}mooncakesio.jpeg",
+          "mooncakes.io",
+          "The MoonBit package registry and documentation hub.",
         ),
         showcase_card(
-          "https://www.bingque.com/", "bingque.jpeg", "Bingque", "Learn AI concepts faster with guided practice and long-term skill building.",
+          "https://www.bingque.com/",
+          "\{site_base_url()}bingque.jpeg",
+          "Bingque",
+          "Learn AI concepts faster with guided practice and long-term skill building.",
         ),
         a(
           class="showcase-card showcase-card--submit",
