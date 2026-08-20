@@ -29,19 +29,13 @@ pub(all) enum WorkerState {
 
 ///|
 pub impl Show for WorkerState with fn output(self, buf) {
-  buf.write_string(self.id())
-}
-
-///|
-/// The lowercase spec identifier for this state.
-pub fn WorkerState::id(self : WorkerState) -> String {
   match self {
-    Parsed => "parsed"
-    Installing => "installing"
-    Installed => "installed"
-    Activating => "activating"
-    Activated => "activated"
-    Redundant => "redundant"
+    Parsed => buf.write_string("parsed")
+    Installing => buf.write_string("installing")
+    Installed => buf.write_string("installed")
+    Activating => buf.write_string("activating")
+    Activated => buf.write_string("activated")
+    Redundant => buf.write_string("redundant")
   }
 }
 
@@ -103,13 +97,13 @@ pub fn WorkerState::can_transition_to(
 
 ///|
 test "WorkerState::from_string maps spec ids and unknown values to Redundant" {
-  inspect(WorkerState::from_string("parsed").id(), content="parsed")
-  inspect(WorkerState::from_string("installing").id(), content="installing")
-  inspect(WorkerState::from_string("installed").id(), content="installed")
-  inspect(WorkerState::from_string("activating").id(), content="activating")
-  inspect(WorkerState::from_string("activated").id(), content="activated")
-  inspect(WorkerState::from_string("redundant").id(), content="redundant")
-  inspect(WorkerState::from_string("unknown").id(), content="redundant")
+  inspect(WorkerState::from_string("parsed"), content="parsed")
+  inspect(WorkerState::from_string("installing"), content="installing")
+  inspect(WorkerState::from_string("installed"), content="installed")
+  inspect(WorkerState::from_string("activating"), content="activating")
+  inspect(WorkerState::from_string("activated"), content="activated")
+  inspect(WorkerState::from_string("redundant"), content="redundant")
+  inspect(WorkerState::from_string("unknown"), content="redundant")
 }
 
 // ===========================================================================

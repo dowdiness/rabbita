@@ -7,8 +7,8 @@ test "WorkerState follows the spec transition graph" {
   let activated = @service_worker.WorkerState::Activated
   let redundant = @service_worker.WorkerState::Redundant
 
-  inspect(parsed.id(), content="parsed")
-  inspect(installing.id(), content="installing")
+  inspect(parsed, content="parsed")
+  inspect(installing, content="installing")
   inspect(activating.is_active(), content="true")
   inspect(activated.is_terminal(), content="true")
   inspect(installing.is_settling(), content="true")

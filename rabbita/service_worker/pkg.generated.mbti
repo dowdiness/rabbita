@@ -65,7 +65,6 @@ pub(all) enum WorkerState {
   Redundant
 } derive(Eq, @debug.Debug)
 pub fn WorkerState::can_transition_to(Self, Self) -> Bool
-pub fn WorkerState::id(Self) -> String
 pub fn WorkerState::is_active(Self) -> Bool
 pub fn WorkerState::is_settling(Self) -> Bool
 pub fn WorkerState::is_terminal(Self) -> Bool
