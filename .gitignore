@@ -3,5 +3,8 @@ _test
 **/_build
 **/node_modules
 **/dist
+**/test-results
+**/playwright-report
+**/blob-report
 .tmp
 **/.DS_Store

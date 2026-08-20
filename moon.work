@@ -15,4 +15,6 @@ members = [
   "./website/homepage",
   "./website/playground",
   "./rui",
+  "./e2e/apps/counter",
+  "./e2e/apps/toggle",
 ]
