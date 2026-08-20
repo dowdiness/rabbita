@@ -85,7 +85,7 @@ fn fail_str_or_none(failed : @cmd.Emit[String]?, message : String) -> Cmd {
 /// Build a `ServiceWorker` snapshot from a live browser object.
 #cfg(target="js")
 fn worker_info(sw : @dom.ServiceWorker) -> WorkerInfo {
-  { script_url: sw.script_url(), state: WorkerState::from_string(sw.state()) }
+  { script_url: sw.script_url(), state: WorkerState(sw.state()) }
 }
 
 ///|

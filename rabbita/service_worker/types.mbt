@@ -40,7 +40,9 @@ pub impl Show for WorkerState with fn output(self, buf) {
 }
 
 ///|
-fn WorkerState::from_string(s : String) -> WorkerState {
+/// Parse a browser `ServiceWorker.state` string into a typed `WorkerState`.
+/// Unknown values map to `Redundant`.
+fn WorkerState::WorkerState(s : String) -> WorkerState {
   match s {
     "parsed" => Parsed
     "installing" => Installing
@@ -96,14 +98,14 @@ pub fn WorkerState::can_transition_to(
 }
 
 ///|
-test "WorkerState::from_string maps spec ids and unknown values to Redundant" {
-  inspect(WorkerState::from_string("parsed"), content="parsed")
-  inspect(WorkerState::from_string("installing"), content="installing")
-  inspect(WorkerState::from_string("installed"), content="installed")
-  inspect(WorkerState::from_string("activating"), content="activating")
-  inspect(WorkerState::from_string("activated"), content="activated")
-  inspect(WorkerState::from_string("redundant"), content="redundant")
-  inspect(WorkerState::from_string("unknown"), content="redundant")
+test "WorkerState custom constructor maps spec strings and unknown values to Redundant" {
+  inspect(WorkerState("parsed"), content="parsed")
+  inspect(WorkerState("installing"), content="installing")
+  inspect(WorkerState("installed"), content="installed")
+  inspect(WorkerState("activating"), content="activating")
+  inspect(WorkerState("activated"), content="activated")
+  inspect(WorkerState("redundant"), content="redundant")
+  inspect(WorkerState("unknown"), content="redundant")
 }
 
 // ===========================================================================
