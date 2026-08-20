@@ -12,5 +12,5 @@ pub extern "js" fn Navigator::clipboard(self : Navigator) -> Clipboard =
 #cfg(target="js")
 pub extern "js" fn Navigator::service_worker(
   self : Navigator,
-) -> ServiceWorkerContainer =
-  #| (self) => self.serviceWorker
+) -> @js.Nullable[ServiceWorkerContainer] =
+  #| (self) => self.serviceWorker ?? null

@@ -8,12 +8,13 @@ priv suberror ServiceWorkerSubscription {
   ContainerEvents(
     controller_changed~ : Cmd?,
     message~ : Emit[Message]?,
-    message_error~ : Cmd?
+    message_error~ : Cmd?,
+    decode_error~ : Emit[MessageDecodeError]?
   )
   RegistrationEvents(
     RegistrationId,
     changed~ : Emit[Registration]?,
-    failed~ : Emit[String]?
+    failed~ : Emit[ServiceWorkerError]?
   )
 }
 
@@ -23,14 +24,20 @@ priv suberror ServiceWorkerSubscription {
 
 ///|
 /// Parse a raw `@js.Value` from a `MessageEvent.data` into a typed `Message`.
+///
+/// Only strings and JSON-encodable objects/arrays are accepted. Other
+/// structured-clone values become `MessageDecodeError` instead of a silent
+/// `Text("[object …]")` conversion.
 #cfg(target="js")
-fn parse_worker_message(raw : @js.Value) -> Message {
+fn parse_worker_message(raw : @js.Value) -> Result[Message, MessageDecodeError] {
   if raw.is_string() {
-    Text(raw.cast())
-  } else {
-    Json(raw.to_json()) catch {
-      _ => Text(raw.to_string())
+    Ok(Text(raw.cast()))
+  } else if raw.is_object() && !raw.is_null() {
+    Ok(Json(raw.to_json())) catch {
+      err => Err(InvalidJson(err.to_string()))
     }
+  } else {
+    Err(UnsupportedPayload)
   }
 }
 
@@ -45,11 +52,20 @@ fn sw_container_sub_loader(
   scheduler : &Scheduler,
 ) -> @sub.RunningSub? {
   match payload {
-    ContainerEvents(controller_changed~, message~, message_error~) => {
-      let container = @dom.window().navigator().service_worker()
+    ContainerEvents(
+      controller_changed~,
+      message~,
+      message_error~,
+      decode_error~
+    ) => {
+      guard @dom.window().navigator().service_worker().to_option()
+        is Some(container) else {
+        return None
+      }
       let mut controller_tagger = controller_changed
       let mut message_tagger = message
       let mut message_error_tagger = message_error
+      let mut decode_error_tagger = decode_error
 
       let on_controller_changed = _ => {
         guard controller_tagger is Some(msg) else { return }
@@ -57,9 +73,17 @@ fn sw_container_sub_loader(
       }
 
       let on_message = (event : @dom.Event) => {
-        guard message_tagger is Some(f) else { return }
         guard event.to_message_event() is Some(message_event) else { return }
-        scheduler.add(f(parse_worker_message(message_event.get_data())))
+        match parse_worker_message(message_event.get_data()) {
+          Ok(payload) => {
+            guard message_tagger is Some(f) else { return }
+            scheduler.add(f(payload))
+          }
+          Err(err) => {
+            guard decode_error_tagger is Some(f) else { return }
+            scheduler.add(f(err))
+          }
+        }
       }
 
       let on_message_error = _ => {
@@ -81,12 +105,18 @@ fn sw_container_sub_loader(
         },
         update_tagger: new_payload => {
           guard new_payload
-            is ContainerEvents(controller_changed~, message~, message_error~) else {
+            is ContainerEvents(
+              controller_changed~,
+              message~,
+              message_error~,
+              decode_error~
+            ) else {
             return
           }
           controller_tagger = controller_changed
           message_tagger = message
           message_error_tagger = message_error
+          decode_error_tagger = decode_error
         },
       })
     }
@@ -103,7 +133,7 @@ fn registration_sub_loader(
   match payload {
     RegistrationEvents(id, changed~, failed~) => {
       let watch = RegistrationWatch(changed, failed)
-      watch.start(scheduler, id.scope)
+      watch.start(scheduler, id)
       Some({
         unload: _ => watch.dispose(),
         update_tagger: new_payload => {
@@ -128,16 +158,21 @@ fn has_container_callbacks(
   controller_changed : Cmd?,
   message : @cmd.Emit[Message]?,
   message_error : Cmd?,
+  decode_error : @cmd.Emit[MessageDecodeError]?,
 ) -> Bool {
   controller_changed is Some(_) ||
   message is Some(_) ||
-  message_error is Some(_)
+  message_error is Some(_) ||
+  decode_error is Some(_)
 }
 
 ///|
 #cfg(target="js")
-fn has_registration_callback(changed : @cmd.Emit[Registration]?) -> Bool {
-  changed is Some(_)
+fn has_registration_callbacks(
+  changed : @cmd.Emit[Registration]?,
+  failed : @cmd.Emit[ServiceWorkerError]?,
+) -> Bool {
+  changed is Some(_) || failed is Some(_)
 }
 
 // ===========================================================================
@@ -147,29 +182,40 @@ fn has_registration_callback(changed : @cmd.Emit[Registration]?) -> Bool {
 ///|
 /// Subscribe to `ServiceWorkerContainer` events:
 /// - `controller_changed`: the active controller has changed
-/// - `message`: a message was received from a Service Worker
-/// - `message_error`: a message could not be deserialised
+/// - `message`: a text or JSON message was received from a Service Worker
+/// - `message_error`: the browser could not deserialise a message
+/// - `decode_error`: the payload was structured-cloneable but not Text/JSON
 ///
 /// At least one callback must be provided; otherwise `@sub.none` is returned.
+/// Returns `@sub.none` when `navigator.serviceWorker` is unavailable.
 #cfg(target="js")
 pub fn listen(
   controller_changed? : Cmd,
   message? : @cmd.Emit[Message],
   message_error? : Cmd,
+  decode_error? : @cmd.Emit[MessageDecodeError],
 ) -> @sub.Sub {
-  guard has_container_callbacks(controller_changed, message, message_error) else {
+  guard has_container_callbacks(
+    controller_changed, message, message_error, decode_error,
+  ) else {
     @sub.none
   }
 
   let has_cc = controller_changed is Some(_)
   let has_msg = message is Some(_)
   let has_err = message_error is Some(_)
+  let has_dec = decode_error is Some(_)
 
-  let key = "service_worker.listen(cc=\{has_cc},msg=\{has_msg},err=\{has_err})"
+  let key = "service_worker.listen(cc=\{has_cc},msg=\{has_msg},err=\{has_err},dec=\{has_dec})"
   @sub.custom_sub(
     key,
     Local,
-    ContainerEvents(controller_changed~, message~, message_error~),
+    ContainerEvents(
+      controller_changed~,
+      message~,
+      message_error~,
+      decode_error~,
+    ),
     sw_container_sub_loader,
   )
 }
@@ -178,21 +224,24 @@ pub fn listen(
 /// Subscribe to lifecycle events for a specific Service Worker registration
 /// identified by `scope`.
 ///
-/// The `changed` callback is called with a fresh `Registration` snapshot
-/// whenever `updatefound` fires or an `installing`, `waiting`, or `active`
-/// worker `statechange` event fires.
+/// `scope` is canonicalized to an absolute URL and resolved with **exact**
+/// scope identity (not client-URL prefix matching).
 ///
-/// If the scope cannot be resolved when the subscription starts, or resolution
-/// fails, `failed` is invoked with an error message string.
+/// The `changed` callback receives a fresh `Registration` snapshot after
+/// `updatefound` / worker `statechange`, once registration slots have been
+/// reconciled past the browser task that may clear redundant workers.
+///
+/// If the registration cannot be resolved when the subscription starts,
+/// `failed` is invoked. Either `changed` or `failed` (or both) must be set.
 #cfg(target="js")
 pub fn watch_registration(
   scope : String,
   changed? : @cmd.Emit[Registration],
-  failed? : @cmd.Emit[String],
+  failed? : @cmd.Emit[ServiceWorkerError],
 ) -> @sub.Sub {
-  guard has_registration_callback(changed) else { @sub.none }
-  let id : RegistrationId = { scope, }
-  let key = "service_worker.watch_registration(scope=\{scope})"
+  guard has_registration_callbacks(changed, failed) else { @sub.none }
+  let id = RegistrationId(scope)
+  let key = "service_worker.watch_registration(scope=\{id.scope()})"
   @sub.custom_sub(
     key,
     Local,
@@ -208,31 +257,66 @@ pub fn watch_registration(
 ///|
 #cfg(target="js")
 test "has_container_callbacks requires at least one handler" {
-  inspect(has_container_callbacks(None, None, None), content="false")
-  inspect(has_container_callbacks(Some(@cmd.none), None, None), content="true")
+  inspect(has_container_callbacks(None, None, None, None), content="false")
   inspect(
-    has_container_callbacks(None, Some(_ => @cmd.none), None),
+    has_container_callbacks(Some(@cmd.none), None, None, None),
     content="true",
   )
-  inspect(has_container_callbacks(None, None, Some(@cmd.none)), content="true")
+  inspect(
+    has_container_callbacks(None, Some(_ => @cmd.none), None, None),
+    content="true",
+  )
+  inspect(
+    has_container_callbacks(None, None, Some(@cmd.none), None),
+    content="true",
+  )
+  inspect(
+    has_container_callbacks(None, None, None, Some(_ => @cmd.none)),
+    content="true",
+  )
 }
 
 ///|
 #cfg(target="js")
-test "has_registration_callback requires changed handler" {
-  inspect(has_registration_callback(None), content="false")
-  inspect(has_registration_callback(Some(_ => @cmd.none)), content="true")
+test "has_registration_callbacks accepts changed, failed, or both" {
+  inspect(has_registration_callbacks(None, None), content="false")
+  inspect(
+    has_registration_callbacks(Some(_ => @cmd.none), None),
+    content="true",
+  )
+  inspect(
+    has_registration_callbacks(None, Some(_ => @cmd.none)),
+    content="true",
+  )
+  inspect(
+    has_registration_callbacks(Some(_ => @cmd.none), Some(_ => @cmd.none)),
+    content="true",
+  )
 }
 
 ///|
 #cfg(target="js")
-test "parse_worker_message decodes string and json payloads" {
+test "parse_worker_message accepts text and json; rejects unsupported payloads" {
   match parse_worker_message(@js.Value::cast_from("ping")) {
-    Text(text) => inspect(text, content="ping")
+    Ok(Text(text)) => inspect(text, content="ping")
     _ => fail("expected a text message")
   }
   match parse_worker_message(@js.Value::from_json({ "ok": true })) {
-    Json(json) => inspect(json.stringify(), content="{\"ok\":true}")
+    Ok(Json(json)) => inspect(json.stringify(), content="{\"ok\":true}")
     _ => fail("expected a json message")
+  }
+  match parse_worker_message(@js.Value::cast_from(true)) {
+    Err(UnsupportedPayload) => ()
+    other =>
+      fail(
+        "boolean payload must be UnsupportedPayload, got \{Debug::to_repr(other)}",
+      )
+  }
+  match parse_worker_message(@js.Value::cast_from(1)) {
+    Err(UnsupportedPayload) => ()
+    other =>
+      fail(
+        "number payload must be UnsupportedPayload, got \{Debug::to_repr(other)}",
+      )
   }
 }

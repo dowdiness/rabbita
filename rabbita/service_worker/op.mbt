@@ -2,22 +2,34 @@
 extenum @cmd.Extension += {
   ServiceWorkerRegister(
     String,
-    String?,
+    RegistrationOptions?,
     @cmd.Emit[Registration]?,
-    @cmd.Emit[String]?
+    @cmd.Emit[ServiceWorkerError]?
   )
   ServiceWorkerGetRegistration(
     String,
     @cmd.Emit[Registration?]?,
-    @cmd.Emit[String]?
+    @cmd.Emit[ServiceWorkerError]?
   )
   ServiceWorkerGetRegistrations(
     @cmd.Emit[Array[Registration]]?,
-    @cmd.Emit[String]?
+    @cmd.Emit[ServiceWorkerError]?
   )
-  ServiceWorkerUpdate(RegistrationId, @cmd.Emit[Unit]?, @cmd.Emit[String]?)
-  ServiceWorkerUnregister(RegistrationId, @cmd.Emit[Bool]?, @cmd.Emit[String]?)
-  ServiceWorkerPostMessage(RegistrationId, Message, @cmd.Emit[String]?)
+  ServiceWorkerUpdate(
+    RegistrationId,
+    @cmd.Emit[Unit]?,
+    @cmd.Emit[ServiceWorkerError]?
+  )
+  ServiceWorkerUnregister(
+    RegistrationId,
+    @cmd.Emit[Bool]?,
+    @cmd.Emit[ServiceWorkerError]?
+  )
+  ServiceWorkerPostMessage(
+    RegistrationId,
+    Message,
+    @cmd.Emit[ServiceWorkerError]?
+  )
 }
 
 ///|
@@ -25,22 +37,22 @@ let op : @cmd.Op = @cmd.Op()
   ..on_invoke(op_invoke)
   ..on_debug(extension => {
     match extension {
-      ServiceWorkerRegister(url, scope, _, _) =>
+      ServiceWorkerRegister(url, options, _, _) =>
         Repr::ctor("ServiceWorkerRegister", [
           (None, Repr(url)),
-          (None, Repr(scope)),
+          (None, Debug::to_repr(options)),
         ])
-      ServiceWorkerGetRegistration(scope, _, _) =>
-        Repr::ctor("ServiceWorkerGetRegistration", [(None, Repr(scope))])
+      ServiceWorkerGetRegistration(client_url, _, _) =>
+        Repr::ctor("ServiceWorkerGetRegistration", [(None, Repr(client_url))])
       ServiceWorkerGetRegistrations(_, _) =>
         Repr::ctor("ServiceWorkerGetRegistrations", [])
       ServiceWorkerUpdate(id, _, _) =>
-        Repr::ctor("ServiceWorkerUpdate", [(None, Repr(id.scope))])
+        Repr::ctor("ServiceWorkerUpdate", [(None, Repr(id.scope()))])
       ServiceWorkerUnregister(id, _, _) =>
-        Repr::ctor("ServiceWorkerUnregister", [(None, Repr(id.scope))])
+        Repr::ctor("ServiceWorkerUnregister", [(None, Repr(id.scope()))])
       ServiceWorkerPostMessage(id, payload, _) =>
         Repr::ctor("ServiceWorkerPostMessage", [
-          (None, Repr(id.scope)),
+          (None, Repr(id.scope())),
           (None, Debug::to_repr(payload)),
         ])
       _ => raise Unhandled
@@ -48,11 +60,10 @@ let op : @cmd.Op = @cmd.Op()
   })
 
 // ===========================================================================
-// Shared helpers — eliminate repetition in op_invoke
+// Shared helpers
 // ===========================================================================
 
 ///|
-/// Emit a value through an optional callback, or return `@cmd.none`.
 #cfg(target="js")
 fn[T] emit_or_none(callback : @cmd.Emit[T]?, value : T) -> Cmd {
   match callback {
@@ -62,39 +73,37 @@ fn[T] emit_or_none(callback : @cmd.Emit[T]?, value : T) -> Cmd {
 }
 
 ///|
-/// Emit an error through an optional `failed` callback, or swallow it.
 #cfg(target="js")
-fn fail_or_none(failed : @cmd.Emit[String]?, err : Error) -> Cmd {
+fn fail_or_none(
+  failed : @cmd.Emit[ServiceWorkerError]?,
+  err : ServiceWorkerError,
+) -> Cmd {
   match failed {
-    Some(f) => f(err.to_string())
+    Some(f) => f(err)
     None => @cmd.none
   }
 }
 
 ///|
-/// Emit a string error through an optional `failed` callback, or swallow it.
 #cfg(target="js")
-fn fail_str_or_none(failed : @cmd.Emit[String]?, message : String) -> Cmd {
-  match failed {
-    Some(f) => f(message)
-    None => @cmd.none
-  }
+fn fail_dom_or_none(
+  failed : @cmd.Emit[ServiceWorkerError]?,
+  err : Error,
+) -> Cmd {
+  fail_or_none(failed, DomError(err.to_string()))
 }
 
 ///|
-/// Build a `ServiceWorker` snapshot from a live browser object.
 #cfg(target="js")
 fn worker_info(sw : @dom.ServiceWorker) -> WorkerInfo {
   { script_url: sw.script_url(), state: WorkerState(sw.state()) }
 }
 
 ///|
-/// Capture the current slots of a live `ServiceWorkerRegistration` into an
-/// immutable `Registration` value safe for storage in a Rabbita `Model`.
 #cfg(target="js")
 fn snapshot_registration(reg : @dom.ServiceWorkerRegistration) -> Registration {
   {
-    id: { scope: reg.scope() },
+    id: RegistrationId(reg.scope()),
     installing: reg.installing().to_option().map(worker_info),
     waiting: reg.waiting().to_option().map(worker_info),
     active: reg.active().to_option().map(worker_info),
@@ -102,27 +111,64 @@ fn snapshot_registration(reg : @dom.ServiceWorkerRegistration) -> Registration {
 }
 
 ///|
-/// Obtain the `ServiceWorkerContainer` from the current window.
+/// Obtain the `ServiceWorkerContainer`, or `None` when the API is unavailable
+/// (for example outside a secure context).
 #cfg(target="js")
-fn container() -> @dom.ServiceWorkerContainer {
-  @dom.window().navigator().service_worker()
+fn container() -> @dom.ServiceWorkerContainer? {
+  @dom.window().navigator().service_worker().to_option()
 }
 
 ///|
-/// Resolve a live `ServiceWorkerRegistration` by scope, returning `None` when
-/// the scope has no registration.
+/// Client-URL lookup via `ServiceWorkerContainer.getRegistration`.
+///
+/// This follows the browser's longest-prefix matching rules and may return a
+/// parent registration. Do **not** use this for destructive operations keyed
+/// by `RegistrationId`.
 #cfg(target="js")
-async fn resolve_registration(
-  scope : String,
+async fn get_registration_for_client(
+  client_url : String,
 ) -> @dom.ServiceWorkerRegistration? {
-  let raw = container()
-    .get_registration(client_url=@js.Optional::from_option(Some(scope)))
+  guard container() is Some(c) else { return None }
+  let raw = c
+    .get_registration(client_url=@js.Optional::from_option(Some(client_url)))
     .wait()
   if (raw : @js.Value).is_undefined() {
     None
   } else {
     Some(raw.cast())
   }
+}
+
+///|
+/// Resolve a live registration by exact absolute scope identity.
+#cfg(target="js")
+async fn resolve_registration_id(
+  id : RegistrationId,
+) -> @dom.ServiceWorkerRegistration? {
+  let expected = id.scope()
+  guard get_registration_for_client(expected) is Some(reg) else { return None }
+  guard scopes_match(reg.scope(), expected) else { return None }
+  Some(reg)
+}
+
+///|
+#cfg(target="js")
+fn registration_options_to_js(options : RegistrationOptions) -> @js.Value? {
+  let has_any = options.scope is Some(_) ||
+    options.worker_type is Some(_) ||
+    options.update_via_cache is Some(_)
+  guard has_any else { return None }
+  let opts = @js.Object::new()
+  if options.scope is Some(scope) {
+    opts["scope"] = scope
+  }
+  if options.worker_type is Some(worker_type) {
+    opts["type"] = Show::to_string(worker_type)
+  }
+  if options.update_via_cache is Some(policy) {
+    opts["updateViaCache"] = Show::to_string(policy)
+  }
+  Some(opts.to_value())
 }
 
 // ===========================================================================
@@ -136,68 +182,81 @@ fn op_invoke(
   _context : &@cmd.Context,
 ) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   match extension {
-    ServiceWorkerRegister(script_url, scope, registered, failed) =>
+    ServiceWorkerRegister(script_url, options, registered, failed) =>
       Async(() => {
         try {
-          let promise = match scope {
-            None => container().register(script_url)
-            Some(s) => {
-              let opts = @js.Object::new()
-              opts["scope"] = s
-              let options = @js.Optional::from_option(Some(opts.to_value()))
-              container().register(script_url, options~)
-            }
+          guard container() is Some(c) else {
+            return fail_or_none(failed, Unavailable)
+          }
+          let promise = match options {
+            None => c.register(script_url)
+            Some(opts) =>
+              match registration_options_to_js(opts) {
+                None => c.register(script_url)
+                Some(js_opts) =>
+                  c.register(
+                    script_url,
+                    options=@js.Optional::from_option(Some(js_opts)),
+                  )
+              }
           }
           let reg : @dom.ServiceWorkerRegistration = promise.wait().cast()
           emit_or_none(registered, snapshot_registration(reg))
         } catch {
-          err => fail_or_none(failed, err)
+          err => fail_dom_or_none(failed, err)
         }
       })
-    ServiceWorkerGetRegistration(scope, reply, failed) =>
+    ServiceWorkerGetRegistration(client_url, reply, failed) =>
       Async(() => {
         try {
-          let reg = resolve_registration(scope).map(snapshot_registration)
+          guard container() is Some(_) else {
+            return fail_or_none(failed, Unavailable)
+          }
+          let reg = get_registration_for_client(client_url).map(
+            snapshot_registration,
+          )
           emit_or_none(reply, reg)
         } catch {
-          err => fail_or_none(failed, err)
+          err => fail_dom_or_none(failed, err)
         }
       })
     ServiceWorkerGetRegistrations(reply, failed) =>
       Async(() => {
         try {
-          let raw : Array[@js.Value] = container()
-            .get_registrations()
-            .wait()
-            .cast()
+          guard container() is Some(c) else {
+            return fail_or_none(failed, Unavailable)
+          }
+          let raw : Array[@js.Value] = c.get_registrations().wait().cast()
           let regs = raw.map(v => snapshot_registration(v.cast()))
           emit_or_none(reply, regs)
         } catch {
-          err => fail_or_none(failed, err)
+          err => fail_dom_or_none(failed, err)
         }
       })
     ServiceWorkerUpdate(id, done, failed) =>
       Async(() => {
         try {
-          match resolve_registration(id.scope) {
-            None =>
-              fail_str_or_none(
-                failed,
-                "no registration found for scope: \{id.scope}",
-              )
+          guard container() is Some(_) else {
+            return fail_or_none(failed, Unavailable)
+          }
+          match resolve_registration_id(id) {
+            None => fail_or_none(failed, RegistrationNotFound(id))
             Some(reg) => {
               reg.update().wait() |> ignore
               emit_or_none(done, ())
             }
           }
         } catch {
-          err => fail_or_none(failed, err)
+          err => fail_dom_or_none(failed, err)
         }
       })
     ServiceWorkerUnregister(id, reply, failed) =>
       Async(() => {
         try {
-          match resolve_registration(id.scope) {
+          guard container() is Some(_) else {
+            return fail_or_none(failed, Unavailable)
+          }
+          match resolve_registration_id(id) {
             None => emit_or_none(reply, false)
             Some(reg) => {
               let ok : Bool = reg.unregister().wait().cast()
@@ -205,25 +264,20 @@ fn op_invoke(
             }
           }
         } catch {
-          err => fail_or_none(failed, err)
+          err => fail_dom_or_none(failed, err)
         }
       })
     ServiceWorkerPostMessage(id, payload, failed) =>
       Async(() => {
         try {
-          match resolve_registration(id.scope) {
-            None =>
-              fail_str_or_none(
-                failed,
-                "no registration found for scope: \{id.scope}",
-              )
+          guard container() is Some(_) else {
+            return fail_or_none(failed, Unavailable)
+          }
+          match resolve_registration_id(id) {
+            None => fail_or_none(failed, RegistrationNotFound(id))
             Some(reg) =>
               match reg.active().to_option() {
-                None =>
-                  fail_str_or_none(
-                    failed,
-                    "no active service worker for scope: \{id.scope}",
-                  )
+                None => fail_or_none(failed, NoActiveWorker(id))
                 Some(sw) => {
                   match payload {
                     Text(text) => sw.post_message(@js.Value::cast_from(text))
@@ -234,7 +288,7 @@ fn op_invoke(
               }
           }
         } catch {
-          err => fail_or_none(failed, err)
+          err => fail_dom_or_none(failed, err)
         }
       })
     _ => raise Unhandled

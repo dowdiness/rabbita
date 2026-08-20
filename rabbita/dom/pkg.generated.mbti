@@ -486,7 +486,7 @@ pub fn MutationRecord::get_attribute_name(Self) -> String?
 #external
 pub type Navigator
 pub fn Navigator::clipboard(Self) -> Clipboard
-pub fn Navigator::service_worker(Self) -> ServiceWorkerContainer
+pub fn Navigator::service_worker(Self) -> @js.Nullable[ServiceWorkerContainer]
 
 type Node
 pub impl IsEventTarget for Node

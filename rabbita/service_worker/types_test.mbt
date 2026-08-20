@@ -10,7 +10,9 @@ test "WorkerState follows the spec transition graph" {
   inspect(parsed, content="parsed")
   inspect(installing, content="installing")
   inspect(activating.is_active(), content="true")
-  inspect(activated.is_terminal(), content="true")
+  inspect(activated.is_terminal(), content="false")
+  inspect(redundant.is_terminal(), content="true")
+  inspect(activated.is_stable(), content="true")
   inspect(installing.is_settling(), content="true")
   inspect(installed.is_settling(), content="false")
 
@@ -19,6 +21,7 @@ test "WorkerState follows the spec transition graph" {
   inspect(installing.can_transition_to(activated), content="false")
   inspect(installed.can_transition_to(activating), content="true")
   inspect(activating.can_transition_to(activated), content="true")
+  inspect(activated.can_transition_to(redundant), content="true")
 }
 
 ///|
@@ -28,4 +31,10 @@ test "Message show output distinguishes text and json payloads" {
     @service_worker.Message::Json(@json.from_json({ "ok": true })),
     content="Json({\"ok\":true})",
   )
+}
+
+///|
+test "RegistrationId exposes scope via accessor" {
+  let id = @service_worker.RegistrationId("/app/")
+  inspect(id.scope().contains("/app/"), content="true")
 }

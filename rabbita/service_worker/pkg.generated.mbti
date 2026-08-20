@@ -8,21 +8,21 @@ import {
 }
 
 // Values
-pub fn get_registration(String, reply? : @cmd.Emit[Registration?], failed? : @cmd.Emit[String]) -> @cmd.Cmd
+pub fn get_registration(String, reply? : @cmd.Emit[Registration?], failed? : @cmd.Emit[ServiceWorkerError]) -> @cmd.Cmd
 
-pub fn get_registrations(reply? : @cmd.Emit[Array[Registration]], failed? : @cmd.Emit[String]) -> @cmd.Cmd
+pub fn get_registrations(reply? : @cmd.Emit[Array[Registration]], failed? : @cmd.Emit[ServiceWorkerError]) -> @cmd.Cmd
 
-pub fn listen(controller_changed? : @cmd.Cmd, message? : @cmd.Emit[Message], message_error? : @cmd.Cmd) -> @sub.Sub
+pub fn listen(controller_changed? : @cmd.Cmd, message? : @cmd.Emit[Message], message_error? : @cmd.Cmd, decode_error? : @cmd.Emit[MessageDecodeError]) -> @sub.Sub
 
-pub fn post_message(RegistrationId, Message, failed? : @cmd.Emit[String]) -> @cmd.Cmd
+pub fn post_message(RegistrationId, Message, failed? : @cmd.Emit[ServiceWorkerError]) -> @cmd.Cmd
 
-pub fn register(String, scope? : String, registered? : @cmd.Emit[Registration], failed? : @cmd.Emit[String]) -> @cmd.Cmd
+pub fn register(String, options? : RegistrationOptions, registered? : @cmd.Emit[Registration], failed? : @cmd.Emit[ServiceWorkerError]) -> @cmd.Cmd
 
-pub fn unregister(RegistrationId, reply? : @cmd.Emit[Bool], failed? : @cmd.Emit[String]) -> @cmd.Cmd
+pub fn unregister(RegistrationId, reply? : @cmd.Emit[Bool], failed? : @cmd.Emit[ServiceWorkerError]) -> @cmd.Cmd
 
-pub fn update(RegistrationId, done? : @cmd.Emit[Unit], failed? : @cmd.Emit[String]) -> @cmd.Cmd
+pub fn update(RegistrationId, done? : @cmd.Emit[Unit], failed? : @cmd.Emit[ServiceWorkerError]) -> @cmd.Cmd
 
-pub fn watch_registration(String, changed? : @cmd.Emit[Registration], failed? : @cmd.Emit[String]) -> @sub.Sub
+pub fn watch_registration(String, changed? : @cmd.Emit[Registration], failed? : @cmd.Emit[ServiceWorkerError]) -> @sub.Sub
 
 // Errors
 
@@ -32,6 +32,12 @@ pub(all) enum Message {
   Json(Json)
 } derive(@debug.Debug)
 pub impl Show for Message
+
+pub(all) enum MessageDecodeError {
+  UnsupportedPayload
+  InvalidJson(String)
+} derive(Eq, @debug.Debug)
+pub impl Show for MessageDecodeError
 
 pub struct Registration {
   id : RegistrationId
@@ -45,10 +51,35 @@ pub fn Registration::has_pending_update(Self) -> Bool
 pub fn Registration::has_waiting(Self) -> Bool
 pub impl Show for Registration
 
-pub(all) struct RegistrationId {
-  scope : String
+pub struct RegistrationId {
+  // private fields
 } derive(Eq, Hash, @debug.Debug)
+pub fn RegistrationId::RegistrationId(String) -> Self
+pub fn RegistrationId::scope(Self) -> String
 pub impl Show for RegistrationId
+
+pub struct RegistrationOptions {
+  scope : String?
+  worker_type : WorkerType?
+  update_via_cache : UpdateViaCache?
+} derive(Eq, @debug.Debug)
+pub fn RegistrationOptions::RegistrationOptions(scope? : String, worker_type? : WorkerType, update_via_cache? : UpdateViaCache) -> Self
+
+pub(all) enum ServiceWorkerError {
+  Unavailable
+  RegistrationNotFound(RegistrationId)
+  NoActiveWorker(RegistrationId)
+  DomError(String)
+  DecodeError(String)
+} derive(Eq, @debug.Debug)
+pub impl Show for ServiceWorkerError
+
+pub(all) enum UpdateViaCache {
+  Imports
+  All
+  None_
+} derive(Eq, @debug.Debug)
+pub impl Show for UpdateViaCache
 
 pub struct WorkerInfo {
   script_url : String
@@ -63,12 +94,20 @@ pub(all) enum WorkerState {
   Activating
   Activated
   Redundant
+  Unknown(String)
 } derive(Eq, @debug.Debug)
 pub fn WorkerState::can_transition_to(Self, Self) -> Bool
 pub fn WorkerState::is_active(Self) -> Bool
 pub fn WorkerState::is_settling(Self) -> Bool
+pub fn WorkerState::is_stable(Self) -> Bool
 pub fn WorkerState::is_terminal(Self) -> Bool
 pub impl Show for WorkerState
+
+pub(all) enum WorkerType {
+  Classic
+  Module
+} derive(Eq, @debug.Debug)
+pub impl Show for WorkerType
 
 // Type aliases
 

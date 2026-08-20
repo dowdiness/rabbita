@@ -25,7 +25,10 @@ pub impl @js.Cast for ServiceWorkerContainer with fn from(value) {
 extern "js" fn ffi_to_service_worker_container(
   x : @js.Value,
 ) -> @js.Nullable[ServiceWorkerContainer] =
-  #| (x) => (x instanceof ServiceWorkerContainer) ? x : null
+  #| (x) => typeof ServiceWorkerContainer !== "undefined"
+  #|   && x instanceof ServiceWorkerContainer
+  #|   ? x
+  #|   : null
 
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/controller

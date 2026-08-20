@@ -25,7 +25,10 @@ pub impl @js.Cast for ServiceWorker with fn from(value) {
 extern "js" fn ffi_to_service_worker(
   x : @js.Value,
 ) -> @js.Nullable[ServiceWorker] =
-  #| (x) => (x instanceof ServiceWorker) ? x : null
+  #| (x) => typeof ServiceWorker !== "undefined"
+  #|   && x instanceof ServiceWorker
+  #|   ? x
+  #|   : null
 
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker/scriptURL

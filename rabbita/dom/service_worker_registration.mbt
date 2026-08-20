@@ -25,7 +25,10 @@ pub impl @js.Cast for ServiceWorkerRegistration with fn from(value) {
 extern "js" fn ffi_to_service_worker_registration(
   x : @js.Value,
 ) -> @js.Nullable[ServiceWorkerRegistration] =
-  #| (x) => (x instanceof ServiceWorkerRegistration) ? x : null
+  #| (x) => typeof ServiceWorkerRegistration !== "undefined"
+  #|   && x instanceof ServiceWorkerRegistration
+  #|   ? x
+  #|   : null
 
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/active
@@ -91,9 +94,10 @@ pub extern "js" fn ServiceWorkerRegistration::unregister(
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/update
 ///
-/// Checks the server for an updated version of the service worker script
-/// without consulting caches.  Returns a `Promise` that resolves to the
-/// updated `ServiceWorkerRegistration`.
+/// Checks the service worker script for an update. HTTP cache behavior follows
+/// the registration's `updateViaCache` policy and the browser's update
+/// algorithm. Returns a `Promise` that resolves to the updated
+/// `ServiceWorkerRegistration`.
 #cfg(target="js")
 pub extern "js" fn ServiceWorkerRegistration::update(
   self : ServiceWorkerRegistration,
