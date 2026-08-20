@@ -44,7 +44,7 @@ pub fn keyed_node(
   children : Map[String, Svg],
   ns? : String = @dom.namespace_svg,
 ) -> Svg {
-  let vnode = @runtime.VNode::elem(
+  let vnode = @vdom.VNode::elem(
     tag,
     attrs.to_props(),
     Map(children.map((_, child) => child.0)),

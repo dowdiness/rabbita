@@ -205,7 +205,18 @@ test "reordering keyed children preserves focused DOM identity" {
   ignore(props)
 
   keyed_focus_reorder_test_focus(second)
-  ignore(diff_children(old, new, Sandbox::new(), parent.as_node(), null()))
+  let scheduler = RelocationTestScheduler::{  }
+  let captured_link_listener : @dom.Listener = _ => ()
+  ignore(
+    diff_children(
+      old,
+      new,
+      scheduler,
+      captured_link_listener,
+      parent.as_node(),
+      null(),
+    ),
+  )
 
   guard document.get_active_element() is Some(active) else {
     fail("expected a focused keyed child")
