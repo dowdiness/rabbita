@@ -18,6 +18,14 @@ pub fn[E, R] default_exception_handler(E) -> R
 
 pub fn document() -> Document
 
+pub fn indexed_db() -> IDBFactory?
+
+pub fn indexed_db_safe() -> Result[IDBFactory?, IDBError]
+
+pub fn local_storage() -> Storage?
+
+pub fn local_storage_safe() -> Result[Storage?, IDBError]
+
 pub let namespace_html : String
 
 pub let namespace_mathml : String
@@ -409,6 +417,72 @@ pub impl IsHtmlElement for HTMLVideoElement
 pub impl IsNode for HTMLVideoElement
 pub impl @js.Cast for HTMLVideoElement
 
+#external
+pub type IDBCursorWithValue
+pub fn IDBCursorWithValue::get_string_value(Self) -> @js.Nullable[String]
+pub fn IDBCursorWithValue::string_value(Self) -> String?
+
+#external
+pub type IDBDatabase
+pub fn IDBDatabase::close(Self) -> Unit
+pub fn IDBDatabase::create_object_store(Self, String) -> IDBObjectStore
+pub fn IDBDatabase::create_object_store_safe(Self, String) -> Result[IDBObjectStore, IDBError]
+pub fn IDBDatabase::has_object_store(Self, String) -> Bool
+pub fn IDBDatabase::has_object_store_safe(Self, String) -> Result[Bool, IDBError]
+pub fn IDBDatabase::set_on_version_change(Self, () -> Unit) -> Unit
+pub fn IDBDatabase::transaction(Self, String, String) -> IDBTransaction
+pub fn IDBDatabase::transaction_safe(Self, String, String) -> Result[IDBTransaction, IDBError]
+
+pub(all) struct IDBError {
+  name : String
+  code : Int
+} derive(Eq)
+pub fn IDBError::code(Self) -> Int
+pub fn IDBError::name(Self) -> String
+
+#external
+pub type IDBFactory
+pub fn IDBFactory::open(Self, String, Int) -> IDBOpenDBRequest
+pub fn IDBFactory::open_safe(Self, String, Int) -> Result[IDBOpenDBRequest, IDBError]
+
+#external
+pub type IDBObjectStore
+pub fn IDBObjectStore::open_cursor(Self, String) -> IDBRequest
+pub fn IDBObjectStore::open_cursor_safe(Self, String) -> Result[IDBRequest, IDBError]
+pub fn IDBObjectStore::put_string(Self, String, String) -> IDBRequest
+pub fn IDBObjectStore::put_string_safe(Self, String, String) -> Result[IDBRequest, IDBError]
+
+#external
+pub type IDBOpenDBRequest
+pub fn IDBOpenDBRequest::get_error_code(Self) -> Int
+pub fn IDBOpenDBRequest::get_error_name(Self) -> String
+pub fn IDBOpenDBRequest::get_result(Self) -> IDBDatabase
+pub fn IDBOpenDBRequest::get_result_safe(Self) -> Result[IDBDatabase, IDBError]
+pub fn IDBOpenDBRequest::set_on_blocked(Self, () -> Unit) -> Unit
+pub fn IDBOpenDBRequest::set_on_error(Self, () -> Unit) -> Unit
+pub fn IDBOpenDBRequest::set_on_success(Self, () -> Unit) -> Unit
+pub fn IDBOpenDBRequest::set_on_upgrade_needed(Self, () -> Unit) -> Unit
+
+#external
+pub type IDBRequest
+pub fn IDBRequest::cursor(Self) -> IDBCursorWithValue?
+pub fn IDBRequest::get_cursor(Self) -> @js.Nullable[IDBCursorWithValue]
+pub fn IDBRequest::get_error_code(Self) -> Int
+pub fn IDBRequest::get_error_name(Self) -> String
+pub fn IDBRequest::set_on_error(Self, () -> Unit) -> Unit
+pub fn IDBRequest::set_on_success(Self, () -> Unit) -> Unit
+
+#external
+pub type IDBTransaction
+pub fn IDBTransaction::abort(Self) -> Unit
+pub fn IDBTransaction::get_error_code(Self) -> Int
+pub fn IDBTransaction::get_error_name(Self) -> String
+pub fn IDBTransaction::object_store(Self, String) -> IDBObjectStore
+pub fn IDBTransaction::object_store_safe(Self, String) -> Result[IDBObjectStore, IDBError]
+pub fn IDBTransaction::set_on_abort(Self, () -> Unit) -> Unit
+pub fn IDBTransaction::set_on_complete(Self, () -> Unit) -> Unit
+pub fn IDBTransaction::set_on_error(Self, () -> Unit) -> Unit
+
 type ImageBitmap
 pub impl @js.Cast for ImageBitmap
 
@@ -561,6 +635,14 @@ pub impl IsSVGElement for SVGImageElement
 pub impl @js.Cast for SVGImageElement
 
 type SVGStringList
+
+#external
+pub type Storage
+pub fn Storage::get_item(Self, String) -> @js.Nullable[String]
+pub fn Storage::read_item(Self, String) -> String?
+pub fn Storage::read_item_safe(Self, String) -> Result[String?, IDBError]
+pub fn Storage::remove_item(Self, String) -> Unit
+pub fn Storage::remove_item_safe(Self, String) -> Result[Unit, IDBError]
 
 type StylePropertyMap
 
