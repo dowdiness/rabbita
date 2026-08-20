@@ -11,10 +11,10 @@ test "svg edge paths expose accessibility and stable data attributes" {
       .data_set("edge-id", "edge-1"),
   )
   match edge_path.to_virtual_dom() {
-    @runtime.VNode::Elem(
+    @vdom.VNode::Elem(
       "path",
       props,
-      @runtime.Children::Array(children),
+      @vdom.Children::Array(children),
       namespace_uri=Some(svg_namespace)
     ) => {
       assert_eq(svg_namespace, @dom.namespace_svg)
@@ -48,10 +48,10 @@ test "svg keyed node retains EdgeId child keys for VDOM reconciliation" {
   ])
   let svg = keyed_node("svg", Attrs::build(), children)
   match svg.to_virtual_dom() {
-    @runtime.VNode::Elem(
+    @vdom.VNode::Elem(
       "svg",
       _,
-      @runtime.Children::Map(actual),
+      @vdom.Children::Map(actual),
       namespace_uri=Some(svg_namespace)
     ) => {
       assert_eq(svg_namespace, @dom.namespace_svg)
