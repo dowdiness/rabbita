@@ -45,11 +45,22 @@ pub fn Blob::from_bytes(bytes : Bytes, content_type : String) -> Blob {
 
 ///|
 #cfg(target="js")
-pub extern "js" fn Blob::slice(
+extern "js" fn Blob::slice_ffi(
   self : Self,
   start : Int,
-  end_? : @js.Optional[Int],
+  end_ : @js.Optional[Int],
 ) -> Blob = "(self, start, end) => self.slice(start, end)"
+
+///|
+#cfg(target="js")
+pub fn Blob::slice(self : Self, start : Int, end_? : @js.Optional[Int]) -> Blob {
+  let end_value = if end_ is Some(end_) {
+    end_
+  } else {
+    @js.Optional::undefined()
+  }
+  self.slice_ffi(start, end_value)
+}
 
 ///|
 #cfg(target="js")

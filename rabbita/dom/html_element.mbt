@@ -244,7 +244,10 @@ impl IsHtmlElement with fn get_edit_context(s) {
 ///|
 #cfg(target="js")
 impl IsHtmlElement with fn set_edit_context(s, value) {
-  ffi_html_element_set_edit_context(s.as_html_element(), value)
+  ffi_html_element_set_edit_context(
+    s.as_html_element(),
+    @js.Nullable::from_option(value),
+  )
 }
 
 ///|
@@ -638,7 +641,7 @@ extern "js" fn ffi_html_element_get_edit_context(
 #cfg(target="js")
 extern "js" fn ffi_html_element_set_edit_context(
   s : HTMLElement,
-  value : EditContext?,
+  value : @js.Nullable[EditContext],
 ) -> Unit = "(s, value) => s.editContext = value"
 
 ///|

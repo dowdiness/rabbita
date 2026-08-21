@@ -416,7 +416,10 @@ impl IsHTMLMediaElement with fn get_src_object(s) {
 ///|
 #cfg(target="js")
 impl IsHTMLMediaElement with fn set_src_object(s, value) {
-  ffi_html_media_element_set_src_object(s.as_html_media_element(), value)
+  ffi_html_media_element_set_src_object(
+    s.as_html_media_element(),
+    @js.Nullable::from_option(value),
+  )
 }
 
 ///|
@@ -759,7 +762,7 @@ extern "js" fn ffi_html_media_element_get_src_object(
 #cfg(target="js")
 extern "js" fn ffi_html_media_element_set_src_object(
   s : HTMLMediaElement,
-  value : @js.Value?,
+  value : @js.Nullable[@js.Value],
 ) -> Unit = "(s, value) => s.srcObject = value"
 
 ///|
@@ -814,7 +817,7 @@ extern "js" fn ffi_html_media_element_can_play_type(
 extern "js" fn ffi_html_media_element_fast_seek(
   s : HTMLMediaElement,
   time : Double,
-) -> Unit = "(s, time) => s.fastSeek(time)"
+) -> Unit = "(s, time) => s.fastSeek?.(time)"
 
 ///|
 #cfg(target="js")
@@ -828,4 +831,4 @@ extern "js" fn ffi_html_media_element_pause(s : HTMLMediaElement) -> Unit = "(s)
 #cfg(target="js")
 extern "js" fn ffi_html_media_element_seek_to_next_frame(
   s : HTMLMediaElement,
-) -> Unit = "(s) => s.seekToNextFrame()"
+) -> Unit = "(s) => s.seekToNextFrame?.()"

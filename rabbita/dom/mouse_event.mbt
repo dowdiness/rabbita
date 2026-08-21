@@ -27,7 +27,7 @@ pub trait IsMouseEvent: IsUIEvent {
   fn get_shift_key(Self) -> Bool = _
   fn get_x(Self) -> Int = _
   fn get_y(Self) -> Int = _
-  fn get_modifier_state(Self) -> Int = _
+  fn get_modifier_state(Self, String) -> Bool = _
 }
 
 ///|
@@ -179,8 +179,8 @@ impl IsMouseEvent with fn get_y(s) {
 
 ///|
 #cfg(target="js")
-impl IsMouseEvent with fn get_modifier_state(s) {
-  s |> js_identity |> ffi_mouse_event_modifier_state
+impl IsMouseEvent with fn get_modifier_state(s, key) {
+  s |> js_identity |> ffi_mouse_event_modifier_state(key)
 }
 
 ///|
@@ -263,4 +263,7 @@ extern "js" fn ffi_mouse_event_y(e : @js.Value) -> Int = "(e) => e.y"
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_mouse_event_modifier_state(e : @js.Value) -> Int = "(e) => e.getModifierState()"
+extern "js" fn ffi_mouse_event_modifier_state(
+  e : @js.Value,
+  key : String,
+) -> Bool = "(e, key) => e.getModifierState(key)"

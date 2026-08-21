@@ -21,7 +21,7 @@ pub impl @js.Cast for BlobEvent with fn from(value) {
 
 ///|
 #cfg(target="js")
-pub extern "js" fn BlobEvent::new() -> BlobEvent = "() => new BlobEvent()"
+pub extern "js" fn BlobEvent::new() -> BlobEvent = "() => new BlobEvent('', { data: new Blob() })"
 
 ///|
 #cfg(target="js")

@@ -3,6 +3,22 @@
 #external
 pub type Clipboard
 
+///|
+#cfg(target="js")
+pub impl IsEventTarget for Clipboard
+
+///|
+#cfg(target="js")
+pub impl @js.Cast for Clipboard with fn into(value) {
+  value |> ffi_to_clipboard |> clipboard => { clipboard.to_option() }
+}
+
+///|
+#cfg(target="js")
+pub impl @js.Cast for Clipboard with fn from(value) {
+  value |> js_identity
+}
+
 // TODO: support ClipboardItem
 //
 // ///|
