@@ -25,3 +25,15 @@ pub async fn copy(src~ : SourcePath, dst~ : SourcePath) -> Unit {
     writer.write_reader(reader)
   }
 }
+
+///|
+#cfg(not(platform="windows"))
+pub async fn chmod_executable(path : SourcePath) -> Unit {
+  @fs.chmod(source_path_to_string(path), 0o755)
+}
+
+///|
+#cfg(platform="windows")
+pub async fn chmod_executable(_path : SourcePath) -> Unit {
+  ignore(_path)
+}

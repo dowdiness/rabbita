@@ -348,7 +348,7 @@ async fn copy_server_artifact(
   }
   copy(src=artifact, dst=output)
   if target is Native {
-    @fs.chmod(source_path_to_string(output), 0o755)
+    chmod_executable(output)
   }
   output
 }

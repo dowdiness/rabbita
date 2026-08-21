@@ -192,7 +192,7 @@ async fn stage_native_server(
   let executable = directory.join(basename)
   if !@fs.exists(source_path_to_string(executable)) {
     copy(src=artifact, dst=executable)
-    @fs.chmod(source_path_to_string(executable), 0o755)
+    chmod_executable(executable)
   }
   executable
 }
