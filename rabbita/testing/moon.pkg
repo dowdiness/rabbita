@@ -1,6 +1,9 @@
 import {
+  "moonbit-community/rabbita/cmd",
   "moonbit-community/rabbita/html",
+  "moonbit-community/rabbita/internal/key",
   "moonbit-community/rabbita/internal/vdom",
+  "moonbitlang/async",
 }
 
 warnings = "-unused_package"
