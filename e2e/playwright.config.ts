@@ -3,7 +3,13 @@ import { defineConfig, devices } from '@playwright/test';
 const isCI = Boolean(process.env.CI);
 const apps = [
   { name: 'counter', port: 4300 },
-  { name: 'toggle', port: 4301 },
+  { name: 'state-and-messages', port: 4301 },
+  { name: 'forms-and-events', port: 4302 },
+  { name: 'collections-lifecycle', port: 4303 },
+  { name: 'navigation-history', port: 4304 },
+  { name: 'commands-and-async', port: 4305 },
+  { name: 'http', port: 4306 },
+  { name: 'subscriptions', port: 4307 },
 ] as const;
 const appUrl = (port: number) => `http://127.0.0.1:${port}`;
 

@@ -1,4 +1,4 @@
-name = "local/rabbita-e2e-toggle"
+name = "local/rabbita-e2e-http"
 
 version = "0.1.0"
 
@@ -8,6 +8,6 @@ import {
 
 license = "Apache-2.0"
 
-description = "A toggle fixture for Rabbita end-to-end tests."
+description = "HTTP fixtures for Rabbita end-to-end tests."
 
 preferred_target = "js"

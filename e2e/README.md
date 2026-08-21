@@ -4,11 +4,21 @@ The Playwright suite starts dedicated MoonBit applications under `apps/` with
 Warren and tests them in Chromium. These fixtures belong to the test suite and
 do not depend on applications under `examples/`.
 
-Each application uses Warren's minimized root-package layout. The initial
-fixtures are:
+Each application uses Warren's minimized root-package layout. The fixtures are:
 
 - `apps/counter` on port `4300`
-- `apps/toggle` on port `4301`
+- `apps/state-and-messages` on port `4301`
+- `apps/forms-and-events` on port `4302`
+- `apps/collections-lifecycle` on port `4303`
+- `apps/navigation-history` on port `4304`
+- `apps/commands-and-async` on port `4305`
+- `apps/http` on port `4306`
+- `apps/subscriptions` on port `4307`
+
+The suite covers stable public behavior: state and message composition, forms
+and DOM events, incremental collection lifecycles, same-origin navigation,
+commands and asynchronous work, mocked HTTP, and subscription lifecycles. It
+does not assert ordering for batched or nested messages.
 
 ## Prerequisites
 
@@ -49,6 +59,10 @@ npm run report
 Tests should prefer accessible roles, labels, and visible text. Add a
 `data-testid` only when the user-facing semantics cannot provide a stable
 locator.
+
+Keep tests deterministic. Mock HTTP with Playwright routes, use the Playwright
+clock for timers, and rely on retrying assertions or event-driven barriers
+instead of fixed sleeps.
 
 ## Add an application
 
