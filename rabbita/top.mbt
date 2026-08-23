@@ -22,7 +22,7 @@ struct App {
 /// rendering, releases the mounted runtime, and removes its DOM while that DOM
 /// still belongs to this mount.
 pub struct MountedApp {
-  priv unmount_ : () -> Unit
+  priv cleanup : () -> Unit
 }
 
 ///|
@@ -34,7 +34,7 @@ pub struct MountedApp {
 /// finish, but their returned commands are ignored after unmount.
 #cfg(target="js")
 pub fn MountedApp::unmount(self : Self) -> Unit {
-  (self.unmount_)()
+  (self.cleanup)()
 }
 
 ///|
@@ -84,7 +84,7 @@ pub fn App::mount(self : Self, element_id : String) -> MountedApp {
     output.map(html => html.to_virtual_dom()).0
   })
   @runtime.Host::flush(host)
-  { unmount_: () => @runtime.Host::cleanup(host) }
+  { cleanup: () => @runtime.Host::cleanup(host) }
 }
 
 ///|
