@@ -86,9 +86,7 @@ mounted.unmount()
 
 `unmount` is safe to call more than once. It stops the app's subscriptions and
 queued renders, then removes its DOM. Async operations that are already running
-may finish after `unmount`, but they cannot update the app through Rabbita. If
-another app has replaced the DOM, unmounting the old app does not remove the new
-app's DOM.
+may finish after `unmount`, but they cannot update the app through Rabbita.
 
 ## Used By
 
