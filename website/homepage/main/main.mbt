@@ -103,7 +103,7 @@ let code_counter : String =
   #|      button(on_click=inject(Click), "You clicked \{count} times")
   #|    })
   #|  }
-  #|  new(app).mount("app")
+  #|  ignore(new(app).mount("app"))
   #|}
 
 // ─── Comparison code samples ──────────────────────────────────────────────
@@ -1104,5 +1104,5 @@ fn main {
   @shiki.initialize(langs=["moonbit"], themes=[
     "github-light", "github-dark-default",
   ])
-  @rabbita.new(app).mount("app")
+  ignore(@rabbita.new(app).mount("app"))
 }

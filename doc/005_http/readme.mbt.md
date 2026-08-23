@@ -118,7 +118,7 @@ Mount it the same way as earlier chapters:
 ```moonbit nocheck
 ///|
 fn main {
-  @rabbita.new(build_app).mount("main")
+  ignore(@rabbita.new(build_app).mount("main"))
 }
 ```
 

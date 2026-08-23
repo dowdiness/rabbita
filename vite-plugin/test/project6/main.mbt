@@ -13,5 +13,5 @@ fn main {
       div([text(model)])
     })
   })
-  app.mount("app")
+  ignore(app.mount("app"))
 }

@@ -23,5 +23,5 @@ fn app() -> Val[Html] {
 }
 
 fn main {
-  new(app).mount("app")
+  ignore(new(app).mount("app"))
 }

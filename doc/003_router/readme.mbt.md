@@ -172,7 +172,7 @@ Mount the root component as usual:
 ```moonbit nocheck
 ///|
 fn main {
-  @rabbita.new(app).mount("main")
+  ignore(@rabbita.new(app).mount("main"))
 }
 ```
 

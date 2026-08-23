@@ -32,6 +32,7 @@ type VDom
 pub fn VDom::initialize(VNode, &@cmd.Scheduler, target_element_id? : String) -> Self
 pub fn VDom::initialize_with_hydration(VNode, &@cmd.Scheduler) -> Self
 pub fn VDom::to_string(Self) -> String
+pub fn VDom::unmount(Self) -> Unit
 pub fn VDom::update(Self, VNode, &@cmd.Scheduler) -> Unit
 
 pub enum VNode {

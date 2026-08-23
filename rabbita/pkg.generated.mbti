@@ -58,7 +58,12 @@ pub fn static_cell(@html.Html) -> () -> Val[@html.Html]
 // Types and methods
 type App
 pub fn App::hydrate(Self) -> Unit
-pub fn App::mount(Self, String) -> Unit
+pub fn App::mount(Self, String) -> MountedApp
+
+pub struct MountedApp {
+  // private fields
+}
+pub fn MountedApp::unmount(Self) -> Unit
 
 pub enum Status[T] {
   Pending

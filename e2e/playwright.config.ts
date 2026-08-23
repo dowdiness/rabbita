@@ -11,6 +11,7 @@ const apps = [
   { name: 'http', port: 4306 },
   { name: 'subscriptions', port: 4307 },
   { name: 'dom-api', port: 4308 },
+  { name: 'mount-lifecycle', port: 4309 },
 ] as const;
 const appUrl = (port: number) => `http://127.0.0.1:${port}`;
 

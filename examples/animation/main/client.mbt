@@ -66,5 +66,5 @@ fn main {
     )
     view(emit, model)
   }
-  @rabbita.new(app).mount("app")
+  ignore(@rabbita.new(app).mount("app"))
 }

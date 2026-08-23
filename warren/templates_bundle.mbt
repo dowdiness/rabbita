@@ -47,7 +47,7 @@ let _embed_main_mbt : String =
   #|}
   #|
   #|fn main {
-  #|  @rabbita.new(app).mount("app")
+  #|  ignore(@rabbita.new(app).mount("app"))
   #|}
   #|
 
@@ -78,6 +78,7 @@ let _embed_index_html : String =
   #|    <div id="app"></div>
   #|</body>
   #|</html>
+  #|
 
 ///|
 let _embed_styles_css : String =
@@ -242,7 +243,7 @@ let _embed_main_mbt_2 : String =
   #|}
   #|
   #|fn main {
-  #|  @rabbita.new(app).mount("app")
+  #|  ignore(@rabbita.new(app).mount("app"))
   #|}
   #|
 
