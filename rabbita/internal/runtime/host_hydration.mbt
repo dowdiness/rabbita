@@ -35,7 +35,7 @@ pub fn HydrationHost::HydrationHost(builder : GraphBuilder) -> HydrationHost {
         url_request: _ => @cmd.none,
         url_changed: _ => @cmd.none,
         paint_scheduled: false,
-        request_id: None,
+        pending_request_id: None,
         drain_scheduled: true,
         unmounted: false,
         after_render_queue: Queue([]),

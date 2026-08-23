@@ -14,7 +14,7 @@ struct BrowserHost {
   mut graph_output : @duplix.Node[VNode]?
   mut drain_scheduled : Bool
   mut paint_scheduled : Bool
-  mut request_id : Double?
+  mut pending_request_id : Double?
   mut unmounted : Bool
   mut document : @vdom.VDom?
   mut url_request : @cmd.Injector[String]
@@ -36,7 +36,7 @@ pub fn BrowserHost::BrowserHost(
       url_request: _ => @cmd.none,
       url_changed: _ => @cmd.none,
       paint_scheduled: false,
-      request_id: None,
+      pending_request_id: None,
       drain_scheduled: true,
       unmounted: false,
       after_render_queue: Queue([]),
@@ -70,9 +70,9 @@ pub impl Host for BrowserHost with fn get_stores(self) {
 fn BrowserHost::request_frame(self : Self) -> Unit {
   guard !self.unmounted && !self.paint_scheduled else { return }
   self.paint_scheduled = true
-  self.request_id = Some(
+  self.pending_request_id = Some(
     @dom.window().request_animation_frame(_ => {
-      self.request_id = None
+      self.pending_request_id = None
       guard !self.unmounted else { return }
       if self.document is Some(document) {
         let output = self.graph_output.unwrap()
@@ -128,11 +128,11 @@ pub impl Host for BrowserHost with fn cleanup(self) {
   self.unmounted = true
   self.task_queue.clear()
   self.after_render_queue.clear()
-  match self.request_id {
+  match self.pending_request_id {
     Some(request_id) => @dom.window().cancel_animation_frame(request_id)
     None => ()
   }
-  self.request_id = None
+  self.pending_request_id = None
   self.paint_scheduled = false
   self.scope.cleanup()
   self.url_request = _ => @cmd.none
