@@ -26,8 +26,7 @@ pub struct MountedApp {
 ///|
 /// Stops this app and removes its DOM. It is safe to call more than once.
 ///
-/// Async operations that are already running may finish after `unmount`, but
-/// they cannot update the app through Rabbita.
+/// Rabbita ignores updates from async operations that finish after `unmount`.
 #cfg(target="js")
 pub fn MountedApp::unmount(self : Self) -> Unit {
   (self.cleanup)()
