@@ -124,25 +124,9 @@ pub extern "js" fn HTMLImageElement::set_loading(self : Self, value : String) = 
 pub extern "js" fn HTMLImageElement::get_natural_height(self : Self) -> Double = "(self) => self.naturalHeight"
 
 ///|
-/// https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/naturalHeight
-#cfg(target="js")
-pub extern "js" fn HTMLImageElement::set_natural_height(
-  self : Self,
-  value : Double,
-) = "(self, value) => self.naturalHeight = value"
-
-///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/naturalWidth
 #cfg(target="js")
 pub extern "js" fn HTMLImageElement::get_natural_width(self : Self) -> Double = "(self) => self.naturalWidth"
-
-///|
-/// https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/naturalWidth
-#cfg(target="js")
-pub extern "js" fn HTMLImageElement::set_natural_width(
-  self : Self,
-  value : Double,
-) = "(self, value) => self.naturalWidth = value"
 
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/referrerPolicy

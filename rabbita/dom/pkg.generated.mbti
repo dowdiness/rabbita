@@ -178,6 +178,8 @@ pub impl @js.Cast for CanvasRenderingContext2D
 pub type Clipboard
 pub fn Clipboard::read_text(Self) -> @js.Promise
 pub fn Clipboard::write_text(Self, String) -> @js.Promise
+pub impl IsEventTarget for Clipboard
+pub impl @js.Cast for Clipboard
 
 type ClipboardEvent
 pub fn ClipboardEvent::clipboard_data(Self) -> DataTransfer
@@ -375,8 +377,6 @@ pub fn HTMLImageElement::set_decoding(Self, String) -> Unit
 pub fn HTMLImageElement::set_height(Self, Double) -> Unit
 pub fn HTMLImageElement::set_is_map(Self, Bool) -> Unit
 pub fn HTMLImageElement::set_loading(Self, String) -> Unit
-pub fn HTMLImageElement::set_natural_height(Self, Double) -> Unit
-pub fn HTMLImageElement::set_natural_width(Self, Double) -> Unit
 pub fn HTMLImageElement::set_referrer_policy(Self, String) -> Unit
 pub fn HTMLImageElement::set_sizes(Self, String) -> Unit
 pub fn HTMLImageElement::set_src(Self, String) -> Unit
@@ -1005,7 +1005,7 @@ pub trait IsMouseEvent : IsUIEvent {
   fn get_shift_key(Self) -> Bool
   fn get_x(Self) -> Double
   fn get_y(Self) -> Double
-  fn get_modifier_state(Self) -> Int
+  fn get_modifier_state(Self, String) -> Bool
 }
 
 pub trait IsNode : IsEventTarget {

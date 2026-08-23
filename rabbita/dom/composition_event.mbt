@@ -25,7 +25,7 @@ pub impl @js.Cast for CompositionEvent with fn from(value) {
 
 ///|
 #cfg(target="js")
-pub extern "js" fn CompositionEvent::new() -> CompositionEvent = "() => new CompositionEvent()"
+pub extern "js" fn CompositionEvent::new() -> CompositionEvent = "() => new CompositionEvent('')"
 
 ///|
 #cfg(target="js")
