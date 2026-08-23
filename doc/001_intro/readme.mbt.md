@@ -103,9 +103,9 @@ fn main {
 
 `new(app)` creates an application from the root component builder.
 `mount("main")` runs that builder, evaluates the root `Val[Html]`, and inserts
-the result into the DOM element whose id is `main`. It also returns a handle for
-the mounted app. This example runs for the life of the page, so `ignore`
-discards the handle. The host page must contain the target element.
+the result into the DOM element whose id is `main`. It also returns a
+`MountedApp`. This example runs for the life of the page, so `ignore` discards
+that value. The host page must contain the target element.
 
 At this point the user sees:
 

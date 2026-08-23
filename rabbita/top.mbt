@@ -15,9 +15,9 @@ struct App {
 }
 
 ///|
-/// A handle to one mounted browser app.
+/// Represents one mounted browser app.
 ///
-/// Keep this handle if the app may be removed before the page closes. Call
+/// Keep this value if the app may be removed before the page closes. Call
 /// `unmount` to stop the app and remove its DOM.
 pub struct MountedApp {
   priv cleanup : () -> Unit
@@ -64,10 +64,9 @@ pub fn[Model : Eq, Msg] elmish(
 ///|
 /// Mounts the app in the DOM element named by `element_id`.
 ///
-/// The returned handle owns this mount. Keep it if the app may be removed before
-/// the page closes, then call `MountedApp::unmount`. A page-lifetime app may
-/// ignore the handle. If routing is configured, mounting also emits the current
-/// URL.
+/// `mount` returns a `MountedApp`. Keep this value if the app may be removed
+/// before the page closes, then call `MountedApp::unmount`. A page-lifetime app
+/// may ignore it. If routing is configured, mounting also emits the current URL.
 #cfg(target="js")
 pub fn App::mount(self : Self, element_id : String) -> MountedApp {
   let host = @runtime.BrowserHost(element_id~, () => {
