@@ -21,5 +21,5 @@ fn main {
     )
     model.map(model => view(emit, model))
   })
-  app.mount("app")
+  ignore(app.mount("app"))
 }

@@ -71,9 +71,25 @@ fn counter() -> Val[Html] {
 
 ///|
 fn main {
-  @rabbita.new(counter).mount("app")
+  ignore(@rabbita.new(counter).mount("app"))
 }
 ```
+
+`mount` returns a `MountedApp` handle for applications whose lifetime is
+shorter than the page. Retain the handle and call `unmount` when the host is
+detached:
+
+```moonbit nocheck
+let mounted = @rabbita.new(counter).mount("app")
+// Later, when the host no longer owns this application:
+mounted.unmount()
+```
+
+`unmount` is idempotent. It stops Rabbita-managed subscriptions and queued
+rendering before removing the mount's DOM. Effects already running outside
+Rabbita may finish, but their returned commands are ignored. If another mount
+has replaced the same container, unmounting the stale handle leaves the
+replacement DOM unchanged.
 
 ## Used By
 

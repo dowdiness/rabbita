@@ -15,6 +15,29 @@ struct App {
 }
 
 ///|
+/// A handle that owns one mounted browser application.
+///
+/// Keep this value when the host has a shorter lifetime than the page. Calling
+/// `unmount` synchronously stops Rabbita-managed subscriptions and queued
+/// rendering, releases the mounted runtime, and removes its DOM while that DOM
+/// still belongs to this mount.
+pub struct MountedApp {
+  priv unmount_ : () -> Unit
+}
+
+///|
+/// Unmounts this application. Repeated calls are no-ops.
+///
+/// If another application has already replaced this mount's DOM in the same
+/// container, unmounting the stale handle still cleans its runtime but leaves
+/// the replacement DOM unchanged. Effects already running outside Rabbita may
+/// finish, but their returned commands are ignored after unmount.
+#cfg(target="js")
+pub fn MountedApp::unmount(self : Self) -> Unit {
+  (self.unmount_)()
+}
+
+///|
 /// Creates an application from a root component builder.
 ///
 /// The builder runs when the app is mounted and must return its root
@@ -46,16 +69,22 @@ pub fn[Model : Eq, Msg] elmish(
 ///|
 /// Mount the app.
 ///
-/// This initializes the runtime and schedules the first render flush.
-/// On JavaScript targets, `element_id` identifies the DOM mount point. If
-/// routing is configured, the current URL is also emitted on mount.
+/// This initializes the runtime, schedules the first render flush, and returns
+/// the handle that owns this particular mount. On JavaScript targets,
+/// `element_id` identifies the DOM mount point. If routing is configured, the
+/// current URL is also emitted on mount.
+///
+/// A later mount may replace the DOM in the same container. Retain each handle
+/// until its runtime should stop, then call `MountedApp::unmount`. Page-lifetime
+/// applications may explicitly ignore the returned handle.
 #cfg(target="js")
-pub fn App::mount(self : Self, element_id : String) -> Unit {
+pub fn App::mount(self : Self, element_id : String) -> MountedApp {
   let host = @runtime.BrowserHost(element_id~, () => {
     let output = (self.builder)()
     output.map(html => html.to_virtual_dom()).0
   })
   @runtime.Host::flush(host)
+  { unmount_: () => @runtime.Host::cleanup(host) }
 }
 
 ///|

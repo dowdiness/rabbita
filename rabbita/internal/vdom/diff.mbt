@@ -306,6 +306,18 @@ pub fn VDom::update(self : Self, root : VNode, scheduler : &Scheduler) -> Unit {
 }
 
 ///|
+#cfg(target="js")
+pub fn VDom::unmount(self : Self) -> Unit {
+  guard self.target_element is Some(container) else { return }
+  let parent = container.as_node()
+  guard self.inode.start().get_parent_node().to_option() is Some(actual) &&
+    actual.is_same_node(parent) else {
+    return
+  }
+  self.inode.remove(parent)
+}
+
+///|
 #cfg(not(target="js"))
 pub fn VDom::update(self : Self, vnode : VNode, _ : &Scheduler) -> Unit {
   self.vnode = vnode

@@ -255,5 +255,5 @@ fn main {
     )
     view(emit, model)
   }
-  new(app).mount("app")
+  ignore(new(app).mount("app"))
 }

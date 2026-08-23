@@ -253,6 +253,6 @@ fn main {
     langs=language_items.map(item => item.0),
     themes=all_theme_ids(),
   )
-  @rabbita.new(shiki_editor).mount("app")
+  ignore(@rabbita.new(shiki_editor).mount("app"))
   ensure_overlay_sync("code-input", "code-preview")
 }

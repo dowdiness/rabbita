@@ -14,6 +14,8 @@ struct BrowserHost {
   mut graph_output : @duplix.Node[VNode]?
   mut drain_scheduled : Bool
   mut paint_scheduled : Bool
+  mut frame_request : Double?
+  mut disposed : Bool
   mut document : @vdom.VDom?
   mut url_request : @cmd.Injector[String]
   mut url_changed : @cmd.Injector[String]
@@ -34,7 +36,9 @@ pub fn BrowserHost::BrowserHost(
       url_request: _ => @cmd.none,
       url_changed: _ => @cmd.none,
       paint_scheduled: false,
+      frame_request: None,
       drain_scheduled: true,
+      disposed: false,
       after_render_queue: Queue([]),
     }
     (host, ambient_host.protect(host, builder))
@@ -64,28 +68,32 @@ pub impl Host for BrowserHost with fn get_stores(self) {
 ///|
 /// Schedules a drawing frame to be rendered on the next animation frame.
 fn BrowserHost::request_frame(self : Self) -> Unit {
-  guard !self.paint_scheduled else { return }
+  guard !self.disposed && !self.paint_scheduled else { return }
   self.paint_scheduled = true
-  @dom.window().request_animation_frame(fn(_) {
-    if self.document is Some(document) {
-      let output = self.graph_output.unwrap()
-      let vnode = ambient_host.protect(self, () => output.read())
-      document.update(vnode, self)
-    }
-    self.paint_scheduled = false
-    while self.after_render_queue.pop() is Some(f) {
-      let cmd = f()
-      Scheduler::queue_command(self, cmd)
-    }
-  })
-  |> ignore
+  self.frame_request = Some(
+    @dom.window().request_animation_frame(_ => {
+      self.frame_request = None
+      guard !self.disposed else { return }
+      if self.document is Some(document) {
+        let output = self.graph_output.unwrap()
+        let vnode = ambient_host.protect(self, () => output.read())
+        document.update(vnode, self)
+      }
+      self.paint_scheduled = false
+      while self.after_render_queue.pop() is Some(f) {
+        let cmd = f()
+        Scheduler::queue_command(self, cmd)
+      }
+    }),
+  )
 }
 
 ///|
 fn BrowserHost::request_task(self : Self) -> Unit {
-  guard !self.drain_scheduled else { return }
+  guard !self.disposed && !self.drain_scheduled else { return }
   self.drain_scheduled = true
   @dom.window().queue_microtask(() => {
+    guard !self.disposed else { return }
     while self.task_queue.pop() is Some((op, extension)) {
       if handle_message(self, extension) {
         continue
@@ -116,11 +124,30 @@ fn BrowserHost::request_task(self : Self) -> Unit {
 
 ///|
 pub impl Host for BrowserHost with fn cleanup(self) {
+  guard !self.disposed else { return }
+  self.disposed = true
+  self.task_queue.clear()
+  self.after_render_queue.clear()
+  match self.frame_request {
+    Some(request) => @dom.window().cancel_animation_frame(request)
+    None => ()
+  }
+  self.frame_request = None
+  self.paint_scheduled = false
   self.scope.cleanup()
+  self.url_request = _ => @cmd.none
+  self.url_changed = _ => @cmd.none
+  match self.document {
+    Some(document) => document.unmount()
+    None => ()
+  }
+  self.document = None
+  self.graph_output = None
 }
 
 ///|
 pub impl Scheduler for BrowserHost with fn queue_command(self, cmd) {
+  guard !self.disposed else { return }
   let tasks = @cmd.flatten(@key.key, cmd)
   for task in tasks {
     self.task_queue.push(task)

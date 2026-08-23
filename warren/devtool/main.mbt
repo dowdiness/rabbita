@@ -462,5 +462,5 @@ fn main {
     )
     view(emit, model)
   }
-  new(app).mount("warren-devtool")
+  ignore(new(app).mount("warren-devtool"))
 }

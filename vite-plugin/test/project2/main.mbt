@@ -56,7 +56,7 @@ fn main {
     let (model, emit) = @rabbita.create_pure_state({ count: 0 }, update~)
     model.map(model => view(emit, model))
   })
-  app.mount("app")
+  ignore(app.mount("app"))
 }
 
 ///|

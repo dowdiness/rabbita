@@ -65,7 +65,7 @@ Mount the graph-building component as the application root:
 ```moonbit nocheck
 ///|
 fn main {
-  @rabbita.new(app).mount("main")
+  ignore(@rabbita.new(app).mount("main"))
 }
 ```
 

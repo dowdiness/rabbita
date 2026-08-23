@@ -97,14 +97,16 @@ reported by the compiler.
 ```moonbit nocheck
 ///|
 fn main {
-  @rabbita.new(app).mount("main")
+  ignore(@rabbita.new(app).mount("main"))
 }
 ```
 
 `new(app)` creates an application from the root component builder.
-`mount("main")` runs that builder, evaluates the root `Val[Html]`, and inserts
-the initial result into the DOM element whose id is `main`. The host page must
-contain that element.
+`mount("main")` runs that builder, evaluates the root `Val[Html]`, inserts the
+initial result into the DOM element whose id is `main`, and returns a
+`MountedApp` lifetime handle. This page-lifetime example deliberately ignores
+the handle. A shorter-lived host retains it and calls `unmount` when detached.
+The host page must contain the target element.
 
 At this point the user sees:
 

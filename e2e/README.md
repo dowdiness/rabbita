@@ -15,12 +15,14 @@ Each application uses Warren's minimized root-package layout. The fixtures are:
 - `apps/http` on port `4306`
 - `apps/subscriptions` on port `4307`
 - `apps/dom-api` on port `4308`
+- `apps/mount-lifecycle` on port `4309`
 
 The suite covers stable public behavior: state and message composition, forms
 and DOM events, incremental collection lifecycles, same-origin navigation,
-commands and asynchronous work, mocked HTTP, and subscription lifecycles. It
-also exercises the public DOM bindings against real browser objects. It does
-not assert ordering for batched or nested messages.
+commands and asynchronous work, mocked HTTP, subscription lifecycles, and
+mounted application teardown. It also exercises the public DOM bindings against
+real browser objects. It does not assert ordering for batched or nested
+messages.
 
 ## Prerequisites
 
