@@ -15,23 +15,20 @@ struct App {
 }
 
 ///|
-/// A handle that owns one mounted browser application.
+/// A handle to one mounted browser app.
 ///
-/// Keep this value when the host has a shorter lifetime than the page. Calling
-/// `unmount` synchronously stops Rabbita-managed subscriptions and queued
-/// rendering, releases the mounted runtime, and removes its DOM while that DOM
-/// still belongs to this mount.
+/// Keep this handle if the app may be removed before the page closes. Call
+/// `unmount` to stop the app and remove its DOM.
 pub struct MountedApp {
   priv cleanup : () -> Unit
 }
 
 ///|
-/// Unmounts this application. Repeated calls are no-ops.
+/// Stops this app and removes its DOM. It is safe to call more than once.
 ///
-/// If another application has already replaced this mount's DOM in the same
-/// container, unmounting the stale handle still cleans its runtime but leaves
-/// the replacement DOM unchanged. Effects already running outside Rabbita may
-/// finish, but their returned commands are ignored after unmount.
+/// Work that already started may finish, but Rabbita ignores any commands it
+/// returns. If another app has replaced the DOM, this handle leaves the new DOM
+/// unchanged.
 #cfg(target="js")
 pub fn MountedApp::unmount(self : Self) -> Unit {
   (self.cleanup)()
@@ -67,16 +64,12 @@ pub fn[Model : Eq, Msg] elmish(
 }
 
 ///|
-/// Mount the app.
+/// Mounts the app in the DOM element named by `element_id`.
 ///
-/// This initializes the runtime, schedules the first render flush, and returns
-/// the handle that owns this particular mount. On JavaScript targets,
-/// `element_id` identifies the DOM mount point. If routing is configured, the
-/// current URL is also emitted on mount.
-///
-/// A later mount may replace the DOM in the same container. Retain each handle
-/// until its runtime should stop, then call `MountedApp::unmount`. Page-lifetime
-/// applications may explicitly ignore the returned handle.
+/// The returned handle owns this mount. Keep it if the app may be removed before
+/// the page closes, then call `MountedApp::unmount`. A page-lifetime app may
+/// ignore the handle. If routing is configured, mounting also emits the current
+/// URL.
 #cfg(target="js")
 pub fn App::mount(self : Self, element_id : String) -> MountedApp {
   let host = @runtime.BrowserHost(element_id~, () => {

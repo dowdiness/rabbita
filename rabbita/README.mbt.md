@@ -75,9 +75,8 @@ fn main {
 }
 ```
 
-`mount` returns a `MountedApp` handle for applications whose lifetime is
-shorter than the page. Retain the handle and call `unmount` when the host is
-detached:
+`mount` returns a `MountedApp`. Keep it if the app may be removed before the
+page closes. Call `unmount` to remove the app:
 
 ```moonbit nocheck
 let mounted = @rabbita.new(counter).mount("app")
@@ -85,11 +84,10 @@ let mounted = @rabbita.new(counter).mount("app")
 mounted.unmount()
 ```
 
-`unmount` is idempotent. It stops Rabbita-managed subscriptions and queued
-rendering before removing the mount's DOM. Effects already running outside
-Rabbita may finish, but their returned commands are ignored. If another mount
-has replaced the same container, unmounting the stale handle leaves the
-replacement DOM unchanged.
+`unmount` is safe to call more than once. It stops the app's subscriptions and
+queued renders, then removes its DOM. Work that already started may finish, but
+Rabbita ignores any commands it returns. If another app has replaced the DOM,
+the old handle leaves the new DOM unchanged.
 
 ## Used By
 
