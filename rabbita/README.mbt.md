@@ -85,9 +85,10 @@ mounted.unmount()
 ```
 
 `unmount` is safe to call more than once. It stops the app's subscriptions and
-queued renders, then removes its DOM. Work that already started may finish, but
-Rabbita ignores any commands it returns. If another app has replaced the DOM,
-the old handle leaves the new DOM unchanged.
+queued renders, then removes its DOM. `unmount` does not cancel async effects
+that are already running. They may finish, but Rabbita ignores any commands
+they return. If another app has replaced the DOM, the old handle leaves the new
+DOM unchanged.
 
 ## Used By
 
