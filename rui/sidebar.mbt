@@ -1546,21 +1546,13 @@ fn sidebar_provider_view(
 }
 
 ///|
-/// Own desktop-collapse and mobile-open state for a complete sidebar tree.
-/// The native fallback renders the requested initial state as a constant value.
 #cfg(target="js")
-pub fn sidebar_provider(
-  default_collapsed? : Bool = false,
-  default_mobile_open? : Bool = false,
-  on_collapsed_change? : @cmd.Emit[Bool],
-  on_mobile_open_change? : @cmd.Emit[Bool],
-  id? : String,
-  class? : String,
-  title? : String,
-  attrs? : @html.Attrs,
-  style? : Array[String] = [],
-  children : (SidebarScope) -> @html.Html,
-) -> @rabbita.Val[@html.Html] {
+fn sidebar_provider_state(
+  default_collapsed : Bool,
+  default_mobile_open : Bool,
+  on_collapsed_change : @cmd.Emit[Bool]?,
+  on_mobile_open_change : @cmd.Emit[Bool]?,
+) -> (@rabbita.Val[SidebarState], @cmd.Emit[SidebarMessage]) {
   let initial : SidebarState = {
     collapsed: default_collapsed,
     mobile_open: default_mobile_open,
@@ -1643,6 +1635,28 @@ pub fn sidebar_provider(
       }
     },
   )
+  (state, emit)
+}
+
+///|
+/// Own desktop-collapse and mobile-open state for a complete sidebar tree.
+/// The native fallback renders the requested initial state as a constant value.
+#cfg(target="js")
+pub fn sidebar_provider(
+  default_collapsed? : Bool = false,
+  default_mobile_open? : Bool = false,
+  on_collapsed_change? : @cmd.Emit[Bool],
+  on_mobile_open_change? : @cmd.Emit[Bool],
+  id? : String,
+  class? : String,
+  title? : String,
+  attrs? : @html.Attrs,
+  style? : Array[String] = [],
+  children : (SidebarScope) -> @html.Html,
+) -> @rabbita.Val[@html.Html] {
+  let (state, emit) = sidebar_provider_state(
+    default_collapsed, default_mobile_open, on_collapsed_change, on_mobile_open_change,
+  )
   state.view(state => {
     sidebar_provider_view(
       sidebar_scope(state, emit),
@@ -1652,6 +1666,42 @@ pub fn sidebar_provider(
       attrs,
       style,
       children,
+    )
+  })
+}
+
+///|
+/// Own sidebar state while rendering content from another incremental value.
+///
+/// Use this form when the sidebar contains a stateful child component. Passing
+/// that component as `input` lets child updates re-render the sidebar without
+/// rebuilding either state owner.
+#cfg(target="js")
+pub fn[Input : Eq] sidebar_provider_with_input(
+  input~ : @rabbita.Val[Input],
+  default_collapsed? : Bool = false,
+  default_mobile_open? : Bool = false,
+  on_collapsed_change? : @cmd.Emit[Bool],
+  on_mobile_open_change? : @cmd.Emit[Bool],
+  id? : String,
+  class? : String,
+  title? : String,
+  attrs? : @html.Attrs,
+  style? : Array[String] = [],
+  children : (SidebarScope, Input) -> @html.Html,
+) -> @rabbita.Val[@html.Html] {
+  let (state, emit) = sidebar_provider_state(
+    default_collapsed, default_mobile_open, on_collapsed_change, on_mobile_open_change,
+  )
+  state.view2(input, (state, input) => {
+    sidebar_provider_view(
+      sidebar_scope(state, emit),
+      id,
+      class,
+      title,
+      attrs,
+      style,
+      scope => children(scope, input),
     )
   })
 }
@@ -1686,6 +1736,41 @@ pub fn sidebar_provider(
   @rabbita.Val::constant(
     sidebar_provider_view(scope, id, class, title, attrs, style, children),
   )
+}
+
+///|
+#cfg(not(target="js"))
+pub fn[Input : Eq] sidebar_provider_with_input(
+  input~ : @rabbita.Val[Input],
+  default_collapsed? : Bool = false,
+  default_mobile_open? : Bool = false,
+  on_collapsed_change? : @cmd.Emit[Bool],
+  on_mobile_open_change? : @cmd.Emit[Bool],
+  id? : String,
+  class? : String,
+  title? : String,
+  attrs? : @html.Attrs,
+  style? : Array[String] = [],
+  children : (SidebarScope, Input) -> @html.Html,
+) -> @rabbita.Val[@html.Html] {
+  ignore((on_collapsed_change, on_mobile_open_change))
+  let scope : SidebarScope = {
+    collapsed: default_collapsed,
+    mobile_open: default_mobile_open,
+    desktop_width: None,
+    toggle_collapsed: @cmd.none,
+    expand: @cmd.none,
+    collapse: @cmd.none,
+    toggle_mobile: @cmd.none,
+    open_mobile: @cmd.none,
+    close_mobile: @cmd.none,
+    commit_width: @cmd.Emit(_ => @cmd.none),
+  }
+  input.view(input => {
+    sidebar_provider_view(scope, id, class, title, attrs, style, scope => {
+      children(scope, input)
+    })
+  })
 }
 
 ///|

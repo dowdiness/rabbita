@@ -24,4 +24,5 @@ members = [
   "./e2e/apps/http",
   "./e2e/apps/subscriptions",
   "./e2e/apps/dom-api",
+  "./e2e/apps/rui",
 ]

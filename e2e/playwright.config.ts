@@ -11,6 +11,7 @@ const apps = [
   { name: 'http', port: 4306 },
   { name: 'subscriptions', port: 4307 },
   { name: 'dom-api', port: 4308 },
+  { name: 'rui', port: 4309 },
 ] as const;
 const appUrl = (port: number) => `http://127.0.0.1:${port}`;
 
@@ -31,7 +32,7 @@ export default defineConfig({
   },
   projects: apps.map(({ name, port }) => ({
     name: `${name}-chromium`,
-    testMatch: `**/${name}.spec.ts`,
+    testMatch: `**/${name}*.spec.ts`,
     use: {
       ...devices['Desktop Chrome'],
       baseURL: appUrl(port),

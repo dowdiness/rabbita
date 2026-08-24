@@ -1,0 +1,77 @@
+import { expect, test } from '@playwright/test';
+
+test('select opens on click, closes on Escape, and keeps the chosen value', async ({ page }) => {
+  await page.goto('/');
+
+  const trigger = page.locator('#fixture-select-trigger');
+  const listbox = page.locator('#fixture-select-content');
+
+  await expect(trigger).toHaveText('Choose an option…');
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  await expect(listbox).toBeHidden();
+
+  await trigger.click();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  await expect(listbox).toBeVisible();
+
+  await listbox.getByRole('option', { name: 'Beta' }).click();
+  await expect(trigger).toHaveText('Beta');
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  await expect(listbox).toBeHidden();
+
+  await trigger.click();
+  await expect(listbox).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(listbox).toBeHidden();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  await expect(trigger).toHaveText('Beta');
+});
+
+test('select keyboard opens, highlights, and confirms an option', async ({ page }) => {
+  await page.goto('/');
+
+  const trigger = page.locator('#fixture-select-trigger');
+  const beta = page
+    .locator('#fixture-select-content')
+    .getByRole('option', { name: 'Beta' });
+  await trigger.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+  await page.keyboard.press('ArrowDown');
+  await expect(beta).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(trigger).toHaveText('Beta');
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('combobox filters options while typing and commits a choice', async ({ page }) => {
+  await page.goto('/');
+
+  const input = page.getByRole('combobox', { name: 'Search options' });
+  const listbox = page.locator('#fixture-combobox-content');
+
+  await input.fill('mo');
+  await expect(input).toHaveAttribute('aria-expanded', 'true');
+  await expect(listbox.getByRole('option', { name: 'MoonBit' })).toBeVisible();
+  await expect(listbox.getByRole('option', { name: 'Rabbita' })).toBeHidden();
+
+  await listbox.getByRole('option', { name: 'MoonBit' }).click();
+  await expect(input).toHaveValue('MoonBit');
+  await expect(input).toHaveAttribute('aria-expanded', 'false');
+
+  await page.getByRole('button', { name: 'Clear selection' }).click();
+  await expect(input).toHaveValue('');
+});
+
+test('combobox shows its empty message for a dead-end query', async ({ page }) => {
+  await page.goto('/');
+
+  const input = page.getByRole('combobox', { name: 'Search options' });
+  await input.fill('zzz');
+  await expect(page.locator('#fixture-combobox-content')).toBeVisible();
+  await expect(page.getByText('No matching runtimes.')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(input).toHaveAttribute('aria-expanded', 'false');
+});
