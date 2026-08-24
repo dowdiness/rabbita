@@ -27,9 +27,21 @@ test('resizable keyboard moves the panel boundary and clamps at the bounds', asy
 
   await page.keyboard.press('Home');
   await expect(handle).toHaveValue('25');
+  await expect(separator).toHaveAttribute('aria-valuenow', '25');
+  await expect(group).toHaveAttribute('data-sizes', '25,75');
+
+  await page.keyboard.press('ArrowUp');
+  await expect(handle).toHaveValue('25');
+  await expect(separator).toHaveAttribute('aria-valuenow', '25');
   await expect(group).toHaveAttribute('data-sizes', '25,75');
 
   await page.keyboard.press('End');
   await expect(handle).toHaveValue('75');
+  await expect(separator).toHaveAttribute('aria-valuenow', '75');
+  await expect(group).toHaveAttribute('data-sizes', '75,25');
+
+  await page.keyboard.press('ArrowDown');
+  await expect(handle).toHaveValue('75');
+  await expect(separator).toHaveAttribute('aria-valuenow', '75');
   await expect(group).toHaveAttribute('data-sizes', '75,25');
 });

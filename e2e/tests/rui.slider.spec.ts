@@ -29,6 +29,12 @@ test('slider arrow keys step through the range and clamp at the ends', async ({ 
   await page.keyboard.press('Home');
   await expect(slider).toHaveValue('0');
 
+  await page.keyboard.press('ArrowLeft');
+  await expect(slider).toHaveValue('0');
+
   await page.keyboard.press('End');
+  await expect(slider).toHaveValue('100');
+
+  await page.keyboard.press('ArrowRight');
   await expect(slider).toHaveValue('100');
 });
