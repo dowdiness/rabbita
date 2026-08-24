@@ -323,7 +323,7 @@ fn field_raw(name : String, value : String) -> String {
 
 ///|
 fn join_json(items : Array[String]) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for i in 0..<items.length() {
     if i > 0 {
       out.write_string(",")
@@ -397,7 +397,7 @@ fn render_manifest(
     None => ""
   }
 
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   out.write_string("{")
   out.write_string(field_str("generatedAt", "\{@env.now()}") + ",")
   out.write_string(field_str("target", "js"))

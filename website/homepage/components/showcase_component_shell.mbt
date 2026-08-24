@@ -106,7 +106,7 @@ const ShowcaseDemoCodeReadableStyle : String = "pointer-events:auto;user-select:
 
 ///|
 fn showcase_anchor(value : String) -> String {
-  let builder = StringBuilder::new()
+  let builder = StringBuilder()
   let mut separator = false
   for character in value {
     match character {

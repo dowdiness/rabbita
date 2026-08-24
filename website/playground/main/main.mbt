@@ -237,7 +237,7 @@ fn run_when_ready(emit : Emit[Msg], model : Model) -> (Cmd, Model) {
 
 ///|
 fn join_blocks(items : Array[String]) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for index, item in items {
     if index > 0 {
       out.write_string("\n\n")

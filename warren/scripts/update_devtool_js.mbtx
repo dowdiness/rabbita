@@ -97,7 +97,7 @@ async fn clean_dist(root : String) -> Unit {
 
 ///|
 fn render_multiline_string(value : String) -> String {
-  let builder = StringBuilder::new()
+  let builder = StringBuilder()
   let lines = value.split("\n").collect()
   for index in 0..<lines.length() {
     if index > 0 {

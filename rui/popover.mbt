@@ -71,7 +71,7 @@ fn popup_align_value(align : PopupAlign) -> String {
 /// Keeping this deterministic lets both compound and standalone parts render
 /// their anchor relationship directly, without a post-render setup pass.
 fn popup_anchor_name(id : String) -> String {
-  let name = StringBuilder::new()
+  let name = StringBuilder()
   name.write_string("--rui-anchor")
   for character in id.iter() {
     name.write_char('_')

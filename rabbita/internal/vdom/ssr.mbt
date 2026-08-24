@@ -220,7 +220,7 @@ fn children_to_string(
 ///|
 pub fn server_side_render(render : () -> VNode) -> String {
   let vnode = render()
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   buf.write_string("<!DOCTYPE html>")
   vnode_to_string(buf, vnode, false)
   buf.to_string()

@@ -111,7 +111,7 @@ fn strip_base(path : String) -> String {
   if strip_len <= 0 || !("/" + path).has_prefix(base) {
     return path
   }
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut i = 0
   for c in path.iter() {
     if i >= strip_len {
@@ -153,7 +153,7 @@ fn component_slug_from_path(path : String) -> String {
   if !p.has_prefix(prefix) {
     return ""
   }
-  let builder = StringBuilder::new()
+  let builder = StringBuilder()
   let mut index = 0
   let mut invalid = false
   for character in p {
@@ -196,7 +196,7 @@ fn chapter_idx_from_path(chapters : Array[TourChapter], path : String) -> Int {
 
 ///|
 fn inline_to_text(inline : @cmark.Inline) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let stack : Array[@cmark.Inline] = [inline]
   for ;; {
     guard stack.pop() is Some(curr) else { break }
@@ -355,7 +355,7 @@ fn code_block_source(cb : @cmark.CodeBlock) -> String {
   while lines.length() > 0 && lines[lines.length() - 1] == "" {
     ignore(lines.pop())
   }
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for i = 0; i < lines.length(); i = i + 1 {
     if i > 0 {
       buf.write_char('\n')
