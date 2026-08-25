@@ -29,6 +29,7 @@ pub trait IsEventTarget: @js.Cast {
   fn to_html_element(Self) -> HTMLElement? = _
   fn to_html_canvas_element(Self) -> HTMLCanvasElement? = _
   fn to_html_input_element(Self) -> HTMLInputElement? = _
+  fn to_html_text_area_element(Self) -> HTMLTextAreaElement? = _
   fn to_html_dialog_element(Self) -> HTMLDialogElement? = _
   fn to_html_image_element(Self) -> HTMLImageElement? = _
   fn to_html_select_element(Self) -> HTMLSelectElement? = _
@@ -170,6 +171,12 @@ impl IsEventTarget with fn to_html_canvas_element(s) {
 #cfg(target="js")
 impl IsEventTarget with fn to_html_input_element(s) {
   s |> js_identity |> ffi_to_html_input_element |> y => { y.to_option() }
+}
+
+///|
+#cfg(target="js")
+impl IsEventTarget with fn to_html_text_area_element(s) {
+  s |> js_identity |> ffi_to_html_text_area_element |> y => { y.to_option() }
 }
 
 ///|
@@ -346,6 +353,15 @@ extern "js" fn ffi_to_html_input_element(
   x : @js.Value,
 ) -> @js.Nullable[HTMLInputElement] =
   #| (x) => x instanceof HTMLInputElement ? x : null
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_to_html_text_area_element(
+  x : @js.Value,
+) -> @js.Nullable[HTMLTextAreaElement] =
+  #| (x) => typeof HTMLTextAreaElement !== "undefined" && x instanceof HTMLTextAreaElement
+  #|   ? x
+  #|   : null
 
 ///|
 #cfg(target="js")
