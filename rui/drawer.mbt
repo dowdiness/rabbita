@@ -394,9 +394,9 @@ fn drawer_handle_style(direction : DrawerDirection) -> String {
     DrawerBottom =>
       "width:3rem;height:0.25rem;margin:0.5rem auto 0;border-radius:999px;background:var(--rui-muted,oklch(0.97 0 0))"
     DrawerRight =>
-      "width:0.25rem;height:3rem;margin:auto 0 auto 0.5rem;border-radius:999px;background:var(--rui-muted,oklch(0.97 0 0))"
+      "position:absolute;inset-inline-start:0.5rem;top:50%;z-index:1;width:0.25rem;height:3rem;transform:translateY(-50%);border-radius:999px;background:var(--rui-muted,oklch(0.97 0 0))"
     DrawerLeft =>
-      "width:0.25rem;height:3rem;margin:auto 0.5rem auto auto;border-radius:999px;background:var(--rui-muted,oklch(0.97 0 0))"
+      "position:absolute;inset-inline-end:0.5rem;top:50%;z-index:1;width:0.25rem;height:3rem;transform:translateY(-50%);border-radius:999px;background:var(--rui-muted,oklch(0.97 0 0))"
   }
 }
 

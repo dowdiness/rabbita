@@ -153,6 +153,21 @@ fn insert_props(
 
 ///|
 #cfg(target="js")
+fn reapply_child_sensitive_properties(
+  element : @dom.Element,
+  tag : String,
+  props : Props,
+) -> Unit {
+  // Adding <option> children resets a <select>'s value to its first selected
+  // option. Reapply the controlled property after child reconciliation so the
+  // public value contract wins on initial mount and when options change.
+  if tag == "select" && props.props.get("value") is Some(value) {
+    element.set_property("value", variant_to_js_value(value))
+  }
+}
+
+///|
+#cfg(target="js")
 fn insert_children(
   node : @dom.Node,
   children : Children[VNode],
@@ -241,6 +256,7 @@ fn VNode::insert(
       } else {
         insert_children(node, children, scheduler, captured_link_listener)
       }
+      reapply_child_sensitive_properties(element, tag, props.props)
       parent.insert_before(node, before)
       Elem(tag, props, children, namespace_uri~, element)
     }
@@ -542,6 +558,7 @@ fn diff_node(
           element.as_node(),
           null(),
         )
+        reapply_child_sensitive_properties(element, tag2, props.props)
         Elem(tag2, props, children, namespace_uri=ns2, element)
       }
     (Text(text1, element), Text(text2)) => {

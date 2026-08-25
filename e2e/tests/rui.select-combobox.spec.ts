@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('select opens on click, closes on Escape, and keeps the chosen value', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/forms');
 
   const trigger = page.locator('#fixture-select-trigger');
   const listbox = page.locator('#fixture-select-content');
@@ -28,7 +28,7 @@ test('select opens on click, closes on Escape, and keeps the chosen value', asyn
 });
 
 test('select keyboard opens, highlights, and confirms an option', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/forms');
 
   const trigger = page.locator('#fixture-select-trigger');
   const beta = page
@@ -46,9 +46,10 @@ test('select keyboard opens, highlights, and confirms an option', async ({ page 
 });
 
 test('combobox filters options while typing and commits a choice', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/forms');
 
-  const input = page.getByRole('combobox', { name: 'Search options' });
+  const section = page.locator('#fixture-section-combobox');
+  const input = section.getByRole('combobox', { name: 'Search options' });
   const listbox = page.locator('#fixture-combobox-content');
 
   await input.fill('mo');
@@ -60,18 +61,38 @@ test('combobox filters options while typing and commits a choice', async ({ page
   await expect(input).toHaveValue('MoonBit');
   await expect(input).toHaveAttribute('aria-expanded', 'false');
 
-  await page.getByRole('button', { name: 'Clear selection' }).click();
+  await section.getByRole('button', { name: 'Clear selection' }).click();
   await expect(input).toHaveValue('');
 });
 
 test('combobox shows its empty message for a dead-end query', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/forms');
 
-  const input = page.getByRole('combobox', { name: 'Search options' });
+  const section = page.locator('#fixture-section-combobox');
+  const input = section.getByRole('combobox', { name: 'Search options' });
   await input.fill('zzz');
   await expect(page.locator('#fixture-combobox-content')).toBeVisible();
-  await expect(page.getByText('No matching runtimes.')).toBeVisible();
+  await expect(section.getByText('No matching runtimes.')).toBeVisible();
 
   await page.keyboard.press('Escape');
   await expect(input).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('select typeahead chooses an enabled match and keyboard navigation skips disabled options', async ({ page }) => {
+  await page.goto('/forms');
+
+  const trigger = page.locator('#fixture-select-trigger');
+  const listbox = page.locator('#fixture-select-content');
+  await trigger.focus();
+  await trigger.press('b');
+  await expect(trigger).toHaveText('Beta');
+
+  await trigger.press('ArrowDown');
+  await expect(listbox).toBeVisible();
+  await page.keyboard.press('End');
+  await expect(listbox.getByRole('option', { name: 'Beta' })).toBeFocused();
+  await expect(listbox.getByRole('option', { name: 'Gamma' })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
 });

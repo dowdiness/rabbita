@@ -19,6 +19,7 @@ struct DropdownMenuSubScope {
 #cfg(target="js")
 priv enum DropdownMenuMsg {
   DropdownSetOpen(Bool)
+  DropdownKeyboardClose
   DropdownNativeOpen(Bool)
   DropdownSetActive(Int)
   DropdownToggleChecked(String)
@@ -34,6 +35,75 @@ fn dropdown_notify(on_open_change : @cmd.Emit[Bool]?, open : Bool) -> @cmd.Cmd {
   } else {
     @cmd.none
   }
+}
+
+///|
+#cfg(target="js")
+fn dropdown_restore_trigger_until_stable(
+  id : String,
+  attempt : Int,
+  stable_frames : Int,
+) -> Unit {
+  if attempt >= 20 || stable_frames >= 3 {
+    return
+  }
+  menu_request_frame(() => {
+    guard ui_element_by_id(id + "-trigger") is Some(trigger) else { return }
+    let document = @dom.document()
+    let active = document.get_active_element()
+    let focused = active is Some(active) &&
+      active.is_same_node(trigger.as_node())
+    if !focused {
+      let focus_is_unowned = active is None ||
+        (
+          active is Some(active) &&
+          (
+            (
+              document.get_body() is Some(body) &&
+              active.is_same_node(body.as_node())
+            ) ||
+            (
+              document.get_document_element() is Some(root) &&
+              active.is_same_node(root.as_node())
+            ) ||
+            (
+              ui_element_by_id(id + "-root") is Some(root) &&
+              root.contains(active.as_node())
+            )
+          )
+        )
+      // A Tab or explicit pointer action after Escape owns the newer focus;
+      // retries only recover focus still stranded in the closing menu/body.
+      if !focus_is_unowned {
+        return
+      }
+      ui_focus_element(trigger)
+    }
+    dropdown_restore_trigger_until_stable(
+      id,
+      attempt + 1,
+      if focused {
+        stable_frames + 1
+      } else {
+        0
+      },
+    )
+  })
+}
+
+///|
+#cfg(target="js")
+fn dropdown_restore_trigger_cmd(id : String) -> @cmd.Cmd {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
+    dropdown_restore_trigger_until_stable(id, 0, 0)
+  })
+}
+
+///|
+#cfg(not(target="js"))
+fn dropdown_restore_trigger_cmd(id : String) -> @cmd.Cmd {
+  ignore(id)
+  @cmd.none
 }
 
 ///|
@@ -90,7 +160,7 @@ pub fn dropdown_menu(
           menu_bind_surface_cmd(
             id + "-root",
             set_active,
-            emit(DropdownSetOpen(false)),
+            emit(DropdownKeyboardClose),
             set_submenu,
           ),
           if default_open {
@@ -106,6 +176,14 @@ pub fn dropdown_menu(
     },
     update=(current, msg, emit) => {
       match msg {
+        DropdownKeyboardClose =>
+          (
+            current,
+            @cmd.batch([
+              emit(DropdownSetOpen(false)),
+              dropdown_restore_trigger_cmd(id),
+            ]),
+          )
         DropdownSetOpen(open) =>
           if open == current.open {
             (current, @cmd.none)
@@ -161,10 +239,11 @@ pub fn dropdown_menu(
           if current.active == index {
             (current, @cmd.none)
           } else {
-            (
-              { ..current, active: index },
-              menu_focus_item_cmd(id + "-root", index),
-            )
+            // Keyboard and focus-in handlers move DOM focus before emitting
+            // the active index. Re-focusing from the subsequent render can
+            // race a newer key press and leave focus and highlight on
+            // different items, so the model update only owns roving state.
+            ({ ..current, active: index }, @cmd.none)
           }
         DropdownToggleChecked(value) =>
           (

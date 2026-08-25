@@ -179,6 +179,7 @@ fn hydrate_existing_element(
     }
     mounted
   }
+  reapply_child_sensitive_properties(element, tag, mounted_props.props)
   Elem(tag, mounted_props, mounted_children, namespace_uri~, element)
 }
 

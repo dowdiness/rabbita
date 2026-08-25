@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
 
 test('resizable handle exposes a native range with the initial size', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/layout');
 
-  const handle = page.locator('#fixture-resizable-handle');
-  const separator = page.locator('[data-slot="resizable-handle"][data-between="0"]');
   const group = page.locator('#fixture-resizable');
+  const handle = page.locator('#fixture-resizable-handle');
+  const separator = group.locator('[data-slot="resizable-handle"][data-between="0"]');
 
   await expect(handle).toHaveValue('50');
   await expect(separator).toHaveAttribute('aria-valuenow', '50');
@@ -13,11 +13,11 @@ test('resizable handle exposes a native range with the initial size', async ({ p
 });
 
 test('resizable keyboard moves the panel boundary and clamps at the bounds', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/layout');
 
-  const handle = page.locator('#fixture-resizable-handle');
-  const separator = page.locator('[data-slot="resizable-handle"][data-between="0"]');
   const group = page.locator('#fixture-resizable');
+  const handle = page.locator('#fixture-resizable-handle');
+  const separator = group.locator('[data-slot="resizable-handle"][data-between="0"]');
 
   await handle.focus();
   await page.keyboard.press('ArrowUp');

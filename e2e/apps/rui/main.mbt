@@ -1,5 +1,5 @@
 ///|
-using @rabbita {type Html, type Val}
+using @rabbita {type Cmd, type Emit, type Html, type Val}
 
 ///|
 using @html {
@@ -252,7 +252,7 @@ fn select_fixture() -> Val[Html] {
     options=[
       @rui.select_option(value="alpha", label="Alpha"),
       @rui.select_option(value="beta", label="Beta"),
-      @rui.select_option(value="gamma", label="Gamma"),
+      @rui.select_option(value="gamma", label="Gamma", disabled=true),
     ],
     placeholder="Choose an option…",
   )
@@ -419,6 +419,13 @@ fn date_picker_fixture() -> Val[Html] {
     today~,
     placeholder="Pick a date…",
     aria_label="Fixture date picker",
+    presets=[
+      @rui.date_picker_preset(label="Today", value=today),
+      @rui.date_picker_preset(
+        label="Release",
+        value=@rui.calendar_date(year=2026, month=8, day=4),
+      ),
+    ],
   )
   picker.map(picker_html => {
     fixture_section("fixture-section-date-picker", "Date picker", [picker_html])
@@ -447,6 +454,12 @@ fn toast_fixture() -> Val[Html] {
           variant=ToastSuccess,
         ),
         "Show success toast",
+      ),
+      @rui.button(
+        size=Sm,
+        variant=Ghost,
+        on_click=scope.dismiss_all(),
+        "Dismiss all toasts",
       ),
     ])
   })
@@ -579,54 +592,299 @@ fn menubar_fixture() -> Val[Html] {
 }
 
 ///|
+priv enum FixtureRoute {
+  FixtureIndex
+  FixtureDisclosure
+  FixtureForms
+  FixtureMenus
+  FixtureModals
+  FixtureData
+  FixtureLayout
+  FixtureFeedback
+  FixtureMissing(String)
+} derive(Eq)
+
+///|
+impl @rabbita.Enumerate for FixtureRoute with fn tag(self) {
+  match self {
+    FixtureIndex => "index"
+    FixtureDisclosure => "disclosure"
+    FixtureForms => "forms"
+    FixtureMenus => "menus"
+    FixtureModals => "modals"
+    FixtureData => "data"
+    FixtureLayout => "layout"
+    FixtureFeedback => "feedback"
+    FixtureMissing(path) => "missing:" + path
+  }
+}
+
+///|
+priv struct FixtureModel {
+  route : FixtureRoute
+} derive(Eq)
+
+///|
+priv enum FixtureMsg {
+  FixtureUrlChanged(@url.Url)
+  FixtureUrlRequest(@url.UrlRequest)
+}
+
+///|
+fn fixture_route_from_path(path : String) -> FixtureRoute {
+  match path {
+    "" => FixtureIndex
+    "disclosure" => FixtureDisclosure
+    "forms" => FixtureForms
+    "menus" => FixtureMenus
+    "modals" => FixtureModals
+    "data" => FixtureData
+    "layout" => FixtureLayout
+    "feedback" => FixtureFeedback
+    path => FixtureMissing(path)
+  }
+}
+
+///|
+fn fixture_current_route() -> FixtureRoute {
+  let url = try! @url.parse(@dom.window().current_url())
+  fixture_route_from_path(url.path)
+}
+
+///|
+fn fixture_update(
+  model : FixtureModel,
+  message : FixtureMsg,
+  _ : Emit[FixtureMsg],
+) -> (FixtureModel, Cmd) {
+  match message {
+    FixtureUrlChanged(url) =>
+      ({ route: fixture_route_from_path(url.path) }, @rabbita.none)
+    FixtureUrlRequest(request) =>
+      match request {
+        Internal(url) => (model, @nav.push_url(url.to_string()))
+        External(url) => (model, @nav.load(url))
+      }
+  }
+}
+
+///|
+fn fixture_subscriptions(_ : FixtureModel, emit : Emit[FixtureMsg]) -> @sub.Sub {
+  @sub.batch([
+    @sub.on_url_changed(emit.map(url => FixtureUrlChanged(url))),
+    @sub.on_url_request(emit.map(request => FixtureUrlRequest(request))),
+  ])
+}
+
+///|
+fn fixture_navigation() -> Html {
+  @html.nav(
+    title="Fixture pages",
+    style=[
+      "display:flex;flex-wrap:wrap;gap:0.5rem;padding:1rem 1.5rem;border-bottom:\{fixture_section_border}",
+    ],
+    [
+      @html.a(href="/", "Index"),
+      @html.a(href="/disclosure", "Disclosure"),
+      @html.a(href="/forms", "Forms"),
+      @html.a(href="/menus", "Menus"),
+      @html.a(href="/modals", "Modals"),
+      @html.a(href="/data", "Data"),
+      @html.a(href="/layout", "Layout"),
+      @html.a(href="/feedback", "Feedback"),
+    ],
+  )
+}
+
+///|
+fn fixture_shell(title : String, sections : Array[Html]) -> Html {
+  let body : Array[Html] = [fixture_intro(), fixture_navigation()]
+  body.push(
+    p(
+      id="fixture-route-title",
+      style=["margin:0;padding:1rem 1.5rem;font-weight:600"],
+      title,
+    ),
+  )
+  body.append(sections)
+  @rui.theme(
+    mode=Light,
+    id="fixture-theme",
+    main_(id="fixture-main", style=["max-width:64rem;margin:0 auto"], body),
+  )
+}
+
+///|
+fn fixture_index_page() -> Val[Html] {
+  @rabbita.Val::constant(
+    fixture_shell("Index", [
+      fixture_section("fixture-section-index", "Fixture pages", [
+        p(
+          style=["margin:0"],
+          "Choose a component family. Navigation stays inside this SPA.",
+        ),
+      ]),
+    ]),
+  )
+}
+
+///|
+fn fixture_disclosure_page() -> Val[Html] {
+  let sidebars = sidebar_fixture().map2(sidebar_mobile_fixture(), fn(
+    desktop,
+    mobile,
+  ) {
+    fragment([desktop, mobile])
+  })
+  let carousels = carousel_fixture().map2(carousel_non_loop_fixture(), fn(
+    looped,
+    bounded,
+  ) {
+    fragment([looped, bounded])
+  })
+  sidebars.map6(
+    carousels,
+    navigation_menu_fixture(),
+    accordion_fixture(),
+    collapsible_fixture(),
+    tabs_fixture(),
+    fn(sidebar, carousel, navigation, accordion, collapsible, tabs) {
+      fixture_shell("Disclosure", [
+        sidebar, carousel, navigation, accordion, collapsible, tabs,
+      ])
+    },
+  )
+}
+
+///|
+fn fixture_forms_page() -> Val[Html] {
+  let extended = forms_extended_fixture()
+    .map2(calendar_extended_fixture(), fn(forms, calendars) {
+      fragment([forms, calendars])
+    })
+    .map3(combobox_multiple_fixture(), slider_values_fixture(), fn(
+      extended,
+      combobox,
+      slider,
+    ) {
+      fragment([extended, combobox, slider])
+    })
+  radio_group_fixture().map9(
+    slider_fixture(),
+    select_fixture(),
+    combobox_fixture(),
+    date_picker_fixture(),
+    calendar_fixture(),
+    checkbox_fixture(),
+    switch_fixture(),
+    extended,
+    fn(
+      radio,
+      slider,
+      select,
+      combobox,
+      picker,
+      calendar,
+      checkbox,
+      switch_,
+      extended,
+    ) {
+      fixture_shell("Forms", [
+        radio, slider, select, combobox, picker, calendar, checkbox, switch_, extended,
+      ])
+    },
+  )
+}
+
+///|
+fn fixture_menus_page() -> Val[Html] {
+  dropdown_menu_fixture().map3(menubar_fixture(), context_menu_fixture(), fn(
+    dropdown,
+    menubar,
+    context,
+  ) {
+    fixture_shell("Menus", [dropdown, menubar, context])
+  })
+}
+
+///|
+fn fixture_modals_page() -> Val[Html] {
+  drawer_fixture().map7(
+    popover_fixture(),
+    tooltip_fixture(),
+    hover_card_fixture(),
+    dialog_fixture(),
+    alert_dialog_fixture(),
+    sheet_fixture(),
+    fn(drawer, popover, tooltip, hover_card, dialog, alert_dialog, sheet) {
+      fixture_shell("Modals", [
+        drawer, popover, tooltip, hover_card, dialog, alert_dialog, sheet,
+      ])
+    },
+  )
+}
+
+///|
+fn fixture_data_page() -> Val[Html] {
+  command_data_fixture().map2(semantic_components_fixture(), fn(
+    data,
+    semantics,
+  ) {
+    fixture_shell("Data", [data, semantics])
+  })
+}
+
+///|
+fn fixture_layout_page() -> Val[Html] {
+  resizable_fixture().map4(
+    toggle_fixture(),
+    resizable_group_fixture(),
+    scroll_area_fixture(),
+    fn(resizable, toggle, group, scroll) {
+      fixture_shell("Layout", [resizable, group, scroll, toggle])
+    },
+  )
+}
+
+///|
+fn fixture_feedback_page() -> Val[Html] {
+  toast_fixture().map2(message_scroller_fixture(), fn(toast, scroller) {
+    fixture_shell("Feedback", [toast, scroller])
+  })
+}
+
+///|
+fn fixture_missing_page(path : String) -> Val[Html] {
+  @rabbita.Val::constant(
+    fixture_shell("Not found", [
+      fixture_section("fixture-section-missing", "Fixture page not found", [
+        p(style=["margin:0"], "No fixture page exists for /\{path}."),
+      ]),
+    ]),
+  )
+}
+
+///|
 fn app() -> Val[Html] {
-  let a1 = sidebar_fixture()
-  let a2 = radio_group_fixture()
-  let a3 = slider_fixture()
-  let a4 = tooltip_fixture()
-  let a5 = carousel_fixture()
-  let a6 = select_fixture()
-  let a7 = combobox_fixture()
-  let a8 = drawer_fixture()
-  let a9 = resizable_fixture()
-  let a10 = navigation_menu_fixture()
-  let a11 = date_picker_fixture()
-  let a12 = toast_fixture()
-  let a13 = popover_fixture()
-  let a14 = hover_card_fixture()
-  let a15 = calendar_fixture()
-  let a16 = dropdown_menu_fixture()
-  let a17 = menubar_fixture()
-  let first = a1.map9(a2, a3, a4, a5, a6, a7, a8, a9, fn(
-    s1,
-    s2,
-    s3,
-    s4,
-    s5,
-    s6,
-    s7,
-    s8,
-    s9,
-  ) {
-    [s1, s2, s3, s4, s5, s6, s7, s8, s9]
-  })
-  let second = a10.map8(a11, a12, a13, a14, a15, a16, a17, fn(
-    s10,
-    s11,
-    s12,
-    s13,
-    s14,
-    s15,
-    s16,
-    s17,
-  ) {
-    [s10, s11, s12, s13, s14, s15, s16, s17]
-  })
-  first.map2(second, fn(first, second) {
-    let sections : Array[Html] = [fixture_intro()]
-    sections.append(first)
-    sections.append(second)
-    main_(id="fixture-main", style=["max-width:64rem;margin:0 auto"], sections)
+  let (model, _) = @rabbita.create_state(
+    { route: fixture_current_route() },
+    update=fixture_update,
+    subscriptions=fixture_subscriptions,
+  )
+  model
+  .map(model => model.route)
+  .switch(route => {
+    match route {
+      FixtureIndex => fixture_index_page()
+      FixtureDisclosure => fixture_disclosure_page()
+      FixtureForms => fixture_forms_page()
+      FixtureMenus => fixture_menus_page()
+      FixtureModals => fixture_modals_page()
+      FixtureData => fixture_data_page()
+      FixtureLayout => fixture_layout_page()
+      FixtureFeedback => fixture_feedback_page()
+      FixtureMissing(path) => fixture_missing_page(path)
+    }
   })
 }
 
