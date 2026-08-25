@@ -169,7 +169,12 @@ async fn first_existing(candidates : Array[String]) -> String? {
 
 ///|
 async fn package_graph_path() -> String? {
-  first_existing(["../../_build/packages.json", "_build/packages.json"])
+  first_existing([
+    "../../_build/js/debug/check/packages.json",
+    "_build/js/debug/check/packages.json",
+    "../../_build/packages.json",
+    "_build/packages.json",
+  ])
 }
 
 ///|
@@ -182,17 +187,13 @@ async fn run_command(command : String, args : Array[String], label : String) -> 
 
 ///|
 async fn ensure_package_graph() -> String raise {
-  match package_graph_path() {
-    Some(path) => return path
-    None => ()
-  }
   let code = @process.run(
     env_or("MOON_BIN", default_moon_bin),
-    ["build", "--target", "js", "--release"],
+    ["check", "--target", "js"],
     inherit_env=true,
   )
   if code != 0 {
-    abort("moon build failed with exit code \{code}")
+    abort("moon check failed with exit code \{code}")
   }
   match package_graph_path() {
     Some(path) => path
