@@ -437,7 +437,7 @@ fn focus_calendar_day(root_id : String, iso_date : String) -> Unit {
     root.get_is_connected()
   }
 
-  fn days_in(root : @dom.Element) -> Array[@dom.Element] {
+  fn days_in(root : @dom.Element) -> @dom.NodeList[@dom.Element] {
     root.query_selector_all(day_selector)
   }
 
@@ -483,11 +483,8 @@ fn focus_calendar_day(root_id : String, iso_date : String) -> Unit {
   }
   let matching : Array[@dom.Element] = []
   let roots = document.query_selector_all(calendar_selector)
-  for index in 0..<roots.get_length().to_int() {
-    if roots.item(index.to_double()).to_option() is Some(node) &&
-      node.to_element() is Some(root) &&
-      is_calendar(root) &&
-      target_in(root) is Some(_) {
+  for root in roots {
+    if is_calendar(root) && target_in(root) is Some(_) {
       matching.push(root)
     }
   }

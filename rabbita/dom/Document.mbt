@@ -91,7 +91,7 @@ pub extern "js" fn Document::get_elements_by_class_name(
 pub extern "js" fn Document::get_elements_by_name(
   self : Self,
   name : String,
-) -> NodeList = "(doc,name) => doc.getElementsByName(name)"
+) -> NodeList[Element] = "(doc,name) => doc.getElementsByName(name)"
 
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementsByTagName
@@ -124,7 +124,7 @@ pub extern "js" fn Document::query_selector(
 pub extern "js" fn Document::query_selector_all(
   self : Self,
   selectors : String,
-) -> NodeList = "(self,selectors) => self.querySelectorAll(selectors)"
+) -> NodeList[Element] = "(self,selectors) => self.querySelectorAll(selectors)"
 
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/Document/activeElement
@@ -172,7 +172,7 @@ pub fn Document::elements_from_point(
   self : Self,
   x : Double,
   y : Double,
-) -> Array[Element] {
+) -> FixedArray[Element] {
   ffi_document_elements_from_point(self, x, y)
 }
 
@@ -223,4 +223,4 @@ extern "js" fn ffi_document_elements_from_point(
   doc : Document,
   x : Double,
   y : Double,
-) -> Array[Element] = "(doc, x, y) => Array.from(doc.elementsFromPoint(x, y))"
+) -> FixedArray[Element] = "(doc, x, y) => doc.elementsFromPoint(x, y)"

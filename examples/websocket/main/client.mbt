@@ -93,7 +93,7 @@ fn trimmed_draft(draft : String) -> String {
 }
 
 ///|
-fn parse_protocols(input : String) -> Array[String] {
+fn parse_protocols(input : String) -> FixedArray[String] {
   let protocols = []
   for part in input.split(",") {
     let protocol = part.trim().to_owned()
@@ -101,7 +101,7 @@ fn parse_protocols(input : String) -> Array[String] {
       protocols.push(protocol)
     }
   }
-  protocols
+  FixedArray::from_array(protocols)
 }
 
 ///|

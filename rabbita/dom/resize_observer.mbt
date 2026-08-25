@@ -13,9 +13,17 @@ type ResizeObserverEntry
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver/ResizeObserver
 #cfg(target="js")
-pub extern "js" fn ResizeObserver::new(
-  callback : (Array[ResizeObserverEntry], ResizeObserver) -> Unit,
-) -> Self = "(callback) => new ResizeObserver(callback)"
+pub fn ResizeObserver::new(
+  callback : (FixedArray[ResizeObserverEntry], ResizeObserver) -> Unit,
+) -> Self {
+  ffi_resize_observer_new(callback)
+}
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_resize_observer_new(
+  callback : (FixedArray[ResizeObserverEntry], ResizeObserver) -> Unit,
+) -> ResizeObserver = "(callback) => new ResizeObserver(callback)"
 
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver/observe

@@ -31,9 +31,10 @@ test "Promise::wait" {
 #cfg(target="js")
 test "async_all" {
   @js.async_test(() => {
-    @debug.assert_eq(
-      @js.async_all([fn() { op2() }, fn() { op1() }, fn() { op3() }]),
-      [Some("Hello, World"), Some("Hello"), None],
-    )
+    let results = @js.async_all([fn() { op2() }, fn() { op1() }, fn() { op3() }])
+    @debug.assert_eq(results.length(), 3)
+    @debug.assert_eq(results.unsafe_get(0), Some("Hello, World"))
+    @debug.assert_eq(results.unsafe_get(1), Some("Hello"))
+    @debug.assert_eq(results.unsafe_get(2), None)
   })
 }

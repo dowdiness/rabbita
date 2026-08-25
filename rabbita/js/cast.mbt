@@ -43,7 +43,9 @@ extern "js" fn checked_cast_bool_ffi(value : Value) -> Nullable[Bool] =
 
 ///|
 #cfg(target="js")
-extern "js" fn checked_cast_array_ffi(value : Value) -> Nullable[Array[Value]] =
+extern "js" fn checked_cast_array_ffi(
+  value : Value,
+) -> Nullable[JsArray[Value]] =
   #| (x) => Array.isArray(x) ? x : null
 
 ///|
@@ -96,11 +98,13 @@ pub impl Cast for Bool with fn from(value) {
 
 ///|
 #cfg(target="js")
-pub impl[A : Cast] Cast for Array[A] with fn into(value) {
+pub impl[A : Cast] Cast for JsArray[A] with fn into(value) {
   checked_cast_array_ffi(value)
   .to_option()
   .bind(fn(arr) {
-    let is_type_a = fn(elem) { !((Cast::into(elem) : A?) is None) }
+    let is_type_a = fn(elem) {
+      elem is Some(elem) && !((Cast::into(elem) : A?) is None)
+    }
     if arr.iter().all(is_type_a) {
       Some(Value::cast_from(arr).cast())
     } else {
@@ -111,6 +115,6 @@ pub impl[A : Cast] Cast for Array[A] with fn into(value) {
 
 ///|
 #cfg(target="js")
-pub impl[A : Cast] Cast for Array[A] with fn from(value) {
+pub impl[A : Cast] Cast for JsArray[A] with fn from(value) {
   Value::cast_from(value)
 }

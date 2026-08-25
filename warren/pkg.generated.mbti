@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub async fn chmod_executable(@path.SourcePath) -> Unit
+
 pub async fn copy(src~ : @path.SourcePath, dst~ : @path.SourcePath) -> Unit
 
 pub fn debug_log(String, String) -> Unit

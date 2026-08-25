@@ -250,8 +250,8 @@ let initial_code =
 #warnings("-alert_unstable")
 fn main {
   @shiki.initialize(
-    langs=language_items.map(item => item.0),
-    themes=all_theme_ids(),
+    langs=FixedArray::from_array(language_items.map(item => item.0)),
+    themes=FixedArray::from_array(all_theme_ids()),
   )
   @rabbita.new(shiki_editor).mount("app")
   ensure_overlay_sync("code-input", "code-preview")

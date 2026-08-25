@@ -7,7 +7,7 @@ using @cmd {type Emit}
 priv suberror WebsocketSubscription {
   Listen(
     String,
-    Array[String],
+    FixedArray[String],
     open~ : Cmd?,
     message~ : Emit[String]?,
     close~ : Emit[CloseInfo]?,
@@ -99,7 +99,7 @@ fn websocket_sub_loader(
 #cfg(target="js")
 pub fn listen(
   url : String,
-  protocols? : Array[String] = [],
+  protocols? : FixedArray[String] = [],
   open? : Cmd,
   message? : @cmd.Emit[String],
   close? : @cmd.Emit[CloseInfo],

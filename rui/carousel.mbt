@@ -332,7 +332,9 @@ fn carousel_owned_elements(
 ) -> Array[@dom.Element] {
   root
   .query_selector_all(selector)
+  .iter()
   .filter(element => carousel_element_owned_by(root, element))
+  .collect()
 }
 
 ///|

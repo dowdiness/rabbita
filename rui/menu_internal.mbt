@@ -306,6 +306,7 @@ fn menu_enabled_items(
   let scope = container.unwrap_or(binding.root)
   scope
   .query_selector_all("[data-menu-index]")
+  .iter()
   .filter(item => {
     if !menu_element_is_visible(item) {
       false
@@ -316,6 +317,7 @@ fn menu_enabled_items(
       true
     }
   })
+  .collect()
 }
 
 ///|
@@ -349,7 +351,7 @@ fn menu_focus_submenu_trigger(
   key : String,
 ) -> Unit {
   menu_request_frame(() => {
-    let target = ui_find_element(
+    let target = ui_find_node_list_element(
       binding.root.query_selector_all("[data-menu-index][data-submenu-key]"),
       node => {
         node.get_attribute("data-submenu-key").unwrap_or("") == key &&
@@ -371,7 +373,7 @@ fn menu_focus_submenu_first(
   attempt : Int,
 ) -> Unit {
   menu_request_frame(() => {
-    let owner = ui_find_element(
+    let owner = ui_find_node_list_element(
       binding.root.query_selector_all("[data-submenu-owner]"),
       node => {
         node.get_attribute("data-submenu-owner").unwrap_or("") == key &&
@@ -756,7 +758,9 @@ fn menu_resolve_focus_item(
   let scope = content.unwrap_or(root)
   let candidates = scope
     .query_selector_all("[data-menu-index=\"\{index}\"]")
+    .iter()
     .filter(menu_element_is_visible)
+    .collect()
   if content is Some(content) {
     ui_find_element(candidates, item => {
       if item.closest("[role=\"menu\"]") is Some(owner) {
@@ -934,7 +938,7 @@ fn menu_position_submenu_root(root : @dom.Element) -> Unit {
       content.set_attribute("data-positioned", "false")
       continue
     }
-    let trigger = ui_find_element(triggers, item => {
+    let trigger = ui_find_node_list_element(triggers, item => {
       item.get_attribute("data-submenu-key").unwrap_or("") == key
     })
     if trigger is None || !trigger.unwrap().get_is_connected() {

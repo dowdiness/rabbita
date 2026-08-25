@@ -34,7 +34,7 @@ pub trait IsEvent: @js.Cast {
   /// https://developer.mozilla.org/en-US/docs/Web/API/Event/timeStamp
   fn get_time_stamp(Self) -> DOMHighResTimeStamp = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Event/composedPath
-  fn composed_path(Self) -> Array[EventTarget] = _
+  fn composed_path(Self) -> FixedArray[EventTarget] = _
   fn prevent_default(Self) -> Unit = _
   fn stop_propagation(Self) -> Unit = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Event/stopImmediatePropagation
@@ -102,7 +102,7 @@ impl IsEvent with fn get_time_stamp(s) {
 ///|
 #cfg(target="js")
 impl IsEvent with fn composed_path(s) {
-  s |> js_identity |> ffi_event_composed_path
+  ffi_event_composed_path(js_identity(s))
 }
 
 ///|
@@ -245,7 +245,9 @@ extern "js" fn ffi_event_get_time_stamp(x : @js.Value) -> DOMHighResTimeStamp = 
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_event_composed_path(x : @js.Value) -> Array[EventTarget] = "(self) => self.composedPath()"
+extern "js" fn ffi_event_composed_path(
+  x : @js.Value,
+) -> FixedArray[EventTarget] = "(self) => self.composedPath()"
 
 ///|
 #cfg(target="js")

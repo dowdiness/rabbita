@@ -62,6 +62,20 @@ fn ui_find_element(
 
 ///|
 #cfg(target="js")
+fn ui_find_node_list_element(
+  elements : @dom.NodeList[@dom.Element],
+  predicate : (@dom.Element) -> Bool,
+) -> @dom.Element? {
+  for element in elements {
+    if predicate(element) {
+      return Some(element)
+    }
+  }
+  None
+}
+
+///|
+#cfg(target="js")
 fn ui_find_descendant_by_attribute(
   root : @dom.Element,
   name : String,
@@ -156,11 +170,13 @@ fn ui_roving_context(
   guard current.closest(root_selector) is Some(root) else { return None }
   let items = root
     .query_selector_all(item_selector)
+    .iter()
     .filter(item => {
       item.closest(root_selector) is Some(owner) &&
       owner.is_same_node(root.as_node()) &&
       ui_element_is_enabled(item)
     })
+    .collect()
   if items.length() == 0 {
     None
   } else {

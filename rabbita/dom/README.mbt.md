@@ -59,6 +59,22 @@ test {
 - Optional JS parameters use `@js.Optional[T]` with default
   `@js.Optional::undefined()`.
 
+## Array-shaped values
+
+Using MoonBit `Array` directly in JavaScript FFI does not have a stable ABI.
+
+| JavaScript or Web IDL value | MoonBit binding |
+| --- | --- |
+| `sequence<T>` | `FixedArray[T]` |
+| `FrozenArray<T>` | `ReadOnlyArray[T]` |
+| ordinary JavaScript `Array` | `@js.JsArray[T]` |
+| `ObservableArray<T>` | a dedicated observable wrapper |
+| `NodeList`, `HTMLCollection`, typed arrays, and similar collections | their dedicated DOM types |
+
+Bindings and wrappers preserve the original JavaScript object without copying.
+APIs explicitly documented as conversions or serialization may allocate the
+target representation.
+
 ## Naming conventions and file structure
 
 - Each DOM type and its methods live in a corresponding file.

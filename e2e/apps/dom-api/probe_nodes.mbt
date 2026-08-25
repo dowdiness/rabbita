@@ -154,11 +154,13 @@ fn probe_nodes() -> String {
       #|<div class="large-child" style="width:640px;height:360px"></div>
       #|
     @dom.IsElement::set_inner_html(root, children_html)
-    record(
-      failures,
-      @dom.IsElement::get_children(root).length() == 3,
-      "children",
-    )
+    let children = @dom.IsElement::get_children(root)
+    record(failures, children.length() == 3, "children")
+    let live_child = document.create_element("i")
+    @dom.IsNode::append_child(root, live_child.as_node())
+    record(failures, children.length() == 4, "children_live_collection")
+    @dom.IsNode::remove_child(root, live_child.as_node())
+    record(failures, children.length() == 3, "children_live_collection_remove")
     record(
       failures,
       @dom.IsElement::query_selector(root, ".hit") is Some(_),
@@ -169,11 +171,18 @@ fn probe_nodes() -> String {
       @dom.IsElement::query_selector(root, ".missing") is None,
       "query_selector_missing",
     )
+    let hits = @dom.IsElement::query_selector_all(root, ".hit")
+    record(failures, hits.length() == 2, "query_selector_all")
+    let later_hit = document.create_element("span")
+    later_hit.set_attribute("class", "hit")
+    root.append_child(later_hit.as_node())
     record(
       failures,
-      @dom.IsElement::query_selector_all(root, ".hit").length() == 2,
-      "query_selector_all",
+      hits.length() == 2 &&
+      @dom.IsElement::query_selector_all(root, ".hit").length() == 3,
+      "query_selector_all_static_snapshot",
     )
+    root.remove_child(later_hit.as_node())
     record(
       failures,
       @dom.IsElement::closest(root, "body") is Some(_),
@@ -320,11 +329,26 @@ fn probe_nodes() -> String {
         @dom.IsElement::get_client_top(root) >= 0.0,
         "client_top",
       )
+      let client_rects = @dom.IsElement::get_client_rects(root)
+      record(failures, client_rects.length() >= 1, "client_rects")
       record(
         failures,
-        @dom.IsElement::get_client_rects(root).length() >= 1,
-        "client_rects",
+        client_rects.item(0.0).to_option() is Some(_),
+        "client_rects_item",
       )
+      if client_rects.item(0.0).to_option() is Some(first_rect) {
+        let original_width = first_rect.get_width()
+        style.set_property("width", "360px")
+        let refreshed = @dom.IsElement::get_client_rects(root)
+        record(
+          failures,
+          first_rect.get_width() == original_width &&
+          refreshed.item(0.0).to_option() is Some(next_rect) &&
+          next_rect.get_width() > original_width,
+          "client_rects_static_snapshot",
+        )
+        style.set_property("width", "320px")
+      }
       let rect = @dom.IsElement::get_bounding_client_rect(root)
       record(failures, rect.get_width() > 0.0, "rect_width")
       record(failures, rect.get_height() > 0.0, "rect_height")
@@ -693,9 +717,10 @@ fn probe_nodes() -> String {
       document.element_from_point(1.0, 1.0) is Some(_),
       "element_from_point",
     )
+    let point_elements = document.elements_from_point(1.0, 1.0)
     record(
       failures,
-      document.elements_from_point(1.0, 1.0).length() >= 1,
+      point_elements.length() >= 1 && point_elements.get(0) is Some(_),
       "elements_from_point",
     )
 

@@ -7,7 +7,7 @@ extenum @cmd.Extension += {
   WebSocketConnect(
     String,
     String,
-    Array[String],
+    FixedArray[String],
     @cmd.Emit[Event],
     @cmd.Emit[String]?
   )

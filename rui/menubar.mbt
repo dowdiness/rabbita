@@ -107,7 +107,9 @@ fn menubar_now() -> Double {
 fn menubar_triggers(binding : MenubarBinding) -> Array[@dom.Element] {
   binding.root
   .query_selector_all("[data-slot=\"menubar-trigger\"]")
+  .iter()
   .filter(ui_element_is_enabled)
+  .collect()
 }
 
 ///|
@@ -137,7 +139,7 @@ fn menubar_focus_menu_index(
   stable_frames : Int,
 ) -> Unit {
   guard ui_element_by_id(binding.id) is Some(live_root) else { return }
-  let content = ui_find_element(
+  let content = ui_find_node_list_element(
     live_root.query_selector_all("[data-slot=\"menubar-content\"]"),
     node => {
       ui_parse_int_or(
@@ -151,11 +153,13 @@ fn menubar_focus_menu_index(
   let target = if content is Some(content) {
     let items = content
       .query_selector_all("[data-menu-index]")
+      .iter()
       .filter(item => {
         menu_element_is_visible(item) &&
         item.closest("[role=\"menu\"]") is Some(owner) &&
         owner.is_same_node(content.as_node())
       })
+      .collect()
     if last {
       items.get(items.length() - 1)
     } else {
@@ -469,7 +473,7 @@ fn menubar_should_toggle(
 #cfg(target="js")
 fn focus_menubar_content(id : String, index : Int) -> Bool {
   guard ui_element_by_id(id) is Some(root) else { return false }
-  guard ui_find_element(
+  guard ui_find_node_list_element(
       root.query_selector_all("[data-slot=\"menubar-content\"]"),
       node => {
         ui_parse_int_or(
@@ -484,7 +488,7 @@ fn focus_menubar_content(id : String, index : Int) -> Bool {
     content.get_attribute("data-state").unwrap_or("") == "open" else {
     return false
   }
-  let target = ui_find_element(
+  let target = ui_find_node_list_element(
     content.query_selector_all("[data-menu-index]"),
     node => {
       if !menu_element_is_visible(node) {

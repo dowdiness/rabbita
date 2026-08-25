@@ -133,7 +133,7 @@ let navigation_menu_bindings : Map[String, NavigationMenuBinding] = Map([])
 #cfg(target="js")
 fn navigation_menu_all_triggers(
   binding : NavigationMenuBinding,
-) -> Array[@dom.Element] {
+) -> @dom.NodeList[@dom.Element] {
   binding.root.query_selector_all("[data-slot=\"navigation-menu-trigger\"]")
 }
 
@@ -142,14 +142,17 @@ fn navigation_menu_all_triggers(
 fn navigation_menu_triggers(
   binding : NavigationMenuBinding,
 ) -> Array[@dom.Element] {
-  navigation_menu_all_triggers(binding).filter(ui_element_is_enabled)
+  navigation_menu_all_triggers(binding)
+  .iter()
+  .filter(ui_element_is_enabled)
+  .collect()
 }
 
 ///|
 #cfg(target="js")
 fn navigation_menu_normalize_tab_stop(binding : NavigationMenuBinding) -> Unit {
   let all = navigation_menu_all_triggers(binding)
-  let enabled = all.filter(ui_element_is_enabled)
+  let enabled = all.iter().filter(ui_element_is_enabled).collect()
   let mut target = ui_find_element(enabled, item => {
     item.get_attribute("aria-expanded").unwrap_or("") == "true"
   })
@@ -194,7 +197,7 @@ fn navigation_menu_content_for_index(
   root : @dom.Element,
   index : Int,
 ) -> @dom.Element? {
-  ui_find_element(
+  ui_find_node_list_element(
     root.query_selector_all("[data-slot=\"navigation-menu-content\"]"),
     content => {
       ui_parse_int_or(
@@ -220,7 +223,7 @@ fn navigation_menu_focus_content(
     }
     if navigation_menu_content_for_index(root, index) is Some(content) {
       let selector = "a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex=\"-1\"])"
-      let target = ui_find_element(
+      let target = ui_find_node_list_element(
         content.query_selector_all(selector),
         menu_element_is_visible,
       ).unwrap_or(content)
@@ -310,13 +313,16 @@ fn navigation_menu_handle_keydown(
       -1,
     )
     (binding.close.val)()
-    let destination = ui_find_element(navigation_menu_all_triggers(binding), item => {
-      ui_parse_int_or(
-        item.get_attribute("data-navigation-index").unwrap_or(""),
-        -1,
-      ) ==
-      index
-    })
+    let destination = ui_find_node_list_element(
+      navigation_menu_all_triggers(binding),
+      item => {
+        ui_parse_int_or(
+          item.get_attribute("data-navigation-index").unwrap_or(""),
+          -1,
+        ) ==
+        index
+      },
+    )
     if destination is Some(destination) {
       ui_focus_element(destination)
     }

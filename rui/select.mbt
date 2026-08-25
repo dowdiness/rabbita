@@ -198,7 +198,7 @@ fn ui_listbox_run_open_sequence(
 #cfg(target="js")
 fn find_listbox_content_id(root_id : String, slot : String) -> String {
   guard ui_element_by_id(root_id + "-root") is Some(root) else { return "" }
-  guard ui_find_element(root.query_selector_all("[data-slot]"), element => {
+  guard ui_find_node_list_element(root.query_selector_all("[data-slot]"), element => {
       element.get_attribute("data-slot").unwrap_or("") == slot
     })
     is Some(content) else {
@@ -212,7 +212,7 @@ fn find_listbox_content_id(root_id : String, slot : String) -> String {
 fn sync_select_trigger_id(root_id : String, content_id : String) -> Unit {
   guard ui_element_by_id(root_id + "-root") is Some(root) else { return }
   guard ui_element_by_id(content_id) is Some(content) else { return }
-  guard ui_find_element(root.query_selector_all("[data-slot]"), element => {
+  guard ui_find_node_list_element(root.query_selector_all("[data-slot]"), element => {
       element.get_attribute("data-slot").unwrap_or("") == "select-trigger"
     })
     is Some(trigger) else {
@@ -286,9 +286,11 @@ fn focus_select_part(root_id : String, slot : String, value : String) -> Unit {
     guard ui_element_by_id(root_id + "-root") is Some(root) else { return }
     let candidates = root
       .query_selector_all("[data-slot]")
+      .iter()
       .filter(element => {
         element.get_attribute("data-slot").unwrap_or("") == slot
       })
+      .collect()
     let target = if slot == "select-item" {
       ui_find_element(candidates, element => {
         element.get_attribute("data-value").unwrap_or("") == value

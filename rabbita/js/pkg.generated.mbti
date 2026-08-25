@@ -6,7 +6,7 @@ import {
 }
 
 // Values
-pub async fn[T] async_all(Array[async () -> T]) -> Array[T]
+pub async fn[T] async_all(FixedArray[async () -> T]) -> JsArray[T]
 
 pub let async_iterator : Symbol
 
@@ -33,6 +33,19 @@ pub fn[T] Error_::wrap(() -> Value, map_ok? : (Value) -> T) -> T raise Self
 pub impl Show for Error_
 
 // Types and methods
+#external
+pub type JsArray[T]
+pub fn[T] JsArray::get(Self[T], Int) -> T?
+pub fn[T] JsArray::is_empty(Self[T]) -> Bool
+pub fn[T] JsArray::iter(Self[T]) -> Iter[T?]
+pub fn[T] JsArray::length(Self[T]) -> Int
+pub fn[T] JsArray::new() -> Self[T]
+pub fn[T] JsArray::pop(Self[T]) -> T?
+pub fn[T] JsArray::push(Self[T], T) -> Unit
+pub fn[T] JsArray::set(Self[T], Int, T) -> Unit
+pub fn[T] JsArray::unsafe_get(Self[T], Int) -> T
+pub impl[A : Cast] Cast for JsArray[A]
+
 type Nullable[_]
 pub fn[T] Nullable::from_option(T?) -> Self[T]
 #deprecated
@@ -68,7 +81,7 @@ pub fn[T] Optional::unwrap(Self[T]) -> T
 
 #external
 pub type Promise
-pub fn Promise::all(Array[Self]) -> Self
+pub fn Promise::all(FixedArray[Self]) -> Self
 pub fn[T] Promise::unsafe_new(async () -> T) -> Self
 pub async fn Promise::wait(Self) -> Value
 
@@ -164,10 +177,10 @@ pub fn[A, B, C, D, E, F, G, H : Cast] Union8::to7(Self[A, B, C, D, E, F, G, H]) 
 
 #external
 pub type Value
-pub fn[Arg, Result] Value::apply(Self, Array[Arg]) -> Result
-pub fn[Arg, Result] Value::apply_with_index(Self, Int, Array[Arg]) -> Result
-pub fn[Arg, Result] Value::apply_with_string(Self, String, Array[Arg]) -> Result
-pub fn[Arg, Result] Value::apply_with_symbol(Self, Symbol, Array[Arg]) -> Result
+pub fn[Arg, Result] Value::apply(Self, FixedArray[Arg]) -> Result
+pub fn[Arg, Result] Value::apply_with_index(Self, Int, FixedArray[Arg]) -> Result
+pub fn[Arg, Result] Value::apply_with_string(Self, String, FixedArray[Arg]) -> Result
+pub fn[Arg, Result] Value::apply_with_symbol(Self, Symbol, FixedArray[Arg]) -> Result
 pub fn[T] Value::cast(Self) -> T
 pub fn[T] Value::cast_from(T) -> Self
 pub fn Value::extends(Self, Self) -> Self
@@ -183,10 +196,10 @@ pub fn Value::is_object(Self) -> Bool
 pub fn Value::is_string(Self) -> Bool
 pub fn Value::is_symbol(Self) -> Bool
 pub fn Value::is_undefined(Self) -> Bool
-pub fn[Arg, Result] Value::new(Self, Array[Arg]) -> Result
-pub fn[Arg, Result] Value::new_with_index(Self, Int, Array[Arg]) -> Result
-pub fn[Arg, Result] Value::new_with_string(Self, String, Array[Arg]) -> Result
-pub fn[Arg, Result] Value::new_with_symbol(Self, Symbol, Array[Arg]) -> Result
+pub fn[Arg, Result] Value::new(Self, FixedArray[Arg]) -> Result
+pub fn[Arg, Result] Value::new_with_index(Self, Int, FixedArray[Arg]) -> Result
+pub fn[Arg, Result] Value::new_with_string(Self, String, FixedArray[Arg]) -> Result
+pub fn[Arg, Result] Value::new_with_symbol(Self, Symbol, FixedArray[Arg]) -> Result
 pub fn[T] Value::set_with_index(Self, Int, T) -> Unit
 pub fn[T] Value::set_with_string(Self, String, T) -> Unit
 pub fn[T] Value::set_with_symbol(Self, Symbol, T) -> Unit
@@ -207,4 +220,3 @@ pub impl Cast for Bool
 pub impl Cast for Int
 pub impl Cast for Double
 pub impl Cast for String
-pub impl[A : Cast] Cast for Array[A]

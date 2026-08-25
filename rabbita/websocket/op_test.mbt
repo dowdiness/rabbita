@@ -8,7 +8,11 @@ test "websocket commands have structural debug output" {
       on_event=_ => @cmd.none,
     ),
     content=(
-      #|WebSocketConnect("events", "wss://example.com/events", ["json"])
+      #|WebSocketConnect(
+      #|  "events",
+      #|  "wss://example.com/events",
+      #|  <FixedArray: ["json"]>,
+      #|)
     ),
   )
   debug_inspect(

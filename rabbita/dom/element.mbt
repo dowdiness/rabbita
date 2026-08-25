@@ -7,11 +7,11 @@ type Element
 #cfg(target="js")
 pub trait IsElement: IsNode {
   fn as_element(Self) -> Element = _
-  fn get_children(Self) -> Array[Element] = _
+  fn get_children(Self) -> HTMLCollection = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/querySelector
   fn query_selector(Self, String) -> Element? = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/querySelectorAll
-  fn query_selector_all(Self, String) -> Array[Element] = _
+  fn query_selector_all(Self, String) -> NodeList[Element] = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/closest
   fn closest(Self, String) -> Element? = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/matches
@@ -27,7 +27,7 @@ pub trait IsElement: IsNode {
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/clientTop
   fn get_client_top(Self) -> Double = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/getClientRects
-  fn get_client_rects(Self) -> Array[DOMRect] = _
+  fn get_client_rects(Self) -> DOMRectList = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/setPointerCapture
   fn set_pointer_capture(Self, Int) -> Unit = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/releasePointerCapture
@@ -59,7 +59,7 @@ pub trait IsElement: IsNode {
   fn set_inner_html(Self, String) -> Unit = _
   fn get_bounding_client_rect(Self) -> DOMRect = _
   /// https://developer.mozilla.org/en-US/docs/Web/API/Element/getAnimations
-  fn get_animations(Self) -> Array[Animation] = _
+  fn get_animations(Self) -> FixedArray[Animation] = _
 }
 
 ///|
@@ -110,7 +110,7 @@ impl IsElement with fn query_selector(s, selectors) {
 ///|
 #cfg(target="js")
 impl IsElement with fn query_selector_all(s, selectors) {
-  s |> js_identity |> ffi_element_query_selector_all(selectors)
+  ffi_element_query_selector_all(js_identity(s), selectors)
 }
 
 ///|
@@ -161,7 +161,7 @@ impl IsElement with fn get_client_top(s) {
 ///|
 #cfg(target="js")
 impl IsElement with fn get_client_rects(s) {
-  s |> js_identity |> ffi_element_get_client_rects
+  ffi_element_get_client_rects(js_identity(s))
 }
 
 ///|
@@ -302,12 +302,12 @@ impl IsElement with fn get_bounding_client_rect(s) {
 ///|
 #cfg(target="js")
 impl IsElement with fn get_animations(s) {
-  s |> js_identity |> ffi_element_get_animations
+  ffi_element_get_animations(js_identity(s))
 }
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_element_children(x : @js.Value) -> Array[Element] =
+extern "js" fn ffi_element_children(x : @js.Value) -> HTMLCollection =
   #| (self) => self.children
 
 ///|
@@ -322,7 +322,7 @@ extern "js" fn ffi_element_query_selector(
 extern "js" fn ffi_element_query_selector_all(
   x : @js.Value,
   selectors : String,
-) -> Array[Element] = "(self, selectors) => Array.from(self.querySelectorAll(selectors))"
+) -> NodeList[Element] = "(self, selectors) => self.querySelectorAll(selectors)"
 
 ///|
 #cfg(target="js")
@@ -357,7 +357,7 @@ extern "js" fn ffi_element_get_client_top(x : @js.Value) -> Double = "(self) => 
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_element_get_client_rects(x : @js.Value) -> Array[DOMRect] = "(self) => Array.from(self.getClientRects())"
+extern "js" fn ffi_element_get_client_rects(x : @js.Value) -> DOMRectList = "(self) => self.getClientRects()"
 
 ///|
 #cfg(target="js")
@@ -487,5 +487,7 @@ extern "js" fn ffi_element_get_bounding_client_rect(x : @js.Value) -> DOMRect =
 
 ///|
 #cfg(target="js")
-extern "js" fn ffi_element_get_animations(x : @js.Value) -> Array[Animation] =
-  #| (self) => Array.from(self.getAnimations())
+extern "js" fn ffi_element_get_animations(
+  x : @js.Value,
+) -> FixedArray[Animation] =
+  #| (self) => self.getAnimations()

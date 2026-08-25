@@ -7,9 +7,9 @@ import {
 }
 
 // Values
-pub fn initialize(langs~ : Array[String], themes~ : Array[String]) -> Unit
+pub fn initialize(langs~ : FixedArray[String], themes~ : FixedArray[String]) -> Unit
 
-pub async fn initialize_static(langs~ : Array[String], themes~ : Array[String]) -> Unit
+pub async fn initialize_static(langs~ : FixedArray[String], themes~ : FixedArray[String]) -> Unit
 
 pub fn shiki_code(@rabbita.Val[String], lang~ : @rabbita.Val[String], theme~ : @rabbita.Val[String]) -> @rabbita.Val[@html.Html]
 

@@ -27,7 +27,7 @@ pub impl @js.Cast for Clipboard with fn from(value) {
 // ///|
 // pub extern "js" fn Clipboard::write(
 //   self : Clipboard,
-//   data : Array[ClipboardItem]
+//   data : FixedArray[ClipboardItem]
 // ) =
 //   #| (self,data) => self.write(data)
 

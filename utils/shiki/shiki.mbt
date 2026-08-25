@@ -19,7 +19,7 @@ extern "js" fn load_shiki() -> @js.Promise =
 ///|
 extern "js" fn load_langs(
   highlighter : @js.Value,
-  langs : Array[String],
+  langs : FixedArray[String],
 ) -> @js.Promise =
   #| (hl, langs) =>
   #|   hl.loadLanguage(
@@ -31,7 +31,7 @@ extern "js" fn load_langs(
 ///|
 extern "js" fn load_themes(
   highlighter : @js.Value,
-  themes : Array[String],
+  themes : FixedArray[String],
 ) -> @js.Promise =
   #| (hl, themes) =>
   #|   hl.loadTheme(
@@ -228,7 +228,10 @@ let global_shiki_hl : Ref[Singleton?] = Ref(None)
 fn async_run(f : async () -> Unit noraise) -> Unit = "%async.run"
 
 ///|
-pub fn initialize(langs~ : Array[String], themes~ : Array[String]) -> Unit {
+pub fn initialize(
+  langs~ : FixedArray[String],
+  themes~ : FixedArray[String],
+) -> Unit {
   async_run(() => {
     try {
       let singleton = match global_shiki_hl.val {
@@ -275,8 +278,8 @@ pub fn initialize(langs~ : Array[String], themes~ : Array[String]) -> Unit {
 /// await this once at the application boundary, then call `static_code` from
 /// any number of otherwise ordinary `Html` functions.
 pub async fn initialize_static(
-  langs~ : Array[String],
-  themes~ : Array[String],
+  langs~ : FixedArray[String],
+  themes~ : FixedArray[String],
 ) -> Unit {
   let singleton = match global_shiki_hl.val {
     Some(s) => s

@@ -9,7 +9,7 @@ using @cmd {type Cmd}
 pub fn connect(
   id : String,
   url : String,
-  protocols? : Array[String] = [],
+  protocols? : FixedArray[String] = [],
   on_event~ : @cmd.Emit[Event],
   failed? : @cmd.Emit[String],
 ) -> Cmd {

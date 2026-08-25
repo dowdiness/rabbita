@@ -64,7 +64,10 @@ pub fn[T] Value::set_with_index(self : Value, index : Int, value : T) -> Unit {
 ///|
 /// `self(...args)`
 #cfg(target="js")
-pub fn[Arg, Result] Value::apply(self : Value, args : Array[Arg]) -> Result {
+pub fn[Arg, Result] Value::apply(
+  self : Value,
+  args : FixedArray[Arg],
+) -> Result {
   self.apply_self_ffi(Value::cast_from(args)).cast()
 }
 
@@ -74,7 +77,7 @@ pub fn[Arg, Result] Value::apply(self : Value, args : Array[Arg]) -> Result {
 pub fn[Arg, Result] Value::apply_with_string(
   self : Value,
   key : String,
-  args : Array[Arg],
+  args : FixedArray[Arg],
 ) -> Result {
   self.apply_ffi(Value::cast_from(key), Value::cast_from(args)).cast()
 }
@@ -85,7 +88,7 @@ pub fn[Arg, Result] Value::apply_with_string(
 pub fn[Arg, Result] Value::apply_with_symbol(
   self : Value,
   key : Symbol,
-  args : Array[Arg],
+  args : FixedArray[Arg],
 ) -> Result {
   self.apply_ffi(Value::cast_from(key), Value::cast_from(args)).cast()
 }
@@ -96,7 +99,7 @@ pub fn[Arg, Result] Value::apply_with_symbol(
 pub fn[Arg, Result] Value::apply_with_index(
   self : Value,
   index : Int,
-  args : Array[Arg],
+  args : FixedArray[Arg],
 ) -> Result {
   self.apply_ffi(Value::cast_from(index), Value::cast_from(args)).cast()
 }
@@ -104,7 +107,7 @@ pub fn[Arg, Result] Value::apply_with_index(
 ///|
 /// `new self(...args)`
 #cfg(target="js")
-pub fn[Arg, Result] Value::new(self : Value, args : Array[Arg]) -> Result {
+pub fn[Arg, Result] Value::new(self : Value, args : FixedArray[Arg]) -> Result {
   self.new_self_ffi(Value::cast_from(args)).cast()
 }
 
@@ -114,7 +117,7 @@ pub fn[Arg, Result] Value::new(self : Value, args : Array[Arg]) -> Result {
 pub fn[Arg, Result] Value::new_with_string(
   self : Value,
   key : String,
-  args : Array[Arg],
+  args : FixedArray[Arg],
 ) -> Result {
   self.new_ffi(Value::cast_from(key), Value::cast_from(args)).cast()
 }
@@ -125,7 +128,7 @@ pub fn[Arg, Result] Value::new_with_string(
 pub fn[Arg, Result] Value::new_with_symbol(
   self : Value,
   key : Symbol,
-  args : Array[Arg],
+  args : FixedArray[Arg],
 ) -> Result {
   self.new_ffi(Value::cast_from(key), Value::cast_from(args)).cast()
 }
@@ -136,7 +139,7 @@ pub fn[Arg, Result] Value::new_with_symbol(
 pub fn[Arg, Result] Value::new_with_index(
   self : Value,
   index : Int,
-  args : Array[Arg],
+  args : FixedArray[Arg],
 ) -> Result {
   self.new_ffi(Value::cast_from(index), Value::cast_from(args)).cast()
 }
@@ -157,7 +160,7 @@ pub impl @json.FromJson for Value with fn from_json(json : Json, path) {
     True => Value::cast_from(true)
     Null => Value::null()
     Array(xs) => {
-      let acc = Array::new(capacity=xs.length())
+      let acc : JsArray[Value] = JsArray::new()
       for x in xs {
         acc.push((@json.from_json(x, path~) : Value))
       }

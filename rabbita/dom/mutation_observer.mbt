@@ -13,9 +13,11 @@ type MutationRecord
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver/MutationObserver
 #cfg(target="js")
-pub extern "js" fn MutationObserver::new(
-  callback : (Array[MutationRecord], MutationObserver) -> Unit,
-) -> Self = "(callback) => new MutationObserver(callback)"
+pub fn MutationObserver::new(
+  callback : (FixedArray[MutationRecord], MutationObserver) -> Unit,
+) -> Self {
+  ffi_mutation_observer_new(callback)
+}
 
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver/observe
@@ -29,7 +31,7 @@ pub fn MutationObserver::observe(
   subtree? : Bool,
   attribute_old_value? : Bool,
   character_data_old_value? : Bool,
-  attribute_filter? : Array[String],
+  attribute_filter? : FixedArray[String],
 ) -> Unit {
   ffi_mutation_observer_observe(
     self,
@@ -67,7 +69,7 @@ extern "js" fn ffi_mutation_observer_observe(
   subtree : @js.Optional[Bool],
   attribute_old_value : @js.Optional[Bool],
   character_data_old_value : @js.Optional[Bool],
-  attribute_filter : @js.Optional[Array[String]],
+  attribute_filter : @js.Optional[FixedArray[String]],
 ) -> Unit =
   #| (self, target, childList, attributes, characterData, subtree, attributeOldValue, characterDataOldValue, attributeFilter) => {
   #|   const options = {}
@@ -80,6 +82,12 @@ extern "js" fn ffi_mutation_observer_observe(
   #|   if (attributeFilter !== undefined) options.attributeFilter = attributeFilter
   #|   self.observe(target, options)
   #| }
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_mutation_observer_new(
+  callback : (FixedArray[MutationRecord], MutationObserver) -> Unit,
+) -> MutationObserver = "(callback) => new MutationObserver(callback)"
 
 ///|
 #cfg(target="js")

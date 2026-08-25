@@ -1,4 +1,27 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
+
+async function expectStableFocus(locator: Locator) {
+  await expect
+    .poll(() =>
+      locator.evaluate(
+        (element) =>
+          new Promise<boolean>((resolve) => {
+            let remainingFrames = 3;
+            const check = () => {
+              if (!element.isConnected || document.activeElement !== element) {
+                resolve(false);
+              } else if (--remainingFrames === 0) {
+                resolve(true);
+              } else {
+                requestAnimationFrame(check);
+              }
+            };
+            requestAnimationFrame(check);
+          }),
+      ),
+    )
+    .toBe(true);
+}
 
 test('context menu opens on right click and activates a normal item', async ({ page }) => {
   await page.goto('/menus');
@@ -56,15 +79,23 @@ test('context menu keyboard navigation skips disabled items and opens submenu', 
   const duplicate = menu.getByRole('menuitem', { name: 'Duplicate fixture' });
   const checkbox = menu.getByRole('menuitemcheckbox', { name: 'Show grid' });
   await expect(menu).toBeVisible();
-  await expect(duplicate).toBeFocused();
+  await expect(menu).toHaveAttribute('data-positioned', 'true');
+  await expect(duplicate).toHaveAttribute('tabindex', '0');
+  await expectStableFocus(duplicate);
 
   await page.keyboard.press('ArrowDown');
-  await expect(checkbox).toBeFocused();
+  await expect(checkbox).toHaveAttribute('tabindex', '0');
+  await expectStableFocus(checkbox);
 
   const submenuTrigger = menu.getByRole('menuitem', { name: 'Move fixture' });
-  await submenuTrigger.hover();
-  await expect(page.getByRole('menuitem', { name: 'Design system' })).toBeVisible();
-  await submenuTrigger.focus();
+  await page.keyboard.press('End');
+  await expect(submenuTrigger).toHaveAttribute('tabindex', '0');
+  await expect(submenuTrigger).toHaveAttribute('aria-expanded', 'false');
+  await expectStableFocus(submenuTrigger);
+
   await page.keyboard.press('ArrowRight');
-  await expect(page.getByRole('menuitem', { name: 'Design system' })).toBeFocused();
+  const submenuItem = page.getByRole('menuitem', { name: 'Design system' });
+  await expect(submenuTrigger).toHaveAttribute('aria-expanded', 'true');
+  await expect(submenuItem).toBeVisible();
+  await expectStableFocus(submenuItem);
 });

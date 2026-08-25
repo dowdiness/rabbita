@@ -43,10 +43,15 @@ fn install_generic_event_probe(target : @dom.Element) -> Unit {
       @dom.IsEvent::get_time_stamp(event) >= 0.0,
       "event_timestamp",
     )
+    let path = @dom.IsEvent::composed_path(event)
+    record(failures, !path.is_empty(), "event_composed_path")
     record(
       failures,
-      !@dom.IsEvent::composed_path(event).is_empty(),
-      "event_composed_path",
+      path.get(0) is Some(first) &&
+      first.to_node() is Some(first_node) &&
+      event.target().to_node() is Some(target_node) &&
+      first_node.is_same_node(target_node),
+      "event_composed_path_target_first",
     )
     @dom.IsEvent::prevent_default(event)
     record(

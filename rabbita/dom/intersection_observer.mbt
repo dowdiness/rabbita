@@ -14,8 +14,8 @@ type IntersectionObserverEntry
 /// https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver/IntersectionObserver
 #cfg(target="js")
 pub fn IntersectionObserver::new(
-  callback : (Array[IntersectionObserverEntry], IntersectionObserver) -> Unit,
-  threshold? : Array[Double],
+  callback : (FixedArray[IntersectionObserverEntry], IntersectionObserver) -> Unit,
+  threshold? : FixedArray[Double],
 ) -> Self {
   if threshold is Some(threshold) {
     ffi_intersection_observer_new_with_threshold(callback, threshold)
@@ -48,12 +48,12 @@ pub extern "js" fn IntersectionObserver::disconnect(self : Self) -> Unit = "(sel
 ///|
 #cfg(target="js")
 extern "js" fn ffi_intersection_observer_new(
-  callback : (Array[IntersectionObserverEntry], IntersectionObserver) -> Unit,
+  callback : (FixedArray[IntersectionObserverEntry], IntersectionObserver) -> Unit,
 ) -> IntersectionObserver = "(callback) => new IntersectionObserver(callback)"
 
 ///|
 #cfg(target="js")
 extern "js" fn ffi_intersection_observer_new_with_threshold(
-  callback : (Array[IntersectionObserverEntry], IntersectionObserver) -> Unit,
-  threshold : Array[Double],
+  callback : (FixedArray[IntersectionObserverEntry], IntersectionObserver) -> Unit,
+  threshold : FixedArray[Double],
 ) -> IntersectionObserver = "(callback, threshold) => new IntersectionObserver(callback, { threshold })"

@@ -25,16 +25,18 @@ pub extern "js" fn WebSocket::new(url : String) -> WebSocket = "(url) => new Web
 
 ///|
 #cfg(target="js")
-pub extern "js" fn WebSocket::new_with_protocols(
+pub fn WebSocket::new_with_protocols(
   url : String,
-  protocols : Array[String],
-) -> WebSocket = "(url, protocols) => new WebSocket(url, protocols)"
+  protocols : FixedArray[String],
+) -> WebSocket {
+  ffi_new_web_socket_with_protocols(url, protocols)
+}
 
 ///|
 #cfg(target="js")
 pub fn WebSocket::open(
   url : String,
-  protocols? : Array[String] = [],
+  protocols? : FixedArray[String] = [],
 ) -> Result[WebSocket, String] {
   let mut result : Result[WebSocket, String] = Err(
     "websocket creation failed without an error message",
@@ -121,9 +123,16 @@ extern "js" fn ffi_to_web_socket(x : @js.Value) -> @js.Nullable[WebSocket] =
 
 ///|
 #cfg(target="js")
+extern "js" fn ffi_new_web_socket_with_protocols(
+  url : String,
+  protocols : FixedArray[String],
+) -> WebSocket = "(url, protocols) => new WebSocket(url, protocols)"
+
+///|
+#cfg(target="js")
 extern "js" fn ffi_open_socket(
   url : String,
-  protocols : Array[String],
+  protocols : FixedArray[String],
   has_protocols~ : Bool,
   opened~ : (WebSocket) -> Unit,
   failed~ : (String) -> Unit,
