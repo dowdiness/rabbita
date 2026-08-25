@@ -409,6 +409,28 @@ pub impl @js.Cast for HTMLMediaElement
 type HTMLSelectElement
 pub fn HTMLSelectElement::value(Self) -> String
 
+type HTMLTextAreaElement
+pub fn HTMLTextAreaElement::get_default_value(Self) -> String
+pub fn HTMLTextAreaElement::get_selection_direction(Self) -> String
+pub fn HTMLTextAreaElement::get_selection_end(Self) -> Int
+pub fn HTMLTextAreaElement::get_selection_start(Self) -> Int
+pub fn HTMLTextAreaElement::get_text_length(Self) -> Int
+pub fn HTMLTextAreaElement::get_value(Self) -> String
+pub fn HTMLTextAreaElement::select(Self) -> Unit
+pub fn HTMLTextAreaElement::set_default_value(Self, String) -> Unit
+pub fn HTMLTextAreaElement::set_range_text(Self, String) -> Unit
+pub fn HTMLTextAreaElement::set_range_text_with_range(Self, String, Int, Int, selection_mode? : @js.Optional[String]) -> Unit
+pub fn HTMLTextAreaElement::set_selection_direction(Self, String) -> Unit
+pub fn HTMLTextAreaElement::set_selection_end(Self, Int) -> Unit
+pub fn HTMLTextAreaElement::set_selection_range(Self, Int, Int, direction? : @js.Optional[String]) -> Unit
+pub fn HTMLTextAreaElement::set_selection_start(Self, Int) -> Unit
+pub fn HTMLTextAreaElement::set_value(Self, String) -> Unit
+pub impl IsElement for HTMLTextAreaElement
+pub impl IsEventTarget for HTMLTextAreaElement
+pub impl IsHtmlElement for HTMLTextAreaElement
+pub impl IsNode for HTMLTextAreaElement
+pub impl @js.Cast for HTMLTextAreaElement
+
 type HTMLVideoElement
 pub impl IsElement for HTMLVideoElement
 pub impl IsEventTarget for HTMLVideoElement
@@ -500,7 +522,7 @@ type ImageDataSettings
 pub fn ImageDataSettings::new(String) -> Self
 
 type InputEvent
-pub fn InputEvent::data(Self) -> String
+pub fn InputEvent::get_data(Self) -> @js.Nullable[String]
 pub fn InputEvent::input_type(Self) -> String
 pub fn InputEvent::is_composing(Self) -> Bool
 pub impl IsEvent for InputEvent
@@ -842,6 +864,7 @@ pub trait IsEventTarget : @js.Cast {
   fn to_html_element(Self) -> HTMLElement?
   fn to_html_canvas_element(Self) -> HTMLCanvasElement?
   fn to_html_input_element(Self) -> HTMLInputElement?
+  fn to_html_text_area_element(Self) -> HTMLTextAreaElement?
   fn to_html_dialog_element(Self) -> HTMLDialogElement?
   fn to_html_image_element(Self) -> HTMLImageElement?
   fn to_html_select_element(Self) -> HTMLSelectElement?
