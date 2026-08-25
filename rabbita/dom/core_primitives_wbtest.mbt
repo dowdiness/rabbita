@@ -161,6 +161,31 @@ extern "js" fn core_primitives_test_input() -> HTMLInputElement = "() => ({ node
 
 ///|
 #cfg(target="js")
+extern "js" fn core_primitives_test_text_area_target() -> EventTarget =
+  #| () => {
+  #|   globalThis.__domTestHTMLTextAreaElement = globalThis.HTMLTextAreaElement
+  #|   globalThis.HTMLTextAreaElement = class HTMLTextAreaElement extends EventTarget {}
+  #|   const textArea = new HTMLTextAreaElement()
+  #|   textArea.nodeType = 1
+  #|   textArea.value = "before"
+  #|   return textArea
+  #| }
+
+///|
+#cfg(target="js")
+extern "js" fn core_primitives_test_restore_text_area_type() -> Unit =
+  #| () => {
+  #|   if (globalThis.__domTestHTMLTextAreaElement === undefined) delete globalThis.HTMLTextAreaElement
+  #|   else globalThis.HTMLTextAreaElement = globalThis.__domTestHTMLTextAreaElement
+  #|   delete globalThis.__domTestHTMLTextAreaElement
+  #| }
+
+///|
+#cfg(target="js")
+extern "js" fn core_primitives_test_null_data_input_event() -> InputEvent = "() => ({ data: null })"
+
+///|
+#cfg(target="js")
 extern "js" fn core_primitives_test_window() -> Window =
   #| () => ({
   #|   setTimeout(callback, ms) {
@@ -539,6 +564,17 @@ test "event, listener, focus, and input primitives preserve optional values" {
   assert_eq(image.get_natural_width(), 640.0)
   let _ : EventTarget = image.as_event_target()
   core_primitives_test_restore_image_type()
+  let text_area_target = core_primitives_test_text_area_target()
+  guard text_area_target.to_html_text_area_element() is Some(text_area) else {
+    fail("expected HTMLTextAreaElement conversion")
+  }
+  assert_eq(text_area.get_value(), "before")
+  text_area.set_value("after")
+  assert_eq(text_area.get_value(), "after")
+  core_primitives_test_restore_text_area_type()
+  assert_true(
+    core_primitives_test_null_data_input_event().get_data().to_option() is None,
+  )
 }
 
 ///|

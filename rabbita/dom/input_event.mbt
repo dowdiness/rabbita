@@ -25,7 +25,7 @@ pub impl @js.Cast for InputEvent with fn from(value) {
 
 ///|
 #cfg(target="js")
-pub extern "js" fn InputEvent::data(self : Self) -> String = "(e) => e.data"
+pub extern "js" fn InputEvent::get_data(self : Self) -> @js.Nullable[String] = "(event) => event.data"
 
 ///|
 #cfg(target="js")
