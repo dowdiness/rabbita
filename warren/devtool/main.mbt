@@ -126,7 +126,7 @@ fn panel_expanded(model : Model) -> Bool {
 
 ///|
 fn mouse_client_x(mouse : Mouse) -> Int {
-  mouse.client_pos().x
+  mouse.client_pos().x.round().to_int()
 }
 
 ///|
@@ -167,7 +167,7 @@ fn websocket_url() -> String {
 
 ///|
 fn initial_model() -> Model {
-  let viewport_width = @dom.window().inner_width()
+  let viewport_width = @dom.window().inner_width().round().to_int()
   {
     pinned: false,
     hovered: false,
@@ -219,8 +219,9 @@ fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
         None => (none, model)
       }
     ViewportChanged(viewport) => {
-      let tab_left = clamp_tab_left(model.tab_left, viewport.width)
-      (none, { ..model, tab_left, viewport_width: viewport.width })
+      let viewport_width = viewport.width.round().to_int()
+      let tab_left = clamp_tab_left(model.tab_left, viewport_width)
+      (none, { ..model, tab_left, viewport_width })
     }
     SocketOpened => (none, { ..model, listening: true, reconnecting: false })
     SocketMessage("building") =>

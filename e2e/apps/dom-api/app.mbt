@@ -120,6 +120,7 @@ fn app() -> Val[Html] {
       p(id="events-result", model.events),
       p(id="event-generic-result", "pending"),
       p(id="event-pointer-result", "pending"),
+      p(id="event-fractional-pointer-result", "pending"),
       p(id="event-keyboard-result", "pending"),
       p(id="event-wheel-result", "pending"),
       p(id="event-subtypes-result", "pending"),

@@ -22,8 +22,8 @@ enum Msg {
 
 ///|
 struct Model {
-  width : Int
-  height : Int
+  width : Double
+  height : Double
 } derive(Eq)
 
 ///|

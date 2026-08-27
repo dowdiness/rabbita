@@ -6,8 +6,8 @@ extenum @cmd.Extension += {
   NavReload
   NavPushUrl(String)
   NavReplaceUrl(String)
-  NavScrollToPos(Int, Int, ScrollBehavior)
-  NavScrollByPos(Int, Int, ScrollBehavior)
+  NavScrollToPos(Double, Double, ScrollBehavior)
+  NavScrollByPos(Double, Double, ScrollBehavior)
   NavScrollTo(String, ScrollBehavior)
   NavScrollToTop(ScrollBehavior)
   NavScrollToBottom(ScrollBehavior)

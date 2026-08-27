@@ -355,8 +355,8 @@ fn window_scroll() -> Scroll {
   let root = @dom.document().query_selector("html").unwrap()
   Scroll::new(
     offset={ x: @dom.window().scroll_x(), y: @dom.window().scroll_y() },
-    width=root.get_scroll_width().to_int(),
-    height=root.get_scroll_height().to_int(),
+    width=root.get_scroll_width(),
+    height=root.get_scroll_height(),
   )
 }
 

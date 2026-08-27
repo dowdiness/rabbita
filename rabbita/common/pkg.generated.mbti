@@ -34,20 +34,20 @@ pub fn Mouse::offset_pos(Self) -> Pos
 pub fn Mouse::screen_pos(Self) -> Pos
 
 pub(all) struct Pos {
-  x : Int
-  y : Int
+  x : Double
+  y : Double
 } derive(@debug.Debug)
 pub impl Show for Pos
 
 type Scroll derive(@debug.Debug)
-pub fn Scroll::height(Self) -> Int
-pub fn Scroll::new(offset~ : Pos, width~ : Int, height~ : Int) -> Self
+pub fn Scroll::height(Self) -> Double
+pub fn Scroll::new(offset~ : Pos, width~ : Double, height~ : Double) -> Self
 pub fn Scroll::offset_pos(Self) -> Pos
-pub fn Scroll::width(Self) -> Int
+pub fn Scroll::width(Self) -> Double
 
 pub(all) struct Viewport {
-  width : Int
-  height : Int
+  width : Double
+  height : Double
 } derive(@debug.Debug)
 pub impl Show for Viewport
 

@@ -200,7 +200,7 @@ priv struct SidebarPointerState {
   pointer_id : Int
   right : Bool
   gutter : Int
-  start_x : Int
+  start_x : Double
   start_width : Double
   min : Double
   max : Double
@@ -525,10 +525,7 @@ fn sidebar_pointer_move(event : @dom.MouseEvent) -> Bool {
     root.get_style().set_property("cursor", "col-resize")
   }
   let delta = if state.right { -physical_delta } else { physical_delta }
-  state.width = (state.start_width + delta.to_double()).clamp(
-    min=state.min,
-    max=state.max,
-  )
+  state.width = (state.start_width + delta).clamp(min=state.min, max=state.max)
   let rounded_width = state.width.round().to_int().max(1)
   root
   .get_style()

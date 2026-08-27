@@ -343,11 +343,11 @@ fn slider_pointer_value_at(
       ui_element_is_rtl(binding.root)
     )
   let offset = if vertical {
-    rect.get_bottom() - pointer.get_client_y().to_double()
+    rect.get_bottom() - pointer.get_client_y()
   } else if rtl {
-    rect.get_right() - pointer.get_client_x().to_double()
+    rect.get_right() - pointer.get_client_x()
   } else {
-    pointer.get_client_x().to_double() - rect.get_left()
+    pointer.get_client_x() - rect.get_left()
   }
   let percent = (offset / size).clamp(min=0.0, max=1.0)
   let config = slider_pointer_config(binding, 1)

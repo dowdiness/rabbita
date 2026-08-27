@@ -710,8 +710,8 @@ priv struct CarouselPointerState {
   can_next : Bool
   resist_previous : Bool
   resist_next : Bool
-  start_x : Int
-  start_y : Int
+  start_x : Double
+  start_y : Double
   start_time : Double
   size : Double
   base_offset : Double?
@@ -978,11 +978,7 @@ fn carousel_pointer_move(event : @dom.MouseEvent) -> Bool {
   } else {
     !state.can_previous || state.resist_previous
   }
-  let visual = if blocked {
-    primary.to_double() * 0.35
-  } else {
-    primary.to_double()
-  }
+  let visual = if blocked { primary * 0.35 } else { primary }
   let base = if state.base_offset is Some(offset) {
     "\{offset}px"
   } else {
@@ -1018,8 +1014,8 @@ fn carousel_pointer_end(event : @dom.MouseEvent) -> Int {
   let threshold = (state.size * 0.12).max(24.0).min(64.0)
   let qualifies = state.active &&
     (
-      primary.abs().to_double() >= threshold ||
-      (primary.abs() >= 12 && primary.abs().to_double() / elapsed >= 0.45)
+      primary.abs() >= threshold ||
+      (primary.abs() >= 12.0 && primary.abs() / elapsed >= 0.45)
     )
   let toward_next = if state.horizontal {
     if state.rtl {

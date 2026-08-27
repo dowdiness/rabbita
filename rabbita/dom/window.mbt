@@ -23,8 +23,8 @@ pub impl @js.Cast for Window with fn from(value) {
 #cfg(target="js")
 pub fn Window::scroll_to(
   self : Self,
-  x : Int,
-  y : Int,
+  x : Double,
+  y : Double,
   behavior? : String = "auto",
 ) -> Unit {
   ffi_window_scroll_to(self, x, y, behavior)
@@ -34,8 +34,8 @@ pub fn Window::scroll_to(
 #cfg(target="js")
 pub fn Window::scroll_by(
   self : Self,
-  x : Int,
-  y : Int,
+  x : Double,
+  y : Double,
   behavior? : String = "auto",
 ) -> Unit {
   ffi_window_scroll_by(self, x, y, behavior)
@@ -60,8 +60,8 @@ pub fn Window::scroll_to_bottom(
 #cfg(target="js")
 extern "js" fn ffi_window_scroll_to(
   win : Window,
-  x : Int,
-  y : Int,
+  x : Double,
+  y : Double,
   behavior : String,
 ) =
   #| (self, x, y, behavior) => {
@@ -72,8 +72,8 @@ extern "js" fn ffi_window_scroll_to(
 #cfg(target="js")
 extern "js" fn ffi_window_scroll_by(
   win : Window,
-  x : Int,
-  y : Int,
+  x : Double,
+  y : Double,
   behavior : String,
 ) =
   #| (self, x, y, behavior) => {
@@ -130,19 +130,19 @@ pub extern "js" fn Window::replace_url(self : Self, url : String) =
 
 ///|
 #cfg(target="js")
-pub extern "js" fn Window::inner_width(self : Self) -> Int = "(self) => self.innerWidth"
+pub extern "js" fn Window::inner_width(self : Self) -> Double = "(self) => self.innerWidth"
 
 ///|
 #cfg(target="js")
-pub extern "js" fn Window::inner_height(self : Self) -> Int = "(self) => self.innerHeight"
+pub extern "js" fn Window::inner_height(self : Self) -> Double = "(self) => self.innerHeight"
 
 ///|
 #cfg(target="js")
-pub extern "js" fn Window::scroll_x(self : Self) -> Int = "(self) => self.scrollX"
+pub extern "js" fn Window::scroll_x(self : Self) -> Double = "(self) => self.scrollX"
 
 ///|
 #cfg(target="js")
-pub extern "js" fn Window::scroll_y(self : Self) -> Int = "(self) => self.scrollY"
+pub extern "js" fn Window::scroll_y(self : Self) -> Double = "(self) => self.scrollY"
 
 ///|
 /// https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval

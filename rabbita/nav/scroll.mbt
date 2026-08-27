@@ -24,8 +24,8 @@ pub impl Show for ScrollBehavior with fn output(self, buf) {
 ///|
 /// Create a command to scroll the window to a specific position.
 pub fn scroll_to_pos(
-  x : Int,
-  y : Int,
+  x : Double,
+  y : Double,
   behavior? : ScrollBehavior = Auto,
 ) -> Cmd {
   op.request(NavScrollToPos(x, y, behavior))
@@ -34,8 +34,8 @@ pub fn scroll_to_pos(
 ///|
 /// Create a command to scroll the window by a specific amount.
 pub fn scroll_by_pos(
-  x : Int,
-  y : Int,
+  x : Double,
+  y : Double,
   behavior? : ScrollBehavior = Auto,
 ) -> Cmd {
   op.request(NavScrollByPos(x, y, behavior))

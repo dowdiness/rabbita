@@ -6,6 +6,7 @@ fn install_event_probes() -> Unit {
     )
     install_generic_event_probe(target)
     install_pointer_event_probe(target)
+    install_fractional_pointer_event_probe(target)
     install_subtype_event_probes(target)
   } else {
     @dom.window().queue_microtask(() => {
@@ -162,6 +163,41 @@ fn install_generic_event_probe(target : @dom.Element) -> Unit {
   @dom.window().queue_microtask(() => {
     set_result("event-generic-result", finish_probe(failures))
   })
+}
+
+///|
+fn install_fractional_pointer_event_probe(target : @dom.Element) -> Unit {
+  let listener : @dom.Listener = event => {
+    let failures : Array[String] = []
+    if @dom.IsEvent::to_pointer_event(event) is Some(pointer) {
+      record(
+        failures,
+        pointer.get_client_x() == 10.25 && pointer.get_client_y() == 20.75,
+        "pointer_fractional_client",
+      )
+      record(
+        failures,
+        pointer.get_page_x() == 10.25 && pointer.get_page_y() == 20.75,
+        "pointer_fractional_page",
+      )
+      record(
+        failures,
+        pointer.get_screen_x() == 30.5 && pointer.get_screen_y() == 40.125,
+        "pointer_fractional_screen",
+      )
+      record(
+        failures,
+        pointer.get_x() == 10.25 && pointer.get_y() == 20.75,
+        "pointer_fractional_alias",
+      )
+    } else {
+      failures.push("pointer_fractional_conversion")
+    }
+    set_result("event-fractional-pointer-result", finish_probe(failures))
+  }
+  @dom.IsEventTarget::add_event_listener(
+    target, "fractional-pointer-probe", listener,
+  )
 }
 
 ///|

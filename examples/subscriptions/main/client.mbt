@@ -42,13 +42,13 @@ struct Model {
   tick_count : Int
   ticking : Bool
   resize_count : Int
-  viewport_width : Int
-  viewport_height : Int
+  viewport_width : Double
+  viewport_height : Double
   scroll_count : Int
-  scroll_x : Int
-  scroll_y : Int
-  scroll_width : Int
-  scroll_height : Int
+  scroll_x : Double
+  scroll_y : Double
+  scroll_width : Double
+  scroll_height : Double
   keydown_count : Int
   last_key_down : String
   last_key_down_code : String
@@ -59,8 +59,8 @@ struct Model {
   visibility_hidden : Bool
   visibility_count : Int
   mouse_moves : Int
-  mouse_x : Int
-  mouse_y : Int
+  mouse_x : Double
+  mouse_y : Double
 } derive(Eq)
 
 ///|

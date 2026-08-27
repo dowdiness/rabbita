@@ -18,13 +18,13 @@ pub fn reload() -> @cmd.Cmd
 
 pub fn replace_url(String) -> @cmd.Cmd
 
-pub fn scroll_by_pos(Int, Int, behavior? : ScrollBehavior) -> @cmd.Cmd
+pub fn scroll_by_pos(Double, Double, behavior? : ScrollBehavior) -> @cmd.Cmd
 
 pub fn scroll_to(String, behavior? : ScrollBehavior) -> @cmd.Cmd
 
 pub fn scroll_to_bottom(behavior? : ScrollBehavior) -> @cmd.Cmd
 
-pub fn scroll_to_pos(Int, Int, behavior? : ScrollBehavior) -> @cmd.Cmd
+pub fn scroll_to_pos(Double, Double, behavior? : ScrollBehavior) -> @cmd.Cmd
 
 pub fn scroll_to_top(behavior? : ScrollBehavior) -> @cmd.Cmd
 
