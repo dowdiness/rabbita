@@ -522,6 +522,77 @@ fn menubar_focus_content_cmd(id : String, index : Int) -> @cmd.Cmd {
 
 ///|
 #cfg(target="js")
+fn menubar_restore_trigger_until_stable(
+  id : String,
+  index : Int,
+  attempt : Int,
+  stable_frames : Int,
+) -> Unit {
+  if attempt >= 20 || stable_frames >= 3 {
+    return
+  }
+  menu_request_frame(() => {
+    guard ui_element_by_id(menubar_trigger_id(id, index)) is Some(trigger) else {
+      return
+    }
+    let document = @dom.document()
+    let active = document.get_active_element()
+    let focused = active is Some(active) &&
+      active.is_same_node(trigger.as_node())
+    if !focused {
+      let focus_is_unowned = active is None ||
+        (
+          active is Some(active) &&
+          (
+            (
+              document.get_body() is Some(body) &&
+              active.is_same_node(body.as_node())
+            ) ||
+            (
+              document.get_document_element() is Some(root) &&
+              active.is_same_node(root.as_node())
+            ) ||
+            (
+              ui_element_by_id(id + "-root") is Some(root) &&
+              root.contains(active.as_node())
+            )
+          )
+        )
+      if !focus_is_unowned {
+        return
+      }
+      ui_focus_element(trigger)
+    }
+    menubar_restore_trigger_until_stable(
+      id,
+      index,
+      attempt + 1,
+      if focused {
+        stable_frames + 1
+      } else {
+        0
+      },
+    )
+  })
+}
+
+///|
+#cfg(target="js")
+fn menubar_restore_trigger_cmd(id : String, index : Int) -> @cmd.Cmd {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
+    menubar_restore_trigger_until_stable(id, index, 0, 0)
+  })
+}
+
+///|
+#cfg(not(target="js"))
+fn menubar_restore_trigger_cmd(id : String, index : Int) -> @cmd.Cmd {
+  ignore((id, index))
+  @cmd.none
+}
+
+///|
+#cfg(target="js")
 fn menubar_bind_cmd(
   id : String,
   activate : @cmd.Emit[(String, Int)],
@@ -782,7 +853,7 @@ pub fn menubar(
                   false,
                 ),
                 menu_position_submenus_cmd(id + "-root"),
-                ui_focus_id(menubar_trigger_id(id, current.active_index)),
+                menubar_restore_trigger_cmd(id, current.active_index),
                 if on_value_change is Some(notify) {
                   notify(None)
                 } else {
