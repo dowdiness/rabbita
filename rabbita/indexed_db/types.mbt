@@ -43,10 +43,34 @@ pub(all) enum ReadResult {
 } derive(Eq, Debug)
 
 ///|
+/// One string-store mutation executed as part of an atomic transaction.
+pub(all) enum Mutation {
+  Put(String, String)
+  Delete(String)
+} derive(Eq, Debug)
+
+///|
 /// Result of a complete string replacement in IndexedDB.
 pub(all) enum WriteResult {
   Stored
   Unavailable
   QuotaExceeded
+  Failed
+} derive(Eq, Debug)
+
+///|
+/// One entry observed while scanning an IndexedDB object store.
+pub(all) enum ScanEntry {
+  StringRecord(String, String)
+  UnsupportedValue(String)
+  /// A non-string key at the given zero-based cursor position.
+  UnsupportedKey(Int)
+} derive(Eq, Debug)
+
+///|
+/// Result of scanning every record in one IndexedDB object store.
+pub(all) enum ScanResult {
+  Scanned(Array[ScanEntry])
+  Unavailable
   Failed
 } derive(Eq, Debug)

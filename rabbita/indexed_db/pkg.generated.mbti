@@ -9,7 +9,11 @@ import {
 // Values
 pub fn get(Config, String, migrate_legacy? : Bool, result~ : @cmd.Emit[ReadResult]) -> @cmd.Cmd
 
+pub fn mutate(Config, Array[Mutation], result~ : @cmd.Emit[WriteResult]) -> @cmd.Cmd
+
 pub fn put(Config, String, String, result~ : @cmd.Emit[WriteResult]) -> @cmd.Cmd
+
+pub fn scan(Config, result~ : @cmd.Emit[ScanResult]) -> @cmd.Cmd
 
 // Errors
 
@@ -24,9 +28,26 @@ pub fn Config::name(Self) -> String
 pub fn Config::store_name(Self) -> String
 pub fn Config::version(Self) -> Int
 
+pub(all) enum Mutation {
+  Put(String, String)
+  Delete(String)
+} derive(Eq, @debug.Debug)
+
 pub(all) enum ReadResult {
   Missing
   Loaded(String)
+  Unavailable
+  Failed
+} derive(Eq, @debug.Debug)
+
+pub(all) enum ScanEntry {
+  StringRecord(String, String)
+  UnsupportedValue(String)
+  UnsupportedKey(Int)
+} derive(Eq, @debug.Debug)
+
+pub(all) enum ScanResult {
+  Scanned(Array[ScanEntry])
   Unavailable
   Failed
 } derive(Eq, @debug.Debug)

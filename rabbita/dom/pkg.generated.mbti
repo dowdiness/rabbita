@@ -441,8 +441,11 @@ pub impl @js.Cast for HTMLVideoElement
 
 #external
 pub type IDBCursorWithValue
+pub fn IDBCursorWithValue::continue_safe(Self) -> Result[Unit, IDBError]
 pub fn IDBCursorWithValue::get_string_value(Self) -> @js.Nullable[String]
+pub fn IDBCursorWithValue::string_key_safe(Self) -> Result[String?, IDBError]
 pub fn IDBCursorWithValue::string_value(Self) -> String?
+pub fn IDBCursorWithValue::string_value_safe(Self) -> Result[String?, IDBError]
 
 #external
 pub type IDBDatabase
@@ -469,7 +472,9 @@ pub fn IDBFactory::open_safe(Self, String, Int) -> Result[IDBOpenDBRequest, IDBE
 
 #external
 pub type IDBObjectStore
+pub fn IDBObjectStore::delete_safe(Self, String) -> Result[IDBRequest, IDBError]
 pub fn IDBObjectStore::open_cursor(Self, String) -> IDBRequest
+pub fn IDBObjectStore::open_cursor_all_safe(Self) -> Result[IDBRequest, IDBError]
 pub fn IDBObjectStore::open_cursor_safe(Self, String) -> Result[IDBRequest, IDBError]
 pub fn IDBObjectStore::put_string(Self, String, String) -> IDBRequest
 pub fn IDBObjectStore::put_string_safe(Self, String, String) -> Result[IDBRequest, IDBError]
@@ -488,6 +493,7 @@ pub fn IDBOpenDBRequest::set_on_upgrade_needed(Self, () -> Unit) -> Unit
 #external
 pub type IDBRequest
 pub fn IDBRequest::cursor(Self) -> IDBCursorWithValue?
+pub fn IDBRequest::cursor_safe(Self) -> Result[IDBCursorWithValue?, IDBError]
 pub fn IDBRequest::get_cursor(Self) -> @js.Nullable[IDBCursorWithValue]
 pub fn IDBRequest::get_error_code(Self) -> Int
 pub fn IDBRequest::get_error_name(Self) -> String
@@ -497,6 +503,7 @@ pub fn IDBRequest::set_on_success(Self, () -> Unit) -> Unit
 #external
 pub type IDBTransaction
 pub fn IDBTransaction::abort(Self) -> Unit
+pub fn IDBTransaction::abort_safe(Self) -> Result[Unit, IDBError]
 pub fn IDBTransaction::get_error_code(Self) -> Int
 pub fn IDBTransaction::get_error_name(Self) -> String
 pub fn IDBTransaction::object_store(Self, String) -> IDBObjectStore

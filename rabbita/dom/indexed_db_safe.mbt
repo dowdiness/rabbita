@@ -245,6 +245,35 @@ extern "js" fn ffi_transaction_safe(
 
 ///|
 #cfg(target="js")
+pub fn IDBTransaction::abort_safe(self : Self) -> Result[Unit, IDBError] {
+  let mut result : Result[Unit, IDBError] = Err({
+    name: "UnknownError",
+    code: 0,
+  })
+  ffi_transaction_abort_safe(self, () => result = Ok(()), (error_name, code) => {
+    result = Err({ name: error_name, code })
+  })
+  result
+}
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_transaction_abort_safe(
+  transaction : IDBTransaction,
+  on_success : () -> Unit,
+  on_error : (String, Int) -> Unit,
+) -> Unit =
+  #| (transaction, onSuccess, onError) => {
+  #|   try {
+  #|     transaction.abort();
+  #|     onSuccess();
+  #|   } catch (error) {
+  #|     onError(error?.name ?? "UnknownError", error?.code ?? 0);
+  #|   }
+  #| }
+
+///|
+#cfg(target="js")
 pub fn IDBTransaction::object_store_safe(
   self : Self,
   name : String,
@@ -313,6 +342,38 @@ extern "js" fn ffi_put_string_safe(
 
 ///|
 #cfg(target="js")
+pub fn IDBObjectStore::delete_safe(
+  self : Self,
+  key : String,
+) -> Result[IDBRequest, IDBError] {
+  let mut result : Result[IDBRequest, IDBError] = Err({
+    name: "UnknownError",
+    code: 0,
+  })
+  ffi_delete_safe(self, key, request => result = Ok(request), (error_name, code) => {
+    result = Err({ name: error_name, code })
+  })
+  result
+}
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_delete_safe(
+  store : IDBObjectStore,
+  key : String,
+  on_success : (IDBRequest) -> Unit,
+  on_error : (String, Int) -> Unit,
+) -> Unit =
+  #| (store, key, onSuccess, onError) => {
+  #|   try {
+  #|     onSuccess(store.delete(key));
+  #|   } catch (error) {
+  #|     onError(error?.name ?? "UnknownError", error?.code ?? 0);
+  #|   }
+  #| }
+
+///|
+#cfg(target="js")
 pub fn IDBObjectStore::open_cursor_safe(
   self : Self,
   key : String,
@@ -339,6 +400,159 @@ extern "js" fn ffi_open_cursor_safe(
   #| (store, key, onSuccess, onError) => {
   #|   try {
   #|     onSuccess(store.openCursor(key));
+  #|   } catch (error) {
+  #|     onError(error?.name ?? "UnknownError", error?.code ?? 0);
+  #|   }
+  #| }
+
+///|
+#cfg(target="js")
+pub fn IDBObjectStore::open_cursor_all_safe(
+  self : Self,
+) -> Result[IDBRequest, IDBError] {
+  let mut result : Result[IDBRequest, IDBError] = Err({
+    name: "UnknownError",
+    code: 0,
+  })
+  ffi_open_cursor_all_safe(self, request => result = Ok(request), (
+    error_name,
+    code,
+  ) => result = Err({ name: error_name, code }))
+  result
+}
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_open_cursor_all_safe(
+  store : IDBObjectStore,
+  on_success : (IDBRequest) -> Unit,
+  on_error : (String, Int) -> Unit,
+) -> Unit =
+  #| (store, onSuccess, onError) => {
+  #|   try {
+  #|     onSuccess(store.openCursor());
+  #|   } catch (error) {
+  #|     onError(error?.name ?? "UnknownError", error?.code ?? 0);
+  #|   }
+  #| }
+
+///|
+#cfg(target="js")
+pub fn IDBRequest::cursor_safe(
+  self : Self,
+) -> Result[IDBCursorWithValue?, IDBError] {
+  let mut result : Result[IDBCursorWithValue?, IDBError] = Err({
+    name: "UnknownError",
+    code: 0,
+  })
+  ffi_request_cursor_safe(self, cursor => result = Ok(cursor.to_option()), (
+    error_name,
+    code,
+  ) => result = Err({ name: error_name, code }))
+  result
+}
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_request_cursor_safe(
+  request : IDBRequest,
+  on_success : (@js.Nullable[IDBCursorWithValue]) -> Unit,
+  on_error : (String, Int) -> Unit,
+) -> Unit =
+  #| (request, onSuccess, onError) => {
+  #|   try {
+  #|     onSuccess(request.result ?? null);
+  #|   } catch (error) {
+  #|     onError(error?.name ?? "UnknownError", error?.code ?? 0);
+  #|   }
+  #| }
+
+///|
+#cfg(target="js")
+pub fn IDBCursorWithValue::string_value_safe(
+  self : Self,
+) -> Result[String?, IDBError] {
+  let mut result : Result[String?, IDBError] = Err({
+    name: "UnknownError",
+    code: 0,
+  })
+  ffi_cursor_string_value_safe(self, value => result = Ok(value.to_option()), (
+    error_name,
+    code,
+  ) => result = Err({ name: error_name, code }))
+  result
+}
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_cursor_string_value_safe(
+  cursor : IDBCursorWithValue,
+  on_success : (@js.Nullable[String]) -> Unit,
+  on_error : (String, Int) -> Unit,
+) -> Unit =
+  #| (cursor, onSuccess, onError) => {
+  #|   try {
+  #|     onSuccess(typeof cursor.value === "string" ? cursor.value : null);
+  #|   } catch (error) {
+  #|     onError(error?.name ?? "UnknownError", error?.code ?? 0);
+  #|   }
+  #| }
+
+///|
+#cfg(target="js")
+pub fn IDBCursorWithValue::string_key_safe(
+  self : Self,
+) -> Result[String?, IDBError] {
+  let mut result : Result[String?, IDBError] = Err({
+    name: "UnknownError",
+    code: 0,
+  })
+  ffi_cursor_string_key_safe(self, key => result = Ok(key.to_option()), (
+    error_name,
+    code,
+  ) => result = Err({ name: error_name, code }))
+  result
+}
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_cursor_string_key_safe(
+  cursor : IDBCursorWithValue,
+  on_success : (@js.Nullable[String]) -> Unit,
+  on_error : (String, Int) -> Unit,
+) -> Unit =
+  #| (cursor, onSuccess, onError) => {
+  #|   try {
+  #|     onSuccess(typeof cursor.key === "string" ? cursor.key : null);
+  #|   } catch (error) {
+  #|     onError(error?.name ?? "UnknownError", error?.code ?? 0);
+  #|   }
+  #| }
+
+///|
+#cfg(target="js")
+pub fn IDBCursorWithValue::continue_safe(self : Self) -> Result[Unit, IDBError] {
+  let mut result : Result[Unit, IDBError] = Err({
+    name: "UnknownError",
+    code: 0,
+  })
+  ffi_cursor_continue_safe(self, () => result = Ok(()), (error_name, code) => {
+    result = Err({ name: error_name, code })
+  })
+  result
+}
+
+///|
+#cfg(target="js")
+extern "js" fn ffi_cursor_continue_safe(
+  cursor : IDBCursorWithValue,
+  on_success : () -> Unit,
+  on_error : (String, Int) -> Unit,
+) -> Unit =
+  #| (cursor, onSuccess, onError) => {
+  #|   try {
+  #|     cursor.continue();
+  #|     onSuccess();
   #|   } catch (error) {
   #|     onError(error?.name ?? "UnknownError", error?.code ?? 0);
   #|   }

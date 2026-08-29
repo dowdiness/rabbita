@@ -1,7 +1,8 @@
 ///|
 priv enum Pending {
   Get(String, Bool, (ReadResult) -> Unit)
-  Put(String, String, (WriteResult) -> Unit)
+  Mutate(Array[Mutation], (WriteResult) -> Unit)
+  Scan((ScanResult) -> Unit)
 }
 
 ///|
@@ -86,6 +87,15 @@ fn write_failure(name : String, code : Int) -> WriteResult {
 }
 
 ///|
+fn scan_failure(name : String, _code : Int) -> ScanResult {
+  if is_unavailable_error(name) {
+    ScanResult::Unavailable
+  } else {
+    ScanResult::Failed
+  }
+}
+
+///|
 fn finish_get(
   state : @ref.Ref[ProviderState],
   operation : Pending,
@@ -93,21 +103,35 @@ fn finish_get(
 ) -> Unit {
   match operation {
     Pending::Get(_, _, reply) => reply(result)
-    Pending::Put(_, _, _) => ()
+    Pending::Mutate(_, _) | Pending::Scan(_) => ()
   }
   state.val.draining = false
   drain(state)
 }
 
 ///|
-fn finish_put(
+fn finish_mutate(
   state : @ref.Ref[ProviderState],
   operation : Pending,
   result : WriteResult,
 ) -> Unit {
   match operation {
-    Pending::Put(_, _, reply) => reply(result)
-    Pending::Get(_, _, _) => ()
+    Pending::Mutate(_, reply) => reply(result)
+    Pending::Get(_, _, _) | Pending::Scan(_) => ()
+  }
+  state.val.draining = false
+  drain(state)
+}
+
+///|
+fn finish_scan(
+  state : @ref.Ref[ProviderState],
+  operation : Pending,
+  result : ScanResult,
+) -> Unit {
+  match operation {
+    Pending::Scan(reply) => reply(result)
+    Pending::Get(_, _, _) | Pending::Mutate(_, _) => ()
   }
   state.val.draining = false
   drain(state)
@@ -124,7 +148,8 @@ fn fail_queued(
   for operation in queued {
     match operation {
       Pending::Get(_, _, reply) => reply(read_failure(name, code))
-      Pending::Put(_, _, reply) => reply(write_failure(name, code))
+      Pending::Mutate(_, reply) => reply(write_failure(name, code))
+      Pending::Scan(reply) => reply(scan_failure(name, code))
     }
   }
 }
@@ -263,11 +288,12 @@ fn start_get_transaction(
 ) -> Unit {
   let (key, migrate_legacy) = match operation {
     Pending::Get(key, migrate_legacy, _) => (key, migrate_legacy)
-    Pending::Put(_, _, _) => ("", false)
+    Pending::Mutate(_, _) | Pending::Scan(_) => ("", false)
   }
   let config = state.val.config
   let completed : @ref.Ref[Bool] = { val: false }
   let outcome : @ref.Ref[ReadResult?] = { val: None }
+  let failure : @ref.Ref[ReadResult?] = { val: None }
   let legacy_storage : @ref.Ref[@dom.Storage?] = { val: None }
   let legacy_value : @ref.Ref[String?] = { val: None }
   let complete = result => {
@@ -275,18 +301,38 @@ fn start_get_transaction(
     completed.val = true
     finish_get(state, operation, result)
   }
+  let record_failure = (name : String, code : Int) => {
+    if failure.val is None {
+      failure.val = Some(read_failure(name, code))
+    }
+  }
   let fail = (name : String, code : Int) => {
-    complete(read_failure(name, code))
-    transaction.abort()
+    guard !completed.val else { return }
+    record_failure(name, code)
+    match transaction.abort_safe() {
+      Ok(_) => ()
+      Err(error) => {
+        record_failure(error.name(), error.code())
+        complete(failure.val.unwrap_or(ReadResult::Failed))
+      }
+    }
   }
   transaction.set_on_error(() => {
-    fail(transaction.get_error_name(), transaction.get_error_code())
+    record_failure(transaction.get_error_name(), transaction.get_error_code())
   })
   transaction.set_on_abort(() => {
-    fail(transaction.get_error_name(), transaction.get_error_code())
+    record_failure(transaction.get_error_name(), transaction.get_error_code())
+    complete(failure.val.unwrap_or(ReadResult::Failed))
   })
   transaction.set_on_complete(() => {
     guard !completed.val else { return }
+    match failure.val {
+      Some(failure) => {
+        complete(failure)
+        return
+      }
+      None => ()
+    }
     match outcome.val {
       None => complete(ReadResult::Failed)
       Some(result) => {
@@ -314,13 +360,16 @@ fn start_get_transaction(
           })
           request.set_on_success(() => {
             guard !completed.val else { return }
-            match request.cursor() {
-              Some(cursor) =>
-                match cursor.string_value() {
-                  Some(value) => outcome.val = Some(ReadResult::Loaded(value))
-                  None => outcome.val = Some(ReadResult::Failed)
+            match request.cursor_safe() {
+              Err(error) => fail(error.name(), error.code())
+              Ok(Some(cursor)) =>
+                match cursor.string_value_safe() {
+                  Err(error) => fail(error.name(), error.code())
+                  Ok(Some(value)) =>
+                    outcome.val = Some(ReadResult::Loaded(value))
+                  Ok(None) => outcome.val = Some(ReadResult::Failed)
                 }
-              None =>
+              Ok(None) =>
                 if !migrate_legacy {
                   outcome.val = Some(ReadResult::Missing)
                 } else {
@@ -368,7 +417,7 @@ fn start_get(state : @ref.Ref[ProviderState], operation : Pending) -> Unit {
       } else {
         "readonly"
       }
-    Pending::Put(_, _, _) => "readonly"
+    Pending::Mutate(_, _) | Pending::Scan(_) => "readonly"
   }
   match database {
     None => ensure_open(state)
@@ -382,63 +431,192 @@ fn start_get(state : @ref.Ref[ProviderState], operation : Pending) -> Unit {
 }
 
 ///|
-fn start_put_transaction(
+fn start_mutate_transaction(
   state : @ref.Ref[ProviderState],
   operation : Pending,
   transaction : @dom.IDBTransaction,
 ) -> Unit {
-  let (key, value) = match operation {
-    Pending::Put(key, value, _) => (key, value)
-    Pending::Get(_, _, _) => ("", "")
+  let mutations = match operation {
+    Pending::Mutate(mutations, _) => mutations
+    Pending::Get(_, _, _) | Pending::Scan(_) => []
   }
   let config = state.val.config
   let completed : @ref.Ref[Bool] = { val: false }
+  let failure : @ref.Ref[WriteResult?] = { val: None }
   let complete = result => {
     guard !completed.val else { return }
     completed.val = true
-    finish_put(state, operation, result)
+    finish_mutate(state, operation, result)
+  }
+  let record_failure = (name : String, code : Int) => {
+    if failure.val is None {
+      failure.val = Some(write_failure(name, code))
+    }
   }
   let fail = (name : String, code : Int) => {
-    complete(write_failure(name, code))
-    transaction.abort()
+    guard !completed.val else { return }
+    record_failure(name, code)
+    match transaction.abort_safe() {
+      Ok(_) => ()
+      Err(error) => {
+        record_failure(error.name(), error.code())
+        complete(failure.val.unwrap_or(WriteResult::Failed))
+      }
+    }
   }
   transaction.set_on_error(() => {
-    fail(transaction.get_error_name(), transaction.get_error_code())
+    record_failure(transaction.get_error_name(), transaction.get_error_code())
   })
   transaction.set_on_abort(() => {
-    fail(transaction.get_error_name(), transaction.get_error_code())
+    record_failure(transaction.get_error_name(), transaction.get_error_code())
+    complete(failure.val.unwrap_or(WriteResult::Failed))
   })
-  transaction.set_on_complete(() => complete(WriteResult::Stored))
+  transaction.set_on_complete(() => {
+    complete(failure.val.unwrap_or(WriteResult::Stored))
+  })
+  match transaction.object_store_safe(config.store_name()) {
+    Err(error) => fail(error.name(), error.code())
+    Ok(store) => {
+      let requests : Array[@dom.IDBRequest] = []
+      for mutation in mutations {
+        if !completed.val {
+          let request = match mutation {
+            Mutation::Put(key, value) => store.put_string_safe(value, key)
+            Mutation::Delete(key) => store.delete_safe(key)
+          }
+          match request {
+            Ok(request) => requests.push(request)
+            Err(error) => fail(error.name(), error.code())
+          }
+        }
+      }
+      guard !completed.val else { return }
+      requests.each(request => {
+        request.set_on_error(() => {
+          fail(request.get_error_name(), request.get_error_code())
+        })
+        request.set_on_success(() => ())
+      })
+    }
+  }
+}
+
+///|
+fn start_mutate(state : @ref.Ref[ProviderState], operation : Pending) -> Unit {
+  match state.val.database {
+    None => ensure_open(state)
+    Some(database) =>
+      match
+        database.transaction_safe(state.val.config.store_name(), "readwrite") {
+        Err(error) =>
+          finish_mutate(
+            state,
+            operation,
+            write_failure(error.name(), error.code()),
+          )
+        Ok(transaction) =>
+          start_mutate_transaction(state, operation, transaction)
+      }
+  }
+}
+
+///|
+fn start_scan_transaction(
+  state : @ref.Ref[ProviderState],
+  operation : Pending,
+  transaction : @dom.IDBTransaction,
+) -> Unit {
+  let config = state.val.config
+  let completed : @ref.Ref[Bool] = { val: false }
+  let outcome : @ref.Ref[ScanResult?] = { val: None }
+  let failure : @ref.Ref[ScanResult?] = { val: None }
+  let entries : Array[ScanEntry] = []
+  let complete = result => {
+    guard !completed.val else { return }
+    completed.val = true
+    finish_scan(state, operation, result)
+  }
+  let record_failure = (name : String, code : Int) => {
+    if failure.val is None {
+      failure.val = Some(scan_failure(name, code))
+    }
+  }
+  let fail = (name : String, code : Int) => {
+    guard !completed.val else { return }
+    record_failure(name, code)
+    match transaction.abort_safe() {
+      Ok(_) => ()
+      Err(error) => {
+        record_failure(error.name(), error.code())
+        complete(failure.val.unwrap_or(ScanResult::Failed))
+      }
+    }
+  }
+  transaction.set_on_error(() => {
+    record_failure(transaction.get_error_name(), transaction.get_error_code())
+  })
+  transaction.set_on_abort(() => {
+    record_failure(transaction.get_error_name(), transaction.get_error_code())
+    complete(failure.val.unwrap_or(ScanResult::Failed))
+  })
+  transaction.set_on_complete(() => {
+    complete(failure.val.unwrap_or(outcome.val.unwrap_or(ScanResult::Failed)))
+  })
   match transaction.object_store_safe(config.store_name()) {
     Err(error) => fail(error.name(), error.code())
     Ok(store) =>
-      match store.put_string_safe(value, key) {
+      match store.open_cursor_all_safe() {
         Err(error) => fail(error.name(), error.code())
         Ok(request) => {
           request.set_on_error(() => {
             fail(request.get_error_name(), request.get_error_code())
           })
-          request.set_on_success(() => ())
+          request.set_on_success(() => {
+            guard !completed.val else { return }
+            match request.cursor_safe() {
+              Err(error) => fail(error.name(), error.code())
+              Ok(None) =>
+                outcome.val = Some(ScanResult::Scanned(entries.copy()))
+              Ok(Some(cursor)) => {
+                match cursor.string_key_safe() {
+                  Err(error) => fail(error.name(), error.code())
+                  Ok(None) =>
+                    entries.push(ScanEntry::UnsupportedKey(entries.length()))
+                  Ok(Some(key)) =>
+                    match cursor.string_value_safe() {
+                      Err(error) => fail(error.name(), error.code())
+                      Ok(Some(value)) =>
+                        entries.push(ScanEntry::StringRecord(key, value))
+                      Ok(None) => entries.push(ScanEntry::UnsupportedValue(key))
+                    }
+                }
+                guard !completed.val else { return }
+                match cursor.continue_safe() {
+                  Ok(_) => ()
+                  Err(error) => fail(error.name(), error.code())
+                }
+              }
+            }
+          })
         }
       }
   }
 }
 
 ///|
-fn start_put(state : @ref.Ref[ProviderState], operation : Pending) -> Unit {
-  let database = state.val.database
-  match database {
+fn start_scan(state : @ref.Ref[ProviderState], operation : Pending) -> Unit {
+  match state.val.database {
     None => ensure_open(state)
     Some(database) =>
       match
-        database.transaction_safe(state.val.config.store_name(), "readwrite") {
+        database.transaction_safe(state.val.config.store_name(), "readonly") {
         Err(error) =>
-          finish_put(
+          finish_scan(
             state,
             operation,
-            write_failure(error.name(), error.code()),
+            scan_failure(error.name(), error.code()),
           )
-        Ok(transaction) => start_put_transaction(state, operation, transaction)
+        Ok(transaction) => start_scan_transaction(state, operation, transaction)
       }
   }
 }
@@ -455,7 +633,8 @@ fn drain(state : @ref.Ref[ProviderState]) -> Unit {
       state.val.draining = true
       match operation {
         Pending::Get(_, _, _) => start_get(state, operation)
-        Pending::Put(_, _, _) => start_put(state, operation)
+        Pending::Mutate(_, _) => start_mutate(state, operation)
+        Pending::Scan(_) => start_scan(state, operation)
       }
     }
   }
@@ -474,14 +653,34 @@ fn enqueue_get(
 }
 
 ///|
+fn enqueue_mutate(
+  config : Config,
+  mutations : Array[Mutation],
+  callback : (WriteResult) -> Unit,
+) -> Unit {
+  if mutations.is_empty() {
+    callback(WriteResult::Stored)
+    return
+  }
+  let state = state_for(config)
+  state.val.queue.push(Pending::Mutate(mutations.copy(), callback))
+  ensure_open(state)
+}
+
+///|
 fn enqueue_put(
   config : Config,
   key : String,
   value : String,
   callback : (WriteResult) -> Unit,
 ) -> Unit {
+  enqueue_mutate(config, [Mutation::Put(key, value)], callback)
+}
+
+///|
+fn enqueue_scan(config : Config, callback : (ScanResult) -> Unit) -> Unit {
   let state = state_for(config)
-  state.val.queue.push(Pending::Put(key, value, callback))
+  state.val.queue.push(Pending::Scan(callback))
   ensure_open(state)
 }
 
