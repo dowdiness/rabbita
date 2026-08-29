@@ -5,6 +5,11 @@ import {
   "moonbitlang/core/ref",
 }
 
+import {
+  "moonbit-community/rabbita/testing",
+  "moonbitlang/async",
+} for "wbtest"
+
 warnings = "-unused_package"
 
 supported_targets = "js"
