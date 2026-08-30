@@ -19,8 +19,9 @@ struct App {
 ///
 /// Keep this value if the app may be removed before the page closes. Call
 /// `unmount` to stop the app and remove its DOM.
+#cfg(target="js")
 pub struct MountedApp {
-  priv cleanup : () -> Unit
+  priv host : @runtime.BrowserHost
 }
 
 ///|
@@ -29,7 +30,7 @@ pub struct MountedApp {
 /// Rabbita ignores updates from async operations that finish after `unmount`.
 #cfg(target="js")
 pub fn MountedApp::unmount(self : Self) -> Unit {
-  (self.cleanup)()
+  @runtime.Host::cleanup(self.host)
 }
 
 ///|
@@ -74,7 +75,7 @@ pub fn App::mount(self : Self, element_id : String) -> MountedApp {
     output.map(html => html.to_virtual_dom()).0
   })
   @runtime.Host::flush(host)
-  { cleanup: () => @runtime.Host::cleanup(host) }
+  { host, }
 }
 
 ///|
