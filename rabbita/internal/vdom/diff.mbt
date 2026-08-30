@@ -310,8 +310,10 @@ pub fn VDom::update(self : Self, root : VNode, scheduler : &Scheduler) -> Unit {
 pub fn VDom::unmount(self : Self) -> Unit {
   guard self.target_element is Some(container) else { return }
   let parent = container.as_node()
-  guard self.inode.start().get_parent_node().to_option() is Some(actual) &&
-    actual.is_same_node(parent) else {
+  guard self.inode.start().get_parent_node().to_option() is Some(start_parent) &&
+    self.inode.end().get_parent_node().to_option() is Some(end_parent) &&
+    start_parent.is_same_node(parent) &&
+    end_parent.is_same_node(parent) else {
     return
   }
   self.inode.remove(parent)
