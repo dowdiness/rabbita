@@ -2,8 +2,11 @@
 
 The `indexed_db` package exposes managed Rabbita commands for a browser
 IndexedDB object store whose application records use string keys and string
-values. The provider owns database connections, serializes commands per
-`Config`, and reports completion through the Rabbita update loop.
+values. The provider owns database connections, creates queued transactions in
+command-invocation order per `Config`, and reports each transaction's completion
+independently through the Rabbita update loop. It does not wait for one
+transaction's completion callback before admitting the next transaction;
+IndexedDB schedules transactions whose scopes overlap.
 
 ```moonbit nocheck
 ///|
@@ -75,4 +78,6 @@ create a transaction. `put` reuses the same mutation provider with one `Put`.
 
 `WriteResult` classifies unavailable storage, quota exhaustion, and other
 failures. A request success is never treated as durable completion; callers
-receive `Stored` only from the transaction's completion event.
+receive `Stored` only from that transaction's completion event. Transaction
+admission order is not an application-level callback-order guarantee: callers
+must correlate acknowledgments with their own operations.
