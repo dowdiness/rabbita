@@ -15,7 +15,7 @@ priv struct ProviderState {
   mut connection_generation : Int
   mut blocked : Bool
   mut queue : Array[Pending]
-  mut draining : Bool
+  mut dispatching : Bool
 }
 
 ///|
@@ -29,7 +29,7 @@ fn ProviderState::new(config : Config) -> ProviderState {
     connection_generation: 0,
     blocked: false,
     queue: [],
-    draining: false,
+    dispatching: false,
   }
 }
 
@@ -96,45 +96,27 @@ fn scan_failure(name : String, _code : Int) -> ScanResult {
 }
 
 ///|
-fn finish_get(
-  state : @ref.Ref[ProviderState],
-  operation : Pending,
-  result : ReadResult,
-) -> Unit {
+fn finish_get(operation : Pending, result : ReadResult) -> Unit {
   match operation {
     Pending::Get(_, _, reply) => reply(result)
     Pending::Mutate(_, _) | Pending::Scan(_) => ()
   }
-  state.val.draining = false
-  drain(state)
 }
 
 ///|
-fn finish_mutate(
-  state : @ref.Ref[ProviderState],
-  operation : Pending,
-  result : WriteResult,
-) -> Unit {
+fn finish_mutate(operation : Pending, result : WriteResult) -> Unit {
   match operation {
     Pending::Mutate(_, reply) => reply(result)
     Pending::Get(_, _, _) | Pending::Scan(_) => ()
   }
-  state.val.draining = false
-  drain(state)
 }
 
 ///|
-fn finish_scan(
-  state : @ref.Ref[ProviderState],
-  operation : Pending,
-  result : ScanResult,
-) -> Unit {
+fn finish_scan(operation : Pending, result : ScanResult) -> Unit {
   match operation {
     Pending::Scan(reply) => reply(result)
     Pending::Get(_, _, _) | Pending::Mutate(_, _) => ()
   }
-  state.val.draining = false
-  drain(state)
 }
 
 ///|
@@ -164,7 +146,7 @@ fn invalidate_database(
   state.val.database = None
   state.val.connection_generation = 0
   database.close()
-  if !state.val.draining && !state.val.queue.is_empty() {
+  if !state.val.dispatching && !state.val.queue.is_empty() {
     ensure_open(state)
   }
 }
@@ -299,7 +281,7 @@ fn start_get_transaction(
   let complete = result => {
     guard !completed.val else { return }
     completed.val = true
-    finish_get(state, operation, result)
+    finish_get(operation, result)
   }
   let record_failure = (name : String, code : Int) => {
     if failure.val is None {
@@ -424,7 +406,7 @@ fn start_get(state : @ref.Ref[ProviderState], operation : Pending) -> Unit {
     Some(database) =>
       match database.transaction_safe(state.val.config.store_name(), mode) {
         Err(error) =>
-          finish_get(state, operation, read_failure(error.name(), error.code()))
+          finish_get(operation, read_failure(error.name(), error.code()))
         Ok(transaction) => start_get_transaction(state, operation, transaction)
       }
   }
@@ -446,7 +428,7 @@ fn start_mutate_transaction(
   let complete = result => {
     guard !completed.val else { return }
     completed.val = true
-    finish_mutate(state, operation, result)
+    finish_mutate(operation, result)
   }
   let record_failure = (name : String, code : Int) => {
     if failure.val is None {
@@ -509,11 +491,7 @@ fn start_mutate(state : @ref.Ref[ProviderState], operation : Pending) -> Unit {
       match
         database.transaction_safe(state.val.config.store_name(), "readwrite") {
         Err(error) =>
-          finish_mutate(
-            state,
-            operation,
-            write_failure(error.name(), error.code()),
-          )
+          finish_mutate(operation, write_failure(error.name(), error.code()))
         Ok(transaction) =>
           start_mutate_transaction(state, operation, transaction)
       }
@@ -534,7 +512,7 @@ fn start_scan_transaction(
   let complete = result => {
     guard !completed.val else { return }
     completed.val = true
-    finish_scan(state, operation, result)
+    finish_scan(operation, result)
   }
   let record_failure = (name : String, code : Int) => {
     if failure.val is None {
@@ -611,30 +589,34 @@ fn start_scan(state : @ref.Ref[ProviderState], operation : Pending) -> Unit {
       match
         database.transaction_safe(state.val.config.store_name(), "readonly") {
         Err(error) =>
-          finish_scan(
-            state,
-            operation,
-            scan_failure(error.name(), error.code()),
-          )
+          finish_scan(operation, scan_failure(error.name(), error.code()))
         Ok(transaction) => start_scan_transaction(state, operation, transaction)
       }
   }
 }
 
 ///|
+/// Admit the queued batch in invocation order without waiting for transaction
+/// completion. IndexedDB owns scheduling for overlapping scopes; each started
+/// operation retains its own completion callback.
 fn drain(state : @ref.Ref[ProviderState]) -> Unit {
-  guard !state.val.draining else { return }
+  guard !state.val.dispatching else { return }
   guard !state.val.queue.is_empty() else { return }
   match state.val.database {
     None => ensure_open(state)
     Some(_) => {
-      let operation = state.val.queue[0]
-      ignore(state.val.queue.remove(0))
-      state.val.draining = true
-      match operation {
-        Pending::Get(_, _, _) => start_get(state, operation)
-        Pending::Mutate(_, _) => start_mutate(state, operation)
-        Pending::Scan(_) => start_scan(state, operation)
+      state.val.dispatching = true
+      let operations = state.val.queue.drain(0, state.val.queue.length())
+      operations.each(operation => {
+        match operation {
+          Pending::Get(_, _, _) => start_get(state, operation)
+          Pending::Mutate(_, _) => start_mutate(state, operation)
+          Pending::Scan(_) => start_scan(state, operation)
+        }
+      })
+      state.val.dispatching = false
+      if !state.val.queue.is_empty() {
+        ensure_open(state)
       }
     }
   }
