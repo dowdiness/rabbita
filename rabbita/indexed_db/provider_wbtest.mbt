@@ -22,6 +22,8 @@ extern "js" fn install_fake_indexed_db(
   #|     stale_thrown: false,
   #|     pending_opens: [],
   #|     pending_transactions: [],
+  #|     pending_completions: [],
+  #|     withheld_completion: false,
   #|     pending_aborts: [],
   #|     database: null,
   #|   };
@@ -195,7 +197,12 @@ extern "js" fn install_fake_indexed_db(
   #|         if (write.kind === "put") fake.records.set(write.key, write.value);
   #|         else fake.records.delete(write.key);
   #|       }
-  #|       transaction.oncomplete?.({ target: transaction });
+  #|       if (fake.mode === "commit-withheld" && !fake.withheld_completion) {
+  #|         fake.withheld_completion = true;
+  #|         fake.pending_completions.push(transaction);
+  #|       } else {
+  #|         transaction.oncomplete?.({ target: transaction });
+  #|       }
   #|     };
   #|     transaction.abort = error => {
   #|       if (transaction.finished) return;
@@ -250,16 +257,20 @@ extern "js" fn install_fake_indexed_db(
   #|       if (fake.mode === "throw-failed") throw { name: "UnknownError" };
   #|       const open_error = fake.mode === "open-error-security"
   #|         ? { name: "SecurityError" }
-  #|         : fake.mode === "open-error-failed" ? { name: "UnknownError" } : null;
+  #|         : fake.mode === "open-error-failed" || fake.mode === "delayed-open-error"
+  #|           ? { name: "UnknownError" }
+  #|           : null;
   #|       const request = make_request(null, open_error);
+  #|       if (fake.mode === "delayed-open-error") request._deliver_error = null;
   #|       const database = make_database();
   #|       request.result = database;
   #|       const entry = { request, database };
-  #|       if (fake.mode === "delayed-open") {
+  #|       if (fake.mode === "delayed-open" || fake.mode === "delayed-open-error") {
   #|         fake.pending_opens.push(entry);
   #|       } else if (fake.mode === "success" || fake.mode === "stale-transaction-once" ||
   #|           fake.mode === "abort-after-put" || fake.mode === "quota" ||
   #|           fake.mode === "request-success-only" ||
+  #|           fake.mode === "commit-withheld" ||
   #|           fake.mode === "delete-failed-delayed-abort" ||
   #|           fake.mode === "cursor-continue-failed" ||
   #|           fake.mode === "cursor-error" ||
@@ -396,8 +407,12 @@ extern "js" fn flush_fake_open() -> Unit =
   #|   if (fake == null) return;
   #|   const pending = fake.pending_opens.splice(0);
   #|   for (const entry of pending) {
-  #|     entry.request._upgrade?.({ target: entry.request });
-  #|     entry.request._success?.({ target: entry.request });
+  #|     if (entry.request.error != null) {
+  #|       entry.request._error?.({ target: entry.request });
+  #|     } else {
+  #|       entry.request._upgrade?.({ target: entry.request });
+  #|       entry.request._success?.({ target: entry.request });
+  #|     }
   #|   }
   #| }
 
@@ -409,6 +424,18 @@ extern "js" fn flush_fake_transactions() -> Unit =
   #|   if (fake == null) return;
   #|   const pending = fake.pending_transactions.splice(0);
   #|   for (const transaction of pending) transaction.complete();
+  #| }
+
+///|
+extern "js" fn flush_fake_completions() -> Unit =
+  #| () => {
+  #|   const fake_key = Symbol.for("moonbit-community.rabbita.indexed-db.fake");
+  #|   const fake = globalThis[fake_key];
+  #|   if (fake == null) return;
+  #|   const pending = fake.pending_completions.splice(0);
+  #|   for (const transaction of pending) {
+  #|     transaction.oncomplete?.({ target: transaction });
+  #|   }
   #| }
 
 ///|
@@ -535,6 +562,34 @@ test "indexeddb open failures preserve the existing unavailable and failed codes
 }
 
 ///|
+test "one failed open fans out to every queued operation" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("delayed-open-error", "missing", "")
+  let config = Config::Config("loomark.local-repository", 1, "archives")
+  let mut write = WriteResult::Stored
+  let mut write_count = 0
+  let mut scan = ScanResult::Scanned([])
+  let mut scan_count = 0
+  enqueue_mutate(config, [Mutation::Put("source/v1/a", "A")], result => {
+    write = result
+    write_count += 1
+  })
+  enqueue_scan(config, result => {
+    scan = result
+    scan_count += 1
+  })
+  assert_eq(write_count, 0)
+  assert_eq(scan_count, 0)
+  assert_eq(fake_open_count(), 1)
+  flush_fake_open()
+  assert_eq(write, WriteResult::Failed)
+  assert_eq(write_count, 1)
+  assert_eq(scan, ScanResult::Failed)
+  assert_eq(scan_count, 1)
+  assert_eq(fake_transaction_count(), 0)
+}
+
+///|
 test "successful writes wait for transaction completion and preserve FIFO invocation order" {
   reset_provider_state_for_test()
   install_fake_indexed_db("delayed-open", "missing", "")
@@ -569,6 +624,65 @@ test "successful writes wait for transaction completion and preserve FIFO invoca
   assert_eq(completion_kind, 0)
   assert_eq(completion_count, 1)
   assert_eq(fake_record_state(), "new")
+}
+
+///|
+test "provider admits a later transaction before an earlier acknowledgment" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("request-success-only", "string", "old")
+  let mut first_count = 0
+  let mut second_count = 0
+  set_item("loomark.active-document-archive", "first", _ => first_count += 1)
+  set_item("loomark.active-document-archive", "second", _ => second_count += 1)
+  assert_eq(fake_transaction_count(), 2)
+  assert_eq(first_count, 0)
+  assert_eq(second_count, 0)
+  flush_fake_transactions()
+  assert_eq(first_count, 1)
+  assert_eq(second_count, 1)
+  assert_eq(fake_record_state(), "second")
+}
+
+///|
+test "a completion callback may enqueue another transaction" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("success", "missing", "")
+  let mut first_count = 0
+  let mut second_count = 0
+  set_item("loomark.active-document-archive", "first", _ => {
+    first_count += 1
+    set_item("loomark.active-document-archive", "second", _ => second_count += 1)
+  })
+  assert_eq(first_count, 1)
+  assert_eq(second_count, 1)
+  assert_eq(fake_transaction_count(), 2)
+  assert_eq(fake_record_state(), "second")
+}
+
+///|
+test "committed mutation with a withheld acknowledgment does not block a probe" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("commit-withheld", "string", "old")
+  let config = Config::Config("loomark.local-repository", 1, "archives")
+  let mut delete_count = 0
+  let mut probe = ReadResult::Failed
+  let mut probe_count = 0
+  enqueue_mutate(
+    config,
+    [Mutation::Delete("loomark.active-document-archive")],
+    _ => delete_count += 1,
+  )
+  assert_eq(delete_count, 0)
+  assert_eq(fake_record_state(), "missing")
+  enqueue_get(config, "loomark.active-document-archive", false, result => {
+    probe = result
+    probe_count += 1
+  })
+  assert_eq(fake_transaction_count(), 2)
+  assert_eq(probe, ReadResult::Missing)
+  assert_eq(probe_count, 1)
+  flush_fake_completions()
+  assert_eq(delete_count, 1)
 }
 
 ///|
