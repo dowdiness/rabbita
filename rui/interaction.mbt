@@ -69,14 +69,36 @@ fn dialog_top_layer() -> DialogLayerBinding? {
 }
 
 ///|
+fn dialog_should_restore_focus(
+  modal : Bool,
+  restore_focus : Bool,
+  final_focus_id : String,
+) -> Bool {
+  restore_focus && (!modal || final_focus_id != "")
+}
+
+///|
 #cfg(target="js")
 fn dialog_restore_focus(layer : DialogLayerBinding) -> Unit {
-  if layer.element.get_attribute("data-modal").unwrap_or("") != "false" ||
-    layer.element.get_attribute("data-restore-focus").unwrap_or("") == "false" {
+  let modal = layer.element.get_attribute("data-modal").unwrap_or("") != "false"
+  let restore_focus = layer.element
+    .get_attribute("data-restore-focus")
+    .unwrap_or("") !=
+    "false"
+  let final_id = layer.element
+    .get_attribute("data-final-focus-id")
+    .unwrap_or("")
+  if !dialog_should_restore_focus(modal, restore_focus, final_id) {
     return
   }
   let document = @dom.document()
-  if document.get_active_element() is Some(active) {
+  let explicit_target = if ui_element_by_id(final_id) is Some(element) &&
+    element.to_html_element() is Some(html) {
+    Some(html)
+  } else {
+    None
+  }
+  if explicit_target is None && document.get_active_element() is Some(active) {
     let active_is_body = if document.get_body() is Some(body) {
       active.is_same_node(body.as_node())
     } else {
@@ -86,14 +108,9 @@ fn dialog_restore_focus(layer : DialogLayerBinding) -> Unit {
       return
     }
   }
-  let final_id = layer.element
-    .get_attribute("data-final-focus-id")
-    .unwrap_or("")
-  let target = if ui_element_by_id(final_id) is Some(element) &&
-    element.to_html_element() is Some(html) {
-    Some(html)
-  } else {
-    layer.return_focus.val
+  let target = match explicit_target {
+    Some(html) => Some(html)
+    None => layer.return_focus.val
   }
   if target is Some(html) && html.get_is_connected() {
     html.focus_with_options(prevent_scroll=true)

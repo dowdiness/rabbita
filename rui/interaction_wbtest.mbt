@@ -457,3 +457,11 @@ test "Escape closes only the floating layer above a modal dialog" {
   assert_eq(requested, 0)
   assert_eq(hidden, 1)
 }
+
+///|
+test "modal dialog restores focus only when an explicit final target is set" {
+  assert_false(dialog_should_restore_focus(true, true, ""))
+  assert_true(dialog_should_restore_focus(true, true, "document-actions"))
+  assert_false(dialog_should_restore_focus(true, false, "document-actions"))
+  assert_true(dialog_should_restore_focus(false, true, ""))
+}
