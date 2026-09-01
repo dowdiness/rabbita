@@ -50,6 +50,27 @@ fn INode::end(self : Self) -> @dom.Node {
 
 ///|
 #cfg(target="js")
+fn INode::has_ordered_endpoints_in(self : Self, parent : @dom.Node) -> Bool {
+  let start = self.start()
+  let end = self.end()
+  guard start.get_parent_node().to_option() is Some(start_parent) &&
+    end.get_parent_node().to_option() is Some(end_parent) &&
+    start_parent.is_same_node(parent) &&
+    end_parent.is_same_node(parent) else {
+    return false
+  }
+  let mut current = Some(start)
+  while current is Some(node) {
+    if node.is_same_node(end) {
+      return true
+    }
+    current = node.get_next_sibling().to_option()
+  }
+  false
+}
+
+///|
+#cfg(target="js")
 fn INode::needs_relocation(
   self : Self,
   anchor : @js.Nullable[@dom.Node],
@@ -310,12 +331,7 @@ pub fn VDom::update(self : Self, root : VNode, scheduler : &Scheduler) -> Unit {
 pub fn VDom::unmount(self : Self) -> Unit {
   guard self.target_element is Some(container) else { return }
   let parent = container.as_node()
-  guard self.inode.start().get_parent_node().to_option() is Some(start_parent) &&
-    self.inode.end().get_parent_node().to_option() is Some(end_parent) &&
-    start_parent.is_same_node(parent) &&
-    end_parent.is_same_node(parent) else {
-    return
-  }
+  guard self.inode.has_ordered_endpoints_in(parent) else { return }
   self.inode.remove(parent)
 }
 

@@ -164,3 +164,51 @@ test "unmount leaves a partial fragment unchanged" {
 
   assert_eq(parent.get_child_count(), 1)
 }
+
+///|
+#cfg(target="js")
+test "unmount removes an intact fragment without touching later siblings" {
+  let document = relocation_test_document()
+  let parent = document.create_element("div")
+  let start = document.create_comment(FRAGMENT_START_MARKER)
+  let end = document.create_comment(FRAGMENT_END_MARKER)
+  let owned = document.create_text_node("owned")
+  let foreign = document.create_text_node("foreign")
+  parent
+  ..append_child(start.as_node())
+  ..append_child(owned.as_node())
+  ..append_child(end.as_node())
+  .append_child(foreign.as_node())
+  let vdom = VDom::{
+    inode: Frag([], start, end),
+    target_element: Some(parent),
+    captured_link_listener: _ => (),
+  }
+
+  vdom.unmount()
+
+  assert_eq(parent.get_child_count(), 1)
+}
+
+///|
+#cfg(target="js")
+test "unmount leaves a fragment with reversed markers unchanged" {
+  let document = relocation_test_document()
+  let parent = document.create_element("div")
+  let start = document.create_comment(FRAGMENT_START_MARKER)
+  let end = document.create_comment(FRAGMENT_END_MARKER)
+  let foreign = document.create_text_node("foreign")
+  parent
+  ..append_child(end.as_node())
+  ..append_child(start.as_node())
+  .append_child(foreign.as_node())
+  let vdom = VDom::{
+    inode: Frag([], start, end),
+    target_element: Some(parent),
+    captured_link_listener: _ => (),
+  }
+
+  vdom.unmount()
+
+  assert_eq(parent.get_child_count(), 3)
+}
