@@ -16,13 +16,13 @@ A command executes only after it is handed to the runtime, for example:
 In earlier tours we used `@rabbita.create_pure_state`:
 
 ```text
-update : (Msg, Model) -> Model
+update : (Model, Msg) -> Model
 ```
 
 When you need follow-up effects, use `@rabbita.create_state`:
 
 ```text
-update : (Emit[Msg], Msg, Model) -> (Cmd, Model)
+update : (Model, Msg, Emit[Msg]) -> (Model, Cmd)
 ```
 
 This update shape lets you return an extra `Cmd`.
@@ -48,11 +48,11 @@ enum Msg {
 type Model = Int
 
 ///|
-fn update(emit : Emit[Msg], msg : Msg, count : Model) -> (Cmd, Model) {
+fn update(count : Model, msg : Msg, emit : Emit[Msg]) -> (Model, Cmd) {
   match msg {
-    Inc => (none, count + 1)
-    IncLater => (delay(emit(Inc), 300), count)
-    Reset => (none, 0)
+    Inc => (count + 1, none)
+    IncLater => (count, delay(emit(Inc), 300))
+    Reset => (0, none)
   }
 }
 
@@ -74,11 +74,11 @@ immediately. `IncLater` is different: it returns a real command
 (`delay(emit(Inc), 300)`) and keeps state unchanged for now.
 
 `Inc` and `Reset` are immediate state transitions, while `IncLater` returns
-`(delay(emit(Inc), 300), count)` and leaves `count` unchanged for now.
+`(count, delay(emit(Inc), 300))` and leaves `count` unchanged for now.
 If you click `+1 after 300ms`, the sequence is:
 
 1. `view` emits `IncLater`.
-2. `update` returns `(delay(emit(Inc), 300), count)`, so state stays unchanged.
+2. `update` returns `(count, delay(emit(Inc), 300))`, so state stays unchanged.
 3. After 300ms, runtime executes the delayed command and emits `Inc`.
 4. `update` handles `Inc` and increments `count`.
 
@@ -105,13 +105,13 @@ enum BatchMsg {
 
 ///|
 fn batch_update(
-  emit : Emit[BatchMsg],
-  msg : BatchMsg,
   model : Int,
-) -> (Cmd, Int) {
+  msg : BatchMsg,
+  emit : Emit[BatchMsg],
+) -> (Int, Cmd) {
   match msg {
-    RunBatch => (batch([emit(Applied(1)), emit(Applied(2))]), model)
-    Applied(value) => (none, model + value)
+    RunBatch => (model, batch([emit(Applied(1)), emit(Applied(2))]))
+    Applied(value) => (model + value, none)
   }
 }
 ```
@@ -130,14 +130,14 @@ enum PerformMsg {
 
 ///|
 fn perform_update(
-  emit : Emit[PerformMsg],
-  msg : PerformMsg,
   model : Int,
-) -> (Cmd, Int) {
+  msg : PerformMsg,
+  emit : Emit[PerformMsg],
+) -> (Int, Cmd) {
   match msg {
     StartLoad =>
-      (@rabbita.perform(value => emit(Loaded(value)), () => 42), model)
-    Loaded(value) => (none, model + value)
+      (model, @rabbita.perform(value => emit(Loaded(value)), () => 42))
+    Loaded(value) => (model + value, none)
   }
 }
 ```
@@ -156,13 +156,14 @@ enum AttemptMsg {
 
 ///|
 fn attempt_update(
-  emit : Emit[AttemptMsg],
-  msg : AttemptMsg,
   model : Int,
-) -> (Cmd, Int) {
+  msg : AttemptMsg,
+  emit : Emit[AttemptMsg],
+) -> (Int, Cmd) {
   match msg {
     StartTry =>
       (
+        model,
         @rabbita.attempt(result => emit(Tried(result)), () => {
           if model % 2 == 0 {
             10
@@ -170,12 +171,11 @@ fn attempt_update(
             fail("demo failure")
           }
         }),
-        model,
       )
     Tried(result) =>
       match result {
-        Ok(value) => (none, model + value)
-        Err(_) => (none, model)
+        Ok(value) => (model + value, none)
+        Err(_) => (model, none)
       }
   }
 }
@@ -187,7 +187,7 @@ fn attempt_update(
 
 - `Cmd` keeps side effects out of pure rendering logic.
 - `view` stays the same shape: `(Emit[Msg], Model) -> Html`.
-- `update` becomes command-aware and returns `(Cmd, Model)`.
+- `update` becomes command-aware and returns `(Model, Cmd)`.
 - Use `none` when no side effect is needed, and use `batch` when multiple commands should run.
 
 ## What comes next

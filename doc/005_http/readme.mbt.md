@@ -46,15 +46,15 @@ new model.
 
 ```moonbit check
 ///|
-fn update(emit : Emit[Msg], msg : Msg, _model : Model) -> (Cmd, Model) {
+fn update(_model : Model, msg : Msg, emit : Emit[Msg]) -> (Model, Cmd) {
   match msg {
     Load =>
       (
-        @http.get("/api/greeting").expect_text(result => emit(Loaded(result))),
         Loading,
+        @http.get("/api/greeting").expect_text(result => emit(Loaded(result))),
       )
-    Loaded(Ok(s)) => (none, Ready(s))
-    Loaded(Err(e)) => (none, Failed(e))
+    Loaded(Ok(s)) => (Ready(s), none)
+    Loaded(Err(e)) => (Failed(e), none)
   }
 }
 ```
@@ -101,14 +101,7 @@ click button
 ```moonbit nocheck
 ///|
 fn build_app() -> Val[Html] {
-  let (model, emit) = @rabbita.create_state(initial_model, update=fn(
-    model,
-    msg,
-    emit,
-  ) {
-    let (cmd, model) = update(emit, msg, model)
-    (model, cmd)
-  })
+  let (model, emit) = @rabbita.create_state(initial_model, update~)
   model.map(model => view(emit, model))
 }
 ```
@@ -152,20 +145,20 @@ enum SaveMsg {
 ```moonbit check
 ///|
 fn save_update(
-  emit : Emit[SaveMsg],
-  msg : SaveMsg,
   _model : SaveModel,
-) -> (Cmd, SaveModel) {
+  msg : SaveMsg,
+  emit : Emit[SaveMsg],
+) -> (SaveModel, Cmd) {
   match msg {
     SaveGreeting =>
       (
+        Saving,
         @http.post("/api/greeting")
         .with_text("hello from Rabbita")
         .expect_empty(result => emit(GreetingSaved(result))),
-        Saving,
       )
-    GreetingSaved(None) => (none, SaveDone)
-    GreetingSaved(Some(error)) => (none, SaveError(error))
+    GreetingSaved(None) => (SaveDone, none)
+    GreetingSaved(Some(error)) => (SaveError(error), none)
   }
 }
 ```
@@ -196,14 +189,10 @@ fn save_view(emit : Emit[SaveMsg], model : SaveModel) -> Html {
 ```moonbit nocheck
 ///|
 fn build_save_app() -> Val[Html] {
-  let (model, emit) = @rabbita.create_state(save_initial_model, update=fn(
-    model,
-    msg,
-    emit,
-  ) {
-    let (cmd, model) = save_update(emit, msg, model)
-    (model, cmd)
-  })
+  let (model, emit) = @rabbita.create_state(
+    save_initial_model,
+    update=save_update,
+  )
   model.map(model => save_view(emit, model))
 }
 ```
