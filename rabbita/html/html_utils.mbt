@@ -433,6 +433,38 @@ fn push_change(value : @cmd.Emit[String]?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(target="js")
+fn push_files(
+  value : @cmd.Emit[FixedArray[@dom.File]]?,
+  attrs : Attrs,
+) -> Unit {
+  if value is Some(v) {
+    ignore(
+      attrs.handler("change", (event, scheduler) => {
+        let target = match event.current_target().to_option() {
+          Some(target) => target
+          None => event.target()
+        }
+        if target.to_html_input_element() is Some(input) {
+          let files = input.get_files()
+          input.set_value("")
+          scheduler.add(v(files))
+        }
+      }),
+    )
+  }
+}
+
+///|
+#cfg(not(target="js"))
+fn push_files(
+  value : @cmd.Emit[FixedArray[@dom.File]]?,
+  attrs : Attrs,
+) -> Unit {
+  ignore((value, attrs))
+}
+
+///|
+#cfg(target="js")
 fn push_input(value : @cmd.Emit[String]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(

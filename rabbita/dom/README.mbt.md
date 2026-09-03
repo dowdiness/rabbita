@@ -86,6 +86,8 @@ Event <- AnimationEvent
                  <- KeyboardEvent
                  <- WheelEvent
 
+Blob <- File
+
 EventTarget <- Window
             <- Node <- Document
                     <- DocumentFragment
@@ -97,6 +99,25 @@ EventTarget <- Window
                                <- SVGElement <- SVGGraphicsElement
                                              <- SVGImageElement
 ```
+
+### Read a selected file
+
+The high-level `@html.input` wrapper emits selected `File` values. `File`
+retains its browser name and last-modified metadata and upcasts to `Blob` for
+size, media type, slicing, text, and byte operations.
+
+```mbt nocheck
+///|
+async fn selected_file_bytes(file : File) -> Bytes {
+  let name = file.get_name()
+  let modified = file.get_last_modified()
+  ignore((name, modified))
+  file.as_blob().bytes()
+}
+```
+
+Prefer `Blob::bytes` when the application needs strict decoding or binary data;
+`Blob::text` uses the browser's UTF-8 replacement behavior.
 
 ## Contribution
 
