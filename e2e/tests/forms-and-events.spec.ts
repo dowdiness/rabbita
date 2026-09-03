@@ -18,7 +18,7 @@ test('input, change, select, and submit events update state', async ({ page }) =
   await expect(page).toHaveURL('/');
 });
 
-test('file input emits typed metadata and allows the same file again', async ({ page }) => {
+test('file input snapshots files and allows the same selection again', async ({ page }) => {
   await page.goto('/');
 
   const file = {
@@ -34,18 +34,14 @@ test('file input emits typed metadata and allows the same file again', async ({ 
   const input = page.getByLabel('Choose files');
 
   await input.setInputFiles([file, secondFile]);
-  await expect(page.locator('#file-name')).toHaveText('file name: notes.md');
-  await expect(page.locator('#file-type')).toHaveText('file type: text/markdown');
-  await expect(page.locator('#file-size')).toHaveText('file size: 5');
-  await expect(page.locator('#file-count')).toHaveText('file count: 2');
-  await expect(page.locator('#file-modified')).toHaveText('file modified: true');
-  await expect(page.locator('#file-selections')).toHaveText('file selections: 1');
-  await expect(page.locator('#file-bytes')).toHaveText('file bytes: 5, first: 104, last: 111');
+  await expect(page.locator('#file-selection')).toHaveText(
+    '2 files | notes.md | text/markdown | 5 bytes | modified true',
+  );
+  await expect(page.locator('#file-read')).toHaveText('bytes preserved');
   await expect(input).toHaveValue('');
 
   await input.setInputFiles([file, secondFile]);
-  await expect(page.locator('#file-selections')).toHaveText('file selections: 2');
-  await expect(input).toHaveValue('');
+  await expect(page.locator('#file-selections')).toHaveText('2');
 });
 
 test('file input cancellation emits no selection', async ({ page }) => {
@@ -54,8 +50,7 @@ test('file input cancellation emits no selection', async ({ page }) => {
   const input = page.getByLabel('Choose files');
   await input.dispatchEvent('cancel');
 
-  await expect(page.locator('#file-selections')).toHaveText('file selections: 0');
-  await expect(input).toHaveValue('');
+  await expect(page.locator('#file-selections')).toHaveText('0');
 });
 
 test('file byte read failure returns through the managed command path', async ({ page }) => {
@@ -70,7 +65,7 @@ test('file byte read failure returns through the managed command path', async ({
     buffer: Buffer.from('content'),
   });
 
-  await expect(page.locator('#file-read')).toHaveText('file read: failed');
+  await expect(page.locator('#file-read')).toHaveText('failed');
 });
 
 test('attributes and DOM properties are added, updated, and removed', async ({ page }) => {

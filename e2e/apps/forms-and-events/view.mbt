@@ -18,15 +18,8 @@ fn app() -> Val[Html] {
     checked: false,
     handler_a: 0,
     handler_b: 0,
-    file_name: "",
-    file_type: "",
-    file_size: 0,
-    file_count: 0,
-    file_modified: false,
+    file_selection: "none",
     file_selections: 0,
-    file_byte_count: 0,
-    file_first_byte: -1,
-    file_last_byte: -1,
     file_read: "idle",
   }
   let (model, emit) = @rabbita.create_state(initial, update~)
@@ -93,17 +86,9 @@ fn app() -> Val[Html] {
         multiple=true,
         on_files=emit.map(files => FilesSelected(files)),
       ),
-      p(id="file-name", "file name: \{model.file_name}"),
-      p(id="file-type", "file type: \{model.file_type}"),
-      p(id="file-size", "file size: \{model.file_size}"),
-      p(id="file-count", "file count: \{model.file_count}"),
-      p(id="file-modified", "file modified: \{model.file_modified}"),
-      p(id="file-selections", "file selections: \{model.file_selections}"),
-      p(
-        id="file-bytes",
-        "file bytes: \{model.file_byte_count}, first: \{model.file_first_byte}, last: \{model.file_last_byte}",
-      ),
-      p(id="file-read", "file read: \{model.file_read}"),
+      p(id="file-selection", model.file_selection),
+      p(id="file-selections", "\{model.file_selections}"),
+      p(id="file-read", model.file_read),
     ]
   })
 }

@@ -11,15 +11,8 @@ priv struct Model {
   checked : Bool
   handler_a : Int
   handler_b : Int
-  file_name : String
-  file_type : String
-  file_size : Int
-  file_count : Int
-  file_modified : Bool
+  file_selection : String
   file_selections : Int
-  file_byte_count : Int
-  file_first_byte : Int
-  file_last_byte : Int
   file_read : String
 } derive(Eq)
 
@@ -66,22 +59,20 @@ fn update(
     FilesSelected(files) =>
       match files.get(0) {
         None => (model, @rabbita.none)
-        Some(file) =>
+        Some(file) => {
+          let blob = file.as_blob()
           (
             {
               ..model,
-              file_name: file.get_name(),
-              file_type: file.as_blob().get_type(),
-              file_size: file.as_blob().get_size(),
-              file_count: files.length(),
-              file_modified: file.get_last_modified() > 0.0,
+              file_selection: "\{files.length()} files | \{file.get_name()} | \{blob.get_type()} | \{blob.get_size()} bytes | modified \{file.get_last_modified() > 0.0}",
               file_selections: model.file_selections + 1,
               file_read: "reading",
             },
             @rabbita.attempt(result => emit(FileRead(result)), async fn() {
-              file.as_blob().bytes()
+              blob.bytes()
             }),
           )
+        }
       }
     FileRead(result) =>
       match result {
@@ -90,12 +81,11 @@ fn update(
           (
             {
               ..model,
-              file_byte_count: bytes.length(),
-              file_first_byte: bytes.get(0).map_or(-1, byte => byte.to_int()),
-              file_last_byte: bytes
-              .get(bytes.length() - 1)
-              .map_or(-1, byte => byte.to_int()),
-              file_read: "complete",
+              file_read: if bytes == b"hello" {
+                "bytes preserved"
+              } else {
+                "bytes changed"
+              },
             },
             @rabbita.none,
           )
