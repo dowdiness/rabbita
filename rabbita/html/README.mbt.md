@@ -129,6 +129,37 @@ fn view2(emit : Emit[Msg2], _ : Model2) -> Html {
 }
 ```
 
+## File inputs
+
+Use `on_files` with `InputType::File` to receive an owned snapshot of the
+browser files selected by the user. The input value is cleared after the
+snapshot is captured, so selecting the same file again emits another event.
+Cancellation does not emit a file selection.
+
+```mbt nocheck
+///|
+enum FileMsg {
+  FilesSelected(FixedArray[@dom.File])
+}
+
+///|
+fn file_input_view(emit : Emit[FileMsg]) -> Html {
+  input(
+    input_type=File,
+    accept="text/plain",
+    multiple=true,
+    on_files=emit.map(files => FilesSelected(files)),
+  )
+}
+```
+
+A `File` retains browser metadata. Call `file.as_blob()` to use the existing
+Blob APIs, including asynchronous byte reading. Decode or validate the bytes in
+the application because the HTML binding does not impose a text format.
+
+`on_change` continues to emit the form control's string value. When both
+`on_change` and `on_files` are present, the ordinary change handler runs first.
+
 ## Advanced Usage
 
 ### Attribute Builder

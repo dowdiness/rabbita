@@ -1460,6 +1460,7 @@ pub fn input(
   inputmode? : String,
   on_change? : Emit[String],
   on_input? : Emit[String],
+  on_files? : Emit[FixedArray[@dom.File]],
   attrs? : Attrs,
 ) -> Html {
   let input_type = match input_type {
@@ -1515,6 +1516,7 @@ pub fn input(
   push_placeholder(placeholder, attrs)
   push_change(on_change, attrs)
   push_input(on_input, attrs)
+  push_files(on_files, attrs)
   push_style(style, attrs)
   push_class(class, attrs)
   push_id(id, attrs)

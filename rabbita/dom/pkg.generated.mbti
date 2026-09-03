@@ -866,6 +866,11 @@ pub fn EventTarget::to_window(Self) -> Window?
 pub impl IsEventTarget for EventTarget
 pub impl @js.Cast for EventTarget
 
+type File
+pub fn File::as_blob(Self) -> Blob
+pub fn File::get_last_modified(Self) -> Double
+pub fn File::get_name(Self) -> String
+
 type FocusEvent
 pub fn FocusEvent::as_event(Self) -> Event
 pub fn FocusEvent::as_ui_event(Self) -> UIEvent
@@ -1686,6 +1691,7 @@ pub fn HTMLInputElement::set_style_declaration(Self, CSSStyleDeclaration) -> Uni
 pub fn HTMLInputElement::set_tab_index(Self, Int) -> Unit
 pub fn HTMLInputElement::set_title(Self, String) -> Unit
 pub fn HTMLInputElement::set_translate(Self, Bool) -> Unit
+pub fn HTMLInputElement::get_files(Self) -> FixedArray[File]
 pub fn HTMLInputElement::set_value(Self, String) -> Unit
 pub fn HTMLInputElement::set_virtual_keyboard_policy(Self, String) -> Unit
 pub fn HTMLInputElement::set_writing_suggestions(Self, String) -> Unit
