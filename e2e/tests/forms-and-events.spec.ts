@@ -18,6 +18,61 @@ test('input, change, select, and submit events update state', async ({ page }) =
   await expect(page).toHaveURL('/');
 });
 
+test('file input emits typed metadata and allows the same file again', async ({ page }) => {
+  await page.goto('/');
+
+  const file = {
+    name: 'notes.md',
+    mimeType: 'text/markdown',
+    buffer: Buffer.from('hello'),
+  };
+  const secondFile = {
+    name: 'other.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('other'),
+  };
+  const input = page.getByLabel('Choose files');
+
+  await input.setInputFiles([file, secondFile]);
+  await expect(page.locator('#file-name')).toHaveText('file name: notes.md');
+  await expect(page.locator('#file-type')).toHaveText('file type: text/markdown');
+  await expect(page.locator('#file-size')).toHaveText('file size: 5');
+  await expect(page.locator('#file-count')).toHaveText('file count: 2');
+  await expect(page.locator('#file-modified')).toHaveText('file modified: true');
+  await expect(page.locator('#file-selections')).toHaveText('file selections: 1');
+  await expect(page.locator('#file-bytes')).toHaveText('file bytes: 5, first: 104, last: 111');
+  await expect(input).toHaveValue('');
+
+  await input.setInputFiles([file, secondFile]);
+  await expect(page.locator('#file-selections')).toHaveText('file selections: 2');
+  await expect(input).toHaveValue('');
+});
+
+test('file input cancellation emits no selection', async ({ page }) => {
+  await page.goto('/');
+
+  const input = page.getByLabel('Choose files');
+  await input.dispatchEvent('cancel');
+
+  await expect(page.locator('#file-selections')).toHaveText('file selections: 0');
+  await expect(input).toHaveValue('');
+});
+
+test('file byte read failure returns through the managed command path', async ({ page }) => {
+  await page.addInitScript(() => {
+    Blob.prototype.arrayBuffer = () => Promise.reject(new Error('read failed'));
+  });
+  await page.goto('/');
+
+  await page.getByLabel('Choose files').setInputFiles({
+    name: 'unreadable.md',
+    mimeType: 'text/markdown',
+    buffer: Buffer.from('content'),
+  });
+
+  await expect(page.locator('#file-read')).toHaveText('file read: failed');
+});
+
 test('attributes and DOM properties are added, updated, and removed', async ({ page }) => {
   await page.goto('/');
 

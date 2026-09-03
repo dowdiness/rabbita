@@ -302,6 +302,11 @@ type EventTarget
 pub impl IsEventTarget for EventTarget
 pub impl @js.Cast for EventTarget
 
+type File
+pub fn File::as_blob(Self) -> Blob
+pub fn File::get_last_modified(Self) -> Double
+pub fn File::get_name(Self) -> String
+
 type FocusEvent
 pub fn FocusEvent::related_target(Self) -> EventTarget?
 pub impl IsEvent for FocusEvent
@@ -387,6 +392,7 @@ pub impl IsNode for HTMLImageElement
 pub impl @js.Cast for HTMLImageElement
 
 type HTMLInputElement
+pub fn HTMLInputElement::get_files(Self) -> FixedArray[File]
 pub fn HTMLInputElement::set_value(Self, String) -> Unit
 pub fn HTMLInputElement::value(Self) -> String
 pub impl IsElement for HTMLInputElement
