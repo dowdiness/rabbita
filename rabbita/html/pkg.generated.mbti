@@ -121,7 +121,7 @@ pub fn iframe(style? : Array[String], id? : String, class? : String, hidden? : B
 
 pub fn img(style? : Array[String], id? : String, class? : String, hidden? : Bool, src? : String, alt? : String, title? : String, width? : Int, height? : Int, srcset? : String, sizes? : String, loading? : String, decoding? : String, attrs? : Attrs) -> Html
 
-pub fn input(input_type? : InputType, name? : String, value? : String, checked? : Bool, read_only? : Bool, multiple? : Bool, accept? : String, placeholder? : String, auto_complete? : AutoComplete, style? : Array[String], max? : Int, min? : Int, step? : Int, maxlength? : Int, minlength? : Int, pattern? : String, size? : Int, width? : Int, height? : Int, id? : String, class? : String, title? : String, hidden? : Bool, required? : Bool, autofocus? : Bool, list? : String, inputmode? : String, on_change? : @cmd.Emit[String], on_input? : @cmd.Emit[String], attrs? : Attrs) -> Html
+pub fn input(input_type? : InputType, name? : String, value? : String, checked? : Bool, read_only? : Bool, multiple? : Bool, accept? : String, placeholder? : String, auto_complete? : AutoComplete, style? : Array[String], max? : Int, min? : Int, step? : Int, maxlength? : Int, minlength? : Int, pattern? : String, size? : Int, width? : Int, height? : Int, id? : String, class? : String, title? : String, hidden? : Bool, required? : Bool, autofocus? : Bool, list? : String, inputmode? : String, on_change? : @cmd.Emit[String], on_input? : @cmd.Emit[String], on_files? : @cmd.Emit[FixedArray[@dom.File]], attrs? : Attrs) -> Html
 
 pub fn[C : IsChildren] ins(style? : Array[String], id? : String, class? : String, title? : String, hidden? : Bool, attrs? : Attrs, C) -> Html
 
