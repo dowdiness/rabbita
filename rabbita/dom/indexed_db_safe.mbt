@@ -389,6 +389,7 @@ pub fn IDBObjectStore::get_key_safe(
 }
 
 ///|
+#cfg(target="js")
 extern "js" fn ffi_get_key_safe(
   store : IDBObjectStore,
   key : String,
@@ -401,6 +402,7 @@ extern "js" fn ffi_get_key_safe(
   #| }
 
 ///|
+#cfg(target="js")
 pub fn IDBObjectStore::open_cursor_safe(
   self : Self,
   key : String,
@@ -477,6 +479,7 @@ pub fn IDBRequest::has_key_safe(self : Self) -> Result[Bool, IDBError] {
 }
 
 ///|
+#cfg(target="js")
 extern "js" fn ffi_has_key_safe(
   request : IDBRequest,
   on_success : (Bool) -> Unit,
@@ -488,6 +491,7 @@ extern "js" fn ffi_has_key_safe(
   #| }
 
 ///|
+#cfg(target="js")
 pub fn IDBRequest::cursor_safe(
   self : Self,
 ) -> Result[IDBCursorWithValue?, IDBError] {
