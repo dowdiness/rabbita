@@ -274,13 +274,17 @@ fn install_pointer_event_probe(target : @dom.Element) -> Unit {
         @dom.IsMouseEvent::get_related_target(pointer) is None,
         "pointer_related_target",
       )
-      @dom.IsElement::set_pointer_capture(target, pointer.get_pointer_id())
+      @dom.IsElement::set_pointer_capture(target, pointer.get_pointer_id()) catch {
+        _ => failures.push("pointer_capture_set")
+      }
       record(
         failures,
         @dom.IsElement::has_pointer_capture(target, pointer.get_pointer_id()),
         "pointer_capture",
       )
-      @dom.IsElement::release_pointer_capture(target, pointer.get_pointer_id())
+      @dom.IsElement::release_pointer_capture(target, pointer.get_pointer_id()) catch {
+        _ => failures.push("pointer_capture_release")
+      }
       record(
         failures,
         !@dom.IsElement::has_pointer_capture(target, pointer.get_pointer_id()),
@@ -330,7 +334,7 @@ fn install_input_event_probe(target : @dom.Element) -> Unit {
   let listener : @dom.Listener = event => {
     let failures : Array[String] = []
     if @dom.IsEvent::to_input_event(event) is Some(input) {
-      record(failures, input.data() == "x", "input_data")
+      record(failures, input.get_data().to_option() == Some("x"), "input_data")
       record(failures, input.input_type() == "insertText", "input_type")
       record(failures, !input.is_composing(), "input_composing")
     } else {
