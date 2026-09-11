@@ -7,57 +7,50 @@ import {
 }
 
 // Values
-pub fn get(Config, String, migrate_legacy? : Bool, result~ : @cmd.Emit[ReadResult]) -> @cmd.Cmd
-
-pub fn mutate(Config, Array[Mutation], result~ : @cmd.Emit[WriteResult]) -> @cmd.Cmd
-
-pub fn put(Config, String, String, result~ : @cmd.Emit[WriteResult]) -> @cmd.Cmd
-
-pub fn scan(Config, result~ : @cmd.Emit[ScanResult]) -> @cmd.Cmd
 
 // Errors
+pub(all) suberror ReadError {
+  Unavailable
+  Failed(String, Int)
+} derive(Eq, @debug.Debug)
+
+pub(all) suberror WriteError {
+  Unavailable
+  QuotaExceeded
+  Failed(String, Int)
+} derive(Eq, @debug.Debug)
 
 // Types and methods
-pub struct Config {
-  name : String
-  version : Int
-  store_name : String
-} derive(Eq, @debug.Debug)
-pub fn Config::Config(String, Int, String) -> Self
-pub fn Config::name(Self) -> String
-pub fn Config::store_name(Self) -> String
-pub fn Config::version(Self) -> Int
-
-pub(all) enum Mutation {
-  Put(String, String)
-  Delete(String)
-} derive(Eq, @debug.Debug)
-
-pub(all) enum ReadResult {
-  Missing
-  Loaded(String)
-  Unavailable
-  Failed
-} derive(Eq, @debug.Debug)
-
-pub(all) enum ScanEntry {
+pub(all) enum Entry {
   StringRecord(String, String)
   UnsupportedValue(String)
   UnsupportedKey(Int)
 } derive(Eq, @debug.Debug)
 
-pub(all) enum ScanResult {
-  Scanned(Array[ScanEntry])
-  Unavailable
-  Failed
+pub(all) enum Lookup {
+  Missing
+  Found(String)
+  Unsupported
 } derive(Eq, @debug.Debug)
 
-pub(all) enum WriteResult {
-  Stored
-  Unavailable
-  QuotaExceeded
-  Failed
+pub(all) enum Mutation {
+  Set(String, String)
+  Delete(String)
 } derive(Eq, @debug.Debug)
+
+pub struct Store {
+  name : String
+  version : Int
+  store_name : String
+} derive(Eq, Hash)
+pub fn Store::Store(String, Int, String) -> Self
+pub fn Store::apply(Self, Array[Mutation], @cmd.Emit[WriteError?]) -> @cmd.Cmd
+pub fn Store::contains(Self, String, @cmd.Emit[Result[Bool, ReadError]]) -> @cmd.Cmd
+pub fn Store::delete(Self, String, @cmd.Emit[WriteError?]) -> @cmd.Cmd
+pub fn Store::entries(Self, @cmd.Emit[Result[Array[Entry], ReadError]]) -> @cmd.Cmd
+pub fn Store::get(Self, String, @cmd.Emit[Result[Lookup, ReadError]]) -> @cmd.Cmd
+pub fn Store::set(Self, String, String, @cmd.Emit[WriteError?]) -> @cmd.Cmd
+pub impl @debug.Debug for Store
 
 // Type aliases
 

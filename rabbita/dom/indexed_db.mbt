@@ -249,6 +249,14 @@ pub extern "js" fn IDBObjectStore::open_cursor(
   key : String,
 ) -> IDBRequest = "(store, key) => store.openCursor(key)"
 
+///|
+/// Return the key without reading its value.
+#cfg(target="js")
+pub extern "js" fn IDBObjectStore::get_key(
+  self : Self,
+  key : String,
+) -> IDBRequest = "(store, key) => store.getKey(key)"
+
 /// https://developer.mozilla.org/en-US/docs/Web/API/IDBRequest/onsuccess
 
 ///|
@@ -280,6 +288,11 @@ pub extern "js" fn IDBRequest::get_cursor(
 pub fn IDBRequest::cursor(self : Self) -> IDBCursorWithValue? {
   self.get_cursor().to_option()
 }
+
+///|
+/// Whether getKey returned a key. This never reads the record value.
+#cfg(target="js")
+pub extern "js" fn IDBRequest::has_key(self : Self) -> Bool = "(request) => request.result !== undefined"
 
 /// https://developer.mozilla.org/en-US/docs/Web/API/IDBRequest/error
 
