@@ -19,7 +19,12 @@ extern "js" fn install_fake_indexed_db(
   #|     transaction_count: 0,
   #|     put_count: 0,
   #|     abort_count: 0,
+  #|     get_key_count: 0,
+  #|     keyed_cursor_count: 0,
+  #|     value_read_count: 0,
+  #|     closed_count: 0,
   #|     stale_thrown: false,
+  #|     retained_request: null,
   #|     pending_opens: [],
   #|     pending_transactions: [],
   #|     pending_completions: [],
@@ -27,6 +32,8 @@ extern "js" fn install_fake_indexed_db(
   #|     pending_aborts: [],
   #|     database: null,
   #|   };
+  #|   const previous = globalThis[fake_key];
+  #|   if (previous != null) globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.stale")] = previous;
   #|   globalThis[fake_key] = fake;
   #|   if (record_kind === "string") fake.records.set(archive_key, record_value);
   #|   else if (record_kind === "undefined") fake.records.set(archive_key, undefined);
@@ -103,8 +110,20 @@ extern "js" fn install_fake_indexed_db(
   #|       return request;
   #|     };
   #|     transaction.objectStore = name => {
-  #|       if (name !== store_name || !fake.schema) throw { name: "NotFoundError" };
+  #|       if ((name !== store_name && name !== "archives|x") || !fake.schema) throw { name: "NotFoundError" };
   #|       return {
+  #|         getKey(key) {
+  #|           fake.get_key_count += 1;
+  #|           const request = make_request(
+  #|             fake.records.has(key) ? key : undefined,
+  #|             null,
+  #|           );
+  #|           request._deliver_success = () => {
+  #|             request._success?.({ target: request });
+  #|             if (!transaction.finished) transaction.complete();
+  #|           };
+  #|           return request;
+  #|         },
   #|         openCursor(key) {
   #|           if (arguments.length === 0) {
   #|             const entries = Array.from(fake.records.entries())
@@ -163,8 +182,17 @@ extern "js" fn install_fake_indexed_db(
   #|             request._deliver_success = deliver;
   #|             return request;
   #|           }
+  #|           fake.keyed_cursor_count += 1;
   #|           const exists = fake.records.has(key);
-  #|           const cursor = exists ? { key, value: fake.records.get(key) } : null;
+  #|           const cursor = exists ? { key } : null;
+  #|           if (cursor != null) {
+  #|             Object.defineProperty(cursor, "value", {
+  #|               get() {
+  #|                 fake.value_read_count += 1;
+  #|                 return fake.records.get(key);
+  #|               },
+  #|             });
+  #|           }
   #|           const request = make_request(cursor, null);
   #|           request._deliver_success = () => {
   #|             request._success?.({ target: request });
@@ -225,10 +253,10 @@ extern "js" fn install_fake_indexed_db(
   #|       closed: false,
   #|       onversionchange: null,
   #|       objectStoreNames: {
-  #|         contains(name) { return fake.schema && name === store_name; },
+  #|         contains(name) { return fake.schema && (name === store_name || name === "archives|x"); },
   #|       },
   #|       createObjectStore(name) {
-  #|         if (name !== store_name) throw { name: "InvalidStateError" };
+  #|         if (name !== store_name && name !== "archives|x") throw { name: "InvalidStateError" };
   #|         fake.schema = true;
   #|         return {};
   #|       },
@@ -241,7 +269,10 @@ extern "js" fn install_fake_indexed_db(
   #|         if (database.closed) throw { name: "InvalidStateError" };
   #|         return make_transaction();
   #|       },
-  #|       close() { database.closed = true; },
+  #|       close() {
+  #|         if (!database.closed) fake.closed_count += 1;
+  #|         database.closed = true;
+  #|       },
   #|     };
   #|     fake.database = database;
   #|     return database;
@@ -278,8 +309,12 @@ extern "js" fn install_fake_indexed_db(
   #|           fake.mode === "cursor-result-getter-failed") {
   #|         request._deliver_upgrade = () => request._upgrade?.({ target: request });
   #|         request._deliver_success = () => request._success?.({ target: request });
-  #|       } else if (fake.mode === "blocked") {
+  #|       } else if (fake.mode === "blocked" || fake.mode === "blocked-retained") {
   #|         request._deliver_blocked = () => request._blocked?.({ target: request });
+  #|         if (fake.mode === "blocked-retained") {
+  #|           fake.retained_request = request;
+  #|           request._deliver_success = () => request._success?.({ target: request });
+  #|         }
   #|       } else if (fake.mode === "open-error-security") {
   #|         request._deliver_error = () => {
   #|           request.error = { name: "SecurityError" };
@@ -330,47 +365,6 @@ extern "js" fn set_fake_unsupported_key_record(
   #| }
 
 ///|
-extern "js" fn set_legacy_value(value : String?) -> Unit =
-  #| value => {
-  #|   const fake_key = Symbol.for("moonbit-community.rabbita.indexed-db.fake");
-  #|   const fake = globalThis[fake_key];
-  #|   if (fake != null) fake.legacy_value = value;
-  #| }
-
-///|
-extern "js" fn throw_legacy_get(name : String) -> Unit =
-  #| name => {
-  #|   const fake_key = Symbol.for("moonbit-community.rabbita.indexed-db.fake");
-  #|   const fake = globalThis[fake_key];
-  #|   if (fake != null) fake.legacy_error = name;
-  #| }
-
-///|
-extern "js" fn clear_legacy_storage() -> Unit =
-  #| () => { delete globalThis.localStorage; }
-
-///|
-extern "js" fn fake_record_state() -> String =
-  #| () => {
-  #|   const fake_key = Symbol.for("moonbit-community.rabbita.indexed-db.fake");
-  #|   const fake = globalThis[fake_key];
-  #|   const key = "loomark.active-document-archive";
-  #|   if (fake == null || !fake.records.has(key)) return "missing";
-  #|   const value = fake.records.get(key);
-  #|   if (value === undefined) return "undefined";
-  #|   return String(value);
-  #| }
-
-///|
-extern "js" fn fake_legacy_state() -> String =
-  #| () => {
-  #|   const fake_key = Symbol.for("moonbit-community.rabbita.indexed-db.fake");
-  #|   const fake = globalThis[fake_key];
-  #|   const value = fake == null ? null : fake.legacy_value;
-  #|   return value == null ? "<missing>" : String(value);
-  #| }
-
-///|
 extern "js" fn fake_record_at(key : String) -> String =
   #| key => {
   #|   const fake_key = Symbol.for("moonbit-community.rabbita.indexed-db.fake");
@@ -378,10 +372,6 @@ extern "js" fn fake_record_at(key : String) -> String =
   #|   if (fake == null || !fake.records.has(key)) return "<missing>";
   #|   return String(fake.records.get(key));
   #| }
-
-///|
-extern "js" fn fake_legacy_remove_count() -> Int =
-  #| () => globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.fake")]?.legacy_remove_count ?? 0
 
 ///|
 extern "js" fn fake_open_count() -> Int =
@@ -392,29 +382,28 @@ extern "js" fn fake_transaction_count() -> Int =
   #| () => globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.fake")]?.transaction_count ?? 0
 
 ///|
-extern "js" fn fake_put_count() -> Int =
-  #| () => globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.fake")]?.put_count ?? 0
-
-///|
 extern "js" fn fake_abort_count() -> Int =
   #| () => globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.fake")]?.abort_count ?? 0
 
 ///|
-extern "js" fn flush_fake_open() -> Unit =
-  #| () => {
-  #|   const fake_key = Symbol.for("moonbit-community.rabbita.indexed-db.fake");
-  #|   const fake = globalThis[fake_key];
-  #|   if (fake == null) return;
-  #|   const pending = fake.pending_opens.splice(0);
-  #|   for (const entry of pending) {
-  #|     if (entry.request.error != null) {
-  #|       entry.request._error?.({ target: entry.request });
-  #|     } else {
-  #|       entry.request._upgrade?.({ target: entry.request });
-  #|       entry.request._success?.({ target: entry.request });
-  #|     }
-  #|   }
-  #| }
+extern "js" fn fake_get_key_count() -> Int =
+  #| () => globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.fake")]?.get_key_count ?? 0
+
+///|
+extern "js" fn fake_keyed_cursor_count() -> Int =
+  #| () => globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.fake")]?.keyed_cursor_count ?? 0
+
+///|
+extern "js" fn fake_value_read_count() -> Int =
+  #| () => globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.fake")]?.value_read_count ?? 0
+
+///|
+extern "js" fn fake_closed_count() -> Int =
+  #| () => globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.fake")]?.closed_count ?? 0
+
+///|
+extern "js" fn fake_stale_database_closed() -> Bool =
+  #| () => globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.stale")]?.database?.closed ?? false
 
 ///|
 extern "js" fn flush_fake_transactions() -> Unit =
@@ -424,18 +413,6 @@ extern "js" fn flush_fake_transactions() -> Unit =
   #|   if (fake == null) return;
   #|   const pending = fake.pending_transactions.splice(0);
   #|   for (const transaction of pending) transaction.complete();
-  #| }
-
-///|
-extern "js" fn flush_fake_completions() -> Unit =
-  #| () => {
-  #|   const fake_key = Symbol.for("moonbit-community.rabbita.indexed-db.fake");
-  #|   const fake = globalThis[fake_key];
-  #|   if (fake == null) return;
-  #|   const pending = fake.pending_completions.splice(0);
-  #|   for (const transaction of pending) {
-  #|     transaction.oncomplete?.({ target: transaction });
-  #|   }
   #| }
 
 ///|
@@ -452,633 +429,261 @@ extern "js" fn flush_fake_aborts() -> Unit =
   #| }
 
 ///|
+extern "js" fn deliver_fake_stale_open() -> Unit =
+  #| () => {
+  #|   const stale = globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.stale")];
+  #|   stale?.retained_request?._success?.({ target: stale.retained_request });
+  #| }
+
+///|
 extern "js" fn trigger_fake_versionchange() -> Unit =
   #| () => {
-  #|   const fake_key = Symbol.for("moonbit-community.rabbita.indexed-db.fake");
-  #|   const fake = globalThis[fake_key];
+  #|   const fake = globalThis[Symbol.for("moonbit-community.rabbita.indexed-db.fake")];
   #|   fake?.database?.onversionchange?.({});
   #| }
 
 ///|
-fn read_result() -> (Int, String, Int) {
-  let mut kind = -1
-  let mut value = ""
-  let mut count = 0
-  get_item("loomark.active-document-archive", (next_kind, next_value) => {
-    kind = next_kind
-    value = next_value
-    count += 1
-  })
-  (kind, value, count)
+fn test_store() -> Store {
+  Store::Store("loomark.local-repository", 1, "archives")
 }
 
 ///|
-fn scan_result() -> (ScanResult, Int) {
-  let config = Config::Config("loomark.local-repository", 1, "archives")
-  let mut result = ScanResult::Failed
+fn read(store : Store, key : String) -> ReadOutcome {
+  let mut result : ReadOutcome = Ok(Lookup::Missing)
+  enqueue_get(store, key, next => result = next)
+  result
+}
+
+///|
+fn contains(store : Store, key : String) -> Result[Bool, ReadError] {
+  let mut result : Result[Bool, ReadError] = Ok(false)
+  enqueue_contains(store, key, next => result = next)
+  result
+}
+
+///|
+fn write(store : Store, mutations : Array[Mutation]) -> WriteOutcome {
+  let mut result : WriteOutcome = Some(WriteError::Failed("pending", 1))
+  enqueue_apply(store, mutations, next => result = next)
+  result
+}
+
+///|
+fn list(store : Store) -> EntriesOutcome {
+  let mut result : EntriesOutcome = Err(ReadError::Failed("pending", 1))
+  enqueue_entries(store, next => result = next)
+  result
+}
+
+///|
+test "structural stores share state and delimiters do not collide" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("success", "missing", "")
+  let first = Store::Store("loomark.local-repository", 1, "archives")
+  let equal = Store::Store("loomark.local-repository", 1, "archives")
+  let different = Store::Store("loomark.local-repository", 1, "archives|x")
+  ignore(read(first, "x"))
+  ignore(read(equal, "x"))
+  ignore(read(different, "x"))
+  assert_eq(fake_open_count(), 2)
+}
+
+///|
+test "get reports missing found and unsupported" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("success", "missing", "")
+  let store = test_store()
+  assert_eq(read(store, "missing"), Ok(Lookup::Missing))
+  set_fake_record("found", "string", "value")
+  assert_eq(read(store, "found"), Ok(Lookup::Found("value")))
+  set_fake_record("bad", "number", "")
+  assert_eq(read(store, "bad"), Ok(Lookup::Unsupported))
+}
+
+///|
+test "contains uses getKey and never reads a value" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("success", "missing", "")
+  let store = test_store()
+  set_fake_record("present", "string", "value")
+  assert_eq(contains(store, "present"), Ok(true))
+  assert_eq(contains(store, "missing"), Ok(false))
+  assert_eq(fake_get_key_count(), 2)
+  assert_eq(fake_keyed_cursor_count(), 0)
+  assert_eq(fake_value_read_count(), 0)
+}
+
+///|
+test "entries retains unsupported cursor entries and continues" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("success", "missing", "")
+  let store = test_store()
+  set_fake_unsupported_key_record(7, "bad-key")
+  set_fake_record("a", "number", "")
+  set_fake_record("b", "string", "B")
+  assert_eq(
+    list(store),
+    Ok([
+      Entry::UnsupportedKey(0),
+      Entry::UnsupportedValue("a"),
+      Entry::StringRecord("b", "B"),
+    ]),
+  )
+}
+
+///|
+test "set and delete commit in one transaction" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("success", "missing", "")
+  let store = test_store()
+  assert_eq(
+    write(store, [Mutation::Set("a", "A"), Mutation::Delete("b")]),
+    None,
+  )
+  assert_eq(fake_transaction_count(), 1)
+  assert_eq(fake_record_at("a"), "A")
+}
+
+///|
+test "apply is atomic, snapshots inputs, and waits for commit" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("request-success-only", "missing", "")
+  let store = test_store()
+  let mutations = [Mutation::Set("a", "A")]
+  let mut result : WriteOutcome = Some(WriteError::Failed("pending", 1))
+  enqueue_apply(store, mutations, next => result = next)
+  mutations.push(Mutation::Delete("b"))
+  assert_eq(result, Some(WriteError::Failed("pending", 1)))
+  flush_fake_transactions()
+  assert_eq(result, None)
+  assert_eq(fake_transaction_count(), 1)
+}
+
+///|
+test "failed apply rolls back and empty apply does not open" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("delete-failed-delayed-abort", "missing", "")
+  let store = test_store()
+  set_fake_record("old", "string", "old")
+  let mut result : WriteOutcome = None
+  enqueue_apply(store, [Mutation::Set("new", "new"), Mutation::Delete("old")], next => {
+    result = next
+  })
+  assert_eq(fake_record_at("new"), "<missing>")
+  assert_eq(fake_abort_count(), 1)
+  flush_fake_aborts()
+  assert_eq(result, Some(WriteError::Failed("UnknownError", 0)))
+  assert_eq(fake_record_at("old"), "old")
+  reset_provider_state_for_test()
+  install_fake_indexed_db("success", "missing", "")
+  assert_eq(write(test_store(), []), None)
+  assert_eq(fake_open_count(), 0)
+}
+
+///|
+test "quota and unavailable preserve typed diagnostics" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("quota", "string", "old")
+  assert_eq(
+    write(test_store(), [Mutation::Set("x", "new")]),
+    Some(WriteError::QuotaExceeded),
+  )
+  reset_provider_state_for_test()
+  install_missing_indexed_db()
+  assert_eq(read(test_store(), "x"), Err(ReadError::Unavailable))
+  reset_provider_state_for_test()
+  install_fake_indexed_db("open-error-failed", "missing", "")
+  assert_eq(read(test_store(), "x"), Err(ReadError::Failed("UnknownError", 0)))
+}
+
+///|
+test "blocked open fails once and a later operation recovers" {
+  reset_provider_state_for_test()
+  install_fake_indexed_db("blocked", "missing", "")
+  let mut result : ReadOutcome = Ok(Lookup::Found("bad"))
   let mut count = 0
-  enqueue_scan(config, next => {
+  enqueue_get(test_store(), "x", next => {
     result = next
     count += 1
   })
-  (result, count)
-}
-
-///|
-test "indexeddb provider distinguishes missing records and authoritative loaded values" {
-  reset_provider_state_for_test()
+  assert_eq(result, Err(ReadError::Unavailable))
+  assert_eq(count, 1)
   install_fake_indexed_db("success", "missing", "")
-  clear_legacy_storage()
-  let (missing_kind, missing_value, missing_count) = read_result()
-  assert_eq(missing_kind, 0)
-  assert_eq(missing_value, "")
-  assert_eq(missing_count, 1)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("success", "string", "indexeddb")
-  set_legacy_value(Some("legacy"))
-  let (loaded_kind, loaded_value, loaded_count) = read_result()
-  assert_eq(loaded_kind, 1)
-  assert_eq(loaded_value, "indexeddb")
-  assert_eq(loaded_count, 1)
-  assert_eq(fake_record_state(), "indexeddb")
-  assert_eq(fake_legacy_state(), "legacy")
-  assert_eq(fake_legacy_remove_count(), 0)
+  let mut recovered_count = 0
+  enqueue_get(test_store(), "x", _ => recovered_count += 1)
+  assert_eq(recovered_count, 1)
+  assert_eq(fake_open_count(), 1)
 }
 
 ///|
-test "indexeddb open failures preserve the existing unavailable and failed codes" {
+test "stale open success closes its old database and never repeats callbacks" {
   reset_provider_state_for_test()
-  install_missing_indexed_db()
-  let (missing_kind, _, missing_count) = read_result()
-  assert_eq(missing_kind, 2)
-  assert_eq(missing_count, 1)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("blocked", "missing", "")
-  let (blocked_kind, _, blocked_count) = read_result()
-  assert_eq(blocked_kind, 2)
+  install_fake_indexed_db("blocked-retained", "missing", "")
+  let mut blocked_count = 0
+  enqueue_get(test_store(), "old", _ => blocked_count += 1)
   assert_eq(blocked_count, 1)
-  let (blocked_again_kind, _, blocked_again_count) = read_result()
-  assert_eq(blocked_again_kind, 2)
-  assert_eq(blocked_again_count, 1)
-  assert_eq(fake_open_count(), 1)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("open-error-security", "missing", "")
-  let (security_kind, _, security_count) = read_result()
-  assert_eq(security_kind, 2)
-  assert_eq(security_count, 1)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("open-error-failed", "missing", "")
-  let (failed_kind, _, failed_count) = read_result()
-  assert_eq(failed_kind, 3)
-  assert_eq(failed_count, 1)
-
-  reset_provider_state_for_test()
-  install_missing_indexed_db()
-  let mut unavailable_write_kind = -1
-  set_item("loomark.active-document-archive", "new", kind => {
-    unavailable_write_kind = kind
-  })
-  assert_eq(unavailable_write_kind, 1)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("open-error-security", "missing", "")
-  let mut security_write_kind = -1
-  set_item("loomark.active-document-archive", "new", kind => {
-    security_write_kind = kind
-  })
-  assert_eq(security_write_kind, 1)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("open-error-failed", "missing", "")
-  let mut failed_write_kind = -1
-  set_item("loomark.active-document-archive", "new", kind => {
-    failed_write_kind = kind
-  })
-  assert_eq(failed_write_kind, 3)
+  install_fake_indexed_db("success", "missing", "")
+  let mut current_count = 0
+  enqueue_get(test_store(), "current", _ => current_count += 1)
+  assert_eq(current_count, 1)
+  deliver_fake_stale_open()
+  assert_eq(blocked_count, 1)
+  assert_eq(current_count, 1)
+  assert_eq(fake_stale_database_closed(), true)
 }
 
 ///|
-test "one failed open fans out to every queued operation" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("delayed-open-error", "missing", "")
-  let config = Config::Config("loomark.local-repository", 1, "archives")
-  let mut write = WriteResult::Stored
-  let mut write_count = 0
-  let mut scan = ScanResult::Scanned([])
-  let mut scan_count = 0
-  enqueue_mutate(config, [Mutation::Put("source/v1/a", "A")], result => {
-    write = result
-    write_count += 1
-  })
-  enqueue_scan(config, result => {
-    scan = result
-    scan_count += 1
-  })
-  assert_eq(write_count, 0)
-  assert_eq(scan_count, 0)
-  assert_eq(fake_open_count(), 1)
-  flush_fake_open()
-  assert_eq(write, WriteResult::Failed)
-  assert_eq(write_count, 1)
-  assert_eq(scan, ScanResult::Failed)
-  assert_eq(scan_count, 1)
-  assert_eq(fake_transaction_count(), 0)
-}
-
-///|
-test "successful writes wait for transaction completion and preserve FIFO invocation order" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("delayed-open", "missing", "")
-  let mut first_kind = -1
-  let mut second_kind = -1
-  set_item("loomark.active-document-archive", "first", kind => first_kind = kind)
-  set_item("loomark.active-document-archive", "second", kind => {
-    second_kind = kind
-  })
-  assert_eq(first_kind, -1)
-  assert_eq(second_kind, -1)
-  assert_eq(fake_transaction_count(), 0)
-  flush_fake_open()
-  assert_eq(first_kind, 0)
-  assert_eq(second_kind, 0)
-  assert_eq(fake_record_state(), "second")
-  assert_eq(fake_transaction_count(), 2)
-  assert_eq(fake_put_count(), 2)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("request-success-only", "string", "old")
-  let mut completion_kind = -1
-  let mut completion_count = 0
-  set_item("loomark.active-document-archive", "new", kind => {
-    completion_kind = kind
-    completion_count += 1
-  })
-  assert_eq(completion_kind, -1)
-  assert_eq(completion_count, 0)
-  assert_eq(fake_record_state(), "old")
-  flush_fake_transactions()
-  assert_eq(completion_kind, 0)
-  assert_eq(completion_count, 1)
-  assert_eq(fake_record_state(), "new")
-}
-
-///|
-test "provider admits a later transaction before an earlier acknowledgment" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("request-success-only", "string", "old")
-  let mut first_count = 0
-  let mut second_count = 0
-  set_item("loomark.active-document-archive", "first", _ => first_count += 1)
-  set_item("loomark.active-document-archive", "second", _ => second_count += 1)
-  assert_eq(fake_transaction_count(), 2)
-  assert_eq(first_count, 0)
-  assert_eq(second_count, 0)
-  flush_fake_transactions()
-  assert_eq(first_count, 1)
-  assert_eq(second_count, 1)
-  assert_eq(fake_record_state(), "second")
-}
-
-///|
-test "a completion callback may enqueue another transaction" {
+test "versionchange closes the cached database before reopening" {
   reset_provider_state_for_test()
   install_fake_indexed_db("success", "missing", "")
-  let mut first_count = 0
-  let mut second_count = 0
-  set_item("loomark.active-document-archive", "first", _ => {
-    first_count += 1
-    set_item("loomark.active-document-archive", "second", _ => second_count += 1)
-  })
-  assert_eq(first_count, 1)
-  assert_eq(second_count, 1)
-  assert_eq(fake_transaction_count(), 2)
-  assert_eq(fake_record_state(), "second")
+  assert_eq(read(test_store(), "before"), Ok(Lookup::Missing))
+  assert_eq(fake_closed_count(), 0)
+  trigger_fake_versionchange()
+  assert_eq(fake_closed_count(), 1)
+  assert_eq(read(test_store(), "after"), Ok(Lookup::Missing))
+  assert_eq(fake_open_count(), 2)
 }
 
 ///|
-test "committed mutation with a withheld acknowledgment does not block a probe" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("commit-withheld", "string", "old")
-  let config = Config::Config("loomark.local-repository", 1, "archives")
-  let mut delete_count = 0
-  let mut probe = ReadResult::Failed
-  let mut probe_count = 0
-  enqueue_mutate(
-    config,
-    [Mutation::Delete("loomark.active-document-archive")],
-    _ => delete_count += 1,
-  )
-  assert_eq(delete_count, 0)
-  assert_eq(fake_record_state(), "missing")
-  enqueue_get(config, "loomark.active-document-archive", false, result => {
-    probe = result
-    probe_count += 1
-  })
-  assert_eq(fake_transaction_count(), 2)
-  assert_eq(probe, ReadResult::Missing)
-  assert_eq(probe_count, 1)
-  flush_fake_completions()
-  assert_eq(delete_count, 1)
-}
-
-///|
-test "aborted and quota writes complete once and preserve the old record" {
+test "duplicate request and transaction events resume once" {
   reset_provider_state_for_test()
   install_fake_indexed_db("abort-after-put", "string", "old")
-  let mut abort_kind = -1
-  let mut abort_count = 0
-  set_item("loomark.active-document-archive", "new", kind => {
-    abort_kind = kind
-    abort_count += 1
-  })
-  assert_eq(abort_kind, 3)
-  assert_eq(abort_count, 1)
-  assert_eq(fake_record_state(), "old")
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("quota", "string", "old")
-  let mut quota_kind = -1
-  set_item("loomark.active-document-archive", "new", kind => quota_kind = kind)
-  assert_eq(quota_kind, 2)
-  assert_eq(fake_record_state(), "old")
-}
-
-///|
-test "legacy strings migrate only after commit and never override an idb record" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("success", "missing", "")
-  set_legacy_value(Some("legacy"))
-  let (migrated_kind, migrated_value, migrated_count) = read_result()
-  assert_eq(migrated_kind, 1)
-  assert_eq(migrated_value, "legacy")
-  assert_eq(migrated_count, 1)
-  assert_eq(fake_record_state(), "legacy")
-  assert_eq(fake_legacy_state(), "<missing>")
-  assert_eq(fake_legacy_remove_count(), 1)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("request-success-only", "missing", "")
-  set_legacy_value(Some("old"))
-  let mut race_kind = -1
-  let mut race_value = ""
-  let mut race_count = 0
-  get_item("loomark.active-document-archive", (kind, value) => {
-    race_kind = kind
-    race_value = value
-    race_count += 1
-  })
-  assert_eq(race_kind, -1)
-  assert_eq(fake_record_state(), "missing")
-  set_legacy_value(Some("new"))
-  flush_fake_transactions()
-  assert_eq(race_kind, 1)
-  assert_eq(race_value, "old")
-  assert_eq(race_count, 1)
-  assert_eq(fake_record_state(), "old")
-  assert_eq(fake_legacy_state(), "new")
-  assert_eq(fake_legacy_remove_count(), 0)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("success", "missing", "")
-  set_legacy_value(Some("preserve"))
-  throw_legacy_get("SecurityError")
-  let (unavailable_kind, _, unavailable_count) = read_result()
-  assert_eq(unavailable_kind, 2)
-  assert_eq(unavailable_count, 1)
-  assert_eq(fake_legacy_state(), "preserve")
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("success", "missing", "")
-  set_legacy_value(Some("preserve"))
-  throw_legacy_get("UnknownError")
-  let (failed_kind, _, failed_count) = read_result()
-  assert_eq(failed_kind, 3)
-  assert_eq(failed_count, 1)
-  assert_eq(fake_legacy_state(), "preserve")
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("abort-after-put", "missing", "")
-  set_legacy_value(Some("preserve"))
-  let (migration_failure_kind, _, migration_failure_count) = read_result()
-  assert_eq(migration_failure_kind, 3)
-  assert_eq(migration_failure_count, 1)
-  assert_eq(fake_record_state(), "missing")
-  assert_eq(fake_legacy_state(), "preserve")
-  assert_eq(fake_legacy_remove_count(), 0)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("success", "undefined", "")
-  set_legacy_value(Some("must-not-win"))
-  let (undefined_kind, undefined_value, undefined_count) = read_result()
-  assert_eq(undefined_kind, 3)
-  assert_eq(undefined_value, "")
-  assert_eq(undefined_count, 1)
-  assert_eq(fake_record_state(), "undefined")
-  assert_eq(fake_legacy_state(), "must-not-win")
-  assert_eq(fake_legacy_remove_count(), 0)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("success", "number", "")
-  set_legacy_value(Some("also-must-not-win"))
-  let (number_kind, number_value, number_count) = read_result()
-  assert_eq(number_kind, 3)
-  assert_eq(number_value, "")
-  assert_eq(number_count, 1)
-  assert_eq(fake_record_state(), "42")
-  assert_eq(fake_legacy_state(), "also-must-not-win")
-  assert_eq(fake_legacy_remove_count(), 0)
-}
-
-///|
-test "stale transaction creation reports unavailable without retrying" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("stale-transaction-once", "missing", "")
-  let mut observed_kind = -1
-  let mut observed_count = 0
-  set_item("loomark.active-document-archive", "not-retried", kind => {
-    observed_kind = kind
-    observed_count += 1
-  })
-  assert_eq(observed_kind, 1)
-  assert_eq(observed_count, 1)
-  assert_eq(fake_open_count(), 1)
-  assert_eq(fake_record_state(), "missing")
-}
-
-///|
-test "versionchange invalidates the cached connection before the next operation" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("success", "missing", "")
-  let mut first_kind = -1
-  set_item("loomark.active-document-archive", "before", kind => {
-    first_kind = kind
-  })
-  assert_eq(first_kind, 0)
-  trigger_fake_versionchange()
-
-  let mut second_kind = -1
-  set_item("loomark.active-document-archive", "after", kind => {
-    second_kind = kind
-  })
-  assert_eq(second_kind, 0)
-  assert_eq(fake_open_count(), 2)
-  assert_eq(fake_record_state(), "after")
-}
-
-///|
-test "indexeddb scan returns an empty committed store" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("success", "missing", "")
-  let (observed, count) = scan_result()
-  assert_eq(observed, ScanResult::Scanned([]))
-  assert_eq(count, 1)
-  assert_eq(fake_transaction_count(), 1)
-}
-
-///|
-test "indexeddb scan preserves order and isolates unsupported records" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("success", "missing", "")
-  set_fake_unsupported_key_record(7, "unsupported-seven")
-  set_fake_unsupported_key_record(8, "unsupported-eight")
-  set_fake_record("source/v1/c", "string", "C")
-  set_fake_record("source/v1/a", "number", "")
-  set_fake_record("source/v1/b", "string", "B")
-  let (observed, count) = scan_result()
-  assert_eq(
-    observed,
-    ScanResult::Scanned([
-      ScanEntry::UnsupportedKey(0),
-      ScanEntry::UnsupportedKey(1),
-      ScanEntry::UnsupportedValue("source/v1/a"),
-      ScanEntry::StringRecord("source/v1/b", "B"),
-      ScanEntry::StringRecord("source/v1/c", "C"),
-    ]),
-  )
-  assert_eq(count, 1)
-}
-
-///|
-test "indexeddb scan fails closed at every cursor boundary" {
-  for
-    mode in [
-      "cursor-error", "cursor-result-getter-failed", "cursor-value-getter-failed",
-      "cursor-continue-failed",
-    ] {
-    reset_provider_state_for_test()
-    install_fake_indexed_db(mode, "missing", "")
-    set_fake_record("source/v1/a", "string", "A")
-    let (observed, count) = scan_result()
-    assert_eq(observed, ScanResult::Failed)
-    assert_eq(count, 1)
-  }
-}
-
-///|
-test "indexeddb scan waits for transaction completion" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("request-success-only", "missing", "")
-  set_fake_record("source/v1/a", "string", "A")
-  let config = Config::Config("loomark.local-repository", 1, "archives")
-  let mut observed = ScanResult::Failed
   let mut count = 0
-  enqueue_scan(config, result => {
-    observed = result
-    count += 1
-  })
-  assert_eq(count, 0)
-  flush_fake_transactions()
-  assert_eq(
-    observed,
-    ScanResult::Scanned([ScanEntry::StringRecord("source/v1/a", "A")]),
-  )
+  enqueue_apply(test_store(), [Mutation::Set("x", "new")], _ => count += 1)
   assert_eq(count, 1)
 }
 
 ///|
-test "indexeddb mutation atomically puts and deletes records" {
+test "debug output is complete and redacts operation arguments" {
+  debug_inspect(
+    test_store().get("secret", _ => @cmd.none),
+    content="IndexedDBGet",
+  )
+  debug_inspect(
+    test_store().contains("secret", _ => @cmd.none),
+    content="IndexedDBContains",
+  )
+  debug_inspect(
+    test_store().entries(_ => @cmd.none),
+    content="IndexedDBEntries",
+  )
+  debug_inspect(
+    test_store().apply([Mutation::Set("secret", "value")], _ => @cmd.none),
+    content="IndexedDBApply(1)",
+  )
+}
+
+///|
+async test "public commands use the new API" {
   reset_provider_state_for_test()
   install_fake_indexed_db("success", "missing", "")
-  set_fake_record("active", "string", "old")
-  let config = Config::Config("loomark.local-repository", 1, "archives")
-  let mut observed = WriteResult::Failed
-  let mut count = 0
-  enqueue_mutate(
-    config,
-    [Mutation::Put("source/v1/document-1", "new"), Mutation::Delete("active")],
-    result => {
-      observed = result
-      count += 1
-    },
-  )
-  assert_eq(observed, WriteResult::Stored)
-  assert_eq(count, 1)
-  assert_eq(fake_record_at("source/v1/document-1"), "new")
-  assert_eq(fake_record_at("active"), "<missing>")
-  assert_eq(fake_transaction_count(), 1)
-}
-
-///|
-test "indexeddb mutation failure waits for abort and rolls back" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("delete-failed-delayed-abort", "missing", "")
-  set_fake_record("active", "string", "old")
-  let config = Config::Config("loomark.local-repository", 1, "archives")
-  let mut observed = WriteResult::Stored
-  let mut count = 0
-  enqueue_mutate(
-    config,
-    [Mutation::Put("source/v1/document-1", "new"), Mutation::Delete("active")],
-    result => {
-      observed = result
-      count += 1
-    },
-  )
-  assert_eq(count, 0)
-  assert_eq(fake_abort_count(), 1)
-  flush_fake_aborts()
-  assert_eq(observed, WriteResult::Failed)
-  assert_eq(count, 1)
-  assert_eq(fake_record_at("source/v1/document-1"), "<missing>")
-  assert_eq(fake_record_at("active"), "old")
-}
-
-///|
-test "empty indexeddb mutation is an immediate successful no-op" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("success", "missing", "")
-  let config = Config::Config("loomark.local-repository", 1, "archives")
-  let mut observed = WriteResult::Failed
-  let mut count = 0
-  enqueue_mutate(config, [], result => {
-    observed = result
-    count += 1
-  })
-  assert_eq(observed, WriteResult::Stored)
-  assert_eq(count, 1)
-  assert_eq(fake_open_count(), 0)
-  assert_eq(fake_transaction_count(), 0)
-}
-
-///|
-test "queued indexeddb mutation owns its mutation list" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("delayed-open", "missing", "")
-  set_fake_record("active", "string", "keep")
-  let config = Config::Config("loomark.local-repository", 1, "archives")
-  let mutations = [Mutation::Put("source/v1/document-1", "new")]
-  let mut observed = WriteResult::Failed
-  enqueue_mutate(config, mutations, result => observed = result)
-  mutations.push(Mutation::Delete("active"))
-  flush_fake_open()
-  assert_eq(observed, WriteResult::Stored)
-  assert_eq(fake_record_at("source/v1/document-1"), "new")
-  assert_eq(fake_record_at("active"), "keep")
-}
-
-///|
-test "indexeddb mutation waits for transaction completion" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("request-success-only", "missing", "")
-  set_fake_record("active", "string", "old")
-  let config = Config::Config("loomark.local-repository", 1, "archives")
-  let mut observed = WriteResult::Failed
-  let mut count = 0
-  enqueue_mutate(
-    config,
-    [Mutation::Put("source/v1/document-1", "new"), Mutation::Delete("active")],
-    result => {
-      observed = result
-      count += 1
-    },
-  )
-  assert_eq(count, 0)
-  assert_eq(fake_record_at("source/v1/document-1"), "<missing>")
-  assert_eq(fake_record_at("active"), "old")
-  flush_fake_transactions()
-  assert_eq(observed, WriteResult::Stored)
-  assert_eq(count, 1)
-  assert_eq(fake_record_at("source/v1/document-1"), "new")
-  assert_eq(fake_record_at("active"), "<missing>")
-}
-
-///|
-test "indexeddb provider preserves FIFO order across mutation and scan" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("delayed-open", "missing", "")
-  let config = Config::Config("loomark.local-repository", 1, "archives")
-  let order : Array[String] = []
-  let mut scanned = ScanResult::Failed
-  enqueue_mutate(config, [Mutation::Put("source/v1/document-1", "new")], _ => {
-    order.push("mutate")
-  })
-  enqueue_scan(config, result => {
-    scanned = result
-    order.push("scan")
-  })
-  assert_eq(order, [])
-  flush_fake_open()
-  assert_eq(order, ["mutate", "scan"])
-  assert_eq(
-    scanned,
-    ScanResult::Scanned([ScanEntry::StringRecord("source/v1/document-1", "new")]),
-  )
-}
-
-///|
-test "indexeddb scan classifies unavailable and failed opens" {
-  reset_provider_state_for_test()
-  install_missing_indexed_db()
-  let (unavailable, unavailable_count) = scan_result()
-  assert_eq(unavailable, ScanResult::Unavailable)
-  assert_eq(unavailable_count, 1)
-
-  reset_provider_state_for_test()
-  install_fake_indexed_db("open-error-failed", "missing", "")
-  let (failed, failed_count) = scan_result()
-  assert_eq(failed, ScanResult::Failed)
-  assert_eq(failed_count, 1)
-}
-
-///|
-async test "public indexeddb commands preserve provider results" {
-  reset_provider_state_for_test()
-  install_fake_indexed_db("success", "missing", "")
-  set_fake_record("active", "string", "old")
-  set_fake_record("source/v1/a", "string", "A")
-  set_fake_record("source/v1/b", "number", "")
-  let config = Config::Config("loomark.local-repository", 1, "archives")
-  let mut scanned = ScanResult::Failed
+  let store = test_store()
+  let mut result : Result[Lookup, ReadError] = Ok(Lookup::Missing)
   @testing.run_cmd(
-    scan(config, result=result => {
-      scanned = result
+    store.get("x", next => {
+      result = next
       @cmd.none
     }),
   )
-  assert_eq(
-    scanned,
-    ScanResult::Scanned([
-      ScanEntry::StringRecord("active", "old"),
-      ScanEntry::StringRecord("source/v1/a", "A"),
-      ScanEntry::UnsupportedValue("source/v1/b"),
-    ]),
-  )
-  let mut written = WriteResult::Failed
-  @testing.run_cmd(
-    mutate(
-      config,
-      [Mutation::Put("source/v1/document-1", "new"), Mutation::Delete("active")],
-      result=result => {
-        written = result
-        @cmd.none
-      },
-    ),
-  )
-  assert_eq(written, WriteResult::Stored)
-  assert_eq(fake_record_at("source/v1/document-1"), "new")
-  assert_eq(fake_record_at("active"), "<missing>")
+  assert_eq(result, Ok(Lookup::Missing))
 }

@@ -1,6 +1,7 @@
 import {
   "moonbit-community/rabbita",
   "moonbit-community/rabbita/html",
+  "moonbit-community/rabbita/indexed_db",
   "moonbit-community/rabbita/js",
 }
 

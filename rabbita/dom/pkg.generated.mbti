@@ -487,6 +487,8 @@ pub fn IDBFactory::open_safe(Self, String, Int) -> Result[IDBOpenDBRequest, IDBE
 #external
 pub type IDBObjectStore
 pub fn IDBObjectStore::delete_safe(Self, String) -> Result[IDBRequest, IDBError]
+pub fn IDBObjectStore::get_key(Self, String) -> IDBRequest
+pub fn IDBObjectStore::get_key_safe(Self, String) -> Result[IDBRequest, IDBError]
 pub fn IDBObjectStore::open_cursor(Self, String) -> IDBRequest
 pub fn IDBObjectStore::open_cursor_all_safe(Self) -> Result[IDBRequest, IDBError]
 pub fn IDBObjectStore::open_cursor_safe(Self, String) -> Result[IDBRequest, IDBError]
@@ -511,6 +513,8 @@ pub fn IDBRequest::cursor_safe(Self) -> Result[IDBCursorWithValue?, IDBError]
 pub fn IDBRequest::get_cursor(Self) -> @js.Nullable[IDBCursorWithValue]
 pub fn IDBRequest::get_error_code(Self) -> Int
 pub fn IDBRequest::get_error_name(Self) -> String
+pub fn IDBRequest::has_key(Self) -> Bool
+pub fn IDBRequest::has_key_safe(Self) -> Result[Bool, IDBError]
 pub fn IDBRequest::set_on_error(Self, () -> Unit) -> Unit
 pub fn IDBRequest::set_on_success(Self, () -> Unit) -> Unit
 

@@ -27,6 +27,13 @@ test('delay follows the controllable browser clock', async ({ page }) => {
   await expect(page.locator('#delay-status')).toHaveText('delay: finished');
 });
 
+test('IndexedDB store flow completes through update messages', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByRole('button', { name: 'Run IndexedDB store flow' }).click();
+  await expect(page.locator('#indexeddb-status')).toHaveText('indexeddb: complete');
+});
+
 test('batch eventually applies every message without asserting order', async ({ page }) => {
   await page.goto('/');
 

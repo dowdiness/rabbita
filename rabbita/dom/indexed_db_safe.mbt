@@ -374,6 +374,33 @@ extern "js" fn ffi_delete_safe(
 
 ///|
 #cfg(target="js")
+pub fn IDBObjectStore::get_key_safe(
+  self : Self,
+  key : String,
+) -> Result[IDBRequest, IDBError] {
+  let mut result : Result[IDBRequest, IDBError] = Err({
+    name: "UnknownError",
+    code: 0,
+  })
+  ffi_get_key_safe(self, key, request => result = Ok(request), (name, code) => {
+    result = Err({ name, code })
+  })
+  result
+}
+
+///|
+extern "js" fn ffi_get_key_safe(
+  store : IDBObjectStore,
+  key : String,
+  on_success : (IDBRequest) -> Unit,
+  on_error : (String, Int) -> Unit,
+) -> Unit =
+  #| (store, key, onSuccess, onError) => {
+  #|   try { onSuccess(store.getKey(key)); }
+  #|   catch (error) { onError(error?.name ?? "UnknownError", error?.code ?? 0); }
+  #| }
+
+///|
 pub fn IDBObjectStore::open_cursor_safe(
   self : Self,
   key : String,
@@ -438,6 +465,29 @@ extern "js" fn ffi_open_cursor_all_safe(
 
 ///|
 #cfg(target="js")
+pub fn IDBRequest::has_key_safe(self : Self) -> Result[Bool, IDBError] {
+  let mut result : Result[Bool, IDBError] = Err({
+    name: "UnknownError",
+    code: 0,
+  })
+  ffi_has_key_safe(self, value => result = Ok(value), (name, code) => {
+    result = Err({ name, code })
+  })
+  result
+}
+
+///|
+extern "js" fn ffi_has_key_safe(
+  request : IDBRequest,
+  on_success : (Bool) -> Unit,
+  on_error : (String, Int) -> Unit,
+) -> Unit =
+  #| (request, onSuccess, onError) => {
+  #|   try { onSuccess(request.result !== undefined); }
+  #|   catch (error) { onError(error?.name ?? "UnknownError", error?.code ?? 0); }
+  #| }
+
+///|
 pub fn IDBRequest::cursor_safe(
   self : Self,
 ) -> Result[IDBCursorWithValue?, IDBError] {

@@ -7,10 +7,10 @@ using @debug {type Repr}
 ///|
 #cfg(target="js")
 extenum @cmd.Extension += {
-  IndexedDBGet(Config, String, Bool, @cmd.Emit[ReadResult])
-  IndexedDBPut(Config, String, String, @cmd.Emit[WriteResult])
-  IndexedDBMutate(Config, Array[Mutation], @cmd.Emit[WriteResult])
-  IndexedDBScan(Config, @cmd.Emit[ScanResult])
+  IndexedDBGet(Store, String, @cmd.Emit[Result[Lookup, ReadError]])
+  IndexedDBContains(Store, String, @cmd.Emit[Result[Bool, ReadError]])
+  IndexedDBEntries(Store, @cmd.Emit[Result[Array[Entry], ReadError]])
+  IndexedDBApply(Store, Array[Mutation], @cmd.Emit[WriteError?])
 }
 
 ///|
@@ -19,25 +19,11 @@ let op : @cmd.Op = @cmd.Op()
   ..on_invoke(indexed_db_invoke)
   ..on_debug(extension => {
     match extension {
-      IndexedDBGet(config, key, migrate_legacy, _) =>
-        Repr::ctor("IndexedDBGet", [
-          (None, Repr(config)),
-          (None, Repr(key)),
-          (None, Repr(migrate_legacy)),
-        ])
-      IndexedDBPut(config, key, value, _) =>
-        Repr::ctor("IndexedDBPut", [
-          (None, Repr(config)),
-          (None, Repr(key)),
-          (None, Repr(value)),
-        ])
-      IndexedDBMutate(config, mutations, _) =>
-        Repr::ctor("IndexedDBMutate", [
-          (None, Repr(config)),
-          (None, Repr(mutations)),
-        ])
-      IndexedDBScan(config, _) =>
-        Repr::ctor("IndexedDBScan", [(None, Repr(config))])
+      IndexedDBGet(_, _, _) => Repr::ctor("IndexedDBGet", [])
+      IndexedDBContains(_, _, _) => Repr::ctor("IndexedDBContains", [])
+      IndexedDBEntries(_, _) => Repr::ctor("IndexedDBEntries", [])
+      IndexedDBApply(_, mutations, _) =>
+        Repr::ctor("IndexedDBApply", [(None, Repr(mutations.length()))])
       _ => raise @cmd.Unhandled
     }
   })
@@ -46,76 +32,99 @@ let op : @cmd.Op = @cmd.Op()
 #cfg(target="js")
 fn indexed_db_invoke(
   extension : @cmd.Extension,
-  _context : &@cmd.Context,
+  _ : &@cmd.Context,
 ) -> @cmd.OpCont[Cmd] raise @cmd.Unhandled {
   match extension {
-    IndexedDBGet(config, key, migrate_legacy, reply) =>
-      LegacyEffect(@cmd.immediately, scheduler => {
-        enqueue_get(config, key, migrate_legacy, result => {
-          scheduler.add(reply(result))
+    IndexedDBGet(store, key, msg) =>
+      Async(async fn() {
+        @js.suspend(fn(resolve, _) {
+          enqueue_get(store, key, result => resolve(msg(result)))
         })
       })
-    IndexedDBPut(config, key, value, reply) =>
-      LegacyEffect(@cmd.immediately, scheduler => {
-        enqueue_put(config, key, value, result => scheduler.add(reply(result)))
+    IndexedDBContains(store, key, msg) =>
+      Async(async fn() {
+        @js.suspend(fn(resolve, _) {
+          enqueue_contains(store, key, result => resolve(msg(result)))
+        })
       })
-    IndexedDBMutate(config, mutations, reply) =>
-      LegacyEffect(@cmd.immediately, scheduler => {
-        enqueue_mutate(config, mutations, result => scheduler.add(reply(result)))
+    IndexedDBEntries(store, msg) =>
+      Async(async fn() {
+        @js.suspend(fn(resolve, _) {
+          enqueue_entries(store, result => resolve(msg(result)))
+        })
       })
-    IndexedDBScan(config, reply) =>
-      LegacyEffect(@cmd.immediately, scheduler => {
-        enqueue_scan(config, result => scheduler.add(reply(result)))
+    IndexedDBApply(store, mutations, msg) =>
+      Async(async fn() {
+        @js.suspend(fn(resolve, _) {
+          enqueue_apply(store, mutations, result => resolve(msg(result)))
+        })
       })
     _ => raise @cmd.Unhandled
   }
 }
 
 ///|
-/// Read one string record and return the result to the Rabbita update loop.
 #cfg(target="js")
-pub fn get(
-  config : Config,
+pub fn Store::get(
+  self : Store,
   key : String,
-  migrate_legacy? : Bool = false,
-  result~ : @cmd.Emit[ReadResult],
-) -> @cmd.Cmd {
-  op.request(IndexedDBGet(config, key, migrate_legacy, result))
+  msg : @cmd.Emit[Result[Lookup, ReadError]],
+) -> Cmd {
+  op.request(IndexedDBGet(self, key, msg))
 }
 
 ///|
-/// Replace one string record and acknowledge only after transaction commit.
 #cfg(target="js")
-pub fn put(
-  config : Config,
+pub fn Store::contains(
+  self : Store,
+  key : String,
+  msg : @cmd.Emit[Result[Bool, ReadError]],
+) -> Cmd {
+  op.request(IndexedDBContains(self, key, msg))
+}
+
+///|
+#cfg(target="js")
+pub fn Store::entries(
+  self : Store,
+  msg : @cmd.Emit[Result[Array[Entry], ReadError]],
+) -> Cmd {
+  op.request(IndexedDBEntries(self, msg))
+}
+
+///|
+#cfg(target="js")
+pub fn Store::set(
+  self : Store,
   key : String,
   value : String,
-  result~ : @cmd.Emit[WriteResult],
-) -> @cmd.Cmd {
-  op.request(IndexedDBPut(config, key, value, result))
+  msg : @cmd.Emit[WriteError?],
+) -> Cmd {
+  self.apply([Mutation::Set(key, value)], msg)
 }
 
 ///|
-/// Apply string puts and deletes atomically in one transaction.
 #cfg(target="js")
-pub fn mutate(
-  config : Config,
+pub fn Store::delete(
+  self : Store,
+  key : String,
+  msg : @cmd.Emit[WriteError?],
+) -> Cmd {
+  self.apply([Mutation::Delete(key)], msg)
+}
+
+///|
+#cfg(target="js")
+pub fn Store::apply(
+  self : Store,
   mutations : Array[Mutation],
-  result~ : @cmd.Emit[WriteResult],
-) -> @cmd.Cmd {
-  op.request(IndexedDBMutate(config, mutations.copy(), result))
-}
-
-///|
-/// Scan every record in one object store and return after transaction commit.
-#cfg(target="js")
-pub fn scan(config : Config, result~ : @cmd.Emit[ScanResult]) -> @cmd.Cmd {
-  op.request(IndexedDBScan(config, result))
+  msg : @cmd.Emit[WriteError?],
+) -> Cmd {
+  op.request(IndexedDBApply(self, mutations.copy(), msg))
 }
 
 ///|
 #cfg(not(target="js"))
-#warnings("-unused_error_type")
 fn unsupported_indexed_db() -> Unit {
   ()
 }

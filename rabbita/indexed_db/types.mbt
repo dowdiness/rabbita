@@ -1,76 +1,56 @@
 ///|
-/// One browser database and object store used by an IndexedDB binding.
-pub struct Config {
+/// A handle to one IndexedDB database and object store.
+pub struct Store {
   name : String
   version : Int
   store_name : String
-} derive(Eq, Debug)
+} derive(Eq, Hash)
 
 ///|
-/// Construct a database configuration. The version is passed unchanged to
-/// `indexedDB.open` and store creation is performed by the binding's upgrade
-/// handler.
-pub fn Config::Config(
-  name : String,
-  version : Int,
-  store_name : String,
-) -> Config {
+/// Construct a store handle.
+pub fn Store::Store(name : String, version : Int, store_name : String) -> Store {
   { name, version, store_name }
 }
 
 ///|
-pub fn Config::name(self : Self) -> String {
-  self.name
+pub impl @debug.Debug for Store with fn to_repr(_) {
+  @debug.Repr::ctor("Store", [])
 }
 
 ///|
-pub fn Config::version(self : Self) -> Int {
-  self.version
-}
-
-///|
-pub fn Config::store_name(self : Self) -> String {
-  self.store_name
-}
-
-///|
-/// Result of a string read from one IndexedDB object-store key.
-pub(all) enum ReadResult {
+/// Result of reading one record.
+pub(all) enum Lookup {
   Missing
-  Loaded(String)
+  Found(String)
+  Unsupported
+} derive(Eq, Debug)
+
+///|
+/// Read-side storage failure.
+pub(all) suberror ReadError {
   Unavailable
-  Failed
+  Failed(String, Int)
 } derive(Eq, Debug)
 
 ///|
-/// One string-store mutation executed as part of an atomic transaction.
-pub(all) enum Mutation {
-  Put(String, String)
-  Delete(String)
-} derive(Eq, Debug)
-
-///|
-/// Result of a complete string replacement in IndexedDB.
-pub(all) enum WriteResult {
-  Stored
+/// Write-side storage failure.
+pub(all) suberror WriteError {
   Unavailable
   QuotaExceeded
-  Failed
+  Failed(String, Int)
 } derive(Eq, Debug)
 
 ///|
-/// One entry observed while scanning an IndexedDB object store.
-pub(all) enum ScanEntry {
+/// One cursor entry. Unsupported records are retained in their cursor position.
+pub(all) enum Entry {
   StringRecord(String, String)
   UnsupportedValue(String)
-  /// A non-string key at the given zero-based cursor position.
   UnsupportedKey(Int)
 } derive(Eq, Debug)
 
 ///|
-/// Result of scanning every record in one IndexedDB object store.
-pub(all) enum ScanResult {
-  Scanned(Array[ScanEntry])
-  Unavailable
-  Failed
+/// An atomic string-store mutation.
+pub(all) enum Mutation {
+  Set(String, String)
+  Delete(String)
 } derive(Eq, Debug)
