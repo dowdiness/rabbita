@@ -89,3 +89,33 @@ pub struct Snapshot {
 pub impl Show for Snapshot with fn output(self, buf) {
   Show::output(self.to_repr(), buf)
 }
+
+///|
+pub extend CloseInfo with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend CloseInfo with Show::{output, to_string}
+
+///|
+pub extend Event with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Event with Show::{output, to_string}
+
+///|
+pub extend Payload with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Payload with Show::{output, to_string}
+
+///|
+pub extend ReadyState with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend ReadyState with Show::{output, to_string}
+
+///|
+pub extend Snapshot with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Snapshot with Show::{output, to_string}

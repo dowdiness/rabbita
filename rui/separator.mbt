@@ -67,3 +67,9 @@ pub fn separator(
     @html.nothing,
   )
 }
+
+///|
+pub extend SeparatorOrientation with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend SeparatorOrientation with Eq::{equal, not_equal}

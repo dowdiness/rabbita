@@ -55,3 +55,11 @@ pub fn view() -> Val[Html] {
     ]
   })
 }
+///|
+pub extend Issue with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend Issue with ToJson::{to_json}
+
+///|
+pub extend Issue with Eq::{equal, not_equal}

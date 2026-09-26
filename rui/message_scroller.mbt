@@ -321,3 +321,9 @@ pub fn[C : @html.IsChildren] message_scroller_button(
     children,
   )
 }
+
+///|
+pub extend MessageScrollDirection with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend MessageScrollDirection with Eq::{equal, not_equal}

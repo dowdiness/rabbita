@@ -10,3 +10,18 @@ pub(all) enum Variant {
 pub impl Show for Variant with fn output(self, buf) {
   Show::output(self.to_repr(), buf)
 }
+
+///|
+pub extend Variant with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Variant with Compare::{compare, op_ge, op_gt, op_le, op_lt}
+
+///|
+pub extend Variant with Eq::{equal, not_equal}
+
+///|
+pub extend Variant with Hash::{hash, hash_combine}
+
+///|
+pub extend Variant with Show::{output, to_string}

@@ -156,3 +156,24 @@ pub(all) struct Viewport {
 pub impl Show for Viewport with fn output(self, buf) {
   Show::output(self.to_repr(), buf)
 }
+
+///|
+pub extend Keyboard with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Mouse with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Pos with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Pos with Show::{output, to_string}
+
+///|
+pub extend Scroll with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Viewport with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Viewport with Show::{output, to_string}

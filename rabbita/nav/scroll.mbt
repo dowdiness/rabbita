@@ -59,3 +59,6 @@ pub fn scroll_to_top(behavior? : ScrollBehavior = Auto) -> Cmd {
 pub fn scroll_to_bottom(behavior? : ScrollBehavior = Auto) -> Cmd {
   op.request(NavScrollToBottom(behavior))
 }
+
+///|
+pub extend ScrollBehavior with Show::{output, to_string}

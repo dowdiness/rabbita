@@ -619,3 +619,15 @@ pub fn tabs(
     ),
   )
 }
+
+///|
+pub extend TabsListVariant with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend TabsListVariant with Eq::{equal, not_equal}
+
+///|
+pub extend TabsOrientation with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend TabsOrientation with Eq::{equal, not_equal}

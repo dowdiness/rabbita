@@ -54,3 +54,42 @@ pub(all) enum Mutation {
   Set(String, String)
   Delete(String)
 } derive(Eq, Debug)
+
+///|
+pub extend Entry with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Entry with Eq::{equal, not_equal}
+
+///|
+pub extend Lookup with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Lookup with Eq::{equal, not_equal}
+
+///|
+pub extend Mutation with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Mutation with Eq::{equal, not_equal}
+
+///|
+pub extend ReadError with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend ReadError with Eq::{equal, not_equal}
+
+///|
+pub extend Store with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Store with Eq::{equal, not_equal}
+
+///|
+pub extend Store with Hash::{hash, hash_combine}
+
+///|
+pub extend WriteError with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend WriteError with Eq::{equal, not_equal}

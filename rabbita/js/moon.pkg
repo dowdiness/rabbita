@@ -1,6 +1,9 @@
+
 import {
   "moonbitlang/core/json",
 }
+
+warnings = "-unused_package-implicit_impl_as_method"
 
 import {
   "moonbitlang/core/json",

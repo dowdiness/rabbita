@@ -792,3 +792,9 @@ pub fn[C : @html.IsChildren] drawer_close(
     children,
   )
 }
+
+///|
+pub extend DrawerDirection with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend DrawerDirection with Eq::{equal, not_equal}

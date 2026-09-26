@@ -416,3 +416,9 @@ pub fn[C : @html.IsChildren] sheet_close(
     children,
   )
 }
+
+///|
+pub extend SheetSide with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend SheetSide with Eq::{equal, not_equal}

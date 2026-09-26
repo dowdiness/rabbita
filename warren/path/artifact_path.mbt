@@ -81,3 +81,32 @@ pub fn ArtifactPath::to_string(
   }
   acc.join(self.relative)
 }
+///|
+pub extend Target with Eq::{equal, not_equal}
+
+///|
+pub extend Target with Hash::{hash, hash_combine}
+
+///|
+pub extend Target with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Build with Eq::{equal, not_equal}
+
+///|
+pub extend Build with Hash::{hash, hash_combine}
+
+///|
+pub extend Build with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Mode with Eq::{equal, not_equal}
+
+///|
+pub extend Mode with Hash::{hash, hash_combine}
+
+///|
+pub extend Mode with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend ArtifactPath with @moonbitlang/core/debug.Debug::{to_repr}

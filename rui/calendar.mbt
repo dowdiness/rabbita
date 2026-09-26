@@ -1321,3 +1321,9 @@ pub fn calendar(
     ),
   )
 }
+
+///|
+pub extend CalendarDate with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend CalendarDate with Eq::{equal, not_equal}

@@ -317,3 +317,15 @@ pub fn input_group_textarea(
     ),
   )
 }
+
+///|
+pub extend InputGroupAddonAlign with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend InputGroupAddonAlign with Eq::{equal, not_equal}
+
+///|
+pub extend InputGroupButtonSize with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend InputGroupButtonSize with Eq::{equal, not_equal}

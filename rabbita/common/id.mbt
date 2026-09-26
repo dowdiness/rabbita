@@ -30,3 +30,21 @@ struct InstId(Int) derive(Eq, Hash)
 pub fn InstId::new(_ : @key.Key) -> InstId {
   next_id()
 }
+
+///|
+pub extend Id with Compare::{compare, op_ge, op_gt, op_le, op_lt}
+
+///|
+pub extend Id with Eq::{equal, not_equal}
+
+///|
+pub extend Id with Hash::{hash, hash_combine}
+
+///|
+pub extend Id with Show::{output, to_string}
+
+///|
+pub extend InstId with Eq::{equal, not_equal}
+
+///|
+pub extend InstId with Hash::{hash, hash_combine}

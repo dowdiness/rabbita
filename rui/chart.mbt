@@ -326,3 +326,9 @@ pub fn[C : @html.IsChildren] chart_legend_item(
     ],
   )
 }
+
+///|
+pub extend ChartIndicator with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend ChartIndicator with Eq::{equal, not_equal}
