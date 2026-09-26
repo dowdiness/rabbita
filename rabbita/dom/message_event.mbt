@@ -35,3 +35,5 @@ extern "js" fn ffi_message_event_data_string(
   event : MessageEvent,
 ) -> @js.Nullable[String] =
   #| (event) => typeof event.data === "string" ? event.data : null
+
+

@@ -34,3 +34,6 @@ pub extern "js" fn InputEvent::is_composing(self : Self) -> Bool = "(e) => e.isC
 ///|
 #cfg(target="js")
 pub extern "js" fn InputEvent::input_type(self : Self) -> String = "(e) => e.inputType"
+
+
+

@@ -35,3 +35,6 @@ pub fn FocusEvent::related_target(self : Self) -> EventTarget? {
 extern "js" fn ffi_focus_event_related_target(
   event : FocusEvent,
 ) -> @js.Nullable[EventTarget] = "(event) => event.relatedTarget"
+
+
+

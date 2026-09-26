@@ -48,3 +48,8 @@ pub extern "js" fn HTMLInputElement::set_value(self : Self, value : String) = "(
 pub extern "js" fn HTMLInputElement::get_files(
   self : Self,
 ) -> FixedArray[File] = "(input) => Array.from(input.files ?? [])"
+
+
+
+
+

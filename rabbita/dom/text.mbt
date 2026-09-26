@@ -26,3 +26,6 @@ pub impl IsNode for Text
 ///|
 #cfg(target="js")
 pub extern "js" fn Text::to_node(self : Self) -> Node = "(x) => x"
+
+
+

@@ -203,3 +203,8 @@ pub extern "js" fn HTMLImageElement::get_y(self : Self) -> Double = "(self) => s
 
 // TODO: Implement the decode method and promise handling.
 // pub extern "js" fn HTMLImageElement::decode() -> Promise
+
+
+
+
+

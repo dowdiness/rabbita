@@ -34,3 +34,9 @@ pub impl @js.Cast for HTMLVideoElement with fn into(value) {
 pub impl @js.Cast for HTMLVideoElement with fn from(value) {
   value |> js_identity
 }
+
+
+
+
+
+

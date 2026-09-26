@@ -576,3 +576,4 @@ pub extern "js" fn CanvasRenderingContext2D::set_font(
   self : Self,
   value : String,
 ) = "(self,value) => self.font = value"
+

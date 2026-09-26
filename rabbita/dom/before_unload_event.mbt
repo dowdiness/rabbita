@@ -18,3 +18,5 @@ pub impl @js.Cast for BeforeUnloadEvent with fn into(value) {
 pub impl @js.Cast for BeforeUnloadEvent with fn from(value) {
   value |> js_identity
 }
+
+

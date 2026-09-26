@@ -55,3 +55,8 @@ pub extern "js" fn HTMLCanvasElement::get_context(
 // TODO: add CanvasText.measureText
 
 // TODO: add TextMetrics
+
+
+
+
+

@@ -30,3 +30,5 @@ pub extern "js" fn CloseEvent::get_reason(self : Self) -> String = "(e) => e.rea
 ///|
 #cfg(target="js")
 pub extern "js" fn CloseEvent::get_was_clean(self : Self) -> Bool = "(e) => e.wasClean"
+
+

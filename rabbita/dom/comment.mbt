@@ -26,3 +26,6 @@ pub impl IsNode for Comment
 ///|
 #cfg(target="js")
 pub extern "js" fn Comment::to_node(self : Self) -> Node = "(x) => x"
+
+
+

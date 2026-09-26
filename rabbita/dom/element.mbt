@@ -505,3 +505,7 @@ extern "js" fn ffi_element_get_animations(
   x : @js.Value,
 ) -> FixedArray[Animation] =
   #| (self) => self.getAnimations()
+
+
+
+

@@ -29,3 +29,7 @@ pub impl @js.Cast for DragEvent with fn from(value) {
 ///|
 #cfg(target="js")
 pub extern "js" fn DragEvent::get_data_transfer(self : Self) -> DataTransfer = "(e) => e.dataTransfer"
+
+
+
+
