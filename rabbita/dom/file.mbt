@@ -14,8 +14,7 @@ pub extern "js" fn File::get_name(self : Self) -> String = "(file) => file.name"
 ///|
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/API/File/lastModified)
 #cfg(target="js")
-pub extern "js" fn File::get_last_modified(self : Self) -> Double =
-  "(file) => file.lastModified"
+pub extern "js" fn File::get_last_modified(self : Self) -> Double = "(file) => file.lastModified"
 
 ///|
 /// Upcast this file to the Blob interface it extends.

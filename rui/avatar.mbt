@@ -388,3 +388,15 @@ pub fn[C : @html.IsChildren] avatar_with_fallback(
     ),
   )
 }
+
+///|
+pub extend AvatarImageStatus with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend AvatarImageStatus with Eq::{equal, not_equal}
+
+///|
+pub extend AvatarSize with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend AvatarSize with Eq::{equal, not_equal}

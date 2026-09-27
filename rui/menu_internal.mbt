@@ -1711,3 +1711,12 @@ fn[C : @html.IsChildren] menu_sub_content_surface(
     children,
   )
 }
+
+///|
+pub extend MenuCoreModel with Eq::{equal, not_equal}
+
+///|
+pub extend MenuIndicatorPlacement with Eq::{equal, not_equal}
+
+///|
+pub extend MenuSubmenuChange with Eq::{equal, not_equal}

@@ -239,3 +239,15 @@ pub fn[C : @html.IsChildren] toggle(
     ),
   )
 }
+
+///|
+pub extend ToggleSize with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend ToggleSize with Eq::{equal, not_equal}
+
+///|
+pub extend ToggleVariant with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend ToggleVariant with Eq::{equal, not_equal}

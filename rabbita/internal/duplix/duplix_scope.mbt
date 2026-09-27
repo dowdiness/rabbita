@@ -71,3 +71,9 @@ fn Scope::dispose(self : Self) -> Unit {
 
   global_scopes.free(self.id.0)
 }
+
+///|
+pub extend ScopeId with Eq::{equal, not_equal}
+
+///|
+pub extend ScopeId with Hash::{hash, hash_combine}

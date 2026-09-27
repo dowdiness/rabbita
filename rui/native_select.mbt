@@ -198,3 +198,9 @@ pub fn[C : @html.IsChildren] native_select_optgroup(
     children,
   )
 }
+
+///|
+pub extend NativeSelectSize with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend NativeSelectSize with Eq::{equal, not_equal}

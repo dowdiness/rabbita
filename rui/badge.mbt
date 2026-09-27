@@ -164,3 +164,9 @@ pub fn[C : @html.IsChildren] badge_link(
     escape~,
   )
 }
+
+///|
+pub extend BadgeVariant with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend BadgeVariant with Eq::{equal, not_equal}

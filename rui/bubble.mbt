@@ -296,3 +296,15 @@ pub fn[C : @html.IsChildren] bubble_reactions(
     children,
   )
 }
+
+///|
+pub extend BubbleReactionSide with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend BubbleReactionSide with Eq::{equal, not_equal}
+
+///|
+pub extend BubbleVariant with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend BubbleVariant with Eq::{equal, not_equal}

@@ -63,6 +63,6 @@ async fn TestCmdScheduler::run(self : TestCmdScheduler) -> Unit {
 /// Immediate and after-render effects run during the drain. Async commands are
 /// awaited and their resulting commands are drained in FIFO order.
 pub async fn run_cmd(cmd : @cmd.Cmd) -> Unit {
-  let scheduler = TestCmdScheduler::{ commands: [cmd] }
+  let scheduler = TestCmdScheduler::{ commands: [cmd], }
   scheduler.run()
 }

@@ -650,3 +650,9 @@ pub fn accordion(
     ),
   )
 }
+
+///|
+pub extend AccordionType with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend AccordionType with Eq::{equal, not_equal}

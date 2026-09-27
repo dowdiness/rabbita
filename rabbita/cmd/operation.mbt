@@ -32,7 +32,7 @@ pub(all) suberror HydrateExn {
 
 ///|
 #internal(experimental, "This API is unstable and may change in the future.")
-pub(all) extenum Extension {}
+pub extenum Extension
 
 ///|
 let default_handler : Op = {
@@ -188,3 +188,6 @@ pub fn invoke(
 ) -> OpCont[Cmd] raise Unhandled {
   (op.invoke)(extension, context)
 }
+
+///|
+pub extend Cmd with @moonbitlang/core/debug.Debug::{to_repr}

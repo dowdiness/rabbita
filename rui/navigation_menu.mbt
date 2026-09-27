@@ -1238,3 +1238,6 @@ pub fn navigation_menu_indicator(
     ),
   )
 }
+
+///|
+pub extend NavigationMenuModel with Eq::{equal, not_equal}

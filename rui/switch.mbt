@@ -290,3 +290,9 @@ pub fn switch(
     ),
   )
 }
+
+///|
+pub extend SwitchSize with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend SwitchSize with Eq::{equal, not_equal}

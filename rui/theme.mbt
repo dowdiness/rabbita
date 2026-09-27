@@ -1107,3 +1107,9 @@ pub fn[C : @html.IsChildren] theme(
     ),
   ])
 }
+
+///|
+pub extend ColorMode with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend ColorMode with Eq::{equal, not_equal}
