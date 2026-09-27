@@ -144,4 +144,3 @@ extern "js" fn ffi_css_style_declaration_get_parent_rule(
 extern "js" fn ffi_to_css_style_declaration(
   x : @js.Value,
 ) -> @js.Nullable[CSSStyleDeclaration] = "(x) => x instanceof CSSStyleDeclaration ? x : null"
-

@@ -55,6 +55,7 @@ pub fn view() -> Val[Html] {
     ]
   })
 }
+
 ///|
 pub extend Issue with @moonbitlang/core/json.FromJson::{from_json}
 

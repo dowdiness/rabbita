@@ -204,8 +204,3 @@ extern "js" fn blur(x : @js.Value) = "(self) => self.blur()"
 ///|
 #cfg(target="js")
 extern "js" fn focus(x : @js.Value) = "(self) => self.focus()"
-
-
-
-
-

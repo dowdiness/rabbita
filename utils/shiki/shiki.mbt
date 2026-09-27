@@ -414,5 +414,6 @@ pub fn shiki_code(
 
 ///|
 using @rabbita {type Html, type Val}
+
 ///|
 pub extend Config with Eq::{equal, not_equal}

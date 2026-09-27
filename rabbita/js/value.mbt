@@ -302,4 +302,3 @@ pub extern "js" fn Value::extends(
   #|    }
   #|  }
   #|}
-

@@ -145,8 +145,3 @@ pub extern "js" fn HTMLTextAreaElement::set_range_text_with_range(
 ) -> Unit =
   #| (self, replacement, start, end, selectionMode) =>
   #|   self.setRangeText(replacement, start, end, selectionMode)
-
-
-
-
-

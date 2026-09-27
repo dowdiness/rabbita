@@ -9,7 +9,7 @@ pub struct Store {
 ///|
 /// Construct a store handle.
 pub fn Store::Store(name : String, version : Int, store_name : String) -> Store {
-  { name, version, store_name }
+  { name, version, store_name, }
 }
 
 ///|

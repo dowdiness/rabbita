@@ -30,5 +30,3 @@ pub extern "js" fn AnimationEvent::get_elapsed_time(self : Self) -> Double = "(e
 ///|
 #cfg(target="js")
 pub extern "js" fn AnimationEvent::get_pseudo_element(self : Self) -> String = "(e) => e.pseudoElement"
-
-

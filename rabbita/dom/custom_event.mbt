@@ -29,5 +29,3 @@ pub extern "js" fn CustomEvent::new(
 ///|
 #cfg(target="js")
 pub extern "js" fn CustomEvent::get_detail(self : Self) -> @js.Value = "(e) => e.detail"
-
-

@@ -67,5 +67,3 @@ pub extern "js" fn Clipboard::read_text(self : Clipboard) -> @js.Promise =
   #|     )
   #|   )
   #| }
-
-

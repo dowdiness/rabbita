@@ -30,8 +30,3 @@ pub impl @js.Cast for SVGImageElement with fn into(value) {
 pub impl @js.Cast for SVGImageElement with fn from(value) {
   value |> js_identity
 }
-
-
-
-
-

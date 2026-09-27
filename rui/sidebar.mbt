@@ -2977,7 +2977,9 @@ pub extend SidebarMenuButtonSize with @moonbitlang/core/debug.Debug::{to_repr}
 pub extend SidebarMenuButtonSize with Eq::{equal, not_equal}
 
 ///|
-pub extend SidebarMenuButtonVariant with @moonbitlang/core/debug.Debug::{to_repr}
+pub extend SidebarMenuButtonVariant with @moonbitlang/core/debug.Debug::{
+  to_repr,
+}
 
 ///|
 pub extend SidebarMenuButtonVariant with Eq::{equal, not_equal}

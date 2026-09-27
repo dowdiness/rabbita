@@ -28,6 +28,7 @@ pub fn SourcePath::join(a : Self, b : String) -> Self {
 pub fn SourcePath::relative(a : Self, base : SourcePath) -> String {
   Path::relative(a.0, base=base.0).0
 }
+
 ///|
 pub extend SourcePath with Eq::{equal, not_equal}
 

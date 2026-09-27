@@ -22,5 +22,3 @@ pub impl @js.Cast for ClipboardEvent with fn from(value) {
 ///|
 #cfg(target="js")
 pub extern "js" fn ClipboardEvent::clipboard_data(self : Self) -> DataTransfer = "(e) => e.clipboardData"
-
-

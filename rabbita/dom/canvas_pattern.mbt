@@ -28,4 +28,3 @@ pub extern "js" fn CanvasPattern::set_transform(
   self : Self,
   transform : @js.Optional[DOMMatrix2DInit],
 ) = "(self,transform) => self.setTransform(transform)"
-

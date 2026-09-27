@@ -41,7 +41,3 @@ pub extern "js" fn WheelEvent::get_delta_z(self : Self) -> Double = "(e) => e.de
 ///|
 #cfg(target="js")
 pub extern "js" fn WheelEvent::get_delta_mode(self : Self) -> Int = "(e) => e.deltaMode"
-
-
-
-

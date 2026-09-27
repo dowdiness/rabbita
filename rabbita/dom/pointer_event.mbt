@@ -87,7 +87,3 @@ pub extern "js" fn PointerEvent::get_pointer_type(self : Self) -> String = "(eve
 /// https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary
 #cfg(target="js")
 pub extern "js" fn PointerEvent::get_is_primary(self : Self) -> Bool = "(event) => event.isPrimary"
-
-
-
-

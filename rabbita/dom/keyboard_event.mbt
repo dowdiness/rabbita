@@ -74,6 +74,3 @@ pub const DOM_KEY_LOCATION_RIGHT : Int = 0x02
 ///|
 #cfg(target="js")
 pub const DOM_KEY_LOCATION_NUMPAD : Int = 0x03
-
-
-

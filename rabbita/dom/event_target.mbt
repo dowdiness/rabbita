@@ -418,5 +418,3 @@ extern "js" fn ffi_to_html_video_element(
 ///|
 #cfg(target="js")
 extern "js" fn ffi_to_window(value : @js.Value) -> @js.Nullable[Window] = "(value) => value instanceof Window ? value : null"
-
-

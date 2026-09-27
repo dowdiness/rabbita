@@ -62,5 +62,3 @@ extern "js" fn ffi_to_visual_viewport(
   #|   && value instanceof VisualViewport
   #|   ? value
   #|   : null
-
-

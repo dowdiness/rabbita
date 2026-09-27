@@ -29,5 +29,3 @@ pub extern "js" fn ToggleEvent::get_old_state(self : Self) -> String = "(event) 
 /// https://developer.mozilla.org/en-US/docs/Web/API/ToggleEvent/newState
 #cfg(target="js")
 pub extern "js" fn ToggleEvent::get_new_state(self : Self) -> String = "(event) => event.newState"
-
-

@@ -265,6 +265,3 @@ extern "js" fn ffi_set_node_value(x : @js.Value, v : @js.Nullable[String]) = "(x
 ///|
 #cfg(target="js")
 extern "js" fn ffi_is_same_node(x : @js.Value, other : Node) -> Bool = "(x, other) => x === other"
-
-
-

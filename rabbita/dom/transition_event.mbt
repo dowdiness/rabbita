@@ -34,5 +34,3 @@ pub extern "js" fn TransitionEvent::get_elapsed_time(self : Self) -> Double = "(
 /// https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent/pseudoElement
 #cfg(target="js")
 pub extern "js" fn TransitionEvent::get_pseudo_element(self : Self) -> String = "(event) => event.pseudoElement"
-
-

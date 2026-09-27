@@ -32,5 +32,3 @@ extern "js" fn ffi_to_animation(value : @js.Value) -> @js.Nullable[Animation] =
   #|   && value instanceof Animation
   #|   ? value
   #|   : null
-
-

@@ -25,6 +25,7 @@ pub impl Debug for MooncakesPath with fn to_repr(self) {
 pub impl Show for MooncakesPath with fn output(self, buf) {
   buf.write_string(self.0)
 }
+
 ///|
 pub extend MooncakesPath with Eq::{equal, not_equal}
 

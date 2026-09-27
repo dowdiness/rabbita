@@ -28,7 +28,7 @@ pub fn indexed_db_safe() -> Result[IDBFactory?, IDBError] {
   ffi_indexed_db_safe(factory => result = Ok(factory.to_option()), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -56,7 +56,7 @@ pub fn local_storage_safe() -> Result[Storage?, IDBError] {
   ffi_local_storage_safe(storage => result = Ok(storage.to_option()), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -88,7 +88,7 @@ pub fn IDBFactory::open_safe(
   ffi_open_safe(self, name, version, request => result = Ok(request), (
     name,
     code,
-  ) => result = Err({ name, code }))
+  ) => result = Err({ name, code, }))
   result
 }
 
@@ -119,7 +119,7 @@ pub fn IDBOpenDBRequest::get_result_safe(
     code: 0,
   })
   ffi_open_result_safe(self, database => result = Ok(database), (name, code) => {
-    result = Err({ name, code })
+    result = Err({ name, code, })
   })
   result
 }
@@ -152,7 +152,7 @@ pub fn IDBDatabase::has_object_store_safe(
   ffi_has_object_store_safe(self, name, value => result = Ok(value), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -185,7 +185,7 @@ pub fn IDBDatabase::create_object_store_safe(
   ffi_create_object_store_safe(self, name, store => result = Ok(store), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -221,7 +221,7 @@ pub fn IDBDatabase::transaction_safe(
     store_name,
     mode,
     transaction => result = Ok(transaction),
-    (error_name, code) => result = Err({ name: error_name, code }),
+    (error_name, code) => result = Err({ name: error_name, code, }),
   )
   result
 }
@@ -251,7 +251,7 @@ pub fn IDBTransaction::abort_safe(self : Self) -> Result[Unit, IDBError] {
     code: 0,
   })
   ffi_transaction_abort_safe(self, () => result = Ok(()), (error_name, code) => {
-    result = Err({ name: error_name, code })
+    result = Err({ name: error_name, code, })
   })
   result
 }
@@ -285,7 +285,7 @@ pub fn IDBTransaction::object_store_safe(
   ffi_object_store_safe(self, name, store => result = Ok(store), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -319,7 +319,7 @@ pub fn IDBObjectStore::put_string_safe(
   ffi_put_string_safe(self, value, key, request => result = Ok(request), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -351,7 +351,7 @@ pub fn IDBObjectStore::delete_safe(
     code: 0,
   })
   ffi_delete_safe(self, key, request => result = Ok(request), (error_name, code) => {
-    result = Err({ name: error_name, code })
+    result = Err({ name: error_name, code, })
   })
   result
 }
@@ -383,7 +383,7 @@ pub fn IDBObjectStore::get_key_safe(
     code: 0,
   })
   ffi_get_key_safe(self, key, request => result = Ok(request), (name, code) => {
-    result = Err({ name, code })
+    result = Err({ name, code, })
   })
   result
 }
@@ -414,7 +414,7 @@ pub fn IDBObjectStore::open_cursor_safe(
   ffi_open_cursor_safe(self, key, request => result = Ok(request), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -446,7 +446,7 @@ pub fn IDBObjectStore::open_cursor_all_safe(
   ffi_open_cursor_all_safe(self, request => result = Ok(request), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -473,7 +473,7 @@ pub fn IDBRequest::has_key_safe(self : Self) -> Result[Bool, IDBError] {
     code: 0,
   })
   ffi_has_key_safe(self, value => result = Ok(value), (name, code) => {
-    result = Err({ name, code })
+    result = Err({ name, code, })
   })
   result
 }
@@ -502,7 +502,7 @@ pub fn IDBRequest::cursor_safe(
   ffi_request_cursor_safe(self, cursor => result = Ok(cursor.to_option()), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -533,7 +533,7 @@ pub fn IDBCursorWithValue::string_value_safe(
   ffi_cursor_string_value_safe(self, value => result = Ok(value.to_option()), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -564,7 +564,7 @@ pub fn IDBCursorWithValue::string_key_safe(
   ffi_cursor_string_key_safe(self, key => result = Ok(key.to_option()), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -591,7 +591,7 @@ pub fn IDBCursorWithValue::continue_safe(self : Self) -> Result[Unit, IDBError] 
     code: 0,
   })
   ffi_cursor_continue_safe(self, () => result = Ok(()), (error_name, code) => {
-    result = Err({ name: error_name, code })
+    result = Err({ name: error_name, code, })
   })
   result
 }
@@ -625,7 +625,7 @@ pub fn Storage::read_item_safe(
   ffi_storage_read_safe(self, key, value => result = Ok(value.to_option()), (
     error_name,
     code,
-  ) => result = Err({ name: error_name, code }))
+  ) => result = Err({ name: error_name, code, }))
   result
 }
 
@@ -656,7 +656,7 @@ pub fn Storage::remove_item_safe(
     code: 0,
   })
   ffi_storage_remove_safe(self, key, () => result = Ok(()), (error_name, code) => {
-    result = Err({ name: error_name, code })
+    result = Err({ name: error_name, code, })
   })
   result
 }
@@ -677,4 +677,3 @@ extern "js" fn ffi_storage_remove_safe(
   #|     onError(error?.name ?? "UnknownError", error?.code ?? 0);
   #|   }
   #| }
-

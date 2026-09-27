@@ -30,6 +30,3 @@ pub extern "js" fn CompositionEvent::new() -> CompositionEvent = "() => new Comp
 ///|
 #cfg(target="js")
 pub extern "js" fn CompositionEvent::get_data(self : Self) -> String = "(e) => e.data"
-
-
-

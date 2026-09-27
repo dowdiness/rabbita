@@ -34,6 +34,3 @@ pub impl @js.Cast for UIEvent with fn into(value) {
 pub impl @js.Cast for UIEvent with fn from(value) {
   value |> js_identity
 }
-
-
-

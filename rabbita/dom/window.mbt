@@ -222,5 +222,3 @@ pub extern "js" fn Window::get_computed_style(
   self : Self,
   element : Element,
 ) -> CSSStyleDeclaration = "(self, element) => self.getComputedStyle(element)"
-
-

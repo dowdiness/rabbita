@@ -60,8 +60,3 @@ pub extern "js" fn HTMLDialogElement::show(self : Self) = "(self) => self.show()
 ///|
 #cfg(target="js")
 pub extern "js" fn HTMLDialogElement::show_modal(self : Self) = "(self) => self.showModal()"
-
-
-
-
-

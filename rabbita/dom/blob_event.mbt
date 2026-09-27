@@ -30,5 +30,3 @@ pub extern "js" fn BlobEvent::get_data(self : Self) -> Blob = "(e) => e.data"
 ///|
 #cfg(target="js")
 pub extern "js" fn BlobEvent::get_timecode(self : Self) -> DOMHighResTimeStamp = "(e) => e.timecode"
-
-

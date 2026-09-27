@@ -29,4 +29,3 @@ pub impl @js.Cast for CanvasGradient with fn into(value) {
 pub impl @js.Cast for CanvasGradient with fn from(value) {
   @js.Value::cast_from(value)
 }
-
