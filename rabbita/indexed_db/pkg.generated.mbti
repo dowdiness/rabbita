@@ -13,12 +13,18 @@ pub(all) suberror ReadError {
   Unavailable
   Failed(String, Int)
 } derive(Eq, @debug.Debug)
+pub fn ReadError::equal(Self, Self) -> Bool
+pub fn ReadError::not_equal(Self, Self) -> Bool
+pub fn ReadError::to_repr(Self) -> @debug.Repr
 
 pub(all) suberror WriteError {
   Unavailable
   QuotaExceeded
   Failed(String, Int)
 } derive(Eq, @debug.Debug)
+pub fn WriteError::equal(Self, Self) -> Bool
+pub fn WriteError::not_equal(Self, Self) -> Bool
+pub fn WriteError::to_repr(Self) -> @debug.Repr
 
 // Types and methods
 pub(all) enum Entry {
@@ -26,17 +32,26 @@ pub(all) enum Entry {
   UnsupportedValue(String)
   UnsupportedKey(Int)
 } derive(Eq, @debug.Debug)
+pub fn Entry::equal(Self, Self) -> Bool
+pub fn Entry::not_equal(Self, Self) -> Bool
+pub fn Entry::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Lookup {
   Missing
   Found(String)
   Unsupported
 } derive(Eq, @debug.Debug)
+pub fn Lookup::equal(Self, Self) -> Bool
+pub fn Lookup::not_equal(Self, Self) -> Bool
+pub fn Lookup::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Mutation {
   Set(String, String)
   Delete(String)
 } derive(Eq, @debug.Debug)
+pub fn Mutation::equal(Self, Self) -> Bool
+pub fn Mutation::not_equal(Self, Self) -> Bool
+pub fn Mutation::to_repr(Self) -> @debug.Repr
 
 pub struct Store {
   name : String
@@ -48,8 +63,13 @@ pub fn Store::apply(Self, Array[Mutation], @cmd.Emit[WriteError?]) -> @cmd.Cmd
 pub fn Store::contains(Self, String, @cmd.Emit[Result[Bool, ReadError]]) -> @cmd.Cmd
 pub fn Store::delete(Self, String, @cmd.Emit[WriteError?]) -> @cmd.Cmd
 pub fn Store::entries(Self, @cmd.Emit[Result[Array[Entry], ReadError]]) -> @cmd.Cmd
+pub fn Store::equal(Self, Self) -> Bool
 pub fn Store::get(Self, String, @cmd.Emit[Result[Lookup, ReadError]]) -> @cmd.Cmd
+pub fn Store::hash(Self) -> Int
+pub fn Store::hash_combine(Self, Hasher) -> Unit
+pub fn Store::not_equal(Self, Self) -> Bool
 pub fn Store::set(Self, String, String, @cmd.Emit[WriteError?]) -> @cmd.Cmd
+pub fn Store::to_repr(Self) -> @debug.Repr
 pub impl @debug.Debug for Store
 
 // Type aliases

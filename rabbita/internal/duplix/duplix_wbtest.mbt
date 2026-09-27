@@ -276,3 +276,6 @@ test "scope dispose recurses into sub scopes and runs cleanups" {
   debug_inspect(cleanup_log, content="[\"child\", \"parent\"]")
   assert_true(global_scopes.get(parent.0) is None)
 }
+
+///|
+pub extend WbRoute with Eq::{equal, not_equal}

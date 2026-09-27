@@ -9,6 +9,7 @@ import {
   "moonbit-community/rabbita/sub",
   "moonbit-community/rabbita/svg",
   "moonbitlang/core/string",
+  "moonbitlang/core/debug",
 }
 
 supported_targets = "js+native+wasm"

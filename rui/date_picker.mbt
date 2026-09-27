@@ -1173,3 +1173,15 @@ pub fn date_range_picker(
     ),
   )
 }
+
+///|
+pub extend DatePickerPreset with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend DatePickerPreset with Eq::{equal, not_equal}
+
+///|
+pub extend DateRange with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend DateRange with Eq::{equal, not_equal}

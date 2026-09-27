@@ -736,3 +736,9 @@ pub fn[T : Eq] create_resource(
   )
   status
 }
+
+///|
+pub extend Status with @moonbit-community/rabbita/common.Enumerate::{tag}
+
+///|
+pub extend Status with Eq::{equal, not_equal}

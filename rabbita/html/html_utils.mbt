@@ -428,10 +428,7 @@ fn push_change(value : @cmd.Emit[String]?, attrs : Attrs) -> Unit {
 
 ///|
 #cfg(target="js")
-fn push_files(
-  value : @cmd.Emit[FixedArray[@dom.File]]?,
-  attrs : Attrs,
-) -> Unit {
+fn push_files(value : @cmd.Emit[FixedArray[@dom.File]]?, attrs : Attrs) -> Unit {
   if value is Some(v) {
     ignore(
       attrs.handler("change", (event, scheduler) => {
@@ -451,10 +448,7 @@ fn push_files(
 
 ///|
 #cfg(not(target="js"))
-fn push_files(
-  value : @cmd.Emit[FixedArray[@dom.File]]?,
-  attrs : Attrs,
-) -> Unit {
+fn push_files(value : @cmd.Emit[FixedArray[@dom.File]]?, attrs : Attrs) -> Unit {
   ignore((value, attrs))
 }
 

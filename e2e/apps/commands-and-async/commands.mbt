@@ -59,26 +59,26 @@ priv enum Msg {
 ///|
 fn update(model : Model, message : Msg, emit : Emit[Msg]) -> (Model, Cmd) {
   match message {
-    Initialized(value) => ({ ..model, initialized: value }, @rabbita.none)
+    Initialized(value) => ({ ..model, initialized: value, }, @rabbita.none)
     StartDelay =>
       (
-        { ..model, delayed: "waiting" },
+        { ..model, delayed: "waiting", },
         @rabbita.delay(emit(DelayFinished), 1000),
       )
-    DelayFinished => ({ ..model, delayed: "finished" }, @rabbita.none)
+    DelayFinished => ({ ..model, delayed: "finished", }, @rabbita.none)
     StartPerform =>
       (
-        { ..model, performed: "running" },
+        { ..model, performed: "running", },
         @rabbita.perform(value => emit(PerformFinished(value)), async fn() noraise {
           resolved("performed").wait() catch {
             _ => "unexpected failure"
           }
         }),
       )
-    PerformFinished(value) => ({ ..model, performed: value }, @rabbita.none)
+    PerformFinished(value) => ({ ..model, performed: value, }, @rabbita.none)
     StartAttempt =>
       (
-        { ..model, attempted: "running" },
+        { ..model, attempted: "running", },
         @rabbita.attempt(result => emit(AttemptFinished(result)), async fn() {
           rejected().wait()
         }),
@@ -96,14 +96,14 @@ fn update(model : Model, message : Msg, emit : Emit[Msg]) -> (Model, Cmd) {
       )
     StartBatch =>
       (
-        { ..model, batch_a: false, batch_b: false },
+        { ..model, batch_a: false, batch_b: false, },
         @rabbita.batch([emit(BatchA), emit(BatchB)]),
       )
-    BatchA => ({ ..model, batch_a: true }, @rabbita.none)
-    BatchB => ({ ..model, batch_b: true }, @rabbita.none)
+    BatchA => ({ ..model, batch_a: true, }, @rabbita.none)
+    BatchB => ({ ..model, batch_b: true, }, @rabbita.none)
     StartIndexedDb =>
       (
-        { ..model, indexed_db_status: "indexeddb: running" },
+        { ..model, indexed_db_status: "indexeddb: running", },
         indexed_db_store.apply(
           [Mutation::Set("alpha", "one"), Mutation::Set("beta", "two")],
           result => emit(IndexedDbApplied(result)),
@@ -112,7 +112,7 @@ fn update(model : Model, message : Msg, emit : Emit[Msg]) -> (Model, Cmd) {
     IndexedDbApplied(result) =>
       match result {
         Some(_) =>
-          ({ ..model, indexed_db_status: "indexeddb: failed" }, @rabbita.none)
+          ({ ..model, indexed_db_status: "indexeddb: failed", }, @rabbita.none)
         None =>
           (
             model,
@@ -122,7 +122,7 @@ fn update(model : Model, message : Msg, emit : Emit[Msg]) -> (Model, Cmd) {
     IndexedDbEntries(result) =>
       match result {
         Err(_) =>
-          ({ ..model, indexed_db_status: "indexeddb: failed" }, @rabbita.none)
+          ({ ..model, indexed_db_status: "indexeddb: failed", }, @rabbita.none)
         Ok(entries) =>
           if entries
             is [
@@ -136,13 +136,16 @@ fn update(model : Model, message : Msg, emit : Emit[Msg]) -> (Model, Cmd) {
               }),
             )
           } else {
-            ({ ..model, indexed_db_status: "indexeddb: failed" }, @rabbita.none)
+            (
+              { ..model, indexed_db_status: "indexeddb: failed", },
+              @rabbita.none,
+            )
           }
       }
     IndexedDbContains(result) =>
       match result {
         Err(_) =>
-          ({ ..model, indexed_db_status: "indexeddb: failed" }, @rabbita.none)
+          ({ ..model, indexed_db_status: "indexeddb: failed", }, @rabbita.none)
         Ok(true) =>
           (
             model,
@@ -151,12 +154,12 @@ fn update(model : Model, message : Msg, emit : Emit[Msg]) -> (Model, Cmd) {
             }),
           )
         Ok(false) =>
-          ({ ..model, indexed_db_status: "indexeddb: failed" }, @rabbita.none)
+          ({ ..model, indexed_db_status: "indexeddb: failed", }, @rabbita.none)
       }
     IndexedDbDeleted(result) =>
       match result {
         Some(_) =>
-          ({ ..model, indexed_db_status: "indexeddb: failed" }, @rabbita.none)
+          ({ ..model, indexed_db_status: "indexeddb: failed", }, @rabbita.none)
         None =>
           (
             model,
@@ -166,9 +169,12 @@ fn update(model : Model, message : Msg, emit : Emit[Msg]) -> (Model, Cmd) {
     IndexedDbGot(result) =>
       match result {
         Ok(Lookup::Missing) =>
-          ({ ..model, indexed_db_status: "indexeddb: complete" }, @rabbita.none)
+          (
+            { ..model, indexed_db_status: "indexeddb: complete", },
+            @rabbita.none,
+          )
         Ok(Lookup::Found(_)) | Ok(Lookup::Unsupported) | Err(_) =>
-          ({ ..model, indexed_db_status: "indexeddb: failed" }, @rabbita.none)
+          ({ ..model, indexed_db_status: "indexeddb: failed", }, @rabbita.none)
       }
   }
 }

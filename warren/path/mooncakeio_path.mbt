@@ -28,12 +28,12 @@ pub impl Debug for MooncakesPath with fn to_repr(self) {
 }
 
 ///|
-pub extend MooncakesPath with Debug::{to_repr}
-
-///|
 pub impl Show for MooncakesPath with fn output(self, buf) {
   buf.write_string(self.0)
 }
+
+///|
+pub extend MooncakesPath with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub extend MooncakesPath with Show::{output}

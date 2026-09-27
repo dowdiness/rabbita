@@ -213,6 +213,4 @@ pub extern "js" fn HTMLInputElement::set_value(self : Self, value : String) = "(
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/files)
 #cfg(target="js")
-pub extern "js" fn HTMLInputElement::get_files(
-  self : Self,
-) -> FixedArray[File] = "(input) => Array.from(input.files ?? [])"
+pub extern "js" fn HTMLInputElement::get_files(self : Self) -> FixedArray[File] = "(input) => Array.from(input.files ?? [])"

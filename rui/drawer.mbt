@@ -85,7 +85,6 @@ fn drawer_pointer_start(
     return
   }
   guard pointer.current_target().to_option() is Some(current_target) else {
-
     return
   }
   guard current_target.to_element() is Some(surface) else { return }

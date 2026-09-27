@@ -3018,3 +3018,6 @@ pub fn[T : Hash] memo(value : T, compute : (T) -> Html) -> Html {
 pub fn[T] memo_by(value : T, compute : (T) -> Html, by~ : (T) -> Int) -> Html {
   VNode::thunk(by(value), () => compute(value).0)
 }
+
+///|
+pub extend Html with Eq::{equal, not_equal}

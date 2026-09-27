@@ -11,9 +11,6 @@ pub struct CloseInfo {
 } derive(Debug)
 
 ///|
-pub extend CloseInfo with Debug::{to_repr}
-
-///|
 pub impl Show for CloseInfo with fn output(self, buf) {
   Show::output(@debug.Debug::to_repr(self), buf)
 }
@@ -29,9 +26,6 @@ pub(all) enum Event {
   Closed(CloseInfo)
   Errored
 } derive(Debug)
-
-///|
-pub extend Event with Debug::{to_repr}
 
 ///|
 pub impl Show for Event with fn output(self, buf) {
@@ -76,9 +70,6 @@ pub impl Debug for Payload with fn to_repr(self) {
 }
 
 ///|
-pub extend Payload with Debug::{to_repr}
-
-///|
 /// Browser `WebSocket.readyState` mapped to a MoonBit enum.
 pub(all) enum ReadyState {
   Connecting
@@ -86,9 +77,6 @@ pub(all) enum ReadyState {
   Closing
   Closed
 } derive(Debug)
-
-///|
-pub extend ReadyState with Debug::{to_repr}
 
 ///|
 pub impl Show for ReadyState with fn output(self, buf) {
@@ -110,12 +98,24 @@ pub struct Snapshot {
 } derive(Debug)
 
 ///|
-pub extend Snapshot with Debug::{to_repr}
-
-///|
 pub impl Show for Snapshot with fn output(self, buf) {
   Show::output(@debug.Debug::to_repr(self), buf)
 }
 
 ///|
 pub extend Snapshot with Show::{output, to_string}
+
+///|
+pub extend Event with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend ReadyState with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend CloseInfo with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Payload with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Snapshot with @moonbitlang/core/debug.Debug::{to_repr}

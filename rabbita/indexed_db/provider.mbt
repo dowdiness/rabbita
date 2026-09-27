@@ -51,7 +51,7 @@ fn state_for(store : Store) -> @ref.Ref[ProviderState] {
   match provider_states.val.get(store) {
     Some(state) => state
     None => {
-      let state : @ref.Ref[ProviderState] = { val: ProviderState::new(store) }
+      let state : @ref.Ref[ProviderState] = { val: ProviderState::new(store), }
       provider_states.val[store] = state
       state
     }
@@ -194,7 +194,7 @@ fn open_database(state : @ref.Ref[ProviderState]) -> Unit {
         Ok(request) => {
           state.val.opening = Some(request)
           state.val.opening_generation = generation
-          let abnormal : @ref.Ref[Bool] = { val: false }
+          let abnormal : @ref.Ref[Bool] = { val: false, }
 
           request.set_on_upgrade_needed(() => {
             guard state.val.opening_generation == generation else { return }
@@ -282,9 +282,9 @@ fn start_get_transaction(
     Pending::Contains(_, _) | Pending::Apply(_, _) | Pending::Entries(_) => ""
   }
   let store = state.val.store
-  let completed : @ref.Ref[Bool] = { val: false }
-  let outcome : @ref.Ref[ReadOutcome?] = { val: None }
-  let failure : @ref.Ref[ReadOutcome?] = { val: None }
+  let completed : @ref.Ref[Bool] = { val: false, }
+  let outcome : @ref.Ref[ReadOutcome?] = { val: None, }
+  let failure : @ref.Ref[ReadOutcome?] = { val: None, }
   let complete = result => {
     guard !completed.val else { return }
     completed.val = true
@@ -385,8 +385,8 @@ fn start_apply_transaction(
     Pending::Get(_, _) | Pending::Contains(_, _) | Pending::Entries(_) => []
   }
   let store = state.val.store
-  let completed : @ref.Ref[Bool] = { val: false }
-  let failure : @ref.Ref[WriteOutcome?] = { val: None }
+  let completed : @ref.Ref[Bool] = { val: false, }
+  let failure : @ref.Ref[WriteOutcome?] = { val: None, }
   let complete = result => {
     guard !completed.val else { return }
     completed.val = true
@@ -459,9 +459,9 @@ fn start_contains(state : @ref.Ref[ProviderState], operation : Pending) -> Unit 
             Err(read_failure(error.name(), error.code()).unwrap_err()),
           )
         Ok(transaction) => {
-          let done : @ref.Ref[Bool] = { val: false }
-          let failure : @ref.Ref[ReadError?] = { val: None }
-          let value : @ref.Ref[Bool?] = { val: None }
+          let done : @ref.Ref[Bool] = { val: false, }
+          let failure : @ref.Ref[ReadError?] = { val: None, }
+          let value : @ref.Ref[Bool?] = { val: None, }
           let complete = result => {
             guard !done.val else { return }
             done.val = true
@@ -548,9 +548,9 @@ fn start_entries_transaction(
   transaction : @dom.IDBTransaction,
 ) -> Unit {
   let store = state.val.store
-  let completed : @ref.Ref[Bool] = { val: false }
-  let outcome : @ref.Ref[EntriesOutcome?] = { val: None }
-  let failure : @ref.Ref[EntriesOutcome?] = { val: None }
+  let completed : @ref.Ref[Bool] = { val: false, }
+  let outcome : @ref.Ref[EntriesOutcome?] = { val: None, }
+  let failure : @ref.Ref[EntriesOutcome?] = { val: None, }
   let entries : Array[Entry] = []
   let complete = result => {
     guard !completed.val else { return }

@@ -192,3 +192,6 @@ pub fn invoke(
 ) -> OpCont[Cmd] raise Unhandled {
   (op.invoke)(extension, context)
 }
+
+///|
+pub extend Cmd with @moonbitlang/core/debug.Debug::{to_repr}

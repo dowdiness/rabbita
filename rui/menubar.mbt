@@ -1460,3 +1460,6 @@ pub fn[C : @html.IsChildren] menubar_sub_content(
     children,
   )
 }
+
+///|
+pub extend MenubarModel with Eq::{equal, not_equal}

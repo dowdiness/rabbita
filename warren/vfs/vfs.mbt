@@ -171,3 +171,9 @@ pub async fn VirtualFileSystem::read(self : Self, path : String) -> &@io.Data? {
     _ => None
   }
 }
+
+///|
+pub extend VirtualFs with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend VirtualFileSystem with @moonbitlang/core/debug.Debug::{to_repr}

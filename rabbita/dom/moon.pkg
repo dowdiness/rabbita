@@ -2,4 +2,4 @@ import {
   "moonbit-community/rabbita/js",
 }
 
-warnings = "-unused_package"
+warnings = "-unused_package-implicit_impl_as_method"

@@ -162,3 +162,39 @@ pub fn parse(url : String) -> Url raise Error {
   }
   { protocol, host, port, path, query, fragment, }
 }
+
+///|
+pub extend Protocol with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Protocol with Compare::{compare, op_ge, op_gt, op_le, op_lt}
+
+///|
+pub extend Protocol with Eq::{equal, not_equal}
+
+///|
+pub extend Protocol with Show::{output, to_string}
+
+///|
+pub extend Url with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Url with Compare::{compare, op_ge, op_gt, op_le, op_lt}
+
+///|
+pub extend Url with Eq::{equal, not_equal}
+
+///|
+pub extend Url with Show::{output}
+
+///|
+pub extend UrlRequest with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend UrlRequest with Compare::{compare, op_ge, op_gt, op_le, op_lt}
+
+///|
+pub extend UrlRequest with Eq::{equal, not_equal}
+
+///|
+pub extend UrlRequest with Show::{output, to_string}

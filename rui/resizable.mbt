@@ -1003,7 +1003,7 @@ pub fn[T : Eq, C : @html.IsChildren] resizable_panel_group_with_input(
     title?,
     attrs?,
     style~,
-    (group, input) => children({ group, control_id: "\{id}-handle" }, input),
+    (group, input) => children({ group, control_id: "\{id}-handle", }, input),
   )
 }
 
@@ -1093,3 +1093,9 @@ pub fn resizable_handle(
     style,
   )
 }
+
+///|
+pub extend ResizablePanelSide with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend ResizablePanelSide with Eq::{equal, not_equal}

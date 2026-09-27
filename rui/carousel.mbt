@@ -1634,3 +1634,9 @@ pub fn[C : @html.IsChildren] carousel(
     ),
   )
 }
+
+///|
+pub extend CarouselOrientation with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend CarouselOrientation with Eq::{equal, not_equal}
