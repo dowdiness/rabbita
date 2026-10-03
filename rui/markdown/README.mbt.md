@@ -80,6 +80,11 @@ resulting links; it does not change image loading.
 
 ## Custom headings
 
+Set `heading_anchors=false` (default: `true`) to omit generated heading links
+and icons at every level, including nested headings. Levels, typography, inline
+formatting and deduplicated IDs are preserved, so fragment links still work.
+This option does not affect custom `render_heading` output.
+
 Pass `render_heading? : (@cmark.BlockHeading) -> @html.Html` to take over the
 entire heading. `@cmark` refers to `moonbit-community/cmark/cmark`;
 `BlockHeading` exposes the source `level`, `inline` AST, `id` and `layout`.
