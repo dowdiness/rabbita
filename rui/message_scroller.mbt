@@ -5,6 +5,12 @@ pub(all) enum MessageScrollDirection {
 } derive(Debug, Eq)
 
 ///|
+pub extend MessageScrollDirection with Debug::{to_repr}
+
+///|
+pub extend MessageScrollDirection with Eq::{equal, not_equal}
+
+///|
 priv struct MessageScrollerPosition {
   at_start : Bool
   at_end : Bool
@@ -222,7 +228,7 @@ pub fn[C : @html.IsChildren] message_scroller_content(
     attrs=ui_attrs(attrs).data_set("slot", "message-scroller-content"),
     style=ui_styles(
       [
-        "display:flex;height:max-content;min-height:100%;flex-direction:column;gap:2rem",
+        "display:flex;height:max-content;min-height:100%;flex-direction:column;gap:1.5rem",
       ],
       style,
     ),
@@ -321,9 +327,3 @@ pub fn[C : @html.IsChildren] message_scroller_button(
     children,
   )
 }
-
-///|
-pub extend MessageScrollDirection with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend MessageScrollDirection with Eq::{equal, not_equal}

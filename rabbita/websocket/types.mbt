@@ -12,8 +12,11 @@ pub struct CloseInfo {
 
 ///|
 pub impl Show for CloseInfo with fn output(self, buf) {
-  Show::output(self.to_repr(), buf)
+  Show::output(@debug.Debug::to_repr(self), buf)
 }
+
+///|
+pub extend CloseInfo with Show::{output, to_string}
 
 ///|
 /// Inbound events emitted by a managed WebSocket connection.
@@ -26,8 +29,11 @@ pub(all) enum Event {
 
 ///|
 pub impl Show for Event with fn output(self, buf) {
-  Show::output(self.to_repr(), buf)
+  Show::output(@debug.Debug::to_repr(self), buf)
 }
+
+///|
+pub extend Event with Show::{output, to_string}
 
 ///|
 /// Outbound payload for `send(...)`.
@@ -53,6 +59,9 @@ pub impl Show for Payload with fn output(self, buf) {
 }
 
 ///|
+pub extend Payload with Show::{output, to_string}
+
+///|
 pub impl Debug for Payload with fn to_repr(self) {
   match self {
     Text(text) => Repr::ctor("Text", [(None, Repr(text))])
@@ -71,8 +80,11 @@ pub(all) enum ReadyState {
 
 ///|
 pub impl Show for ReadyState with fn output(self, buf) {
-  Show::output(self.to_repr(), buf)
+  Show::output(@debug.Debug::to_repr(self), buf)
 }
+
+///|
+pub extend ReadyState with Show::{output, to_string}
 
 ///|
 /// Snapshot of the current connection state for a named socket.
@@ -87,35 +99,23 @@ pub struct Snapshot {
 
 ///|
 pub impl Show for Snapshot with fn output(self, buf) {
-  Show::output(self.to_repr(), buf)
+  Show::output(@debug.Debug::to_repr(self), buf)
 }
 
 ///|
-pub extend CloseInfo with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend CloseInfo with Show::{output, to_string}
+pub extend Snapshot with Show::{output, to_string}
 
 ///|
 pub extend Event with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
-pub extend Event with Show::{output, to_string}
+pub extend ReadyState with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend CloseInfo with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub extend Payload with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
-pub extend Payload with Show::{output, to_string}
-
-///|
-pub extend ReadyState with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ReadyState with Show::{output, to_string}
-
-///|
 pub extend Snapshot with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend Snapshot with Show::{output, to_string}

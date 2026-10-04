@@ -1,6 +1,6 @@
 name = "moonbit-community/rabbita"
 
-version = "0.15.8"
+version = "0.16.3"
 
 readme = "README.md"
 
@@ -17,7 +17,7 @@ preferred_target = "js"
 supported_targets = "js+native+wasm"
 
 import {
-  "moonbitlang/async@0.22.2",
+  "moonbitlang/async@0.22.4",
   "moonbitlang/moonback@0.8.5",
   "moonbitlang/x@0.5.1",
 }

@@ -5,6 +5,12 @@ pub(all) enum ResizablePanelSide {
 } derive(Debug, Eq)
 
 ///|
+pub extend ResizablePanelSide with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend ResizablePanelSide with Eq::{equal, not_equal}
+
+///|
 priv enum ResizableGroupMsg {
   SetResizableGroupSizes(Array[Int])
   ResizeResizableGroupAt(Int, Int)
@@ -1087,9 +1093,3 @@ pub fn resizable_handle(
     style,
   )
 }
-
-///|
-pub extend ResizablePanelSide with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ResizablePanelSide with Eq::{equal, not_equal}

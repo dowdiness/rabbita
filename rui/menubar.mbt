@@ -7,6 +7,9 @@ struct MenubarModel {
 } derive(Eq)
 
 ///|
+pub extend MenubarModel with Eq::{equal, not_equal}
+
+///|
 struct MenubarScope {
   id : String
   model : MenubarModel
@@ -56,10 +59,10 @@ priv enum MenubarMsg {
 }
 
 ///|
-const MenubarStyle : String = "display:inline-flex;max-width:100%;min-width:0;flex-wrap:wrap;align-items:center;gap:0.125rem;border:1px solid var(--rui-border,oklch(0.922 0 0));border-radius:calc(var(--rui-radius,0.625rem) - 0.125rem);background:var(--rui-background,oklch(1 0 0));padding:0.25rem;color:var(--rui-foreground,oklch(0.145 0 0));box-shadow:0 1px 2px rgb(0 0 0 / 0.05)"
+const MenubarStyle : String = "display:inline-flex;max-width:100%;min-width:0;flex-wrap:wrap;align-items:center;gap:0.125rem;border:1px solid var(--rui-border,oklch(0.922 0 0));border-radius:var(--rui-radius,0.625rem);background:var(--rui-background,oklch(1 0 0));padding:0.1875rem;color:var(--rui-foreground,oklch(0.145 0 0));box-shadow:none;height:2rem"
 
 ///|
-const MenubarTriggerStyle : String = "height:1.75rem;border:0;background:var(--rui-menu-item-bg,var(--rui-menu-item-base-bg,transparent));padding-inline:0.625rem;color:var(--rui-menu-item-fg,var(--rui-menu-item-base-fg,inherit));box-shadow:none"
+const MenubarTriggerStyle : String = "height:1.5rem;border:0;background:var(--rui-menu-item-bg,var(--rui-menu-item-base-bg,transparent));padding-inline:0.375rem;color:var(--rui-menu-item-fg,var(--rui-menu-item-base-fg,inherit));box-shadow:none;padding-block:0.125rem"
 
 ///|
 const MenubarHoverClickWindowMs : Int = 250
@@ -1031,6 +1034,9 @@ pub fn menubar(
     .role("menubar")
     .aria_orientation("horizontal")
   ignore(element_attrs.aria_label(aria_label))
+  if default_value is Some(value) {
+    ignore(element_attrs.data_set("value", value))
+  }
   @rabbita.Val::constant(
     @html.div(
       style=ui_styles(
@@ -1454,6 +1460,3 @@ pub fn[C : @html.IsChildren] menubar_sub_content(
     children,
   )
 }
-
-///|
-pub extend MenubarModel with Eq::{equal, not_equal}

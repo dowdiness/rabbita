@@ -1,11 +1,12 @@
-name = "Yoorkin/rui"
+name = "moonbit-community/rui"
 
-version = "0.1.2"
+version = "0.3.3"
 
 import {
-  "moonbit-community/rabbita@0.15.6",
+  "moonbit-community/rabbita@0.16.1",
   "Yoorkin/shiki@0.1.0",
   "moonbitlang/async@0.21.0",
+  "moonbit-community/cmark@0.4.8",
 }
 
 readme = "README.mbt.md"
@@ -16,8 +17,8 @@ license = "MIT"
 
 keywords = [ "UI", "components", "rabbita", "shadcn", "web" ]
 
-description = "Self-contained Vega-style UI components for Rabbita"
+description = "Self-contained Nova-style UI components for Rabbita"
 
 preferred_target = "js"
 
-supported_targets = "js+native"
+supported_targets = "js+native+wasm"

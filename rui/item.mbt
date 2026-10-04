@@ -6,10 +6,22 @@ pub(all) enum ItemVariant {
 } derive(Debug, Eq)
 
 ///|
+pub extend ItemVariant with Debug::{to_repr}
+
+///|
+pub extend ItemVariant with Eq::{equal, not_equal}
+
+///|
 pub(all) enum ItemSize {
   ItemDefaultSize
   ItemSm
 } derive(Debug, Eq)
+
+///|
+pub extend ItemSize with Debug::{to_repr}
+
+///|
+pub extend ItemSize with Eq::{equal, not_equal}
 
 ///|
 pub(all) enum ItemMediaVariant {
@@ -19,10 +31,16 @@ pub(all) enum ItemMediaVariant {
 } derive(Debug, Eq)
 
 ///|
-const ItemGroupStyle : String = "display:flex;flex-direction:column"
+pub extend ItemMediaVariant with Debug::{to_repr}
 
 ///|
-const ItemBaseStyle : String = "display:flex;flex-wrap:wrap;align-items:center;border:1px solid var(--rui-item-border,var(--rui-item-base-border,transparent));border-radius:calc(var(--rui-radius,0.625rem) - 0.125rem);background:var(--rui-item-bg,var(--rui-item-base-bg,transparent));color:var(--rui-item-fg,var(--rui-foreground,oklch(0.145 0 0)));box-shadow:var(--rui-item-shadow,none);font-size:0.875rem;line-height:1.25rem;text-align:start;outline:none"
+pub extend ItemMediaVariant with Eq::{equal, not_equal}
+
+///|
+const ItemGroupStyle : String = "display:flex;width:100%;flex-direction:column;gap:var(--rui-item-group-gap,1rem)"
+
+///|
+const ItemBaseStyle : String = "display:flex;flex-wrap:wrap;align-items:center;border:1px solid var(--rui-item-border,var(--rui-item-base-border,transparent));border-radius:var(--rui-radius,0.625rem);background:var(--rui-item-bg,var(--rui-item-base-bg,transparent));color:var(--rui-item-fg,var(--rui-foreground,oklch(0.145 0 0)));box-shadow:var(--rui-item-shadow,none);font-size:0.875rem;line-height:1.25rem;text-align:start;outline:none"
 
 ///|
 fn item_variant_value(variant : ItemVariant) -> String {
@@ -56,8 +74,8 @@ fn item_size_value(size : ItemSize) -> String {
 ///|
 fn item_size_style(size : ItemSize) -> String {
   match size {
-    ItemDefaultSize => "gap:1rem;padding:1rem"
-    ItemSm => "gap:0.625rem;padding:0.75rem 1rem"
+    ItemDefaultSize => "gap:0.625rem;padding:0.625rem 0.75rem"
+    ItemSm => "gap:0.625rem;padding:0.625rem 0.75rem"
   }
 }
 
@@ -134,7 +152,7 @@ fn item_bind_disabled_link(attrs : @html.Attrs, disabled : Bool) -> Unit {
 }
 
 ///|
-/// Render the `asChild` anchor path from the Vega item recipe as a native link.
+/// Render the `asChild` anchor path from the Nova item recipe as a native link.
 pub fn[C : @html.IsChildren] item_link(
   href~ : String,
   variant? : ItemVariant = ItemDefault,
@@ -389,21 +407,3 @@ pub fn item_separator(
     style~,
   )
 }
-
-///|
-pub extend ItemMediaVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ItemMediaVariant with Eq::{equal, not_equal}
-
-///|
-pub extend ItemSize with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ItemSize with Eq::{equal, not_equal}
-
-///|
-pub extend ItemVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ItemVariant with Eq::{equal, not_equal}

@@ -26,13 +26,13 @@ const IgNavigationContentStyle : String = "box-sizing:border-box;display:grid;gr
 const IgNavigationLinkStyle : String = "display:flex;min-height:4.5rem;flex-direction:column;justify-content:center;gap:0.25rem"
 
 ///|
-const IgSidebarVariantFrameStyle : String = "--rui-sidebar-width:15rem;height:24rem;min-height:24rem;overflow:hidden"
+const IgSidebarVariantFrameStyle : String = "container-type:inline-size;--rui-sidebar-width:min(15rem,44cqw);--rui-sidebar-max-width:44cqw;height:24rem;min-height:24rem;overflow:hidden"
 
 ///|
 const IgSidebarWorkspaceStyle : String = "box-sizing:border-box;display:flex;min-width:0;flex:1;flex-direction:column;padding:0.75rem"
 
 ///|
-const IgSidebarWorkspaceBodyStyle : String = "display:flex;min-height:0;flex:1;align-items:center;justify-content:center;padding:1rem"
+const IgSidebarWorkspaceBodyStyle : String = "display:flex;min-height:0;flex:1;align-items:center;justify-content:center;padding:1rem 0"
 
 ///|
 const IgContextTargetStyle : String = "display:flex;min-height:8rem;align-items:center;justify-content:center;border:1px dashed var(--rui-border);border-radius:var(--rui-radius);background:var(--rui-muted);color:var(--rui-muted-foreground);font-size:0.8125rem;text-align:center;user-select:none"
@@ -317,35 +317,32 @@ fn ig_sidebar_panel_icon(side : @rui.SidebarSide) -> @html.Html {
 ///|
 fn ig_sidebar_navigation(
   scope : @rui.SidebarScope,
-  side : @rui.SidebarSide,
   menu_size : @rui.SidebarMenuButtonSize,
   mobile : Bool,
-  interactive : Bool,
 ) -> @html.Html {
-  let close_command = if mobile {
-    @rui.sidebar_close_mobile(scope)
-  } else {
-    @rui.sidebar_collapse(scope)
-  }
   @html.fragment([
     @rui.sidebar_header(
-      @rui.sidebar_input(
-        aria_label="Filter workspace navigation",
-        placeholder="Filter…",
-      ),
-    ),
-    @rui.sidebar_content(
-      @rui.sidebar_group([
-        @rui.sidebar_group_label(scope~, "Workspace"),
-        if interactive {
-          @rui.sidebar_group_action(
-            aria_label=if mobile { "Close sidebar" } else { "Collapse sidebar" },
-            on_click=close_command,
-            ig_sidebar_panel_icon(side),
+      @html.div(style=[RowStyle, "flex-wrap:nowrap"], [
+        @rui.sidebar_input(
+          aria_label="Filter workspace navigation",
+          placeholder="Filter…",
+        ),
+        if mobile {
+          @rui.button(
+            variant=Ghost,
+            size=IconSm,
+            attrs=@html.Attrs::build().aria_label("Close mobile sidebar"),
+            on_click=@rui.sidebar_close_mobile(scope),
+            showcase_close_icon(),
           )
         } else {
           @html.nothing
         },
+      ]),
+    ),
+    @rui.sidebar_content(
+      @rui.sidebar_group([
+        @rui.sidebar_group_label(scope~, "Workspace"),
         @rui.sidebar_group_content(
           @rui.sidebar_menu([
             @rui.sidebar_menu_item([
@@ -355,20 +352,6 @@ fn ig_sidebar_navigation(
                 size=menu_size,
                 [showcase_layout_icon(), @html.span("Overview")],
               ),
-              if interactive {
-                @rui.sidebar_menu_action(
-                  show_on_hover=true,
-                  aria_label=if mobile {
-                    "Close sidebar"
-                  } else {
-                    "Collapse sidebar"
-                  },
-                  on_click=close_command,
-                  showcase_panel_left_icon(),
-                )
-              } else {
-                @html.nothing
-              },
             ]),
             @rui.sidebar_menu_item([
               @rui.sidebar_menu_button(href="#activity", size=menu_size, [
@@ -500,7 +483,7 @@ fn ig_sidebar_workspace_content(
       @html.p(
         style=[MutedStyle, "max-width:18rem;margin:0;text-align:center"],
         if mobile {
-          "Open the mobile sheet, then close it with the overlay, Escape, or its navigation action."
+          "Open the mobile sheet, then close it with its close button, the overlay, or Escape."
         } else if interactive {
           "Use the trigger or sidebar rail; the provider owns every state change."
         } else {
@@ -531,7 +514,7 @@ fn ig_sidebar_variant(
       let rail = if mobile || !interactive {
         @html.nothing
       } else if resizable {
-        @rui.sidebar_rail(scope, min_width=192, max_width=352)
+        @rui.sidebar_rail(scope, min_width=112, max_width=352)
       } else {
         @rui.sidebar_rail(scope)
       }
@@ -545,7 +528,7 @@ fn ig_sidebar_variant(
       }
       @html.fragment([
         @rui.sidebar(scope, id~, side~, variant~, collapsible~, mobile~, [
-          ig_sidebar_navigation(scope, side, menu_size, mobile, interactive),
+          ig_sidebar_navigation(scope, menu_size, mobile),
           rail,
         ]),
         workspace,
@@ -1220,15 +1203,23 @@ fn ig_dialog_variant(
   trigger_variant : @rui.ButtonVariant,
   trigger_label : String,
 ) -> @rabbita.Val[@html.Html] {
-  @rui.dialog(id~, modal~, scope => {
+  @rabbita.Val::constant(
     @html.fragment([
-      @rui.dialog_trigger(scope, variant=trigger_variant, trigger_label),
-      @rui.dialog_portal([
-        @rui.dialog_content(scope, show_close=true, [
+      @rui.button(
+        variant=trigger_variant,
+        on_click=@dialog.show(id, modal~),
+        trigger_label,
+      ),
+      @rui.dialog(
+        id~,
+        attrs=@html.Attrs::build()
+          .aria_labelledby(id + "-title")
+          .aria_describedby(id + "-description"),
+        [
           @rui.dialog_header([
-            @rui.dialog_title(scope, trigger_label),
+            @rui.dialog_title(id=id + "-title", trigger_label),
             @rui.dialog_description(
-              scope,
+              id=id + "-description",
               if modal {
                 "Focus stays inside this modal surface until it closes."
               } else {
@@ -1236,15 +1227,17 @@ fn ig_dialog_variant(
               },
             ),
           ]),
-          @html.div(style=[StackStyle], [
-            @rui.label(for_=id + "-name", "Display name"),
-            @rui.input(id=id + "-name", value="Rabbita team"),
+          @html.form(method_="dialog", [
+            @html.div(style=[StackStyle], [
+              @rui.label(for_=id + "-name", "Display name"),
+              @rui.input(id=id + "-name", value="Rabbita team"),
+            ]),
+            @rui.dialog_footer(@rui.button(type_="submit", "Save changes")),
           ]),
-          @rui.dialog_footer(@rui.dialog_close(scope, "Save changes")),
-        ]),
-      ]),
-    ])
-  })
+        ],
+      ),
+    ]),
+  )
 }
 
 ///|
@@ -1252,30 +1245,39 @@ fn ig_drawer_variant(
   id : String,
   direction : @rui.DrawerDirection,
   trigger_label : String,
-) -> @rabbita.Val[@html.Html] {
-  @rui.drawer(id~, scope => {
-    @html.fragment([
-      @rui.drawer_trigger(scope, variant=Outline, trigger_label),
-      @rui.drawer_portal([
-        @rui.drawer_content(
-          scope,
-          direction~,
-          show_handle=true,
-          show_close=true,
-          [
-            @rui.drawer_header([
-              @rui.drawer_title(scope, trigger_label),
-              @rui.drawer_description(
-                scope, "The direction controls placement, motion, and handle orientation.",
-              ),
-            ]),
-            @html.div(style=[IgDemoSurfaceStyle], "All checks passed"),
-            @rui.drawer_footer(@rui.drawer_close(scope, "Close")),
-          ],
+) -> @html.Html {
+  @html.fragment([
+    @rui.button(variant=Outline, on_click=@dialog.show(id), trigger_label),
+    @rui.drawer(
+      id~,
+      direction~,
+      swipe_area=50,
+      attrs=@html.Attrs::build()
+        .aria_labelledby(id + "-title")
+        .aria_describedby(id + "-description"),
+      [
+        @rui.drawer_header([
+          @rui.drawer_title(id=id + "-title", trigger_label),
+          @rui.drawer_description(
+            id=id + "-description",
+            "Drag beside the drawer to dismiss, or use the close button below.",
+          ),
+        ]),
+        @html.div(style=[IgDemoSurfaceStyle], "All checks passed"),
+        @rui.drawer_footer(
+          @html.form(
+            method_="dialog",
+            @rui.button(
+              variant=Outline,
+              type_="submit",
+              style=["width:100%"],
+              "Close",
+            ),
+          ),
         ),
-      ]),
-    ])
-  })
+      ],
+    ),
+  ])
 }
 
 ///|
@@ -1283,25 +1285,33 @@ fn ig_sheet_variant(
   id : String,
   side : @rui.SheetSide,
   trigger_label : String,
-) -> @rabbita.Val[@html.Html] {
-  @rui.sheet(id~, scope => {
-    @html.fragment([
-      @rui.sheet_trigger(scope, variant=Outline, trigger_label),
-      @rui.sheet_content(scope, side~, [
+) -> @html.Html {
+  @html.fragment([
+    @rui.button(variant=Outline, on_click=@dialog.show(id), trigger_label),
+    @rui.sheet(
+      id~,
+      side~,
+      attrs=@html.Attrs::build()
+        .aria_labelledby(id + "-title")
+        .aria_describedby(id + "-description"),
+      [
         @rui.sheet_header([
-          @rui.sheet_title(scope, trigger_label),
+          @rui.sheet_title(id=id + "-title", trigger_label),
           @rui.sheet_description(
-            scope, "Placement changes while focus and dismissal behavior stay consistent.",
+            id=id + "-description",
+            "Placement changes while focus and dismissal behavior stay consistent.",
           ),
         ]),
-        @html.div(style=[StackStyle], [
-          @rui.label(for_=id + "-email", "Notification email"),
-          @rui.input(id=id + "-email", value="team@example.com"),
+        @html.form(method_="dialog", [
+          @html.div(style=[StackStyle], [
+            @rui.label(for_=id + "-email", "Notification email"),
+            @rui.input(id=id + "-email", value="team@example.com"),
+          ]),
+          @rui.sheet_footer(@rui.button(type_="submit", "Save settings")),
         ]),
-        @rui.sheet_footer(@rui.sheet_close(scope, "Save settings")),
-      ]),
-    ])
-  })
+      ],
+    ),
+  ])
 }
 
 ///|
@@ -1361,7 +1371,7 @@ fn ig_hover_card_variant(
         "Native MoonBit components with incremental state.",
       ),
       @html.div(style=[RowStyle], [
-        @rui.badge(variant=Secondary, "Vega"),
+        @rui.badge(variant=Secondary, "Nova"),
         @rui.badge(variant=Outline, "Inline"),
       ]),
     ]),
@@ -1448,26 +1458,26 @@ fn ig_drawer_component(
 ) -> @html.Html {
   showcase_component_demos(
     "Drawer",
-    "Placement controls motion, edge geometry, and handle orientation.",
+    "Floating panels can be dismissed by dragging the backdrop beside their inner edge.",
     [
       showcase_demo_section(
         "Top",
-        "A horizontal handle accompanies motion from the top edge.",
+        "Drag the backdrop just below the panel to dismiss it upward.",
         showcase_demo_stage(top_html, ig_drawer_code(IgDrawerTopCallCode)),
       ),
       showcase_demo_section(
         "Right",
-        "A vertical handle accompanies motion from the right edge.",
+        "Drag the backdrop just left of the panel to dismiss it rightward.",
         showcase_demo_stage(right_html, ig_drawer_code(IgDrawerRightCallCode)),
       ),
       showcase_demo_section(
         "Bottom",
-        "A horizontal handle accompanies motion from the bottom edge.",
+        "Drag the backdrop just above the panel to dismiss it downward.",
         showcase_demo_stage(bottom_html, ig_drawer_code(IgDrawerBottomCallCode)),
       ),
       showcase_demo_section(
         "Left",
-        "A vertical handle accompanies motion from the left edge.",
+        "Drag the backdrop just right of the panel to dismiss it leftward.",
         showcase_demo_stage(left_html, ig_drawer_code(IgDrawerLeftCallCode)),
       ),
     ],
@@ -1480,7 +1490,7 @@ fn ig_command_component(
   dialog_html : @html.Html,
 ) -> @html.Html {
   showcase_component_demos(
-    "Command",
+    "Command Box",
     "Inline and dialog listboxes share active-descendant navigation.",
     [
       showcase_demo_section(
@@ -1639,49 +1649,72 @@ fn ig_sheet_component(
 
 ///|
 fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
-  let alert_dialog_view = @rui.alert_dialog(id="showcase-alert-dialog", scope => {
-    @html.fragment([
-      @rui.alert_dialog_trigger(scope, variant=Destructive, "Delete snapshot"),
-      @rui.alert_dialog_portal([
-        @rui.alert_dialog_content(scope, [
-          @rui.alert_dialog_header([
-            @rui.alert_dialog_media(showcase_alert_triangle_icon()),
-            @rui.alert_dialog_title(scope, "Delete this snapshot?"),
-            @rui.alert_dialog_description(
-              scope, "This removes the saved state permanently.",
-            ),
-          ]),
+  let alert_dialog_view = @html.fragment([
+    @rui.button(
+      variant=Destructive,
+      on_click=@dialog.show("showcase-alert-dialog"),
+      "Delete snapshot",
+    ),
+    @rui.alert_dialog(
+      id="showcase-alert-dialog",
+      attrs=@html.Attrs::build()
+        .aria_labelledby("showcase-alert-dialog-title")
+        .aria_describedby("showcase-alert-dialog-description"),
+      [
+        @rui.alert_dialog_header([
+          @rui.alert_dialog_media(showcase_alert_triangle_icon()),
+          @rui.alert_dialog_title(
+            id="showcase-alert-dialog-title",
+            "Delete this snapshot?",
+          ),
+          @rui.alert_dialog_description(
+            id="showcase-alert-dialog-description",
+            "This removes the saved state permanently.",
+          ),
+        ]),
+        @html.form(
+          method_="dialog",
           @rui.alert_dialog_footer([
-            @rui.alert_dialog_cancel(scope, "Cancel"),
-            @rui.alert_dialog_action(scope, "Delete"),
+            @rui.alert_dialog_cancel("Cancel"),
+            @rui.alert_dialog_action("Delete"),
           ]),
+        ),
+      ],
+    ),
+  ])
+  let alert_dialog_default_view = @html.fragment([
+    @rui.button(
+      variant=Outline,
+      on_click=@dialog.show("showcase-alert-dialog-default"),
+      "Archive project",
+    ),
+    @rui.alert_dialog(
+      id="showcase-alert-dialog-default",
+      attrs=@html.Attrs::build()
+        .aria_labelledby("showcase-alert-dialog-default-title")
+        .aria_describedby("showcase-alert-dialog-default-description"),
+      [
+        @rui.alert_dialog_header([
+          @rui.alert_dialog_title(
+            id="showcase-alert-dialog-default-title",
+            "Archive this project?",
+          ),
+          @rui.alert_dialog_description(
+            id="showcase-alert-dialog-default-description",
+            "You can restore an archived project later from workspace settings.",
+          ),
         ]),
-      ]),
-    ])
-  })
-  let alert_dialog_default_view = @rui.alert_dialog(
-    id="showcase-alert-dialog-default",
-    scope => {
-      @html.fragment([
-        @rui.alert_dialog_trigger(scope, variant=Outline, "Archive project"),
-        @rui.alert_dialog_portal([
-          @rui.alert_dialog_content(scope, [
-            @rui.alert_dialog_header([
-              @rui.alert_dialog_title(scope, "Archive this project?"),
-              @rui.alert_dialog_description(
-                scope, "You can restore an archived project later from workspace settings.",
-              ),
-            ]),
-            @rui.alert_dialog_footer([
-              @rui.alert_dialog_cancel(scope, "Cancel"),
-              @rui.alert_dialog_action(scope, "Archive"),
-            ]),
+        @html.form(
+          method_="dialog",
+          @rui.alert_dialog_footer([
+            @rui.alert_dialog_cancel("Cancel"),
+            @rui.alert_dialog_action("Archive"),
           ]),
-        ]),
-      ])
-    },
-  )
-  let command_view = @rui.command(
+        ),
+      ],
+    ),
+  ])
+  let command_box_view = @rui.command_box(
     id="showcase-command",
     style=[IgCommandStyle],
     scope => {
@@ -1717,9 +1750,6 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
   let command_dialog_view = @rui.command_dialog(
     id="showcase-command-dialog",
     aria_label="Command palette",
-    trigger=scope => {
-      @rui.command_dialog_trigger(scope~, variant=Outline, "Open palette")
-    },
     scope => {
       @html.fragment([
         @rui.command_input(scope~, placeholder="Type a command…"),
@@ -1738,7 +1768,16 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
         ]),
       ])
     },
-  )
+  ).map(dialog => {
+    @html.fragment([
+      @rui.button(
+        variant=Outline,
+        on_click=@dialog.show("showcase-command-dialog"),
+        "Open palette",
+      ),
+      dialog,
+    ])
+  })
   let context_menu_actions_view = @rui.context_menu(
     id="showcase-context-menu-actions",
     scope => {
@@ -2152,14 +2191,14 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
     },
   )
   let alert_dialog_component = if selected == "" || selected == "alert-dialog" {
-    alert_dialog_default_view.view2(
-      alert_dialog_view, ig_alert_dialog_component,
+    showcase_static_page(
+      ig_alert_dialog_component(alert_dialog_default_view, alert_dialog_view),
     )
   } else {
     showcase_static_page(@html.nothing)
   }
   let command_component = if selected == "" || selected == "command" {
-    command_view.view2(command_dialog_view, ig_command_component)
+    command_box_view.view2(command_dialog_view, ig_command_component)
   } else {
     showcase_static_page(@html.nothing)
   }
@@ -2169,8 +2208,10 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
     showcase_static_page(@html.nothing)
   }
   let drawer_component = if selected == "" || selected == "drawer" {
-    drawer_top_view.view4(
-      drawer_right_view, drawer_bottom_view, drawer_left_view, ig_drawer_component,
+    showcase_static_page(
+      ig_drawer_component(
+        drawer_top_view, drawer_right_view, drawer_bottom_view, drawer_left_view,
+      ),
     )
   } else {
     showcase_static_page(@html.nothing)
@@ -2623,8 +2664,10 @@ fn ig_overlay_page(selected : String) -> @rabbita.Val[@html.Html] {
     showcase_static_page(@html.nothing)
   }
   let sheet_component = if selected == "" || selected == "sheet" {
-    sheet_top_view.view4(
-      sheet_right_view, sheet_bottom_view, sheet_left_view, ig_sheet_component,
+    showcase_static_page(
+      ig_sheet_component(
+        sheet_top_view, sheet_right_view, sheet_bottom_view, sheet_left_view,
+      ),
     )
   } else {
     showcase_static_page(@html.nothing)

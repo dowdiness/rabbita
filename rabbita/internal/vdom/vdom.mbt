@@ -16,6 +16,9 @@ pub impl Eq for VNode with fn equal(a, b) {
 }
 
 ///|
+pub extend VNode with Eq::{equal, not_equal}
+
+///|
 const CAPTURED_LINK_TAG : String = "RABBITA_CAPTURED_LINK"
 
 ///|
@@ -151,6 +154,3 @@ pub fn Props::copy(self : Props) -> Props {
     styles: copy_map(self.styles),
   }
 }
-
-///|
-pub extend VNode with Eq::{equal, not_equal}

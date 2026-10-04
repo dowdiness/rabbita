@@ -5,6 +5,12 @@ pub(all) enum TextDirection {
 } derive(Debug, Eq)
 
 ///|
+pub extend TextDirection with Debug::{to_repr}
+
+///|
+pub extend TextDirection with Eq::{equal, not_equal}
+
+///|
 fn text_direction_value(direction : TextDirection) -> String {
   match direction {
     Ltr => "ltr"
@@ -36,9 +42,3 @@ pub fn[C : @html.IsChildren] direction(
     children,
   )
 }
-
-///|
-pub extend TextDirection with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend TextDirection with Eq::{equal, not_equal}

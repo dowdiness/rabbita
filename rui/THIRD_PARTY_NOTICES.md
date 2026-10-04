@@ -1,7 +1,16 @@
 # Third-party notices
 
+The Markdown tests and website showcase use the complete ripgrep README under
+the MIT license. Its pinned source and license are preserved in
+[`markdown/__fixtures__/PROVENANCE.md`](markdown/__fixtures__/PROVENANCE.md) and
+[`markdown/__fixtures__/ripgrep-LICENSE-MIT`](markdown/__fixtures__/ripgrep-LICENSE-MIT).
+
+The complete `moonbitlang/async@0.22.2` README is included under Apache-2.0.
+Its provenance is recorded in the same fixture document and its license is
+retained in [`markdown/__fixtures__/async-LICENSE`](markdown/__fixtures__/async-LICENSE).
+
 Rabbita UI translates visual recipes and public component conventions from
-shadcn/ui's Vega style. Calendar focus behavior additionally follows React
+shadcn/ui's Nova style. Calendar focus behavior additionally follows React
 DayPicker, which shadcn/ui wraps. The MoonBit implementation is original and
 uses Rabbita-native HTML, ARIA, browser primitives, and incremental state.
 

@@ -6,9 +6,15 @@ pub(all) enum BroadcastMsg {
 } derive(Debug)
 
 ///|
+pub extend BroadcastMsg with Debug::{to_repr}
+
+///|
 pub(all) enum ClientMsg {
   Text(String)
 } derive(Debug)
+
+///|
+pub extend ClientMsg with Debug::{to_repr}
 
 ///|
 pub struct Devhub {
@@ -304,9 +310,3 @@ async fn Devhub::handle_ws(
     group.return_immediately(())
   })
 }
-
-///|
-pub extend BroadcastMsg with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ClientMsg with @moonbitlang/core/debug.Debug::{to_repr}

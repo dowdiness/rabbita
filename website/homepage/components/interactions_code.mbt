@@ -880,43 +880,32 @@ const IgSidebarSharedCode : String =
   #|
   #|fn sidebar_navigation(
   #|  scope : @rui.SidebarScope,
-  #|  side : @rui.SidebarSide,
   #|  menu_size : @rui.SidebarMenuButtonSize,
   #|  mobile : Bool,
-  #|  interactive : Bool,
   #|) -> @html.Html {
-  #|  let close_command = if mobile {
-  #|    @rui.sidebar_close_mobile(scope)
-  #|  } else {
-  #|    @rui.sidebar_collapse(scope)
-  #|  }
   #|  @html.fragment([
   #|    @rui.sidebar_header(
-  #|      @rui.sidebar_input(
-  #|        aria_label="Filter workspace navigation",
-  #|        placeholder="Filter…",
-  #|      ),
-  #|    ),
-  #|    @rui.sidebar_content(
-  #|      @rui.sidebar_group([
-  #|        @rui.sidebar_group_label(scope~, "Workspace"),
-  #|        if interactive {
-  #|          @rui.sidebar_group_action(
-  #|            aria_label=if mobile {
-  #|              "Close sidebar"
-  #|            } else {
-  #|              "Collapse sidebar"
-  #|            },
-  #|            on_click=close_command,
-  #|            if side == @rui.SidebarRight {
-  #|              stroke_icon("M3 3h18v18H3zM15 3v18")
-  #|            } else {
-  #|              panel_left_icon()
-  #|            },
+  #|      @html.div(style=["display:flex;align-items:center;gap:0.75rem", "flex-wrap:nowrap"], [
+  #|        @rui.sidebar_input(
+  #|          aria_label="Filter workspace navigation",
+  #|          placeholder="Filter…",
+  #|        ),
+  #|        if mobile {
+  #|          @rui.button(
+  #|            variant=Ghost,
+  #|            size=IconSm,
+  #|            attrs=@html.Attrs::build().aria_label("Close mobile sidebar"),
+  #|            on_click=@rui.sidebar_close_mobile(scope),
+  #|            stroke_icon("M18 6 6 18M6 6l12 12"),
   #|          )
   #|        } else {
   #|          @html.nothing
   #|        },
+  #|      ]),
+  #|    ),
+  #|    @rui.sidebar_content(
+  #|      @rui.sidebar_group([
+  #|        @rui.sidebar_group_label(scope~, "Workspace"),
   #|        @rui.sidebar_group_content(
   #|          @rui.sidebar_menu([
   #|            @rui.sidebar_menu_item([
@@ -926,20 +915,6 @@ const IgSidebarSharedCode : String =
   #|                size=menu_size,
   #|                [layout_icon(), @html.span("Overview")],
   #|              ),
-  #|              if interactive {
-  #|                @rui.sidebar_menu_action(
-  #|                  show_on_hover=true,
-  #|                  aria_label=if mobile {
-  #|                    "Close sidebar"
-  #|                  } else {
-  #|                    "Collapse sidebar"
-  #|                  },
-  #|                  on_click=close_command,
-  #|                  panel_left_icon(),
-  #|                )
-  #|              } else {
-  #|                @html.nothing
-  #|              },
   #|            ]),
   #|            @rui.sidebar_menu_item([
   #|              @rui.sidebar_menu_button(href="#activity", size=menu_size, [
@@ -981,24 +956,23 @@ const IgSidebarSharedCode : String =
   #|          @rui.sidebar_menu_button(
   #|            href="#account",
   #|            size=menu_size,
-  #|            variant=if menu_size == @rui.SidebarMenuLg {
-  #|              @rui.SidebarMenuButtonOutline
+  #|            variant=if menu_size == SidebarMenuLg {
+  #|              SidebarMenuButtonOutline
   #|            } else {
-  #|              @rui.SidebarMenuButtonDefault
+  #|              SidebarMenuButtonDefault
   #|            },
-  #|            if menu_size == @rui.SidebarMenuLg {
+  #|            if menu_size == SidebarMenuLg {
   #|              [
   #|                user_icon(),
-  #|                @html.span(
-  #|                  style=["display:grid;min-width:0;line-height:1.1"],
-  #|                  [
-  #|                    @html.strong("Yorkin"),
-  #|                    @html.span(
-  #|                      style=["color:var(--rui-muted-foreground);font-size:0.75rem;line-height:1.35"],
-  #|                      "yorkin@example.com",
-  #|                    ),
-  #|                  ],
-  #|                ),
+  #|                @html.span(style=["display:grid;min-width:0;line-height:1.1"], [
+  #|                  @html.strong("Yorkin"),
+  #|                  @html.span(
+  #|                    style=[
+  #|                      "color:var(--rui-muted-foreground);font-size:0.75rem;line-height:1.35",
+  #|                    ],
+  #|                    "yorkin@example.com",
+  #|                  ),
+  #|                ]),
   #|              ]
   #|            } else {
   #|              [user_icon(), @html.span("Account")]
@@ -1069,11 +1043,11 @@ const IgSidebarSharedCode : String =
   #|      ],
   #|    ),
   #|    @html.div(
-  #|      style=["display:flex;min-height:0;flex:1;align-items:center;justify-content:center;padding:1rem"],
+  #|      style=["display:flex;min-height:0;flex:1;align-items:center;justify-content:center;padding:1rem 0"],
   #|      @html.p(
   #|        style=["color:var(--rui-muted-foreground);font-size:0.8125rem;line-height:1.35;max-width:18rem;margin:0;text-align:center"],
   #|        if mobile {
-  #|          "Open the mobile sheet, then close it with the overlay, Escape, or its navigation action."
+  #|          "Open the mobile sheet, then close it with its close button, the overlay, or Escape."
   #|        } else if interactive {
   #|          "Use the trigger or sidebar rail; the provider owns every state change."
   #|        } else {
@@ -1088,7 +1062,7 @@ const IgSidebarSharedCode : String =
 const IgSidebarDefaultCode : String =
   #|@rui.sidebar_provider(
   #|  default_collapsed=false,
-  #|  style=["--rui-sidebar-width:15rem;height:24rem;min-height:24rem;overflow:hidden"],
+  #|  style=["container-type:inline-size;--rui-sidebar-width:min(15rem,44cqw);--rui-sidebar-max-width:44cqw;height:24rem;min-height:24rem;overflow:hidden"],
   #|  scope => {
   #|    @html.fragment([
   #|      @rui.sidebar(
@@ -1100,7 +1074,7 @@ const IgSidebarDefaultCode : String =
   #|        mobile=false,
   #|        [
   #|          sidebar_navigation(
-  #|            scope, @rui.SidebarLeft, @rui.SidebarMenuDefault, false, true,
+  #|            scope, @rui.SidebarMenuDefault, false,
   #|          ),
   #|          @rui.sidebar_rail(scope),
   #|        ],
@@ -1123,7 +1097,7 @@ const IgSidebarDefaultCode : String =
 const IgSidebarFixedCode : String =
   #|@rui.sidebar_provider(
   #|  default_collapsed=false,
-  #|  style=["--rui-sidebar-width:15rem;height:24rem;min-height:24rem;overflow:hidden"],
+  #|  style=["container-type:inline-size;--rui-sidebar-width:min(15rem,44cqw);--rui-sidebar-max-width:44cqw;height:24rem;min-height:24rem;overflow:hidden"],
   #|  scope => {
   #|    @html.fragment([
   #|      @rui.sidebar(
@@ -1135,7 +1109,7 @@ const IgSidebarFixedCode : String =
   #|        mobile=false,
   #|        [
   #|          sidebar_navigation(
-  #|            scope, @rui.SidebarLeft, @rui.SidebarMenuSm, false, false,
+  #|            scope, @rui.SidebarMenuSm, false,
   #|          ),
   #|          @html.nothing,
   #|        ],
@@ -1158,7 +1132,7 @@ const IgSidebarFixedCode : String =
 const IgSidebarIconCode : String =
   #|@rui.sidebar_provider(
   #|  default_collapsed=true,
-  #|  style=["--rui-sidebar-width:15rem;height:24rem;min-height:24rem;overflow:hidden"],
+  #|  style=["container-type:inline-size;--rui-sidebar-width:min(15rem,44cqw);--rui-sidebar-max-width:44cqw;height:24rem;min-height:24rem;overflow:hidden"],
   #|  scope => {
   #|    @html.fragment([
   #|      @rui.sidebar(
@@ -1170,7 +1144,7 @@ const IgSidebarIconCode : String =
   #|        mobile=false,
   #|        [
   #|          sidebar_navigation(
-  #|            scope, @rui.SidebarLeft, @rui.SidebarMenuDefault, false, true,
+  #|            scope, @rui.SidebarMenuDefault, false,
   #|          ),
   #|          @rui.sidebar_rail(scope),
   #|        ],
@@ -1193,7 +1167,7 @@ const IgSidebarIconCode : String =
 const IgSidebarLoadingCode : String =
   #|@rui.sidebar_provider(
   #|  default_collapsed=false,
-  #|  style=["--rui-sidebar-width:15rem;height:24rem;min-height:24rem;overflow:hidden"],
+  #|  style=["container-type:inline-size;--rui-sidebar-width:min(15rem,44cqw);--rui-sidebar-max-width:44cqw;height:24rem;min-height:24rem;overflow:hidden"],
   #|  scope => {
   #|    @html.fragment([
   #|      @rui.sidebar(
@@ -1223,7 +1197,7 @@ const IgSidebarLoadingCode : String =
 const IgSidebarFloatingCode : String =
   #|@rui.sidebar_provider(
   #|  default_collapsed=false,
-  #|  style=["--rui-sidebar-width:15rem;height:24rem;min-height:24rem;overflow:hidden"],
+  #|  style=["container-type:inline-size;--rui-sidebar-width:min(15rem,44cqw);--rui-sidebar-max-width:44cqw;height:24rem;min-height:24rem;overflow:hidden"],
   #|  scope => {
   #|    @html.fragment([
   #|      @rui.sidebar(
@@ -1235,7 +1209,7 @@ const IgSidebarFloatingCode : String =
   #|        mobile=false,
   #|        [
   #|          sidebar_navigation(
-  #|            scope, @rui.SidebarLeft, @rui.SidebarMenuLg, false, true,
+  #|            scope, @rui.SidebarMenuLg, false,
   #|          ),
   #|          @rui.sidebar_rail(scope),
   #|        ],
@@ -1258,7 +1232,7 @@ const IgSidebarFloatingCode : String =
 const IgSidebarInsetCode : String =
   #|@rui.sidebar_provider(
   #|  default_collapsed=false,
-  #|  style=["--rui-sidebar-width:15rem;height:24rem;min-height:24rem;overflow:hidden"],
+  #|  style=["container-type:inline-size;--rui-sidebar-width:min(15rem,44cqw);--rui-sidebar-max-width:44cqw;height:24rem;min-height:24rem;overflow:hidden"],
   #|  scope => {
   #|    @html.fragment([
   #|      @rui.sidebar(
@@ -1270,7 +1244,7 @@ const IgSidebarInsetCode : String =
   #|        mobile=false,
   #|        [
   #|          sidebar_navigation(
-  #|            scope, @rui.SidebarLeft, @rui.SidebarMenuDefault, false, true,
+  #|            scope, @rui.SidebarMenuDefault, false,
   #|          ),
   #|          @rui.sidebar_rail(scope),
   #|        ],
@@ -1297,7 +1271,7 @@ const IgSidebarRightCode : String =
   #|
   #|@rui.sidebar_provider(
   #|  default_collapsed=false,
-  #|  style=["--rui-sidebar-width:15rem;height:24rem;min-height:24rem;overflow:hidden"],
+  #|  style=["container-type:inline-size;--rui-sidebar-width:min(15rem,44cqw);--rui-sidebar-max-width:44cqw;height:24rem;min-height:24rem;overflow:hidden"],
   #|  scope => {
   #|    @html.fragment([
   #|      @rui.sidebar(
@@ -1309,7 +1283,7 @@ const IgSidebarRightCode : String =
   #|        mobile=false,
   #|        [
   #|          sidebar_navigation(
-  #|            scope, @rui.SidebarRight, @rui.SidebarMenuDefault, false, true,
+  #|            scope, @rui.SidebarMenuDefault, false,
   #|          ),
   #|          @rui.sidebar_rail(scope),
   #|        ],
@@ -1332,7 +1306,7 @@ const IgSidebarRightCode : String =
 const IgSidebarResizeCode : String =
   #|@rui.sidebar_provider(
   #|  default_collapsed=false,
-  #|  style=["--rui-sidebar-width:15rem;height:24rem;min-height:24rem;overflow:hidden"],
+  #|  style=["container-type:inline-size;--rui-sidebar-width:min(15rem,44cqw);--rui-sidebar-max-width:44cqw;height:24rem;min-height:24rem;overflow:hidden"],
   #|  scope => {
   #|    @html.fragment([
   #|      @rui.sidebar(
@@ -1344,11 +1318,11 @@ const IgSidebarResizeCode : String =
   #|        mobile=false,
   #|        [
   #|          sidebar_navigation(
-  #|            scope, @rui.SidebarLeft, @rui.SidebarMenuDefault, false, true,
+  #|            scope, @rui.SidebarMenuDefault, false,
   #|          ),
   #|          @rui.sidebar_rail(
   #|            scope,
-  #|            min_width=192,
+  #|            min_width=112,
   #|            max_width=352,
   #|          ),
   #|        ],
@@ -1371,7 +1345,7 @@ const IgSidebarResizeCode : String =
 const IgSidebarMobileCode : String =
   #|@rui.sidebar_provider(
   #|  default_collapsed=false,
-  #|  style=["--rui-sidebar-width:15rem;height:24rem;min-height:24rem;overflow:hidden"],
+  #|  style=["container-type:inline-size;--rui-sidebar-width:min(15rem,44cqw);--rui-sidebar-max-width:44cqw;height:24rem;min-height:24rem;overflow:hidden"],
   #|  scope => {
   #|    @html.fragment([
   #|      @rui.sidebar(
@@ -1383,7 +1357,7 @@ const IgSidebarMobileCode : String =
   #|        mobile=true,
   #|        [
   #|          sidebar_navigation(
-  #|            scope, @rui.SidebarLeft, @rui.SidebarMenuDefault, true, true,
+  #|            scope, @rui.SidebarMenuDefault, true,
   #|          ),
   #|          @html.nothing,
   #|        ],
@@ -1409,26 +1383,38 @@ fn ig_sidebar_code(call : String) -> String {
 
 ///|
 const IgAlertDialogDefaultCode : String =
-  #|@rui.alert_dialog(id="showcase-alert-dialog-default", scope => {
-  #|  @html.fragment([
-  #|    @rui.alert_dialog_trigger(scope, variant=@rui.Outline, "Archive project"),
-  #|    @rui.alert_dialog_portal([
-  #|      @rui.alert_dialog_content(scope, [
-  #|        @rui.alert_dialog_header([
-  #|          @rui.alert_dialog_title(scope, "Archive this project?"),
-  #|          @rui.alert_dialog_description(
-  #|            scope,
-  #|            "You can restore an archived project later from workspace settings.",
-  #|          ),
-  #|        ]),
-  #|        @rui.alert_dialog_footer([
-  #|          @rui.alert_dialog_cancel(scope, "Cancel"),
-  #|          @rui.alert_dialog_action(scope, "Archive"),
-  #|        ]),
+  #|@html.fragment([
+  #|  @rui.button(
+  #|    variant=@rui.Outline,
+  #|    on_click=@dialog.show("showcase-alert-dialog-default"),
+  #|    "Archive project",
+  #|  ),
+  #|  @rui.alert_dialog(
+  #|    id="showcase-alert-dialog-default",
+  #|    attrs=@html.Attrs::build()
+  #|      .aria_labelledby("showcase-alert-dialog-default-title")
+  #|      .aria_describedby("showcase-alert-dialog-default-description"),
+  #|    [
+  #|      @rui.alert_dialog_header([
+  #|        @rui.alert_dialog_title(
+  #|          id="showcase-alert-dialog-default-title",
+  #|          "Archive this project?",
+  #|        ),
+  #|        @rui.alert_dialog_description(
+  #|          id="showcase-alert-dialog-default-description",
+  #|          "You can restore an archived project later from workspace settings.",
+  #|        ),
   #|      ]),
-  #|    ]),
-  #|  ])
-  #|})
+  #|      @html.form(
+  #|        method_="dialog",
+  #|        @rui.alert_dialog_footer([
+  #|          @rui.alert_dialog_cancel("Cancel"),
+  #|          @rui.alert_dialog_action("Archive"),
+  #|        ]),
+  #|      ),
+  #|    ],
+  #|  ),
+  #|])
 
 ///|
 const IgAlertDialogDestructiveCode : String =
@@ -1457,34 +1443,39 @@ const IgAlertDialogDestructiveCode : String =
   #|  )
   #|}
   #|
-  #|@rui.alert_dialog(
-  #|  id="showcase-alert-dialog",
-  #|  scope => {
-  #|    @html.fragment([
-  #|      @rui.alert_dialog_trigger(
-  #|        scope,
-  #|        variant=@rui.Destructive,
-  #|        "Delete snapshot",
-  #|      ),
-  #|      @rui.alert_dialog_portal([
-  #|        @rui.alert_dialog_content(scope, [
-  #|          @rui.alert_dialog_header([
-  #|            @rui.alert_dialog_media(alert_triangle_icon()),
-  #|            @rui.alert_dialog_title(scope, "Delete this snapshot?"),
-  #|            @rui.alert_dialog_description(
-  #|              scope,
-  #|              "This removes the saved state permanently.",
-  #|            ),
-  #|          ]),
-  #|          @rui.alert_dialog_footer([
-  #|            @rui.alert_dialog_cancel(scope, "Cancel"),
-  #|            @rui.alert_dialog_action(scope, "Delete"),
-  #|          ]),
-  #|        ]),
+  #|@html.fragment([
+  #|  @rui.button(
+  #|    variant=@rui.Destructive,
+  #|    on_click=@dialog.show("showcase-alert-dialog"),
+  #|    "Delete snapshot",
+  #|  ),
+  #|  @rui.alert_dialog(
+  #|    id="showcase-alert-dialog",
+  #|    attrs=@html.Attrs::build()
+  #|      .aria_labelledby("showcase-alert-dialog-title")
+  #|      .aria_describedby("showcase-alert-dialog-description"),
+  #|    [
+  #|      @rui.alert_dialog_header([
+  #|        @rui.alert_dialog_media(alert_triangle_icon()),
+  #|        @rui.alert_dialog_title(
+  #|          id="showcase-alert-dialog-title",
+  #|          "Delete this snapshot?",
+  #|        ),
+  #|        @rui.alert_dialog_description(
+  #|          id="showcase-alert-dialog-description",
+  #|          "This removes the saved state permanently.",
+  #|        ),
   #|      ]),
-  #|    ])
-  #|  },
-  #|)
+  #|      @html.form(
+  #|        method_="dialog",
+  #|        @rui.alert_dialog_footer([
+  #|          @rui.alert_dialog_cancel("Cancel"),
+  #|          @rui.alert_dialog_action("Delete"),
+  #|        ]),
+  #|      ),
+  #|    ],
+  #|  ),
+  #|])
 
 ///|
 const IgDialogSharedCode : String =
@@ -1494,15 +1485,23 @@ const IgDialogSharedCode : String =
   #|  trigger_variant : @rui.ButtonVariant,
   #|  trigger_label : String,
   #|) -> @rabbita.Val[@html.Html] {
-  #|  @rui.dialog(id~, modal~, scope => {
+  #|  @rabbita.Val::constant(
   #|    @html.fragment([
-  #|      @rui.dialog_trigger(scope, variant=trigger_variant, trigger_label),
-  #|      @rui.dialog_portal([
-  #|        @rui.dialog_content(scope, show_close=true, [
+  #|      @rui.button(
+  #|        variant=trigger_variant,
+  #|        on_click=@dialog.show(id, modal~),
+  #|        trigger_label,
+  #|      ),
+  #|      @rui.dialog(
+  #|        id~,
+  #|        attrs=@html.Attrs::build()
+  #|          .aria_labelledby(id + "-title")
+  #|          .aria_describedby(id + "-description"),
+  #|        [
   #|          @rui.dialog_header([
-  #|            @rui.dialog_title(scope, trigger_label),
+  #|            @rui.dialog_title(id=id + "-title", trigger_label),
   #|            @rui.dialog_description(
-  #|              scope,
+  #|              id=id + "-description",
   #|              if modal {
   #|                "Focus stays inside this modal surface until it closes."
   #|              } else {
@@ -1510,15 +1509,20 @@ const IgDialogSharedCode : String =
   #|              },
   #|            ),
   #|          ]),
-  #|          @html.div(style=["display:flex;flex-direction:column;gap:1rem"], [
-  #|            @rui.label(for_=id + "-name", "Display name"),
-  #|            @rui.input(id=id + "-name", value="Rabbita team"),
-  #|          ]),
-  #|          @rui.dialog_footer(@rui.dialog_close(scope, "Save changes")),
-  #|        ]),
-  #|      ]),
-  #|    ])
-  #|  })
+  #|          @html.form(
+  #|            method_="dialog",
+  #|            [
+  #|              @html.div(style=["display:flex;flex-direction:column;gap:1rem"], [
+  #|                @rui.label(for_=id + "-name", "Display name"),
+  #|                @rui.input(id=id + "-name", value="Rabbita team"),
+  #|              ]),
+  #|              @rui.dialog_footer(@rui.button(type_="submit", "Save changes")),
+  #|            ],
+  #|          ),
+  #|        ],
+  #|      ),
+  #|    ]),
+  #|  )
   #|}
   #|
 
@@ -1551,36 +1555,40 @@ const IgDrawerSharedCode : String =
   #|  id : String,
   #|  direction : @rui.DrawerDirection,
   #|  trigger_label : String,
-  #|) -> @rabbita.Val[@html.Html] {
-  #|  @rui.drawer(id~, scope => {
-  #|    @html.fragment([
-  #|      @rui.drawer_trigger(scope, variant=@rui.Outline, trigger_label),
-  #|      @rui.drawer_portal([
-  #|        @rui.drawer_content(
-  #|          scope,
-  #|          direction~,
-  #|          show_handle=true,
-  #|          show_close=true,
-  #|          [
-  #|            @rui.drawer_header([
-  #|              @rui.drawer_title(scope, trigger_label),
-  #|              @rui.drawer_description(
-  #|                scope,
-  #|                "The direction controls placement, motion, and handle orientation.",
-  #|              ),
-  #|            ]),
-  #|            @html.div(
-  #|              style=["position:relative;min-width:0;padding-block:1rem"],
-  #|              "All checks passed",
+  #|) -> @html.Html {
+  #|  @html.fragment([
+  #|    @rui.button(variant=@rui.Outline, on_click=@dialog.show(id), trigger_label),
+  #|    @rui.drawer(
+  #|      id~,
+  #|      direction~,
+  #|      swipe_area=50,
+  #|      attrs=@html.Attrs::build()
+  #|        .aria_labelledby(id + "-title")
+  #|        .aria_describedby(id + "-description"),
+  #|      [
+  #|        @rui.drawer_header([
+  #|          @rui.drawer_title(id=id + "-title", trigger_label),
+  #|          @rui.drawer_description(
+  #|            id=id + "-description",
+  #|            "Drag beside the drawer to dismiss, or use the close button below.",
+  #|          ),
+  #|        ]),
+  #|        @html.div(style=["border:1px solid var(--rui-border);border-radius:0.5rem;padding:1rem;text-align:center"], "All checks passed"),
+  #|        @rui.drawer_footer(
+  #|          @html.form(
+  #|            method_="dialog",
+  #|            @rui.button(
+  #|              variant=@rui.Outline,
+  #|              type_="submit",
+  #|              style=["width:100%"],
+  #|              "Close",
   #|            ),
-  #|            @rui.drawer_footer(@rui.drawer_close(scope, "Close")),
-  #|          ],
+  #|          ),
   #|        ),
-  #|      ]),
-  #|    ])
-  #|  })
+  #|      ],
+  #|    ),
+  #|  ])
   #|}
-  #|
 
 ///|
 const IgDrawerTopCallCode : String =
@@ -1888,7 +1896,7 @@ const IgContextMenuRadioCode : String =
 
 ///|
 const IgCommandInlineCode : String =
-  #|@rui.command(
+  #|@rui.command_box(
   #|  id="showcase-command",
   #|  style=["max-width:none;border:1px solid var(--rui-border);border-radius:var(--rui-radius);box-shadow:none"],
   #|  scope => {
@@ -1925,9 +1933,6 @@ const IgCommandDialogCode : String =
   #|@rui.command_dialog(
   #|  id="showcase-command-dialog",
   #|  aria_label="Command palette",
-  #|  trigger=scope => {
-  #|    @rui.command_dialog_trigger(scope~, variant=@rui.Outline, "Open palette")
-  #|  },
   #|  scope => {
   #|    @html.fragment([
   #|      @rui.command_input(scope~, placeholder="Type a command…"),
@@ -1946,7 +1951,14 @@ const IgCommandDialogCode : String =
   #|      ]),
   #|    ])
   #|  },
-  #|)
+  #|).map(dialog => @html.fragment([
+  #|  @rui.button(
+  #|    variant=@rui.Outline,
+  #|    on_click=@dialog.show("showcase-command-dialog"),
+  #|    "Open palette",
+  #|  ),
+  #|  dialog,
+  #|]))
 
 ///|
 const IgDropdownMenuBasicCode : String =
@@ -2595,7 +2607,7 @@ const IgHoverCardSharedCode : String =
   #|      @html.div(
   #|        style=["display:flex;flex-wrap:wrap;align-items:center;gap:0.75rem"],
   #|        [
-  #|          @rui.badge(variant=@rui.Secondary, "Vega"),
+  #|          @rui.badge(variant=@rui.Secondary, "Nova"),
   #|          @rui.badge(variant=@rui.Outline, "Inline"),
   #|        ],
   #|      ),
@@ -2727,28 +2739,34 @@ const IgSheetSharedCode : String =
   #|  id : String,
   #|  side : @rui.SheetSide,
   #|  trigger_label : String,
-  #|) -> @rabbita.Val[@html.Html] {
-  #|  @rui.sheet(id~, scope => {
-  #|    @html.fragment([
-  #|      @rui.sheet_trigger(scope, variant=@rui.Outline, trigger_label),
-  #|      @rui.sheet_content(scope, side~, [
+  #|) -> @html.Html {
+  #|  @html.fragment([
+  #|    @rui.button(variant=@rui.Outline, on_click=@dialog.show(id), trigger_label),
+  #|    @rui.sheet(
+  #|      id~,
+  #|      side~,
+  #|      attrs=@html.Attrs::build()
+  #|        .aria_labelledby(id + "-title")
+  #|        .aria_describedby(id + "-description"),
+  #|      [
   #|        @rui.sheet_header([
-  #|          @rui.sheet_title(scope, trigger_label),
+  #|          @rui.sheet_title(id=id + "-title", trigger_label),
   #|          @rui.sheet_description(
-  #|            scope,
+  #|            id=id + "-description",
   #|            "Placement changes while focus and dismissal behavior stay consistent.",
   #|          ),
   #|        ]),
-  #|        @html.div(style=["display:flex;flex-direction:column;gap:1rem"], [
-  #|          @rui.label(for_=id + "-email", "Notification email"),
-  #|          @rui.input(id=id + "-email", value="team@example.com"),
+  #|        @html.form(method_="dialog", [
+  #|          @html.div(style=["display:flex;flex-direction:column;gap:1rem"], [
+  #|            @rui.label(for_=id + "-email", "Notification email"),
+  #|            @rui.input(id=id + "-email", value="team@example.com"),
+  #|          ]),
+  #|          @rui.sheet_footer(@rui.button(type_="submit", "Save settings")),
   #|        ]),
-  #|        @rui.sheet_footer(@rui.sheet_close(scope, "Save settings")),
-  #|      ]),
-  #|    ])
-  #|  })
+  #|      ],
+  #|    ),
+  #|  ])
   #|}
-  #|
 
 ///|
 const IgSheetTopCallCode : String =

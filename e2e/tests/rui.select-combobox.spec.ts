@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('select opens on click, closes on Escape, and keeps the chosen value', async ({ page }) => {
-  await page.goto('/forms');
+  await page.goto('/');
 
   const trigger = page.locator('#fixture-select-trigger');
   const listbox = page.locator('#fixture-select-content');
@@ -28,7 +28,7 @@ test('select opens on click, closes on Escape, and keeps the chosen value', asyn
 });
 
 test('select keyboard opens, highlights, and confirms an option', async ({ page }) => {
-  await page.goto('/forms');
+  await page.goto('/');
 
   const trigger = page.locator('#fixture-select-trigger');
   const beta = page
@@ -46,7 +46,7 @@ test('select keyboard opens, highlights, and confirms an option', async ({ page 
 });
 
 test('combobox filters options while typing and commits a choice', async ({ page }) => {
-  await page.goto('/forms');
+  await page.goto('/');
 
   const section = page.locator('#fixture-section-combobox');
   const input = section.getByRole('combobox', { name: 'Search options' });
@@ -66,7 +66,7 @@ test('combobox filters options while typing and commits a choice', async ({ page
 });
 
 test('combobox shows its empty message for a dead-end query', async ({ page }) => {
-  await page.goto('/forms');
+  await page.goto('/');
 
   const section = page.locator('#fixture-section-combobox');
   const input = section.getByRole('combobox', { name: 'Search options' });
@@ -79,7 +79,7 @@ test('combobox shows its empty message for a dead-end query', async ({ page }) =
 });
 
 test('select typeahead chooses an enabled match and keyboard navigation skips disabled options', async ({ page }) => {
-  await page.goto('/forms');
+  await page.goto('/');
 
   const trigger = page.locator('#fixture-select-trigger');
   const listbox = page.locator('#fixture-select-content');
@@ -95,4 +95,30 @@ test('select typeahead chooses an enabled match and keyboard navigation skips di
     'aria-disabled',
     'true',
   );
+});
+
+test('combobox popup matches its complete control while filtering and resizing', async ({ page }) => {
+  await page.goto('/');
+  const input = page.locator('#fixture-combobox-input');
+  const control = page.locator('#fixture-combobox-control');
+  const popup = page.locator('#fixture-combobox-content');
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await input.fill('mo');
+    await expect(popup).toBeVisible();
+    for (const query of ['mo', 'zzz', '']) {
+      await input.fill(query);
+      await expect.poll(async () => {
+        const anchor = await control.boundingBox();
+        const box = await popup.boundingBox();
+        return anchor && box ? Math.abs(box.width - anchor.width) : Infinity;
+      }).toBeLessThan(1);
+      const anchor = (await control.boundingBox())!;
+      const box = (await popup.boundingBox())!;
+      expect(Math.abs(box.x - anchor.x)).toBeLessThan(1);
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(width);
+    }
+    await input.press('Escape');
+  }
 });

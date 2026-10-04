@@ -680,6 +680,9 @@ pub impl[T : Eq] Eq for Status[T] with fn equal(a, b) {
 }
 
 ///|
+pub extend Status with Eq::{equal, not_equal}
+
+///|
 pub impl[T] Enumerate for Status[T] with fn tag(self) {
   match self {
     Pending => "pending"
@@ -687,6 +690,9 @@ pub impl[T] Enumerate for Status[T] with fn tag(self) {
     Failed(_) => "failed"
   }
 }
+
+///|
+pub extend Status with Enumerate::{tag}
 
 ///|
 /// An incremental asynchronous resource state.
@@ -730,9 +736,3 @@ pub fn[T : Eq] create_resource(
   )
   status
 }
-
-///|
-pub extend Status with @moonbit-community/rabbita/common.Enumerate::{tag}
-
-///|
-pub extend Status with Eq::{equal, not_equal}

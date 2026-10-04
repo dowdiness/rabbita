@@ -5,11 +5,23 @@ pub(all) enum SidebarSide {
 } derive(Debug, Eq)
 
 ///|
+pub extend SidebarSide with Debug::{to_repr}
+
+///|
+pub extend SidebarSide with Eq::{equal, not_equal}
+
+///|
 pub(all) enum SidebarVariant {
   SidebarDefault
   SidebarFloating
   SidebarInset
 } derive(Debug, Eq)
+
+///|
+pub extend SidebarVariant with Debug::{to_repr}
+
+///|
+pub extend SidebarVariant with Eq::{equal, not_equal}
 
 ///|
 pub(all) enum SidebarCollapsible {
@@ -19,6 +31,12 @@ pub(all) enum SidebarCollapsible {
 } derive(Debug, Eq)
 
 ///|
+pub extend SidebarCollapsible with Debug::{to_repr}
+
+///|
+pub extend SidebarCollapsible with Eq::{equal, not_equal}
+
+///|
 pub(all) enum SidebarMenuButtonSize {
   SidebarMenuSm
   SidebarMenuDefault
@@ -26,10 +44,22 @@ pub(all) enum SidebarMenuButtonSize {
 } derive(Debug, Eq)
 
 ///|
+pub extend SidebarMenuButtonSize with Debug::{to_repr}
+
+///|
+pub extend SidebarMenuButtonSize with Eq::{equal, not_equal}
+
+///|
 pub(all) enum SidebarMenuButtonVariant {
   SidebarMenuButtonDefault
   SidebarMenuButtonOutline
 } derive(Debug, Eq)
+
+///|
+pub extend SidebarMenuButtonVariant with Debug::{to_repr}
+
+///|
+pub extend SidebarMenuButtonVariant with Eq::{equal, not_equal}
 
 ///|
 #cfg(target="js")
@@ -96,7 +126,7 @@ const SidebarOverlayClosedStyle : String = "--rui-sidebar-overlay-opacity:0;--ru
 const SidebarHeaderFooterStyle : String = "display:flex;min-width:0;flex-direction:column;gap:0.5rem;padding:0.5rem;overflow:hidden"
 
 ///|
-const SidebarContentStyle : String = "display:flex;min-width:0;min-height:0;flex:1;flex-direction:column;gap:0.5rem;overflow-x:hidden;overflow-y:var(--rui-sidebar-content-overflow-y,auto);scrollbar-width:none"
+const SidebarContentStyle : String = "display:flex;min-width:0;min-height:0;flex:1;flex-direction:column;gap:0;overflow-x:hidden;overflow-y:var(--rui-sidebar-content-overflow-y,auto);scrollbar-width:none"
 
 ///|
 const SidebarGroupStyle : String = "position:relative;display:flex;min-width:0;flex-direction:column;padding:0.5rem"
@@ -117,7 +147,7 @@ const SidebarActionSizeStyle : String = "width:1.25rem;height:1.25rem;--rui-butt
 const SidebarGroupContentStyle : String = "min-width:0;width:100%;font-size:0.875rem;line-height:1.25rem"
 
 ///|
-const SidebarMenuStyle : String = "display:flex;min-width:0;width:100%;flex-direction:column;gap:0.25rem;margin:0;padding:0;list-style:none"
+const SidebarMenuStyle : String = "display:flex;min-width:0;width:100%;flex-direction:column;gap:0;margin:0;padding:0;list-style:none"
 
 ///|
 const SidebarMenuItemStyle : String = "position:relative;display:block;min-width:0"
@@ -534,13 +564,19 @@ fn sidebar_pointer_move(pointer : @dom.PointerEvent) -> Bool {
   let rounded_width = state.width.round().to_int().max(1)
   root
   .get_style()
-  .set_property("--rui-sidebar-current-width", "\{rounded_width}px")
+  .set_property(
+    "--rui-sidebar-current-width",
+    "min(\{rounded_width}px,var(--rui-sidebar-max-width,\{rounded_width}px))",
+  )
   sidebar.get_style().set_property("transition", "none")
   sidebar
   .get_style()
-  .set_property("width", "\{(rounded_width - state.gutter).max(1)}px")
+  .set_property(
+    "width",
+    "max(1px,calc(var(--rui-sidebar-current-width) - \{state.gutter}px))",
+  )
   shell.get_style().set_property("transition", "none")
-  shell.get_style().set_property("width", "\{rounded_width}px")
+  shell.get_style().set_property("width", "var(--rui-sidebar-current-width)")
   true
 }
 
@@ -1436,7 +1472,8 @@ fn sidebar_mobile_change_cmd(
 ///|
 fn sidebar_provider_width_style(width : Int?) -> String {
   match width {
-    Some(width) => "--rui-sidebar-current-width:\{width}px"
+    Some(width) =>
+      "--rui-sidebar-current-width:min(\{width}px,var(--rui-sidebar-max-width,\{width}px))"
     None => ""
   }
 }
@@ -1985,6 +2022,7 @@ pub fn[C : @html.IsChildren] sidebar_trigger(
     .data_set("slot", "sidebar-trigger")
     .data_set("state", if expanded { "open" } else { "closed" })
     .aria_expanded(ui_bool(expanded))
+    .aria_label(aria_label)
   if controls is Some(value) {
     ignore(trigger_attrs.aria_controls(value))
   }
@@ -1992,18 +2030,23 @@ pub fn[C : @html.IsChildren] sidebar_trigger(
     trigger_attrs,
     mobile && !scope.mobile_open && !disabled,
   )
-  dialog_control_button(
+  button(
     slot="sidebar-trigger",
-    command=if mobile { scope.toggle_mobile } else { scope.toggle_collapsed },
     variant=Ghost,
     size=IconSm,
     disabled~,
-    id~,
-    class~,
-    title~,
-    aria_label=Some(aria_label),
-    on_click~,
-    attrs=Some(trigger_attrs),
+    id?,
+    class?,
+    title?,
+    on_click=@cmd.batch([
+      on_click.unwrap_or(@cmd.none),
+      if mobile {
+        scope.toggle_mobile
+      } else {
+        scope.toggle_collapsed
+      },
+    ]),
+    attrs=trigger_attrs,
     style=ui_styles(
       ["width:1.75rem;height:1.75rem;--rui-button-base-shadow:0 0 #0000"],
       style,
@@ -2081,30 +2124,21 @@ pub fn sidebar_rail(
     .data_set("max-width", "\{max_width}")
     .aria_expanded(ui_bool(!scope.collapsed))
     .tabindex(-1)
+    .aria_label(aria_label)
   ignore(
     rail_attrs.on_click(_ => {
-      @cmd.batch([
-        match on_click {
-          Some(command) => command
-          None => @cmd.none
-        },
-        scope.toggle_collapsed,
-      ])
+      @cmd.batch([on_click.unwrap_or(@cmd.none), scope.toggle_collapsed])
     }),
   )
   sidebar_bind_resize_attrs(rail_attrs, scope, min_width, max_width)
-  dialog_control_button(
+  button(
     slot="sidebar-rail",
-    command=@cmd.none,
     variant=Ghost,
     size=IconXs,
-    disabled=false,
-    id~,
-    class~,
-    title=Some(title),
-    aria_label=Some(aria_label),
-    on_click=None,
-    attrs=Some(rail_attrs),
+    id?,
+    class?,
+    title~,
+    attrs=rail_attrs,
     style=ui_styles([SidebarRailStyle], style),
     @html.span(
       attrs=@html.Attrs::build()
@@ -2247,18 +2281,20 @@ pub fn[C : @html.IsChildren] sidebar_group_action(
   style? : Array[String] = [],
   children : C,
 ) -> @html.Html {
-  dialog_control_button(
+  let element_attrs = ui_attrs(attrs)
+  if aria_label is Some(label) {
+    ignore(element_attrs.aria_label(label))
+  }
+  button(
     slot="sidebar-group-action",
-    command=@cmd.none,
     variant=Ghost,
     size=IconXs,
     disabled~,
-    id~,
-    class~,
-    title~,
-    aria_label~,
-    on_click~,
-    attrs~,
+    id?,
+    class?,
+    title?,
+    on_click?,
+    attrs=element_attrs,
     style=ui_styles(
       [
         SidebarGroupActionStyle,
@@ -2660,18 +2696,19 @@ pub fn[C : @html.IsChildren] sidebar_menu_action(
   let element_attrs = ui_attrs(attrs)
     .data_set("slot", "sidebar-menu-action")
     .data_set("show-on-hover", ui_bool(show_on_hover))
-  dialog_control_button(
+  if aria_label is Some(label) {
+    ignore(element_attrs.aria_label(label))
+  }
+  button(
     slot="sidebar-menu-action",
-    command=@cmd.none,
     variant=Ghost,
     size=IconXs,
     disabled~,
-    id~,
-    class~,
-    title~,
-    aria_label~,
-    on_click~,
-    attrs=Some(element_attrs),
+    id?,
+    class?,
+    title?,
+    on_click?,
+    attrs=element_attrs,
     style=ui_styles(
       [
         SidebarMenuActionStyle,
@@ -2963,35 +3000,3 @@ pub fn[C : @html.IsChildren] sidebar_inset(
     children,
   )
 }
-
-///|
-pub extend SidebarCollapsible with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend SidebarCollapsible with Eq::{equal, not_equal}
-
-///|
-pub extend SidebarMenuButtonSize with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend SidebarMenuButtonSize with Eq::{equal, not_equal}
-
-///|
-pub extend SidebarMenuButtonVariant with @moonbitlang/core/debug.Debug::{
-  to_repr,
-}
-
-///|
-pub extend SidebarMenuButtonVariant with Eq::{equal, not_equal}
-
-///|
-pub extend SidebarSide with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend SidebarSide with Eq::{equal, not_equal}
-
-///|
-pub extend SidebarVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend SidebarVariant with Eq::{equal, not_equal}

@@ -63,6 +63,10 @@ pub impl Debug for Cmd with fn to_repr(cmd) {
 }
 
 ///|
+#internal(experimental, "This API is unstable and may change in the future.")
+pub extend Cmd with Debug::{to_repr}
+
+///|
 fn[A, B] wrap_hook(
   f : (A) -> B raise Unhandled,
   g : (A) -> B raise Unhandled,
@@ -188,6 +192,3 @@ pub fn invoke(
 ) -> OpCont[Cmd] raise Unhandled {
   (op.invoke)(extension, context)
 }
-
-///|
-pub extend Cmd with @moonbitlang/core/debug.Debug::{to_repr}

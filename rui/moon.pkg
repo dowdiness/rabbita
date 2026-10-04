@@ -1,7 +1,9 @@
 import {
+  "moonbit-community/rui/internal/checkbox_view",
   "moonbit-community/rabbita",
   "moonbit-community/rabbita/html",
   "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita/dialog",
   "moonbit-community/rabbita/dom",
   "moonbit-community/rabbita/js",
   "moonbit-community/rabbita/sub",
@@ -10,6 +12,6 @@ import {
   "moonbitlang/core/debug",
 }
 
-supported_targets = "js"
+supported_targets = "js+native+wasm"
 
 formatter(ignore: [ "README.mbt.md" ])

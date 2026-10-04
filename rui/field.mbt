@@ -6,10 +6,22 @@ pub(all) enum FieldOrientation {
 } derive(Debug, Eq)
 
 ///|
+pub extend FieldOrientation with Debug::{to_repr}
+
+///|
+pub extend FieldOrientation with Eq::{equal, not_equal}
+
+///|
 pub(all) enum FieldLegendVariant {
   FieldLegend
   FieldLabelLegend
 } derive(Debug, Eq)
+
+///|
+pub extend FieldLegendVariant with Debug::{to_repr}
+
+///|
+pub extend FieldLegendVariant with Eq::{equal, not_equal}
 
 ///|
 fn field_orientation_value(orientation : FieldOrientation) -> String {
@@ -24,8 +36,10 @@ fn field_orientation_value(orientation : FieldOrientation) -> String {
 fn field_orientation_style(orientation : FieldOrientation) -> String {
   match orientation {
     FieldVertical => "flex-direction:column"
-    FieldHorizontal => "flex-direction:row;align-items:center"
-    FieldResponsive => "flex-direction:column"
+    FieldHorizontal =>
+      "flex-direction:row;align-items:var(--rui-field-align,center)"
+    FieldResponsive =>
+      "flex-direction:var(--rui-field-direction,column);align-items:var(--rui-field-align,stretch)"
   }
 }
 
@@ -58,7 +72,7 @@ pub fn[C : @html.IsChildren] field_set(
       [
         UiBoxSizing,
         UiFontSans,
-        "display:flex;min-width:0;flex-direction:column;gap:1.5rem;border:0;margin:0;padding:0",
+        "display:flex;min-width:0;flex-direction:column;gap:1rem;border:0;margin:0;padding:0",
       ],
       style,
     ),
@@ -86,7 +100,7 @@ pub fn[C : @html.IsChildren] field_legend(
       .data_set("variant", value),
     style=ui_styles(
       [
-        "margin:0 0 0.75rem;padding:0;font-weight:500",
+        "margin:0 0 0.375rem;padding:0;font-weight:500",
         if variant is FieldLegend {
           "font-size:1rem;line-height:1.5rem"
         } else {
@@ -115,7 +129,7 @@ pub fn[C : @html.IsChildren] field_group(
     attrs=ui_attrs(attrs).data_set("slot", "field-group"),
     style=ui_styles(
       [
-        "display:flex;width:100%;flex-direction:column;gap:1.75rem;container-type:inline-size;container-name:rui-field-group",
+        "display:flex;width:100%;flex-direction:column;gap:1.25rem;container-type:inline-size;container-name:rui-field-group",
       ],
       style,
     ),
@@ -154,7 +168,7 @@ pub fn[C : @html.IsChildren] field(
     attrs=field_attrs,
     style=ui_styles(
       [
-        "display:flex;width:100%;gap:0.75rem",
+        "display:flex;width:100%;gap:0.5rem",
         field_orientation_style(orientation),
         if invalid {
           "color:var(--rui-destructive,oklch(0.577 0.245 27.325))"
@@ -185,7 +199,7 @@ pub fn[C : @html.IsChildren] field_content(
     attrs=ui_attrs(attrs).data_set("slot", "field-content"),
     style=ui_styles(
       [
-        "display:flex;min-width:0;flex:1;flex-direction:column;gap:0.375rem;line-height:1.375",
+        "display:flex;min-width:0;flex:1;flex-direction:column;gap:0.125rem;line-height:1.375",
       ],
       style,
     ),
@@ -324,15 +338,3 @@ pub fn[C : @html.IsChildren] field_separator(
     ],
   )
 }
-
-///|
-pub extend FieldLegendVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend FieldLegendVariant with Eq::{equal, not_equal}
-
-///|
-pub extend FieldOrientation with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend FieldOrientation with Eq::{equal, not_equal}

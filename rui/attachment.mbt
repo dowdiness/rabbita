@@ -8,11 +8,23 @@ pub(all) enum AttachmentState {
 } derive(Debug, Eq)
 
 ///|
+pub extend AttachmentState with Debug::{to_repr}
+
+///|
+pub extend AttachmentState with Eq::{equal, not_equal}
+
+///|
 pub(all) enum AttachmentSize {
   AttachmentDefaultSize
   AttachmentSm
   AttachmentXs
 } derive(Debug, Eq)
+
+///|
+pub extend AttachmentSize with Debug::{to_repr}
+
+///|
+pub extend AttachmentSize with Eq::{equal, not_equal}
 
 ///|
 pub(all) enum AttachmentOrientation {
@@ -21,10 +33,22 @@ pub(all) enum AttachmentOrientation {
 } derive(Debug, Eq)
 
 ///|
+pub extend AttachmentOrientation with Debug::{to_repr}
+
+///|
+pub extend AttachmentOrientation with Eq::{equal, not_equal}
+
+///|
 pub(all) enum AttachmentMediaVariant {
   AttachmentIcon
   AttachmentImage
 } derive(Debug, Eq)
+
+///|
+pub extend AttachmentMediaVariant with Debug::{to_repr}
+
+///|
+pub extend AttachmentMediaVariant with Eq::{equal, not_equal}
 
 ///|
 const AttachmentTitleShimmerStyle : String = "--rui-attachment-title-shimmer-spread:calc(3ch + 40px);--rui-attachment-title-shimmer-base:currentColor;--rui-attachment-title-shimmer-highlight:light-dark(oklch(from currentColor l c h / calc(alpha * 0.2)),oklch(from currentColor max(0.8,calc(l + 0.4)) c h / calc(alpha + 0.4)));--rui-attachment-title-bg:linear-gradient(calc(90deg + var(--rui-attachment-title-shimmer-angle,20deg)),var(--rui-attachment-title-shimmer-base) calc(50% - var(--rui-attachment-title-shimmer-spread)),color-mix(in oklch,var(--rui-attachment-title-shimmer-highlight),var(--rui-attachment-title-shimmer-base) 50%) calc(50% - var(--rui-attachment-title-shimmer-spread) * 0.5),var(--rui-attachment-title-shimmer-highlight) 50%,color-mix(in oklch,var(--rui-attachment-title-shimmer-highlight),var(--rui-attachment-title-shimmer-base) 50%) calc(50% + var(--rui-attachment-title-shimmer-spread) * 0.5),var(--rui-attachment-title-shimmer-base) calc(50% + var(--rui-attachment-title-shimmer-spread)));--rui-attachment-title-bg-size:calc(200% + var(--rui-attachment-title-shimmer-spread) * 2);--rui-attachment-title-bg-position:0 0;--rui-attachment-title-text-fill:transparent;--rui-attachment-title-animation:rui-shimmer 2s linear infinite"
@@ -381,7 +405,7 @@ fn attachment_bind_disabled_link(attrs : @html.Attrs, disabled : Bool) -> Unit {
 }
 
 ///|
-/// Render the Vega attachment trigger's `asChild` path as a native anchor.
+/// Render the Nova attachment trigger's `asChild` path as a native anchor.
 pub fn[C : @html.IsChildren] attachment_trigger_link(
   href~ : String,
   disabled? : Bool = false,
@@ -431,27 +455,3 @@ pub fn[C : @html.IsChildren] attachment_trigger_link(
     escape~,
   )
 }
-
-///|
-pub extend AttachmentMediaVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend AttachmentMediaVariant with Eq::{equal, not_equal}
-
-///|
-pub extend AttachmentOrientation with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend AttachmentOrientation with Eq::{equal, not_equal}
-
-///|
-pub extend AttachmentSize with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend AttachmentSize with Eq::{equal, not_equal}
-
-///|
-pub extend AttachmentState with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend AttachmentState with Eq::{equal, not_equal}

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('navigation menu opens its viewport on hover', async ({ page }) => {
-  await page.goto('/disclosure');
+  await page.goto('/');
 
   const platform = page.getByRole('button', { name: 'Platform' });
   const viewport = page.locator('[data-slot="navigation-menu-viewport"]');
@@ -17,7 +17,7 @@ test('navigation menu opens its viewport on hover', async ({ page }) => {
 });
 
 test('navigation menu switches content when hovering another item', async ({ page }) => {
-  await page.goto('/disclosure');
+  await page.goto('/');
 
   const platform = page.getByRole('button', { name: 'Platform' });
   const resources = page.getByRole('button', { name: 'Resources' });
@@ -34,7 +34,7 @@ test('navigation menu switches content when hovering another item', async ({ pag
 });
 
 test('navigation menu toggles on keyboard activation and closes on Escape', async ({ page }) => {
-  await page.goto('/disclosure');
+  await page.goto('/');
 
   const platform = page.getByRole('button', { name: 'Platform' });
   const viewport = page.locator('[data-slot="navigation-menu-viewport"]');
@@ -56,7 +56,7 @@ test('navigation menu toggles on keyboard activation and closes on Escape', asyn
 });
 
 test('navigation menu roves triggers and moves into content with ArrowDown', async ({ page }) => {
-  await page.goto('/disclosure');
+  await page.goto('/');
 
   const platform = page.getByRole('button', { name: 'Platform' });
   const resources = page.getByRole('button', { name: 'Resources' });
@@ -74,4 +74,34 @@ test('navigation menu roves triggers and moves into content with ArrowDown', asy
   await expect(viewport.getByRole('link', { name: 'API reference' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(resources).toBeFocused();
+});
+
+test('navigation viewport aligns to the trigger start and stays inside narrow viewports', async ({ page }) => {
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/');
+    for (const direction of ['ltr', 'rtl']) {
+      await page.evaluate((dir) => { document.documentElement.dir = dir; }, direction);
+      const trigger = page.getByRole('button', { name: 'Platform' });
+      const viewport = page.locator('[data-slot="navigation-menu-viewport"]');
+      await trigger.hover();
+      await expect(viewport).toBeVisible();
+      await expect.poll(async () => {
+        const anchor = await trigger.boundingBox();
+        const popup = await viewport.boundingBox();
+        if (!anchor || !popup) return Infinity;
+        const start = direction === 'ltr' ? anchor.x : anchor.x + anchor.width - popup.width;
+        const expected = Math.max(8, Math.min(start, width - popup.width - 8));
+        return Math.abs(popup.x - expected);
+      }).toBeLessThan(1);
+      const popup = (await viewport.boundingBox())!;
+      const content = (await viewport.locator('[data-slot="navigation-menu-content"]').boundingBox())!;
+      expect(popup.x).toBeGreaterThanOrEqual(8);
+      expect(popup.x + popup.width).toBeLessThanOrEqual(width - 8);
+      expect(content.x).toBeGreaterThanOrEqual(popup.x);
+      expect(content.x + content.width).toBeLessThanOrEqual(popup.x + popup.width);
+      await page.keyboard.press('Escape');
+      await page.mouse.move(0, 0);
+    }
+  }
 });

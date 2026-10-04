@@ -53,7 +53,7 @@ pub async fn SSRHost::SSRHost(
     }
     (host, ambient_host.protect(host, builder))
   })
-  errdefer host.cleanup()
+  errdefer Host::cleanup(host)
   let cmd = Context::inject_url_changed(host, host.origin + host.path)
   Scheduler::queue_command(host, cmd)
 
@@ -80,8 +80,9 @@ async fn SSRHost::drain_task(host : Self) -> Unit {
             Unhandled => ()
           } noraise {
             None => ()
-            Ready(cmd) => host.queue_command(cmd)
-            Async(f) => group.spawn_bg(() => host.queue_command(f()))
+            Ready(cmd) => Scheduler::queue_command(host, cmd)
+            Async(f) =>
+              group.spawn_bg(() => Scheduler::queue_command(host, f()))
             LegacyEffect(Immediately, f) => f(host)
             AfterLayout(_) | LegacyEffect(AfterRender, _) => ()
           }
@@ -93,7 +94,7 @@ async fn SSRHost::drain_task(host : Self) -> Unit {
           } noraise {
             key => host.transcript[key] = value
           }
-          host.queue_command(cmd)
+          Scheduler::queue_command(host, cmd)
         }
         Async(f) =>
           group.spawn_bg(() => {
@@ -130,6 +131,9 @@ pub impl Host for SSRHost with fn flush(self) {
 }
 
 ///|
+pub extend SSRHost with Host::{cleanup, flush, get_stores}
+
+///|
 pub impl Host for SSRHost with fn get_stores(self) {
   self.stores
 }
@@ -148,6 +152,14 @@ pub impl Scheduler for SSRHost with fn queue_command(self, cmd) {
 }
 
 ///|
+pub extend SSRHost with Scheduler::{
+  add,
+  queue_command,
+  set_url_changed_injector,
+  set_url_request_injector,
+}
+
+///|
 pub impl Scheduler for SSRHost with fn set_url_changed_injector(self, injector) {
   self.url_changed = injector
 }
@@ -163,6 +175,13 @@ pub impl Context for SSRHost with fn get_origin(self) {
 }
 
 ///|
+pub extend SSRHost with Context::{
+  get_origin,
+  inject_url_changed,
+  inject_url_request,
+}
+
+///|
 pub impl Context for SSRHost with fn inject_url_changed(self, url) {
   (self.url_changed)(url)
 }
@@ -171,21 +190,3 @@ pub impl Context for SSRHost with fn inject_url_changed(self, url) {
 pub impl Context for SSRHost with fn inject_url_request(self, url) {
   (self.url_request)(url)
 }
-
-///|
-pub extend SSRHost with @moonbit-community/rabbita/cmd.Context::{
-  get_origin,
-  inject_url_changed,
-  inject_url_request,
-}
-
-///|
-pub extend SSRHost with @moonbit-community/rabbita/cmd.Scheduler::{
-  add,
-  queue_command,
-  set_url_changed_injector,
-  set_url_request_injector,
-}
-
-///|
-pub extend SSRHost with Host::{cleanup, flush, get_stores}

@@ -3,9 +3,9 @@
 > RUI is experimental. Its API and component behavior may change before a
 > stable release.
 
-RUI (`Yoorkin/rui`) is a native component library for
+RUI (`moonbit-community/rui`) is a native component library for
 [Rabbita](https://github.com/moonbit-community/rabbita), inspired by the
-shadcn/ui Vega visual language.
+[shadcn/ui Nova](https://ui.shadcn.com/r/styles/base-nova/registry.json) visual language.
 
 [Browse the component showcase](https://moonbit-community.github.io/rabbita/components/)
 
@@ -25,6 +25,11 @@ in the [showcase](https://moonbit-community.github.io/rabbita/components/) and
 the generated `pkg.generated.mbti` interface.
 
 ## Customization
+
+For Markdown documents, import `moonbit-community/rui/markdown` and use
+`@markdown.markdown(source)`. The synchronous renderer includes shadcn Typeset typography with Nova tokens,
+tables, task lists and footnotes. See the [Markdown package](markdown/README.mbt.md)
+for supported syntax and source-rendering behavior.
 
 Use `--rui-*` theme tokens, component `style` parameters, and `attrs` for normal
 customization. Copy the relevant `.mbt` source when you need to change a

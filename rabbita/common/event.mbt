@@ -33,8 +33,11 @@ pub(all) struct Pos {
 
 ///|
 pub impl Show for Pos with fn output(self, buf) {
-  Show::output(self.to_repr(), buf)
+  Show::output(@debug.Debug::to_repr(self), buf)
 }
+
+///|
+pub extend Pos with Show::{output, to_string}
 
 ///|
 struct Keyboard {
@@ -154,7 +157,7 @@ pub(all) struct Viewport {
 
 ///|
 pub impl Show for Viewport with fn output(self, buf) {
-  Show::output(self.to_repr(), buf)
+  Show::output(@debug.Debug::to_repr(self), buf)
 }
 
 ///|
@@ -165,9 +168,6 @@ pub extend Mouse with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub extend Pos with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend Pos with Show::{output, to_string}
 
 ///|
 pub extend Scroll with @moonbitlang/core/debug.Debug::{to_repr}

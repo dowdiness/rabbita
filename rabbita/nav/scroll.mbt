@@ -22,6 +22,9 @@ pub impl Show for ScrollBehavior with fn output(self, buf) {
 }
 
 ///|
+pub extend ScrollBehavior with Show::{output, to_string}
+
+///|
 /// Create a command to scroll the window to a specific position.
 pub fn scroll_to_pos(
   x : Double,
@@ -59,6 +62,3 @@ pub fn scroll_to_top(behavior? : ScrollBehavior = Auto) -> Cmd {
 pub fn scroll_to_bottom(behavior? : ScrollBehavior = Auto) -> Cmd {
   op.request(NavScrollToBottom(behavior))
 }
-
-///|
-pub extend ScrollBehavior with Show::{output, to_string}

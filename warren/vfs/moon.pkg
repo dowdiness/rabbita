@@ -1,7 +1,6 @@
 import {
   "moonbitlang/async/fs",
   "moonbitlang/async/io",
-  "moonbitlang/core/debug",
   "moonbit-community/warren/path",
 }
 

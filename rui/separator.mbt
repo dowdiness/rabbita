@@ -5,6 +5,12 @@ pub(all) enum SeparatorOrientation {
 } derive(Debug, Eq)
 
 ///|
+pub extend SeparatorOrientation with Debug::{to_repr}
+
+///|
+pub extend SeparatorOrientation with Eq::{equal, not_equal}
+
+///|
 const SeparatorBaseStyle : String = "display:block;flex-shrink:0;background:var(--rui-border,oklch(0.922 0 0))"
 
 ///|
@@ -67,9 +73,3 @@ pub fn separator(
     @html.nothing,
   )
 }
-
-///|
-pub extend SeparatorOrientation with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend SeparatorOrientation with Eq::{equal, not_equal}

@@ -6,11 +6,23 @@ pub(all) enum AvatarSize {
 } derive(Debug, Eq)
 
 ///|
+pub extend AvatarSize with Debug::{to_repr}
+
+///|
+pub extend AvatarSize with Eq::{equal, not_equal}
+
+///|
 pub(all) enum AvatarImageStatus {
   AvatarLoading
   AvatarLoaded
   AvatarError
 } derive(Debug, Eq)
+
+///|
+pub extend AvatarImageStatus with Debug::{to_repr}
+
+///|
+pub extend AvatarImageStatus with Eq::{equal, not_equal}
 
 ///|
 #cfg(target="js")
@@ -96,7 +108,7 @@ fn avatar_part_attrs(attrs : @html.Attrs?, slot : String) -> @html.Attrs {
 }
 
 ///|
-/// Render the composable Vega avatar root as a native `span` element.
+/// Render the composable Nova avatar root as a native `span` element.
 ///
 /// Size is shared with fallback and badge parts through inherited inline custom
 /// properties. The root does not own image-loading state; omit `avatar_image`
@@ -388,15 +400,3 @@ pub fn[C : @html.IsChildren] avatar_with_fallback(
     ),
   )
 }
-
-///|
-pub extend AvatarImageStatus with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend AvatarImageStatus with Eq::{equal, not_equal}
-
-///|
-pub extend AvatarSize with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend AvatarSize with Eq::{equal, not_equal}

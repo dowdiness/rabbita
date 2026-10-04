@@ -663,13 +663,13 @@ pub(all) suberror HttpError {
 } derive(FromJson, ToJson)
 
 ///|
+pub extend HttpError with FromJson::{from_json}
+
+///|
+pub extend HttpError with ToJson::{to_json}
+
+///|
 impl Show for HttpError with fn output(self, buf) {
   let RequestError(s) = self
   buf <+ "Request error, \{s}"
 }
-
-///|
-pub extend HttpError with @moonbitlang/core/json.FromJson::{from_json}
-
-///|
-pub extend HttpError with ToJson::{to_json}

@@ -5,6 +5,12 @@ pub(all) enum ContentAlignment {
 } derive(Debug, Eq)
 
 ///|
+pub extend ContentAlignment with Debug::{to_repr}
+
+///|
+pub extend ContentAlignment with Eq::{equal, not_equal}
+
+///|
 fn content_alignment_value(align : ContentAlignment) -> String {
   match align {
     AlignStart => "start"
@@ -165,9 +171,3 @@ pub fn[C : @html.IsChildren] message_footer(
     children,
   )
 }
-
-///|
-pub extend ContentAlignment with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ContentAlignment with Eq::{equal, not_equal}

@@ -57,6 +57,9 @@ pub impl Host for BrowserHost with fn flush(self) {
 }
 
 ///|
+pub extend BrowserHost with Host::{cleanup, flush, get_stores}
+
+///|
 pub impl Host for BrowserHost with fn get_stores(self) {
   self.stores
 }
@@ -94,11 +97,9 @@ fn BrowserHost::request_task(self : Self) -> Unit {
         Unhandled => ()
       } noraise {
         None => ()
-        Ready(cmd) => self.queue_command(cmd)
+        Ready(cmd) => Scheduler::queue_command(self, cmd)
         Async(f) =>
-          @js_async.Promise::from_async(() => {
-            Scheduler::queue_command(self, f())
-          })
+          @js.Promise::from_async(() => Scheduler::queue_command(self, f()))
           |> ignore
         AfterLayout(f) => self.after_render_queue.push(f)
         LegacyEffect(Immediately, f) => f(self)
@@ -129,6 +130,14 @@ pub impl Scheduler for BrowserHost with fn queue_command(self, cmd) {
 }
 
 ///|
+pub extend BrowserHost with Scheduler::{
+  add,
+  queue_command,
+  set_url_changed_injector,
+  set_url_request_injector,
+}
+
+///|
 pub impl Scheduler for BrowserHost with fn set_url_changed_injector(
   self,
   injector,
@@ -150,6 +159,13 @@ pub impl Context for BrowserHost with fn get_origin(_self) {
 }
 
 ///|
+pub extend BrowserHost with Context::{
+  get_origin,
+  inject_url_changed,
+  inject_url_request,
+}
+
+///|
 pub impl Context for BrowserHost with fn inject_url_changed(self, url) {
   (self.url_changed)(url)
 }
@@ -158,21 +174,3 @@ pub impl Context for BrowserHost with fn inject_url_changed(self, url) {
 pub impl Context for BrowserHost with fn inject_url_request(self, url) {
   (self.url_request)(url)
 }
-
-///|
-pub extend BrowserHost with @moonbit-community/rabbita/cmd.Context::{
-  get_origin,
-  inject_url_changed,
-  inject_url_request,
-}
-
-///|
-pub extend BrowserHost with @moonbit-community/rabbita/cmd.Scheduler::{
-  add,
-  queue_command,
-  set_url_changed_injector,
-  set_url_request_injector,
-}
-
-///|
-pub extend BrowserHost with Host::{cleanup, flush, get_stores}

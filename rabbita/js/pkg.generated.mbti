@@ -2,17 +2,12 @@
 package "moonbit-community/rabbita/js"
 
 import {
+  "moonbitlang/async/js_async",
   "moonbitlang/core/json",
 }
 
 // Values
-pub async fn[T] async_all(FixedArray[async () -> T]) -> JsArray[T]
-
 pub let async_iterator : Symbol
-
-pub fn async_run(async () -> Unit noraise) -> Unit
-
-pub fn async_test(async () -> Unit) -> Unit
 
 pub let globalThis : Value
 
@@ -20,22 +15,22 @@ pub let iterator : Symbol
 
 pub fn require(String, keys? : Array[String]) -> Value
 
-pub fn[T, E : Error] spawn_detach(async () -> T raise E) -> Unit
-
-pub async fn[T, E : Error] suspend(((T) -> Unit, (E) -> Unit) -> Unit) -> T raise E
-
 // Errors
 pub suberror Error_ {
   Error_(Value)
 }
 pub fn Error_::cause(Self) -> Value?
+pub fn Error_::output(Self, &Logger) -> Unit
+pub fn Error_::to_string(Self) -> String
 pub fn[T] Error_::wrap(() -> Value, map_ok? : (Value) -> T) -> T raise Self
 pub impl Show for Error_
 
 // Types and methods
 #external
 pub type JsArray[T]
+pub fn[A : Cast] JsArray::from(Self[A]) -> Value
 pub fn[T] JsArray::get(Self[T], Int) -> T?
+pub fn[A : Cast] JsArray::into(Value) -> Self[A]?
 pub fn[T] JsArray::is_empty(Self[T]) -> Bool
 pub fn[T] JsArray::iter(Self[T]) -> Iter[T?]
 pub fn[T] JsArray::length(Self[T]) -> Int
@@ -78,12 +73,6 @@ pub fn[T] Optional::is_undefined(Self[T]) -> Bool
 pub fn[T] Optional::to_option(Self[T]) -> T?
 pub fn[T] Optional::undefined() -> Self[T]
 pub fn[T] Optional::unwrap(Self[T]) -> T
-
-#external
-pub type Promise
-pub fn Promise::all(FixedArray[Self]) -> Self
-pub fn[T] Promise::unsafe_new(async () -> T) -> Self
-pub async fn Promise::wait(Self) -> Value
 
 type Symbol
 pub fn Symbol::make() -> Self
@@ -200,6 +189,7 @@ pub fn[Arg, Result] Value::new(Self, FixedArray[Arg]) -> Result
 pub fn[Arg, Result] Value::new_with_index(Self, Int, FixedArray[Arg]) -> Result
 pub fn[Arg, Result] Value::new_with_string(Self, String, FixedArray[Arg]) -> Result
 pub fn[Arg, Result] Value::new_with_symbol(Self, Symbol, FixedArray[Arg]) -> Result
+pub fn Value::output(Self, &Logger) -> Unit
 pub fn[T] Value::set_with_index(Self, Int, T) -> Unit
 pub fn[T] Value::set_with_string(Self, String, T) -> Unit
 pub fn[T] Value::set_with_symbol(Self, Symbol, T) -> Unit
@@ -210,6 +200,7 @@ pub impl Show for Value
 pub impl @json.FromJson for Value
 
 // Type aliases
+pub using @js_async {type Promise}
 
 // Traits
 pub(open) trait Cast {

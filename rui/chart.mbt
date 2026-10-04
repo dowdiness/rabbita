@@ -6,6 +6,12 @@ pub(all) enum ChartIndicator {
 } derive(Debug, Eq)
 
 ///|
+pub extend ChartIndicator with Debug::{to_repr}
+
+///|
+pub extend ChartIndicator with Eq::{equal, not_equal}
+
+///|
 const ChartContentsCarrierStyle : String = "display:contents"
 
 ///|
@@ -32,7 +38,7 @@ fn chart_indicator_style(indicator : ChartIndicator, color : String) -> String {
 }
 
 ///|
-/// Vega chart surface for an application-provided SVG, canvas, or chart engine.
+/// Nova chart surface for an application-provided SVG, canvas, or chart engine.
 pub fn[C : @html.IsChildren] chart_container(
   aria_label? : String,
   aspect? : String = "16 / 9",
@@ -326,9 +332,3 @@ pub fn[C : @html.IsChildren] chart_legend_item(
     ],
   )
 }
-
-///|
-pub extend ChartIndicator with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ChartIndicator with Eq::{equal, not_equal}

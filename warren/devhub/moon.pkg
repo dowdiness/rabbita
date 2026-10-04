@@ -4,7 +4,6 @@ import {
   "moonbitlang/async/websocket",
   "moonbitlang/async/process",
   "moonbitlang/async",
-  "moonbitlang/core/debug",
   "moonbit-community/warren/log",
   "moonbit-community/warren/path",
   "moonbit-community/warren/vfs",

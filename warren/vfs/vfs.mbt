@@ -10,9 +10,15 @@ pub(all) enum VirtualFs {
 } derive(Debug)
 
 ///|
+pub extend VirtualFs with Debug::{to_repr}
+
+///|
 struct VirtualFileSystem {
   roots : Map[String, VirtualFs]
 } derive(Debug)
+
+///|
+pub extend VirtualFileSystem with Debug::{to_repr}
 
 ///|
 #as_free_fn
@@ -165,9 +171,3 @@ pub async fn VirtualFileSystem::read(self : Self, path : String) -> &@io.Data? {
     _ => None
   }
 }
-
-///|
-pub extend VirtualFs with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend VirtualFileSystem with @moonbitlang/core/debug.Debug::{to_repr}
