@@ -27,6 +27,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.repository == 'moonbit-community/rabbita'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
