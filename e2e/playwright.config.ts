@@ -12,6 +12,7 @@ const mainApps = [
   { name: 'subscriptions', port: 4307 },
   { name: 'dom-api', port: 4308 },
   { name: 'memo', port: 4310 },
+  { name: 'worker', port: 4311 },
 ] as const;
 const ruiFixtures = [
   'calendar',
@@ -51,7 +52,7 @@ const apps = [
     name,
     port,
     testMatch: [`**/${name}.spec.ts`, `**/${name}.*.spec.ts`],
-    command: `warren -C ./apps/${name} dev --browser-entry . --direct --port ${port}`,
+    command: `warren -C ./apps/${name} dev --browser-entry .${name === 'worker' ? ' --public-dir public' : ''} --direct --port ${port}`,
   })),
   ...ruiFixtures.map((fixture, index) => {
     const port = 4320 + index;

@@ -16,6 +16,7 @@ The non-RUI applications use Warren's minimized root-package layout:
 - `apps/subscriptions` on port `4307`
 - `apps/dom-api` on port `4308`
 - `apps/memo` on port `4310`
+- `apps/worker` on port `4311`
 
 The suite covers stable public behavior: state and message composition, forms
 and DOM events, incremental collection lifecycles, same-origin navigation,
@@ -38,6 +39,13 @@ through DOM snapshots. Each snapshot has a reading number so tests wait for a
 fresh result without accessing JavaScript globals or adding FFI probes.
 For manual checks, `Toggle keyed trailing marker` removes the final sibling so
 keyed fragments can also move directly to the end of their container.
+
+`apps/worker` exercises the [Worker binding](../rabbita/worker/README.mbt.md)
+through real module Workers: connection isolation, callback rebinding,
+replacement, correlated requests, inactivity deadlines and cleanup. Native
+boundary fault injection covers constructor/post errors and `messageerror`
+without replacing the transport with an all-mock Worker. Run it with
+`npm test -- --project=worker-chromium --workers=1 --retries=0`.
 
 RUI fixtures share the module `apps/rui`, with one executable package per spec:
 `tests/rui.<name>.spec.ts` runs against `apps/rui/<name>` in project

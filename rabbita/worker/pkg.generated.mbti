@@ -1,0 +1,53 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/rabbita/worker"
+
+import {
+  "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita/sub",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn listen(String, String, generation? : Int, on_event~ : @cmd.Emit[Event]) -> @sub.Sub
+
+pub fn request(Connection, Json, reply~ : @cmd.Emit[Result[Json, Failure]], timeout_ms? : Int) -> @cmd.Cmd
+
+// Errors
+
+// Types and methods
+pub struct Connection {
+  // private fields
+} derive(Eq, Hash)
+pub fn Connection::equal(Self, Self) -> Bool
+pub fn Connection::hash(Self) -> Int
+pub fn Connection::hash_combine(Self, Hasher) -> Unit
+pub fn Connection::not_equal(Self, Self) -> Bool
+pub fn Connection::to_repr(Self) -> @debug.Repr
+pub impl @debug.Debug for Connection
+
+pub(all) enum Event {
+  Connected(Connection)
+  Failed(Connection?, Failure)
+} derive(Eq, @debug.Debug)
+pub fn Event::equal(Self, Self) -> Bool
+pub fn Event::not_equal(Self, Self) -> Bool
+pub fn Event::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Failure {
+  Unavailable
+  ConstructionFailed
+  ConnectionClosed
+  PostFailed
+  WorkerFailed
+  MessageError
+  InvalidMessage
+  Timeout
+  InvalidTimeout
+} derive(Eq, @debug.Debug)
+pub fn Failure::equal(Self, Self) -> Bool
+pub fn Failure::not_equal(Self, Self) -> Bool
+pub fn Failure::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

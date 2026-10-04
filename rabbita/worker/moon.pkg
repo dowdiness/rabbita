@@ -1,0 +1,14 @@
+import {
+  "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita/js",
+  "moonbit-community/rabbita/sub",
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+}
+
+import {
+  "moonbit-community/rabbita/testing",
+  "moonbitlang/async",
+} for "wbtest"
+
+supported_targets = "js"
