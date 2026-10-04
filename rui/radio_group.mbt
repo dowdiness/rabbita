@@ -380,9 +380,3 @@ pub fn radio_group_item(
     style~,
   )
 }
-
-///|
-pub extend RadioGroupOrientation with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend RadioGroupOrientation with Eq::{equal, not_equal}

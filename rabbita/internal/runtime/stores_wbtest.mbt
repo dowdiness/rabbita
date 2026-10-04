@@ -216,6 +216,3 @@ test "state machine with input unloads subscriptions when disposed" {
     inspect(unloads, content="1")
   })
 }
-
-///|
-pub extend CleanupBranch with Eq::{equal, not_equal}

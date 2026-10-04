@@ -171,9 +171,3 @@ pub fn[C : @html.IsChildren] message_footer(
     children,
   )
 }
-
-///|
-pub extend ContentAlignment with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ContentAlignment with Eq::{equal, not_equal}

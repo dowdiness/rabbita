@@ -175,9 +175,3 @@ pub fn[C : @html.IsChildren] marker_content(
     children,
   )
 }
-
-///|
-pub extend MarkerVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend MarkerVariant with Eq::{equal, not_equal}

@@ -30,6 +30,13 @@ let op : @cmd.Op = @cmd.Op()
 
 ///|
 #cfg(target="js")
+extern "js" fn callback_promise(
+  register : ((Cmd) -> Unit) -> Unit,
+) -> @js.Promise[Cmd] =
+  #| register => new Promise(resolve => register(resolve))
+
+///|
+#cfg(target="js")
 fn indexed_db_invoke(
   extension : @cmd.Extension,
   _ : &@cmd.Context,
@@ -37,27 +44,27 @@ fn indexed_db_invoke(
   match extension {
     IndexedDBGet(store, key, msg) =>
       Async(async fn() {
-        @js.suspend(fn(resolve, _) {
+        callback_promise(resolve => {
           enqueue_get(store, key, result => resolve(msg(result)))
-        })
+        }).wait()
       })
     IndexedDBContains(store, key, msg) =>
       Async(async fn() {
-        @js.suspend(fn(resolve, _) {
+        callback_promise(resolve => {
           enqueue_contains(store, key, result => resolve(msg(result)))
-        })
+        }).wait()
       })
     IndexedDBEntries(store, msg) =>
       Async(async fn() {
-        @js.suspend(fn(resolve, _) {
+        callback_promise(resolve => {
           enqueue_entries(store, result => resolve(msg(result)))
-        })
+        }).wait()
       })
     IndexedDBApply(store, mutations, msg) =>
       Async(async fn() {
-        @js.suspend(fn(resolve, _) {
+        callback_promise(resolve => {
           enqueue_apply(store, mutations, result => resolve(msg(result)))
-        })
+        }).wait()
       })
     _ => raise @cmd.Unhandled
   }

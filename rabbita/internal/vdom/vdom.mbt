@@ -154,6 +154,3 @@ pub fn Props::copy(self : Props) -> Props {
     styles: copy_map(self.styles),
   }
 }
-
-///|
-pub extend VNode with Eq::{equal, not_equal}

@@ -208,9 +208,3 @@ pub fn[C : @html.IsChildren] card_footer(
     children,
   )
 }
-
-///|
-pub extend CardSize with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend CardSize with Eq::{equal, not_equal}

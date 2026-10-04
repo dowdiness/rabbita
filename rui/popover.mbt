@@ -1949,15 +1949,3 @@ pub fn[T : @html.IsChildren, C : @html.IsChildren] popover(
     ),
   )
 }
-
-///|
-pub extend PopupAlign with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend PopupAlign with Eq::{equal, not_equal}
-
-///|
-pub extend PopupSide with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend PopupSide with Eq::{equal, not_equal}

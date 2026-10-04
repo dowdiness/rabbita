@@ -761,7 +761,7 @@ pub fn Element::is_same_node(Self, Node) -> Bool
 pub fn Element::matches(Self, String) -> Bool
 pub fn Element::query_selector(Self, String) -> Self?
 pub fn Element::query_selector_all(Self, String) -> NodeList[Self]
-pub fn Element::release_pointer_capture(Self, Int) -> Unit
+pub fn Element::release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn Element::remove_attribute(Self, String) -> Unit
 pub fn Element::remove_child(Self, Node) -> Unit
 pub fn Element::remove_event_listener(Self, String, (Event) -> Unit) -> Unit
@@ -773,7 +773,7 @@ pub fn Element::scroll_into_view_with_options(Self, behavior? : String, block? :
 pub fn Element::set_attribute(Self, String, String) -> Unit
 pub fn Element::set_inner_html(Self, String) -> Unit
 pub fn Element::set_node_value(Self, @js.Nullable[String]) -> Unit
-pub fn Element::set_pointer_capture(Self, Int) -> Unit
+pub fn Element::set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn Element::set_property(Self, String, @js.Value) -> Unit
 pub fn Element::set_scroll_left(Self, Double) -> Unit
 pub fn Element::set_scroll_top(Self, Double) -> Unit
@@ -996,7 +996,7 @@ pub fn HTMLCanvasElement::is_same_node(Self, Node) -> Bool
 pub fn HTMLCanvasElement::matches(Self, String) -> Bool
 pub fn HTMLCanvasElement::query_selector(Self, String) -> Element?
 pub fn HTMLCanvasElement::query_selector_all(Self, String) -> NodeList[Element]
-pub fn HTMLCanvasElement::release_pointer_capture(Self, Int) -> Unit
+pub fn HTMLCanvasElement::release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLCanvasElement::remove_attribute(Self, String) -> Unit
 pub fn HTMLCanvasElement::remove_child(Self, Node) -> Unit
 pub fn HTMLCanvasElement::remove_event_listener(Self, String, (Event) -> Unit) -> Unit
@@ -1024,7 +1024,7 @@ pub fn HTMLCanvasElement::set_lang(Self, String) -> Unit
 pub fn HTMLCanvasElement::set_node_value(Self, @js.Nullable[String]) -> Unit
 pub fn HTMLCanvasElement::set_nonce(Self, String) -> Unit
 pub fn HTMLCanvasElement::set_outer_text(Self, String) -> Unit
-pub fn HTMLCanvasElement::set_pointer_capture(Self, Int) -> Unit
+pub fn HTMLCanvasElement::set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLCanvasElement::set_popover(Self, String?) -> Unit
 pub fn HTMLCanvasElement::set_property(Self, String, @js.Value) -> Unit
 pub fn HTMLCanvasElement::set_scroll_left(Self, Double) -> Unit
@@ -1158,7 +1158,7 @@ pub fn HTMLDialogElement::matches(Self, String) -> Bool
 pub fn HTMLDialogElement::open(Self) -> Bool
 pub fn HTMLDialogElement::query_selector(Self, String) -> Element?
 pub fn HTMLDialogElement::query_selector_all(Self, String) -> NodeList[Element]
-pub fn HTMLDialogElement::release_pointer_capture(Self, Int) -> Unit
+pub fn HTMLDialogElement::release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLDialogElement::remove_attribute(Self, String) -> Unit
 pub fn HTMLDialogElement::remove_child(Self, Node) -> Unit
 pub fn HTMLDialogElement::remove_event_listener(Self, String, (Event) -> Unit) -> Unit
@@ -1188,7 +1188,7 @@ pub fn HTMLDialogElement::set_lang(Self, String) -> Unit
 pub fn HTMLDialogElement::set_node_value(Self, @js.Nullable[String]) -> Unit
 pub fn HTMLDialogElement::set_nonce(Self, String) -> Unit
 pub fn HTMLDialogElement::set_outer_text(Self, String) -> Unit
-pub fn HTMLDialogElement::set_pointer_capture(Self, Int) -> Unit
+pub fn HTMLDialogElement::set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLDialogElement::set_popover(Self, String?) -> Unit
 pub fn HTMLDialogElement::set_property(Self, String, @js.Value) -> Unit
 pub fn HTMLDialogElement::set_scroll_left(Self, Double) -> Unit
@@ -1315,7 +1315,7 @@ pub fn HTMLElement::is_same_node(Self, Node) -> Bool
 pub fn HTMLElement::matches(Self, String) -> Bool
 pub fn HTMLElement::query_selector(Self, String) -> Element?
 pub fn HTMLElement::query_selector_all(Self, String) -> NodeList[Element]
-pub fn HTMLElement::release_pointer_capture(Self, Int) -> Unit
+pub fn HTMLElement::release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLElement::remove_attribute(Self, String) -> Unit
 pub fn HTMLElement::remove_child(Self, Node) -> Unit
 pub fn HTMLElement::remove_event_listener(Self, String, (Event) -> Unit) -> Unit
@@ -1343,7 +1343,7 @@ pub fn HTMLElement::set_lang(Self, String) -> Unit
 pub fn HTMLElement::set_node_value(Self, @js.Nullable[String]) -> Unit
 pub fn HTMLElement::set_nonce(Self, String) -> Unit
 pub fn HTMLElement::set_outer_text(Self, String) -> Unit
-pub fn HTMLElement::set_pointer_capture(Self, Int) -> Unit
+pub fn HTMLElement::set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLElement::set_popover(Self, String?) -> Unit
 pub fn HTMLElement::set_property(Self, String, @js.Value) -> Unit
 pub fn HTMLElement::set_scroll_left(Self, Double) -> Unit
@@ -1488,7 +1488,7 @@ pub fn HTMLImageElement::new() -> Self
 pub fn HTMLImageElement::new_with_size(Double, Double) -> Self
 pub fn HTMLImageElement::query_selector(Self, String) -> Element?
 pub fn HTMLImageElement::query_selector_all(Self, String) -> NodeList[Element]
-pub fn HTMLImageElement::release_pointer_capture(Self, Int) -> Unit
+pub fn HTMLImageElement::release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLImageElement::remove_attribute(Self, String) -> Unit
 pub fn HTMLImageElement::remove_child(Self, Node) -> Unit
 pub fn HTMLImageElement::remove_event_listener(Self, String, (Event) -> Unit) -> Unit
@@ -1522,7 +1522,7 @@ pub fn HTMLImageElement::set_loading(Self, String) -> Unit
 pub fn HTMLImageElement::set_node_value(Self, @js.Nullable[String]) -> Unit
 pub fn HTMLImageElement::set_nonce(Self, String) -> Unit
 pub fn HTMLImageElement::set_outer_text(Self, String) -> Unit
-pub fn HTMLImageElement::set_pointer_capture(Self, Int) -> Unit
+pub fn HTMLImageElement::set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLImageElement::set_popover(Self, String?) -> Unit
 pub fn HTMLImageElement::set_property(Self, String, @js.Value) -> Unit
 pub fn HTMLImageElement::set_referrer_policy(Self, String) -> Unit
@@ -1608,6 +1608,7 @@ pub fn HTMLInputElement::get_dir(Self) -> String
 pub fn HTMLInputElement::get_draggable(Self) -> Bool
 pub fn HTMLInputElement::get_edit_context(Self) -> EditContext?
 pub fn HTMLInputElement::get_enter_key_hint(Self) -> String
+pub fn HTMLInputElement::get_files(Self) -> FixedArray[File]
 pub fn HTMLInputElement::get_first_child(Self) -> Node
 pub fn HTMLInputElement::get_hidden(Self) -> @js.Value
 pub fn HTMLInputElement::get_inert(Self) -> Bool
@@ -1653,7 +1654,7 @@ pub fn HTMLInputElement::is_same_node(Self, Node) -> Bool
 pub fn HTMLInputElement::matches(Self, String) -> Bool
 pub fn HTMLInputElement::query_selector(Self, String) -> Element?
 pub fn HTMLInputElement::query_selector_all(Self, String) -> NodeList[Element]
-pub fn HTMLInputElement::release_pointer_capture(Self, Int) -> Unit
+pub fn HTMLInputElement::release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLInputElement::remove_attribute(Self, String) -> Unit
 pub fn HTMLInputElement::remove_child(Self, Node) -> Unit
 pub fn HTMLInputElement::remove_event_listener(Self, String, (Event) -> Unit) -> Unit
@@ -1681,7 +1682,7 @@ pub fn HTMLInputElement::set_lang(Self, String) -> Unit
 pub fn HTMLInputElement::set_node_value(Self, @js.Nullable[String]) -> Unit
 pub fn HTMLInputElement::set_nonce(Self, String) -> Unit
 pub fn HTMLInputElement::set_outer_text(Self, String) -> Unit
-pub fn HTMLInputElement::set_pointer_capture(Self, Int) -> Unit
+pub fn HTMLInputElement::set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLInputElement::set_popover(Self, String?) -> Unit
 pub fn HTMLInputElement::set_property(Self, String, @js.Value) -> Unit
 pub fn HTMLInputElement::set_scroll_left(Self, Double) -> Unit
@@ -1691,7 +1692,6 @@ pub fn HTMLInputElement::set_style_declaration(Self, CSSStyleDeclaration) -> Uni
 pub fn HTMLInputElement::set_tab_index(Self, Int) -> Unit
 pub fn HTMLInputElement::set_title(Self, String) -> Unit
 pub fn HTMLInputElement::set_translate(Self, Bool) -> Unit
-pub fn HTMLInputElement::get_files(Self) -> FixedArray[File]
 pub fn HTMLInputElement::set_value(Self, String) -> Unit
 pub fn HTMLInputElement::set_virtual_keyboard_policy(Self, String) -> Unit
 pub fn HTMLInputElement::set_writing_suggestions(Self, String) -> Unit
@@ -1849,7 +1849,7 @@ pub fn HTMLMediaElement::matches(Self, String) -> Bool
 pub fn HTMLMediaElement::pause(Self) -> Unit
 pub fn HTMLMediaElement::query_selector(Self, String) -> Element?
 pub fn HTMLMediaElement::query_selector_all(Self, String) -> NodeList[Element]
-pub fn HTMLMediaElement::release_pointer_capture(Self, Int) -> Unit
+pub fn HTMLMediaElement::release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLMediaElement::remove_attribute(Self, String) -> Unit
 pub fn HTMLMediaElement::remove_child(Self, Node) -> Unit
 pub fn HTMLMediaElement::remove_event_listener(Self, String, (Event) -> Unit) -> Unit
@@ -1888,7 +1888,7 @@ pub fn HTMLMediaElement::set_node_value(Self, @js.Nullable[String]) -> Unit
 pub fn HTMLMediaElement::set_nonce(Self, String) -> Unit
 pub fn HTMLMediaElement::set_outer_text(Self, String) -> Unit
 pub fn HTMLMediaElement::set_playback_rate(Self, Double) -> Unit
-pub fn HTMLMediaElement::set_pointer_capture(Self, Int) -> Unit
+pub fn HTMLMediaElement::set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLMediaElement::set_popover(Self, String?) -> Unit
 pub fn HTMLMediaElement::set_preload(Self, String) -> Unit
 pub fn HTMLMediaElement::set_preserves_pitch(Self, Bool) -> Unit
@@ -2084,7 +2084,7 @@ pub fn HTMLVideoElement::matches(Self, String) -> Bool
 pub fn HTMLVideoElement::pause(Self) -> Unit
 pub fn HTMLVideoElement::query_selector(Self, String) -> Element?
 pub fn HTMLVideoElement::query_selector_all(Self, String) -> NodeList[Element]
-pub fn HTMLVideoElement::release_pointer_capture(Self, Int) -> Unit
+pub fn HTMLVideoElement::release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLVideoElement::remove_attribute(Self, String) -> Unit
 pub fn HTMLVideoElement::remove_child(Self, Node) -> Unit
 pub fn HTMLVideoElement::remove_event_listener(Self, String, (Event) -> Unit) -> Unit
@@ -2123,7 +2123,7 @@ pub fn HTMLVideoElement::set_node_value(Self, @js.Nullable[String]) -> Unit
 pub fn HTMLVideoElement::set_nonce(Self, String) -> Unit
 pub fn HTMLVideoElement::set_outer_text(Self, String) -> Unit
 pub fn HTMLVideoElement::set_playback_rate(Self, Double) -> Unit
-pub fn HTMLVideoElement::set_pointer_capture(Self, Int) -> Unit
+pub fn HTMLVideoElement::set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn HTMLVideoElement::set_popover(Self, String?) -> Unit
 pub fn HTMLVideoElement::set_preload(Self, String) -> Unit
 pub fn HTMLVideoElement::set_preserves_pitch(Self, Bool) -> Unit
@@ -2268,11 +2268,10 @@ pub fn InputEvent::as_event(Self) -> Event
 pub fn InputEvent::as_ui_event(Self) -> UIEvent
 pub fn InputEvent::composed_path(Self) -> FixedArray[EventTarget]
 pub fn InputEvent::current_target(Self) -> @js.Nullable[EventTarget]
-pub fn InputEvent::data(Self) -> String
 pub fn InputEvent::from(Self) -> @js.Value
+pub fn InputEvent::get_data(Self) -> @js.Nullable[String]
 pub fn InputEvent::get_default_prevented(Self) -> Bool
 pub fn InputEvent::get_time_stamp(Self) -> Double
-pub fn InputEvent::get_data(Self) -> @js.Nullable[String]
 pub fn InputEvent::input_type(Self) -> String
 pub fn InputEvent::into(@js.Value) -> Self?
 pub fn InputEvent::is_composing(Self) -> Bool
@@ -2690,7 +2689,7 @@ pub fn SVGElement::is_same_node(Self, Node) -> Bool
 pub fn SVGElement::matches(Self, String) -> Bool
 pub fn SVGElement::query_selector(Self, String) -> Element?
 pub fn SVGElement::query_selector_all(Self, String) -> NodeList[Element]
-pub fn SVGElement::release_pointer_capture(Self, Int) -> Unit
+pub fn SVGElement::release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn SVGElement::remove_attribute(Self, String) -> Unit
 pub fn SVGElement::remove_child(Self, Node) -> Unit
 pub fn SVGElement::remove_event_listener(Self, String, (Event) -> Unit) -> Unit
@@ -2704,7 +2703,7 @@ pub fn SVGElement::set_auto_focus(Self, Bool) -> Unit
 pub fn SVGElement::set_inner_html(Self, String) -> Unit
 pub fn SVGElement::set_node_value(Self, @js.Nullable[String]) -> Unit
 pub fn SVGElement::set_nonce(Self, String) -> Unit
-pub fn SVGElement::set_pointer_capture(Self, Int) -> Unit
+pub fn SVGElement::set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn SVGElement::set_property(Self, String, @js.Value) -> Unit
 pub fn SVGElement::set_scroll_left(Self, Double) -> Unit
 pub fn SVGElement::set_scroll_top(Self, Double) -> Unit
@@ -2798,7 +2797,7 @@ pub fn SVGGraphicsElement::is_same_node(Self, Node) -> Bool
 pub fn SVGGraphicsElement::matches(Self, String) -> Bool
 pub fn SVGGraphicsElement::query_selector(Self, String) -> Element?
 pub fn SVGGraphicsElement::query_selector_all(Self, String) -> NodeList[Element]
-pub fn SVGGraphicsElement::release_pointer_capture(Self, Int) -> Unit
+pub fn SVGGraphicsElement::release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn SVGGraphicsElement::remove_attribute(Self, String) -> Unit
 pub fn SVGGraphicsElement::remove_child(Self, Node) -> Unit
 pub fn SVGGraphicsElement::remove_event_listener(Self, String, (Event) -> Unit) -> Unit
@@ -2812,7 +2811,7 @@ pub fn SVGGraphicsElement::set_auto_focus(Self, Bool) -> Unit
 pub fn SVGGraphicsElement::set_inner_html(Self, String) -> Unit
 pub fn SVGGraphicsElement::set_node_value(Self, @js.Nullable[String]) -> Unit
 pub fn SVGGraphicsElement::set_nonce(Self, String) -> Unit
-pub fn SVGGraphicsElement::set_pointer_capture(Self, Int) -> Unit
+pub fn SVGGraphicsElement::set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn SVGGraphicsElement::set_property(Self, String, @js.Value) -> Unit
 pub fn SVGGraphicsElement::set_scroll_left(Self, Double) -> Unit
 pub fn SVGGraphicsElement::set_scroll_top(Self, Double) -> Unit
@@ -2900,7 +2899,7 @@ pub fn SVGImageElement::is_same_node(Self, Node) -> Bool
 pub fn SVGImageElement::matches(Self, String) -> Bool
 pub fn SVGImageElement::query_selector(Self, String) -> Element?
 pub fn SVGImageElement::query_selector_all(Self, String) -> NodeList[Element]
-pub fn SVGImageElement::release_pointer_capture(Self, Int) -> Unit
+pub fn SVGImageElement::release_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn SVGImageElement::remove_attribute(Self, String) -> Unit
 pub fn SVGImageElement::remove_child(Self, Node) -> Unit
 pub fn SVGImageElement::remove_event_listener(Self, String, (Event) -> Unit) -> Unit
@@ -2914,7 +2913,7 @@ pub fn SVGImageElement::set_auto_focus(Self, Bool) -> Unit
 pub fn SVGImageElement::set_inner_html(Self, String) -> Unit
 pub fn SVGImageElement::set_node_value(Self, @js.Nullable[String]) -> Unit
 pub fn SVGImageElement::set_nonce(Self, String) -> Unit
-pub fn SVGImageElement::set_pointer_capture(Self, Int) -> Unit
+pub fn SVGImageElement::set_pointer_capture(Self, Int) -> Unit raise DOMExceptionError
 pub fn SVGImageElement::set_property(Self, String, @js.Value) -> Unit
 pub fn SVGImageElement::set_scroll_left(Self, Double) -> Unit
 pub fn SVGImageElement::set_scroll_top(Self, Double) -> Unit

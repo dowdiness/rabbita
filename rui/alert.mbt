@@ -131,9 +131,3 @@ pub fn[C : @html.IsChildren] alert_action(
     children,
   )
 }
-
-///|
-pub extend AlertVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend AlertVariant with Eq::{equal, not_equal}

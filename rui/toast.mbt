@@ -1013,9 +1013,3 @@ pub fn toaster(
     "toaster", false, max_toasts, position, class, attrs, style, children,
   )
 }
-
-///|
-pub extend ToastVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ToastVariant with Eq::{equal, not_equal}

@@ -310,9 +310,3 @@ async fn Devhub::handle_ws(
     group.return_immediately(())
   })
 }
-
-///|
-pub extend BroadcastMsg with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ClientMsg with @moonbitlang/core/debug.Debug::{to_repr}

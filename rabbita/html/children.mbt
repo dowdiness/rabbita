@@ -45,6 +45,3 @@ pub impl IsChildren for @list.List[Html] with fn to_children(self) {
 pub impl IsChildren for @vdom.Children[VNode] with fn to_children(children) {
   children
 }
-
-///|
-pub extend Html with IsChildren::{to_children}

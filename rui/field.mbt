@@ -338,15 +338,3 @@ pub fn[C : @html.IsChildren] field_separator(
     ],
   )
 }
-
-///|
-pub extend FieldLegendVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend FieldLegendVariant with Eq::{equal, not_equal}
-
-///|
-pub extend FieldOrientation with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend FieldOrientation with Eq::{equal, not_equal}

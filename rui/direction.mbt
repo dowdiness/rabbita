@@ -42,9 +42,3 @@ pub fn[C : @html.IsChildren] direction(
     children,
   )
 }
-
-///|
-pub extend TextDirection with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend TextDirection with Eq::{equal, not_equal}

@@ -455,27 +455,3 @@ pub fn[C : @html.IsChildren] attachment_trigger_link(
     escape~,
   )
 }
-
-///|
-pub extend AttachmentMediaVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend AttachmentMediaVariant with Eq::{equal, not_equal}
-
-///|
-pub extend AttachmentOrientation with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend AttachmentOrientation with Eq::{equal, not_equal}
-
-///|
-pub extend AttachmentSize with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend AttachmentSize with Eq::{equal, not_equal}
-
-///|
-pub extend AttachmentState with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend AttachmentState with Eq::{equal, not_equal}

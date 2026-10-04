@@ -407,21 +407,3 @@ pub fn item_separator(
     style~,
   )
 }
-
-///|
-pub extend ItemMediaVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ItemMediaVariant with Eq::{equal, not_equal}
-
-///|
-pub extend ItemSize with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ItemSize with Eq::{equal, not_equal}
-
-///|
-pub extend ItemVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ItemVariant with Eq::{equal, not_equal}

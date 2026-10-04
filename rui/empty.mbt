@@ -162,9 +162,3 @@ pub fn[C : @html.IsChildren] empty_content(
     children,
   )
 }
-
-///|
-pub extend EmptyMediaVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend EmptyMediaVariant with Eq::{equal, not_equal}

@@ -111,6 +111,7 @@ test('alert dialog keeps its backdrop inert and closes with native form results'
   await expect(trigger).toBeFocused();
 
   await trigger.click();
+  await expect(dialog).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();

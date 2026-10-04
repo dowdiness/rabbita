@@ -487,15 +487,3 @@ fn push_dirty(node : &ErasedNode) -> Unit {
     }
   }
 }
-
-///|
-pub extend DirtyFlag with Compare::{compare, op_ge, op_gt, op_le, op_lt}
-
-///|
-pub extend DirtyFlag with Eq::{equal, not_equal}
-
-///|
-pub extend Node with Compare::{compare, op_ge, op_gt, op_le, op_lt}
-
-///|
-pub extend Node with Eq::{equal, not_equal}

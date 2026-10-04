@@ -187,15 +187,3 @@ pub fn[C : @html.IsChildren] button(
     children,
   )
 }
-
-///|
-pub extend ButtonSize with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ButtonSize with Eq::{equal, not_equal}
-
-///|
-pub extend ButtonVariant with @moonbitlang/core/debug.Debug::{to_repr}
-
-///|
-pub extend ButtonVariant with Eq::{equal, not_equal}

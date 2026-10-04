@@ -141,6 +141,12 @@ Keep tests deterministic. Mock HTTP with Playwright routes, use the Playwright
 clock for timers, and rely on retrying assertions or event-driven barriers
 instead of fixed sleeps.
 
+Advance an installed clock with `page.clock.runFor()`. Passing a previously
+sampled `Date.now()` to `pauseAt()` races the still-running clock and can request
+a time in the past. Before sending dialog keyboard input, await its visible
+state: completion of a trigger click does not mean the after-layout command
+has opened the dialog.
+
 ## Add an application
 
 1. Create a minimized Warren application under `apps/<name>`.

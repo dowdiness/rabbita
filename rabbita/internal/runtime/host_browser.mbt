@@ -174,21 +174,3 @@ pub impl Context for BrowserHost with fn inject_url_changed(self, url) {
 pub impl Context for BrowserHost with fn inject_url_request(self, url) {
   (self.url_request)(url)
 }
-
-///|
-pub extend BrowserHost with @moonbit-community/rabbita/cmd.Context::{
-  get_origin,
-  inject_url_changed,
-  inject_url_request,
-}
-
-///|
-pub extend BrowserHost with @moonbit-community/rabbita/cmd.Scheduler::{
-  add,
-  queue_command,
-  set_url_changed_injector,
-  set_url_request_injector,
-}
-
-///|
-pub extend BrowserHost with Host::{cleanup, flush, get_stores}

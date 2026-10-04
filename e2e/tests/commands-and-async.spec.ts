@@ -22,7 +22,6 @@ test('delay follows the controllable browser clock', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Run delayed command' }).click();
   await expect(page.locator('#delay-status')).toHaveText('delay: waiting');
-  await page.clock.pauseAt(await page.evaluate(() => Date.now()));
   await page.clock.runFor(1000);
   await expect(page.locator('#delay-status')).toHaveText('delay: finished');
 });
