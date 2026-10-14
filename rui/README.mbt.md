@@ -35,6 +35,17 @@ Use `--rui-*` theme tokens, component `style` parameters, and `attrs` for normal
 customization. Copy the relevant `.mbt` source when you need to change a
 component's DOM structure, state model, or interaction policy.
 
+## Notifications in an existing stateful application
+
+Call `sonner_host()` once during component composition to obtain
+`(Val[Html], ToastScope)`. Capture the scope in the application's update closure
+and return `scope.show(...)` or `scope.dismiss_all()` as commands. Combine the
+returned host view with the application's view using `Val::map2`. Do not create
+application state inside `sonner`'s children callback: that callback is a render
+function and may run again.
+
+The existing `sonner(children)` and `toaster(children)` APIs remain available.
+
 ## License
 
 RUI is available under the [MIT License](./LICENSE). See

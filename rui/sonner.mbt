@@ -38,3 +38,19 @@ pub fn sonner(
     @html.fragment([sonner_rich_color_stylesheet(), children(scope)])
   })
 }
+
+///|
+/// Create a Sonner host and stable command scope for an independently managed
+/// component. Call once during composition, then combine the returned view
+/// with the application's view. The scope belongs in update closures, not Model.
+pub fn sonner_host(
+  max_toasts? : Int = 3,
+  position? : String = "bottom-right",
+  class? : String,
+  attrs? : @html.Attrs,
+  style? : Array[String] = [],
+) -> (@rabbita.Val[@html.Html], ToastScope) {
+  toaster_state("sonner", true, max_toasts, position, class, attrs, style, _ => {
+    sonner_rich_color_stylesheet()
+  })
+}

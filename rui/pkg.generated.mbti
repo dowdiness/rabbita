@@ -711,6 +711,8 @@ pub fn slider_values(id~ : String, default_values~ : Array[Int], min? : Int, max
 
 pub fn sonner(max_toasts? : Int, position? : String, class? : String, attrs? : @html.Attrs, style? : Array[String], (ToastScope) -> @html.Html) -> @rabbita.Val[@html.Html]
 
+pub fn sonner_host(max_toasts? : Int, position? : String, class? : String, attrs? : @html.Attrs, style? : Array[String]) -> (@rabbita.Val[@html.Html], ToastScope)
+
 pub fn spinner(label? : String, id? : String, class? : String, title? : String, attrs? : @html.Attrs, style? : Array[String]) -> @html.Html
 
 pub fn switch(default_checked? : Bool, size? : SwitchSize, disabled? : Bool, read_only? : Bool, invalid? : Bool, id? : String, class? : String, title? : String, aria_label? : String, on_checked_change? : @cmd.Emit[Bool], attrs? : @html.Attrs, style? : Array[String]) -> @rabbita.Val[@html.Html]

@@ -807,7 +807,7 @@ fn toast_set_paused(
 
 ///|
 #cfg(target="js")
-fn toaster_impl(
+fn toaster_state(
   slot : String,
   rich_colors : Bool,
   max_toasts : Int,
@@ -816,7 +816,7 @@ fn toaster_impl(
   attrs : @html.Attrs?,
   style : Array[String],
   children : (ToastScope) -> @html.Html,
-) -> @rabbita.Val[@html.Html] {
+) -> (@rabbita.Val[@html.Html], ToastScope) {
   let (model, emit) = @rabbita.create_state_with_init(
     init=emit => {
       (
@@ -956,24 +956,18 @@ fn toaster_impl(
       }
     },
   )
-  model.view(model => {
+  let scope : ToastScope = { emit, }
+  let view = model.view(model => {
     render_toaster(
-      model,
-      { emit, },
-      slot,
-      rich_colors,
-      position,
-      class,
-      attrs,
-      style,
-      children,
+      model, scope, slot, rich_colors, position, class, attrs, style, children,
     )
   })
+  (view, scope)
 }
 
 ///|
 #cfg(not(target="js"))
-fn toaster_impl(
+fn toaster_state(
   slot : String,
   rich_colors : Bool,
   max_toasts : Int,
@@ -982,10 +976,10 @@ fn toaster_impl(
   attrs : @html.Attrs?,
   style : Array[String],
   children : (ToastScope) -> @html.Html,
-) -> @rabbita.Val[@html.Html] {
+) -> (@rabbita.Val[@html.Html], ToastScope) {
   ignore(max_toasts)
   let scope = { emit: @cmd.Emit(_ => @cmd.none), }
-  @rabbita.Val::constant(
+  let view = @rabbita.Val::constant(
     render_toaster(
       { next_id: 1, entries: [], pause_sources: [], expired: [], },
       scope,
@@ -998,6 +992,23 @@ fn toaster_impl(
       children,
     ),
   )
+  (view, scope)
+}
+
+///|
+fn toaster_impl(
+  slot : String,
+  rich_colors : Bool,
+  max_toasts : Int,
+  position : String,
+  class : String?,
+  attrs : @html.Attrs?,
+  style : Array[String],
+  children : (ToastScope) -> @html.Html,
+) -> @rabbita.Val[@html.Html] {
+  toaster_state(
+    slot, rich_colors, max_toasts, position, class, attrs, style, children,
+  ).0
 }
 
 ///|
