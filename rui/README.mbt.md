@@ -45,6 +45,9 @@ application state inside `sonner`'s children callback: that callback is a render
 function and may run again.
 
 The existing `sonner(children)` and `toaster(children)` APIs remain available.
+Hosts retain a bounded set of hidden DOM slots after notifications close, so
+notification expiry does not break native Undo grouping in adjacent editors.
+Only visible slots are exposed to keyboard navigation and accessibility APIs.
 
 ## License
 

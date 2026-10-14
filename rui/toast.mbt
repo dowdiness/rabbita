@@ -328,6 +328,7 @@ fn toast_mark_all_closing(
 #cfg(target="js")
 priv struct ToastPointerState {
   surface : @dom.Element
+  toast_id : String?
   pointer_id : Int
   start_x : Double
   start_y : Double
@@ -346,6 +347,10 @@ let toast_pointer_states : Array[ToastPointerState] = []
 fn toast_pointer_state(surface : @dom.Element) -> ToastPointerState? {
   for state in toast_pointer_states {
     if state.surface.is_same_node(surface.as_node()) {
+      if state.toast_id != surface.get_attribute("data-toast-id") {
+        toast_restore_pointer_state(state)
+        return None
+      }
       return Some(state)
     }
   }
@@ -386,6 +391,19 @@ fn toast_restore_pointer_state(state : ToastPointerState) -> Unit {
 
 ///|
 #cfg(target="js")
+fn toast_reset_reused_slots() -> @cmd.Cmd {
+  @cmd.custom_cmd(kind=AfterRender, _ => {
+    // A captured swipe belongs to its notification, not the reusable DOM slot.
+    for state in toast_pointer_states.copy() {
+      if state.toast_id != state.surface.get_attribute("data-toast-id") {
+        toast_restore_pointer_state(state)
+      }
+    }
+  })
+}
+
+///|
+#cfg(target="js")
 fn toast_pointer_start(pointer : @dom.PointerEvent) -> Bool {
   if !pointer.get_is_primary() || pointer.get_button() != 0 {
     return false
@@ -405,6 +423,7 @@ fn toast_pointer_start(pointer : @dom.PointerEvent) -> Bool {
   }
   let state : ToastPointerState = {
     surface,
+    toast_id: surface.get_attribute("data-toast-id"),
     pointer_id: pointer.get_pointer_id(),
     start_x: pointer.get_client_x(),
     start_y: pointer.get_client_y(),
@@ -551,9 +570,11 @@ fn toast_entry_view(
   scope : ToastScope,
   entry : ToastEntry,
   rich_colors : Bool,
+  hidden : Bool,
 ) -> @html.Html {
   let variant = entry.variant
   let element_attrs = @html.Attrs::build()
+    .hidden(hidden)
     .role(if variant is ToastDestructive { "alert" } else { "status" })
     .aria_live(if variant is ToastDestructive { "assertive" } else { "polite" })
     .aria_atomic("true")
@@ -575,6 +596,11 @@ fn toast_entry_view(
       UiFontSans,
       ToastSurfaceStyle,
       ToastCardShadowStyle,
+      if hidden {
+        "display:none"
+      } else {
+        ""
+      },
       if entry.closing {
         if entry.swipe_direction < 0 {
           "opacity:0;transform:translate3d(-110%,0,0) scale(0.98);pointer-events:none"
@@ -591,11 +617,10 @@ fn toast_entry_view(
     [
       toast_title(entry.title),
       toast_close(scope~, toast_id=entry.id, attrs=close_attrs),
-      if entry.description is Some(description) {
-        toast_description(description)
-      } else {
-        @html.nothing
-      },
+      toast_description(
+        attrs=@html.Attrs::build().hidden(entry.description is None),
+        entry.description.unwrap_or(""),
+      ),
     ],
   )
 }
@@ -603,6 +628,7 @@ fn toast_entry_view(
 ///|
 fn render_toaster(
   model : ToastModel,
+  max_toasts : Int,
   scope : ToastScope,
   slot : String,
   rich_colors : Bool,
@@ -613,8 +639,26 @@ fn render_toaster(
   children : (ToastScope) -> @html.Html,
 ) -> @html.Html {
   let entries : Array[@html.Html] = []
-  for entry in model.entries {
-    entries.push(toast_entry_view(scope, entry, rich_colors))
+  // Removing even unrelated DOM nodes closes Chromium's native typing group.
+  // Reuse bounded, hidden slots so expiry and dismissal do not split Undo in
+  // an editor sharing this document. Keep each slot's children stable too.
+  for index in 0..<max_toasts.max(1) {
+    let entry = model.entries.get(index)
+    entries.push(
+      toast_entry_view(
+        scope,
+        entry.unwrap_or({
+          id: 0,
+          title: "",
+          description: None,
+          variant: ToastDefault,
+          closing: false,
+          swipe_direction: 0,
+        }),
+        rich_colors,
+        entry is None,
+      ),
+    )
   }
   @html.fragment([
     children(scope),
@@ -825,7 +869,7 @@ fn toaster_state(
       )
     },
     update=fn(model, msg, emit) {
-      match msg {
+      let (next, command) = match msg {
         ShowToast(title, description, variant, duration_ms) => {
           let id = model.next_id
           let entries = model.entries.copy()
@@ -954,12 +998,14 @@ fn toaster_state(
           )
         }
       }
+      (next, @cmd.batch([command, toast_reset_reused_slots()]))
     },
   )
   let scope : ToastScope = { emit, }
   let view = model.view(model => {
     render_toaster(
-      model, scope, slot, rich_colors, position, class, attrs, style, children,
+      model, max_toasts, scope, slot, rich_colors, position, class, attrs, style,
+      children,
     )
   })
   (view, scope)
@@ -977,11 +1023,11 @@ fn toaster_state(
   style : Array[String],
   children : (ToastScope) -> @html.Html,
 ) -> (@rabbita.Val[@html.Html], ToastScope) {
-  ignore(max_toasts)
   let scope = { emit: @cmd.Emit(_ => @cmd.none), }
   let view = @rabbita.Val::constant(
     render_toaster(
       { next_id: 1, entries: [], pause_sources: [], expired: [], },
+      max_toasts,
       scope,
       slot,
       rich_colors,
