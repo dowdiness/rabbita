@@ -4,7 +4,7 @@ test('toast shows with its title and description and closes from its button', as
   await page.goto('/');
 
   await page.getByRole('button', { name: 'Show toast' }).click();
-  const toast = page.locator('[data-slot="toast"]');
+  const toast = page.getByRole('status');
   await expect(toast).toBeVisible();
   await expect(toast.getByText('Saved')).toBeVisible();
   await expect(toast.getByText('The draft is kept.')).toBeVisible();
@@ -18,7 +18,7 @@ test('toast dismisses itself after its duration', async ({ page }) => {
   await page.goto('/');
 
   await page.getByRole('button', { name: 'Show toast' }).click();
-  const toast = page.locator('[data-slot="toast"]');
+  const toast = page.getByRole('status');
   await expect(toast).toBeVisible();
 
   await page.clock.runFor(5000);
@@ -29,7 +29,7 @@ test('toast swipe dismisses toward the inline end', async ({ page }) => {
   await page.goto('/');
 
   await page.getByRole('button', { name: 'Show toast' }).click();
-  const toast = page.locator('[data-slot="toast"]');
+  const toast = page.getByRole('status');
   await expect(toast).toBeVisible();
 
   const box = await toast.boundingBox();
@@ -48,7 +48,7 @@ test('toast pauses its timeout while hovered and resumes after leaving', async (
   await page.goto('/');
 
   await page.getByRole('button', { name: 'Show toast' }).click();
-  const toast = page.locator('[data-slot="toast"]');
+  const toast = page.getByRole('status');
   await expect(toast).toBeVisible();
   await toast.hover();
   await page.clock.runFor(5000);
@@ -67,8 +67,18 @@ test('sonner bounds its queue and dismisses every visible toast', async ({ page 
   await show.click();
   await show.click();
   await show.click();
-  await expect(page.locator('[data-slot="toast"]')).toHaveCount(3);
+  await expect(page.getByRole('status')).toHaveCount(3);
+  const slots = await page.locator('[data-slot="toast"]').elementHandles();
 
   await page.getByRole('button', { name: 'Dismiss all toasts' }).click();
-  await expect(page.locator('[data-slot="toast"]')).toHaveCount(0);
+  await expect(page.getByRole('status')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Close notification' })).toHaveCount(0);
+  for (const slot of slots) {
+    expect(await slot.evaluate(element => element.isConnected)).toBe(true);
+    await slot.evaluate(element => (element.querySelector('button') as HTMLButtonElement).focus());
+    expect(await slot.evaluate(element => element.contains(document.activeElement))).toBe(false);
+  }
+  await show.click();
+  await expect(page.getByRole('status')).toHaveCount(1);
+  expect(await slots[0].evaluate(element => element === document.querySelector('[data-slot="toast"]'))).toBe(true);
 });
