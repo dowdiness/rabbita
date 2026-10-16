@@ -395,7 +395,8 @@ fn toast_reset_reused_slots() -> @cmd.Cmd {
   @cmd.custom_cmd(kind=AfterRender, _ => {
     // A captured swipe belongs to its notification, not the reusable DOM slot.
     for state in toast_pointer_states.copy() {
-      if state.toast_id != state.surface.get_attribute("data-toast-id") {
+      if !state.surface.get_is_connected() ||
+        state.toast_id != state.surface.get_attribute("data-toast-id") {
         toast_restore_pointer_state(state)
       }
     }
@@ -569,6 +570,7 @@ fn toast_bind_pointer_attrs(
 fn toast_entry_view(
   scope : ToastScope,
   entry : ToastEntry,
+  slot_index : Int,
   rich_colors : Bool,
   hidden : Bool,
 ) -> @html.Html {
@@ -583,12 +585,16 @@ fn toast_entry_view(
     .data_set("state", if entry.closing { "closed" } else { "open" })
     .data_set("variant", toast_variant_value(variant))
     .data_set("swipe-direction", "inline-end")
-    .on_mouseenter(_ => (scope.emit)(SetToastPaused("hover-\{entry.id}", true)))
-    .on_mouseleave(_ => (scope.emit)(SetToastPaused("hover-\{entry.id}", false)))
+    .on_mouseenter(_ => {
+      (scope.emit)(SetToastPaused("hover-\{slot_index}", true))
+    })
+    .on_mouseleave(_ => {
+      (scope.emit)(SetToastPaused("hover-\{slot_index}", false))
+    })
   toast_bind_pointer_attrs(element_attrs, scope, entry.id)
   let close_attrs = @html.Attrs::build()
-    .on_focus(_ => (scope.emit)(SetToastPaused("focus-\{entry.id}", true)))
-    .on_blur(_ => (scope.emit)(SetToastPaused("focus-\{entry.id}", false)))
+    .on_focus(_ => (scope.emit)(SetToastPaused("focus-\{slot_index}", true)))
+    .on_blur(_ => (scope.emit)(SetToastPaused("focus-\{slot_index}", false)))
   @html.div(
     attrs=element_attrs,
     style=[
@@ -628,6 +634,7 @@ fn toast_entry_view(
 ///|
 fn render_toaster(
   model : ToastModel,
+  host_key : String,
   max_toasts : Int,
   scope : ToastScope,
   slot : String,
@@ -655,6 +662,7 @@ fn render_toaster(
           closing: false,
           swipe_direction: 0,
         }),
+        index,
         rich_colors,
         entry is None,
       ),
@@ -668,6 +676,7 @@ fn render_toaster(
         .role("region")
         .aria_label("Notifications")
         .data_set("slot", slot)
+        .data_set("toast-host", host_key)
         .data_set("position", position),
       style=ui_styles(
         [
@@ -701,7 +710,11 @@ fn render_toaster(
 
 ///|
 #cfg(target="js")
-let toast_document_pause_callbacks : Map[String, (Bool) -> Unit] = Map([])
+let toast_document_pause_callbacks : Map[String, (@dom.Element, (Bool) -> Unit)] = Map([],
+)
+
+///|
+let toast_next_host : Ref[Int] = Ref(0)
 
 ///|
 #cfg(target="js")
@@ -710,15 +723,27 @@ let toast_document_pause_bound_to : Ref[@dom.Document?] = Ref(None)
 ///|
 #cfg(target="js")
 fn toast_notify_document_pause(paused : Bool) -> Unit {
-  for _, changed in toast_document_pause_callbacks {
-    changed(paused)
+  let disconnected : Array[String] = []
+  for key, (root, changed) in toast_document_pause_callbacks {
+    if root.get_is_connected() {
+      changed(paused)
+    } else {
+      disconnected.push(key)
+    }
+  }
+  for key in disconnected {
+    toast_document_pause_callbacks.remove(key)
   }
 }
 
 ///|
 #cfg(target="js")
-fn bind_toast_document_pause(slot : String, changed : (Bool) -> Unit) -> Unit {
-  toast_document_pause_callbacks[slot] = changed
+fn bind_toast_document_pause(
+  slot : String,
+  root : @dom.Element,
+  changed : (Bool) -> Unit,
+) -> Unit {
+  toast_document_pause_callbacks[slot] = (root, changed)
   let document = @dom.document()
   let already_bound = if toast_document_pause_bound_to.val is Some(bound) {
     bound.to_node().is_same_node(document.to_node())
@@ -748,7 +773,13 @@ fn toast_bind_document_pause_cmd(
   emit : @cmd.Emit[ToastMsg],
 ) -> @cmd.Cmd {
   @cmd.custom_cmd(kind=AfterRender, scheduler => {
-    bind_toast_document_pause(slot, paused => {
+    guard @dom.document()
+      .query_selector("[data-toast-host='\{slot}']")
+      .to_option()
+      is Some(root) else {
+      return
+    }
+    bind_toast_document_pause(slot, root, paused => {
       scheduler.add(emit(SetToastPaused("document", paused)))
     })
   })
@@ -769,12 +800,38 @@ fn toast_remove_pause_source(
 }
 
 ///|
-fn toast_remove_entry_pause_sources(
+fn toast_remove_slot_pause_sources(
   sources : Array[String],
-  id : Int,
+  slot_index : Int,
 ) -> Array[String] {
-  let result = toast_remove_pause_source(sources, "hover-\{id}")
-  toast_remove_pause_source(result, "focus-\{id}")
+  let result = toast_remove_pause_source(sources, "hover-\{slot_index}")
+  toast_remove_pause_source(result, "focus-\{slot_index}")
+}
+
+///|
+fn toast_clean_hidden_slots(
+  sources : Array[String],
+  count : Int,
+  capacity : Int,
+) -> Array[String] {
+  let mut result = sources
+  for index in count..<capacity.max(1) {
+    result = toast_remove_slot_pause_sources(result, index)
+  }
+  result
+}
+
+///|
+fn toast_focus_disappears(before : ToastModel, after : ToastModel) -> Bool {
+  for index, entry in before.entries {
+    if !entry.closing && before.pause_sources.contains("focus-\{index}") {
+      match after.entries.get(index) {
+        None => return true
+        Some(next) => if next.closing { return true }
+      }
+    }
+  }
+  false
 }
 
 ///|
@@ -850,8 +907,7 @@ fn toast_set_paused(
 }
 
 ///|
-#cfg(target="js")
-fn toaster_state(
+fn[Context] toaster_state(
   slot : String,
   rich_colors : Bool,
   max_toasts : Int,
@@ -859,16 +915,22 @@ fn toaster_state(
   class : String?,
   attrs : @html.Attrs?,
   style : Array[String],
+  build : (ToastScope) -> (Context, (() -> @cmd.Cmd)?),
   children : (ToastScope) -> @html.Html,
-) -> (@rabbita.Val[@html.Html], ToastScope) {
-  let (model, emit) = @rabbita.create_state_with_init(
-    init=emit => {
+) -> (@rabbita.Val[@html.Html], Context) {
+  let host_key = "rui-toast-\{toast_next_host.val}"
+  toast_next_host.val += 1
+  let (model, emit, (context, _)) = @rabbita.create_state_with_setup(
+    setup=emit => {
+      let context = build({ emit, })
       (
         { next_id: 1, entries: [], pause_sources: [], expired: [], },
-        toast_bind_document_pause_cmd(slot, emit),
+        toast_bind_document_pause_cmd(host_key, emit),
+        context,
       )
     },
-    update=fn(model, msg, emit) {
+    update=fn(model, context, msg, emit) {
+      let (_, on_focus_return) = context
       let (next, command) = match msg {
         ShowToast(title, description, variant, duration_ms) => {
           let id = model.next_id
@@ -882,34 +944,21 @@ fn toaster_state(
             swipe_direction: 0,
           })
           let entries = toast_trimmed(entries, max_toasts)
-          let mut pause_sources = model.pause_sources
-          for previous in model.entries {
-            if !toast_contains_entry(entries, previous.id) {
-              pause_sources = toast_remove_entry_pause_sources(
-                pause_sources,
-                previous.id,
-              )
-            }
-          }
-          let filtered = {
+          // Pause ownership follows the retained DOM slot, not notification IDs.
+          let next = {
             ..model,
             next_id: id + 1,
             entries,
             expired: toast_filter_expired(model.expired, entries),
           }
-          let (next, resume_ids) = toast_with_pause_sources(
-            filtered, pause_sources,
+          (
+            next,
+            if duration_ms > 0 {
+              @rabbita.delay(emit(AutoDismissToast(id)), duration_ms)
+            } else {
+              @cmd.none
+            },
           )
-          let commands : Array[@cmd.Cmd] = []
-          if duration_ms > 0 {
-            commands.push(
-              @rabbita.delay(emit(AutoDismissToast(id)), duration_ms),
-            )
-          }
-          for expired_id in resume_ids {
-            commands.push(emit(DismissToast(expired_id, 0)))
-          }
-          (next, @cmd.batch(commands))
         }
         DismissToast(id, swipe_direction) => {
           let (entries, changed) = toast_mark_closing(
@@ -917,20 +966,14 @@ fn toaster_state(
             id,
             swipe_direction,
           )
-          let (unpaused, resume_ids) = toast_with_pause_sources(
-            model,
-            toast_remove_entry_pause_sources(model.pause_sources, id),
+          (
+            { ..model, entries, },
+            if changed {
+              @rabbita.delay(emit(RemoveToast(id)), ToastExitDurationMs)
+            } else {
+              @cmd.none
+            },
           )
-          let commands : Array[@cmd.Cmd] = []
-          if changed {
-            commands.push(
-              @rabbita.delay(emit(RemoveToast(id)), ToastExitDurationMs),
-            )
-          }
-          for expired_id in resume_ids {
-            commands.push(emit(DismissToast(expired_id, 0)))
-          }
-          ({ ..unpaused, entries, }, @cmd.batch(commands))
         }
         AutoDismissToast(id) =>
           if !toast_contains_entry(model.entries, id) {
@@ -969,7 +1012,11 @@ fn toaster_state(
           }
           let (next, resume_ids) = toast_with_pause_sources(
             cleaned,
-            toast_remove_entry_pause_sources(cleaned.pause_sources, id),
+            toast_clean_hidden_slots(
+              cleaned.pause_sources,
+              entries.length(),
+              max_toasts,
+            ),
           )
           let commands : Array[@cmd.Cmd] = []
           for expired_id in resume_ids {
@@ -979,66 +1026,54 @@ fn toaster_state(
         }
         DismissAllToasts => {
           let (entries, ids) = toast_mark_all_closing(model.entries)
-          let mut pause_sources = model.pause_sources
-          for entry in model.entries {
-            pause_sources = toast_remove_entry_pause_sources(
-              pause_sources,
-              entry.id,
-            )
-          }
           let commands : Array[@cmd.Cmd] = []
           for id in ids {
             commands.push(
               @rabbita.delay(emit(RemoveToast(id)), ToastExitDurationMs),
             )
           }
-          (
-            { ..model, entries, pause_sources, expired: [], },
-            @cmd.batch(commands),
-          )
+          ({ ..model, entries, expired: [], }, @cmd.batch(commands))
         }
       }
-      (next, @cmd.batch([command, toast_reset_reused_slots()]))
+      let focus_return = toast_focus_disappears(model, next) &&
+        on_focus_return is Some(_)
+      (
+        next,
+        @cmd.batch([
+          if focus_return {
+            on_focus_return.unwrap()()
+          } else {
+            @cmd.none
+          },
+          command,
+          toast_reset_reused_slots(),
+        ]),
+      )
     },
   )
   let scope : ToastScope = { emit, }
   let view = model.view(model => {
     render_toaster(
-      model, max_toasts, scope, slot, rich_colors, position, class, attrs, style,
-      children,
+      model, host_key, max_toasts, scope, slot, rich_colors, position, class, attrs,
+      style, children,
     )
   })
-  (view, scope)
+  (view, context)
 }
 
 ///|
 #cfg(not(target="js"))
-fn toaster_state(
-  slot : String,
-  rich_colors : Bool,
-  max_toasts : Int,
-  position : String,
-  class : String?,
-  attrs : @html.Attrs?,
-  style : Array[String],
-  children : (ToastScope) -> @html.Html,
-) -> (@rabbita.Val[@html.Html], ToastScope) {
-  let scope = { emit: @cmd.Emit(_ => @cmd.none), }
-  let view = @rabbita.Val::constant(
-    render_toaster(
-      { next_id: 1, entries: [], pause_sources: [], expired: [], },
-      max_toasts,
-      scope,
-      slot,
-      rich_colors,
-      position,
-      class,
-      attrs,
-      style,
-      children,
-    ),
-  )
-  (view, scope)
+fn toast_bind_document_pause_cmd(
+  _slot : String,
+  _emit : @cmd.Emit[ToastMsg],
+) -> @cmd.Cmd {
+  @cmd.none
+}
+
+///|
+#cfg(not(target="js"))
+fn toast_reset_reused_slots() -> @cmd.Cmd {
+  @cmd.none
 }
 
 ///|
@@ -1050,10 +1085,19 @@ fn toaster_impl(
   class : String?,
   attrs : @html.Attrs?,
   style : Array[String],
+  on_focus_return : (() -> @cmd.Cmd)?,
   children : (ToastScope) -> @html.Html,
 ) -> @rabbita.Val[@html.Html] {
   toaster_state(
-    slot, rich_colors, max_toasts, position, class, attrs, style, children,
+    slot,
+    rich_colors,
+    max_toasts,
+    position,
+    class,
+    attrs,
+    style,
+    _ => ((), on_focus_return),
+    children,
   ).0
 }
 
@@ -1064,9 +1108,11 @@ pub fn toaster(
   class? : String,
   attrs? : @html.Attrs,
   style? : Array[String] = [],
+  on_focus_return? : () -> @cmd.Cmd,
   children : (ToastScope) -> @html.Html,
 ) -> @rabbita.Val[@html.Html] {
   toaster_impl(
-    "toaster", false, max_toasts, position, class, attrs, style, children,
+    "toaster", false, max_toasts, position, class, attrs, style, on_focus_return,
+    children,
   )
 }

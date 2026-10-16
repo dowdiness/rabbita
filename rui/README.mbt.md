@@ -37,10 +37,11 @@ component's DOM structure, state model, or interaction policy.
 
 ## Notifications in an existing stateful application
 
-Call `sonner_host()` once during component composition to obtain
-`(Val[Html], ToastScope)`. Capture the scope in the application's update closure
-and return `scope.show(...)` or `scope.dismiss_all()` as commands. Combine the
-returned host view with the application's view using `Val::map2`. Do not create
+Call `sonner_host(build=scope => (content, focus_policy))` during composition.
+`build` runs exactly once: construct application state there, capturing the
+scope in its update closure, and return its `Val[Html]` and `() -> Cmd` focus
+policy. The host combines content and notifications with `Val::map2`. Return
+`scope.show(...)` or `scope.dismiss_all()` as application commands. Do not create
 application state inside `sonner`'s children callback: that callback is a render
 function and may run again.
 
@@ -48,6 +49,22 @@ The existing `sonner(children)` and `toaster(children)` APIs remain available.
 Hosts retain a bounded set of hidden DOM slots after notifications close, so
 notification expiry does not break native Undo grouping in adjacent editors.
 Only visible slots are exposed to keyboard navigation and accessibility APIs.
+
+Return `() => emit(FocusCurrentTarget)` from `build` so focus decisions use
+current application state. The rendering forms `sonner` and `toaster` also take
+`on_focus_return=() => focus_command`. The callback is
+captured by composition, never stored in Model. It runs when a focused
+notification starts closing, or its focused slot becomes hidden. Replacement
+in a retained visible slot preserves focus and does not invoke the callback.
+Expiry while focus is elsewhere never invokes it. There is no default focus
+target: applications should provide their own mode-aware command.
+
+Hover and focus pause belong to retained DOM slots, while timers and swipe
+gestures belong to notification IDs. Replacing a notification under stationary
+hover or focus keeps the host paused; hiding a slot clears its pause sources.
+Timeouts that elapse while paused dismiss on resume (they do not restart).
+Each host has independent local pause ownership and receives document pause
+events independently, even when several Sonner hosts share a document.
 
 ## License
 

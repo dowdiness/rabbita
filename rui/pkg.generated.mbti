@@ -709,9 +709,9 @@ pub fn slider(id~ : String, default_value? : Int, min? : Int, max? : Int, step? 
 
 pub fn slider_values(id~ : String, default_values~ : Array[Int], min? : Int, max? : Int, step? : Int, large_step? : Int, min_steps_between_values? : Int, orientation? : SeparatorOrientation, disabled? : Bool, aria_label? : String, on_value_change? : @cmd.Emit[Array[Int]], on_value_commit? : @cmd.Emit[Array[Int]], class? : String, title? : String, attrs? : @html.Attrs, input_attrs? : @html.Attrs, style? : Array[String]) -> @rabbita.Val[@html.Html]
 
-pub fn sonner(max_toasts? : Int, position? : String, class? : String, attrs? : @html.Attrs, style? : Array[String], (ToastScope) -> @html.Html) -> @rabbita.Val[@html.Html]
+pub fn sonner(max_toasts? : Int, position? : String, class? : String, attrs? : @html.Attrs, style? : Array[String], on_focus_return? : () -> @cmd.Cmd, (ToastScope) -> @html.Html) -> @rabbita.Val[@html.Html]
 
-pub fn sonner_host(max_toasts? : Int, position? : String, class? : String, attrs? : @html.Attrs, style? : Array[String]) -> (@rabbita.Val[@html.Html], ToastScope)
+pub fn sonner_host(max_toasts? : Int, position? : String, class? : String, attrs? : @html.Attrs, style? : Array[String], build~ : (ToastScope) -> (@rabbita.Val[@html.Html], () -> @cmd.Cmd)) -> @rabbita.Val[@html.Html]
 
 pub fn spinner(label? : String, id? : String, class? : String, title? : String, attrs? : @html.Attrs, style? : Array[String]) -> @html.Html
 
@@ -759,7 +759,7 @@ pub fn[C : @html.IsChildren] toast_description(id? : String, class? : String, ti
 
 pub fn[C : @html.IsChildren] toast_title(id? : String, class? : String, title? : String, attrs? : @html.Attrs, style? : Array[String], C) -> @html.Html
 
-pub fn toaster(max_toasts? : Int, position? : String, class? : String, attrs? : @html.Attrs, style? : Array[String], (ToastScope) -> @html.Html) -> @rabbita.Val[@html.Html]
+pub fn toaster(max_toasts? : Int, position? : String, class? : String, attrs? : @html.Attrs, style? : Array[String], on_focus_return? : () -> @cmd.Cmd, (ToastScope) -> @html.Html) -> @rabbita.Val[@html.Html]
 
 pub fn[C : @html.IsChildren] toggle(default_pressed? : Bool, variant? : ToggleVariant, size? : ToggleSize, disabled? : Bool, invalid? : Bool, id? : String, class? : String, title? : String, aria_label? : String, on_pressed_change? : @cmd.Emit[Bool], attrs? : @html.Attrs, style? : Array[String], slot? : String, C) -> @rabbita.Val[@html.Html]
 

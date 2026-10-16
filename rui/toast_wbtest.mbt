@@ -104,10 +104,33 @@ test "toast timers resume only after every overlapping pause source leaves" {
 }
 
 ///|
-test "removing a toast clears only that entry's hover and focus sources" {
-  let remaining = toast_remove_entry_pause_sources(
+test "hiding a toast slot clears only that slot's hover and focus sources" {
+  let remaining = toast_remove_slot_pause_sources(
     ["document", "hover-1", "focus-1", "hover-2"],
     1,
   )
   assert_eq(remaining, ["document", "hover-2"])
+}
+
+///|
+#cfg(not(target="js"))
+#warnings("-alert_experimental")
+async test "sonner host composes once and accepts application init commands" {
+  let builds = Ref(0)
+  let app = @rabbita.new(() => {
+    sonner_host(build=scope => {
+      builds.val += 1
+      let (model, emit) = @rabbita.create_state_with_init(
+        init=_ => (0, scope.show(title="Composed init", duration_ms=0)),
+        update=(model, _, _) => (model + 1, scope.dismiss_all()),
+      )
+      (model.view(count => @html.div("Updates: \{count}")), () => emit(()))
+    }).map(content => {
+      @html.html([@html.head(@html.nothing), @html.body(content)])
+    })
+  })
+  let rendered = app.render(url="https://example.com/")
+  assert_eq(builds.val, 1)
+  assert_true(rendered.contains("Composed init"))
+  assert_true(rendered.contains("Updates: 0"))
 }

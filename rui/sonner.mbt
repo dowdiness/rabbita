@@ -32,25 +32,49 @@ pub fn sonner(
   class? : String,
   attrs? : @html.Attrs,
   style? : Array[String] = [],
+  on_focus_return? : () -> @cmd.Cmd,
   children : (ToastScope) -> @html.Html,
 ) -> @rabbita.Val[@html.Html] {
-  toaster_impl("sonner", true, max_toasts, position, class, attrs, style, scope => {
-    @html.fragment([sonner_rich_color_stylesheet(), children(scope)])
-  })
+  toaster_impl(
+    "sonner",
+    true,
+    max_toasts,
+    position,
+    class,
+    attrs,
+    style,
+    on_focus_return,
+    scope => @html.fragment([sonner_rich_color_stylesheet(), children(scope)]),
+  )
 }
 
 ///|
-/// Create a Sonner host and stable command scope for an independently managed
-/// component. Call once during composition, then combine the returned view
-/// with the application's view. The scope belongs in update closures, not Model.
+/// Compose application content and notifications once with a stable scope.
+/// `build` returns incremental content and the application's focus policy.
+/// Construct application state in `build`, never in a rendering callback.
 pub fn sonner_host(
   max_toasts? : Int = 3,
   position? : String = "bottom-right",
   class? : String,
   attrs? : @html.Attrs,
   style? : Array[String] = [],
-) -> (@rabbita.Val[@html.Html], ToastScope) {
-  toaster_state("sonner", true, max_toasts, position, class, attrs, style, _ => {
-    sonner_rich_color_stylesheet()
+  build~ : (ToastScope) -> (@rabbita.Val[@html.Html], () -> @cmd.Cmd),
+) -> @rabbita.Val[@html.Html] {
+  let (notifications, content) = toaster_state(
+    "sonner",
+    true,
+    max_toasts,
+    position,
+    class,
+    attrs,
+    style,
+    scope => {
+      let (content, policy) = build(scope)
+      (content, Some(policy))
+    },
+    _ => sonner_rich_color_stylesheet(),
+  )
+  content.map2(notifications, (content, notifications) => {
+    @html.fragment([content, notifications])
   })
 }
