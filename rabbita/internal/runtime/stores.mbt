@@ -54,15 +54,36 @@ pub fn[Model : Eq, Msg] create_state_machine(
   update : (Model, Msg, Emit[Msg]) -> (Model, Cmd),
   subscriptions? : (Model, Emit[Msg]) -> Sub,
 ) -> (@duplix.Node[Model], Emit[Msg]) {
+  let (model, emit, _) = create_state_machine_with_setup(
+    emit => {
+      let (model, cmd) = initialize(emit)
+      (model, cmd, ())
+    },
+    (model, _, msg, emit) => update(model, msg, emit),
+    subscriptions?=subscriptions.map(f => (model, _, emit) => f(model, emit)),
+  )
+  (model, emit)
+}
+
+///|
+pub fn[Model : Eq, Msg, Context] create_state_machine_with_setup(
+  setup : (Emit[Msg]) -> (Model, Cmd, Context),
+  update : (Model, Context, Msg, Emit[Msg]) -> (Model, Cmd),
+  subscriptions? : (Model, Context, Emit[Msg]) -> Sub,
+) -> (@duplix.Node[Model], Emit[Msg], Context) {
   let host = ambient_host.val
   let stores = Host::get_stores(host)
   let id = stores.allocate()
   let emit = msg => op.request(Message(id, @any.erase(msg)))
   let mut sub_map : Map[String, @sub.RunningSub] = Map([])
 
+  let (model, set_model) : (@duplix.Node[Model?], _) = @duplix.input(None)
+  let (model_value, init_cmd, context) = setup(emit)
+  set_model(Some(model_value))
+
   fn handle_subs(scheduler : &Scheduler, model : Model) {
     if subscriptions is Some(subscriptions) {
-      let new_subs = subscriptions(model, emit).to_map(
+      let new_subs = subscriptions(model, context, emit).to_map(
         @key.key,
         filter_global=false,
       )
@@ -70,15 +91,10 @@ pub fn[Model : Eq, Msg] create_state_machine(
     }
   }
 
-  let (model, set_model) : (@duplix.Node[Model?], _) = @duplix.input(None)
-
-  let (model_value, init_cmd) = initialize(emit)
-  set_model(Some(model_value))
-
   fn on_update(scheduler : &Scheduler, msg : @any.Any) -> Cmd {
     let msg : Msg = msg.into()
     let old_model = model.read()
-    let (new_model, cmd) = update(old_model.unwrap(), msg, emit)
+    let (new_model, cmd) = update(old_model.unwrap(), context, msg, emit)
     handle_subs(scheduler, new_model)
     set_model(Some(new_model))
     cmd
@@ -89,7 +105,7 @@ pub fn[Model : Eq, Msg] create_state_machine(
 
   Scheduler::add(host, init_cmd)
   handle_subs(host, model.read().unwrap())
-  (model.map(x => x.unwrap()), emit)
+  (model.map(x => x.unwrap()), emit, context)
 }
 
 ///|

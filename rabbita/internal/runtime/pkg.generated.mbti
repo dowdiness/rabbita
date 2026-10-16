@@ -17,6 +17,8 @@ pub fn[Model : Eq, Msg] create_state_machine((@cmd.Emit[Msg]) -> (Model, @cmd.Cm
 
 pub fn[Model : Eq, Msg, Input : Eq] create_state_machine_with_input((@cmd.Emit[Msg], Input) -> (Model, @cmd.Cmd), (Model, Input, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, Input, @cmd.Emit[Msg]) -> @sub.Sub, @duplix.Node[Input]) -> (@duplix.Node[Model], @cmd.Emit[Msg])
 
+pub fn[Model : Eq, Msg, Context] create_state_machine_with_setup((@cmd.Emit[Msg]) -> (Model, @cmd.Cmd, Context), (Model, Context, Msg, @cmd.Emit[Msg]) -> (Model, @cmd.Cmd), subscriptions? : (Model, Context, @cmd.Emit[Msg]) -> @sub.Sub) -> (@duplix.Node[Model], @cmd.Emit[Msg], Context)
+
 // Errors
 
 // Types and methods

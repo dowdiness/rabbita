@@ -574,6 +574,23 @@ pub fn[Model : Eq, Msg] create_state_with_init(
 }
 
 ///|
+/// Runs `setup` once with the real emitter, before installing updates and
+/// scheduling its initial command. The returned immutable composition context
+/// is passed to updates and subscriptions; it is not Model and needs no Eq.
+pub fn[Model : Eq, Msg, Context] create_state_with_setup(
+  setup~ : (Emit[Msg]) -> (Model, Cmd, Context),
+  update~ : (Model, Context, Msg, Emit[Msg]) -> (Model, Cmd),
+  subscriptions? : (Model, Context, Emit[Msg]) -> @sub.Sub,
+) -> (Val[Model], Emit[Msg], Context) {
+  let (node, emit, context) = @runtime.create_state_machine_with_setup(
+    setup,
+    update,
+    subscriptions?,
+  )
+  (node, emit, context)
+}
+
+///|
 /// Creates component-local state whose callbacks receive an incremental input.
 ///
 /// The current input is passed to `init`, `update`, and `subscriptions` when
